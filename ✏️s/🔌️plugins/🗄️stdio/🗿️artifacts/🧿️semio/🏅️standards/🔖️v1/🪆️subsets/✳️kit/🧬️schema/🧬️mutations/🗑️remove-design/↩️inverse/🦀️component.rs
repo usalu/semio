@@ -6,7 +6,8 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{ad
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &RemoveDesign, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &RemoveDesign, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
     match base.designs.iter().find(|d| d.id == payload.id) {
         Some(existing) => vec![
             SemioKitMutation::AddDesign(add_design::mutation::AddDesign { id: existing.id.clone(), name: existing.name.clone() }),

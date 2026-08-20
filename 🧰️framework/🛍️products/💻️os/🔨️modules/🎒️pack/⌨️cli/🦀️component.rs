@@ -353,9 +353,9 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
     };
     match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).await {
         Ok((record, report)) => {
-            let mut writer = crate::os_dsl::schema::Writer::new().await;
-            crate::os_dsl::schema::print_record(&record, &spec, &mut writer).await;
-            print!("{}", writer.render(crate::os_dsl::schema::JoinMode::Document).await);
+            let mut writer = crate::os_dsl::schema::Writer::new();
+            crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
+            print!("{}", writer.render(crate::os_dsl::schema::JoinMode::Document));
             if !report.unknown_field_ids.is_empty() {
                 eprintln!("note: unknown field ids not in schema '{schema_name}': {:?}", report.unknown_field_ids);
             }
@@ -400,7 +400,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    let record = match crate::os_dsl::schema::parse(&text, &spec, &crate::os_dsl::schema::ParseOptions::default()).await {
+    let record = match crate::os_dsl::schema::parse(&text, &spec, &crate::os_dsl::schema::ParseOptions::default()) {
         Ok(record) => record,
         Err(error) => {
             eprintln!("pack: dsl parse failed: {error}");
@@ -674,9 +674,9 @@ mod tests {
         let dsl_path = temp_path("roundtrip.dsl").await;
         let spec = sample_spec();
         let record = sample_record("Grace Hopper", 7, false);
-        let mut writer = crate::os_dsl::schema::Writer::new().await;
-        crate::os_dsl::schema::print_record(&record.await, &spec.await, &mut writer).await;
-        std::fs::write(&dsl_path, writer.render(crate::os_dsl::schema::JoinMode::Document).await).unwrap();
+        let mut writer = crate::os_dsl::schema::Writer::new();
+        crate::os_dsl::schema::print_record(&record.await, &spec.await, &mut writer);
+        std::fs::write(&dsl_path, writer.render(crate::os_dsl::schema::JoinMode::Document)).unwrap();
         let dsl_path_str = dsl_path.to_string_lossy().to_string();
 
         let out_path = temp_path("fromdsl.spk").await;

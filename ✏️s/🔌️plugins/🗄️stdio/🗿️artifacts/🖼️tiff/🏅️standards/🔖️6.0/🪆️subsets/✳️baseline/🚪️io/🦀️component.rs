@@ -48,7 +48,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_tiff_baseline_conformance(&snapshot).await,
+                Some(snapshot) => check_tiff_baseline_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.tiff.baseline.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -63,15 +63,17 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<TiffBaselineValidator>)
     }
 
     /// 📌️ Registers this subset's `SubsetValidator`. Called from 6.0's own `⚙️engine::register()`.
     /// The `ComposerEntry` itself is registered separately via this standard's own
     /// `composer::entries()` aggregation.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -86,7 +88,8 @@ pub mod derived_composition {
         /// then panics instead of returning that `Err`. A minimal 1x1 non-degenerate image (real
         /// IFD with ImageWidth/ImageLength/StripOffsets) is the smallest real fixture the encoder
         /// accepts.
-        async fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
             TiffSnapshot {
                 byte_order: TiffByteOrder::LittleEndian,
                 ifds: vec![TiffIfd { entries: vec![TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }] }],

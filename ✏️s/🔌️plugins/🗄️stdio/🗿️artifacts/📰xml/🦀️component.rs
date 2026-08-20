@@ -15,7 +15,8 @@ pub const XML_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xml";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.xml".into(),
         name: "Xml".into(),
@@ -56,19 +57,21 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// for this field). `standards::v1_0::subsets::any::engine::register()` itself is left in place, now
 /// orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("xml", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("xml", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("xml").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("xml")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
-        .await.composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
-        .await.subset_validators(pilot_subset_validators().await)
-        .await.languages(pilot_languages())
+        .schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
+        .composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
+        .subset_validators(pilot_subset_validators())
+        .languages(pilot_languages())
         .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -76,7 +79,8 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 🛡️ The ✳️valid subset's `SubsetValidatorEntry`, built once — see `declaration()`'s own doc for why
 /// this is a fresh `subset_validator_entry_of::<XmlValidValidator>()` call rather than a reuse of
 /// `subsets::valid::io::derived_composition`'s private `validator_entry()`.
-async fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::artifacts::xml::standards::v1_0::subsets::valid::io::XmlValidValidator>()]).as_slice()
 }
@@ -85,7 +89,8 @@ async fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetVa
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `🔋️energy` exemplar's helper of the same shape. Verbatim copy of `standards::v1_0::subsets::any::
 /// engine::register_pilot_languages()`'s five `LanguageSpec`s.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -159,12 +164,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v1_0::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v1_0::entries());
     }
 }

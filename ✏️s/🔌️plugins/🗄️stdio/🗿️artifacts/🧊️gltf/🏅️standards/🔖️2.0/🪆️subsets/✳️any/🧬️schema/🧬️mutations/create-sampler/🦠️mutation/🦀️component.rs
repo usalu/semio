@@ -8,5 +8,7 @@ pub const ID: &str = "s.stdio.gltf.mutation.create-sampler.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/samplers"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfCreateSamplerPayload { pub position: usize }
-pub async fn validate(payload: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.position > base.document.samplers.len() { return Err(reject("gltf.mutation.insert-out-of-range", "document/samplers", "position must be within the collection")); }   Ok(()) }
-pub async fn apply(payload: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); repair(&mut next.document, GltfTopLevelFamily::Samplers, &Change::Insert(payload.position))?; next.document.samplers.insert(payload.position, GltfSampler::default()); Ok(next) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.position > base.document.samplers.len() { return Err(reject("gltf.mutation.insert-out-of-range", "document/samplers", "position must be within the collection")); }   Ok(()) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); repair(&mut next.document, GltfTopLevelFamily::Samplers, &Change::Insert(payload.position))?; next.document.samplers.insert(payload.position, GltfSampler::default()); Ok(next) }

@@ -26,13 +26,16 @@ use serde::{Deserialize, Serialize};
 /// `🧬️schema-design.md` §Absorb; ported verbatim from gif 89a's own diff module (the reference
 /// implementation for this arithmetic), generalized here to operate on the shared
 /// `IndexedTripleDiff<D,T>` shape instead of a bespoke per-artifact triple struct.
-async fn count_le(sorted: &[usize], x: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -42,8 +45,9 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
 
@@ -51,11 +55,13 @@ async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_s
 /// 🕳️ Emptiness for the shared `IndexedTripleDiff<D,T>` (the engine type itself carries no
 /// `is_empty` — this subset supplies the semantics, per the recipe: the engine is data+text-codec
 /// only, apply/between/absorb/inverse are each collection's own job).
-async fn indexed_is_empty<D, T>(t: &IndexedTripleDiff<D, T>) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_is_empty<D, T>(t: &IndexedTripleDiff<D, T>) -> bool {
     t.removed.is_empty() && t.modified.is_empty() && t.added.is_empty()
 }
 
-async fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_between: impl Fn(&T, &T) -> Option<D>) -> IndexedTripleDiff<D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_between: impl Fn(&T, &T) -> Option<D>) -> IndexedTripleDiff<D, T> {
     let min = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -68,7 +74,8 @@ async fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_
     IndexedTripleDiff { removed, modified, added }
 }
 
-async fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff_apply: impl Fn(&D, &T) -> T) -> Vec<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff_apply: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &triple.modified {
         if let Some(slot) = next.get_mut(m.index) {
@@ -99,7 +106,8 @@ async fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T]
 /// module's doc comment for the derivation and the plan's 3 mandated canonical cases, all
 /// re-verified for this generic form in this file's own tests below).
 #[allow(clippy::too_many_arguments)]
-async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
     let removed1 = std::mem::take(&mut mine.removed);
     let modified1: Vec<(usize, D)> = std::mem::take(&mut mine.modified).into_iter().map(|m| (m.index, m.diff)).collect();
     let added1: Vec<(usize, T)> = std::mem::take(&mut mine.added).into_iter().map(|a| (a.index, a.item)).collect();
@@ -127,8 +135,8 @@ async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
-            merged_removed_base.push(base_index.await);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
         }
     }
     merged_removed_base.sort_unstable();
@@ -150,11 +158,11 @@ async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -184,7 +192,8 @@ async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
 
 /// ↩️ Diff-level inverse for a generic index-keyed collection triple, given the ORIGINAL base
 /// items — generalized from gif's `inverse_indexed_collection`.
-async fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
     let mut removed_sorted: Vec<usize> = triple.removed.clone();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = triple.added.iter().map(|a| a.index).collect();
@@ -195,7 +204,7 @@ async fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_ite
     for m in &triple.modified {
         if let Some(orig) = base_items.get(m.index) {
             let after_index = transport_forward(m.index, &removed_sorted, &added_index_sorted);
-            inv_modified.push(IndexModified { index: after_index.await, diff: diff_inverse(&m.diff, orig) });
+            inv_modified.push(IndexModified { index: after_index, diff: diff_inverse(&m.diff, orig) });
         }
     }
     let mut inv_added: Vec<IndexAdded<T>> = Vec::new();
@@ -222,23 +231,28 @@ pub struct SemioAudioChannelDiff {
 }
 
 impl SemioAudioChannelDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.samples.is_none()
     }
-    pub async fn between(base: &SemioAudioChannel, other: &SemioAudioChannel) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &SemioAudioChannel, other: &SemioAudioChannel) -> Self {
         Self { samples: (base.samples != other.samples).then_some(other.samples.clone()) }
     }
-    pub async fn apply(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
         let mut next = base.clone();
         if let Some(v) = &self.samples {
             next.samples = v.clone();
         }
         next
     }
-    pub async fn inverse(&self, base: &SemioAudioChannel) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &SemioAudioChannel) -> Self {
         Self { samples: self.samples.as_ref().map(|_| base.samples.clone()) }
     }
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.samples.is_some() {
             self.samples = other.samples;
         }
@@ -247,20 +261,24 @@ impl SemioAudioChannelDiff {
 
 pub type SemioAudioChannelsDiff = IndexedTripleDiff<SemioAudioChannelDiff, SemioAudioChannel>;
 
-async fn channels_between(base: &[SemioAudioChannel], other: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn channels_between(base: &[SemioAudioChannel], other: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
     indexed_between(base, other, |a, b| {
-        let d = semio_framework_plugin::resolve_ready(SemioAudioChannelDiff::between(a, b));
-        (!semio_framework_plugin::resolve_ready(d.is_empty())).then_some(d)
-    }).await
+        let d = SemioAudioChannelDiff::between(a, b);
+        (!d.is_empty()).then_some(d)
+    })
 }
-async fn channels_apply(d: &SemioAudioChannelsDiff, base: &[SemioAudioChannel]) -> Vec<SemioAudioChannel> {
-    indexed_apply(d, base, |diff, item| diff.apply(item)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn channels_apply(d: &SemioAudioChannelsDiff, base: &[SemioAudioChannel]) -> Vec<SemioAudioChannel> {
+    indexed_apply(d, base, |diff, item| diff.apply(item))
 }
-async fn channels_absorb(mine: &mut SemioAudioChannelsDiff, other: SemioAudioChannelsDiff) {
-    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn channels_absorb(mine: &mut SemioAudioChannelsDiff, other: SemioAudioChannelsDiff) {
+    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item))
 }
-async fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
-    indexed_inverse(d, base_items, |diff, item| diff.inverse(item)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
+    indexed_inverse(d, base_items, |diff, item| diff.inverse(item))
 }
 //#endregion 🔖️ChannelDiff
 
@@ -269,17 +287,21 @@ async fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioCh
 /// [`SemioAudioTag`] (`D = T = SemioAudioTag`), no further sub-diffing of a key/value pair.
 pub type SemioAudioTagsDiff = IndexedTripleDiff<SemioAudioTag, SemioAudioTag>;
 
-async fn tags_between(base: &[SemioAudioTag], other: &[SemioAudioTag]) -> SemioAudioTagsDiff {
-    indexed_between(base, other, |a, b| (a != b).then_some(b.clone())).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tags_between(base: &[SemioAudioTag], other: &[SemioAudioTag]) -> SemioAudioTagsDiff {
+    indexed_between(base, other, |a, b| (a != b).then_some(b.clone()))
 }
-async fn tags_apply(d: &SemioAudioTagsDiff, base: &[SemioAudioTag]) -> Vec<SemioAudioTag> {
-    indexed_apply(d, base, |diff, _item| diff.clone()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tags_apply(d: &SemioAudioTagsDiff, base: &[SemioAudioTag]) -> Vec<SemioAudioTag> {
+    indexed_apply(d, base, |diff, _item| diff.clone())
 }
-async fn tags_absorb(mine: &mut SemioAudioTagsDiff, other: SemioAudioTagsDiff) {
-    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tags_absorb(mine: &mut SemioAudioTagsDiff, other: SemioAudioTagsDiff) {
+    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone())
 }
-async fn tags_inverse(d: &SemioAudioTagsDiff, base_items: &[SemioAudioTag]) -> SemioAudioTagsDiff {
-    indexed_inverse(d, base_items, |_diff, item| item.clone()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tags_inverse(d: &SemioAudioTagsDiff, base_items: &[SemioAudioTag]) -> SemioAudioTagsDiff {
+    indexed_inverse(d, base_items, |_diff, item| item.clone())
 }
 //#endregion 🔖️TagsDiff
 
@@ -300,8 +322,9 @@ pub struct SemioAudioDiff {
 }
 
 impl SemioAudioDiff {
-    pub async fn is_empty_diff(&self) -> bool {
-        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true).await && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
+        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true) && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
 }
 
@@ -315,12 +338,12 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             next.format = v;
         }
         if let Some(d) = &self.channels {
-            triples::validate_indexed_triple(d, next.channels.len(), ["channels"]).await?;
-            next.channels = channels_apply(d, &next.channels).await;
+            triples::validate_indexed_triple(d, next.channels.len(), ["channels"])?;
+            next.channels = channels_apply(d, &next.channels);
         }
         if let Some(d) = &self.tags {
-            triples::validate_indexed_triple(d, next.tags.len(), ["tags"]).await?;
-            next.tags = tags_apply(d, &next.tags).await;
+            triples::validate_indexed_triple(d, next.tags.len(), ["tags"])?;
+            next.tags = tags_apply(d, &next.tags);
         }
         Ok(next)
     }
@@ -333,12 +356,12 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             self.format = other.format;
         }
         match (&mut self.channels, other.channels) {
-            (Some(mine), Some(theirs)) => channels_absorb(mine, theirs).await,
+            (Some(mine), Some(theirs)) => channels_absorb(mine, theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
         match (&mut self.tags, other.tags) {
-            (Some(mine), Some(theirs)) => tags_absorb(mine, theirs).await,
+            (Some(mine), Some(theirs)) => tags_absorb(mine, theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -367,13 +390,14 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 
 /// 🧩️ Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapshot) -> SemioAudioDiff {
-    <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapshot) -> SemioAudioDiff {
+    <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 
@@ -391,41 +415,50 @@ pub async fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioS
 /// hex. Worked example: `rate=44100 format=f32 channels{[];[1:[1,[3f800000]]];[]}
 /// tags{[0];[];[0:[74697465,6669727374]]}`.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn hex_decode_string(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode_string(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    triples::split_top_level(s, sep).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+    triples::split_top_level(s, sep)
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
-    triples::strip_brackets(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+    triples::strip_brackets(s)
 }
 
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -434,7 +467,8 @@ async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_format(f: SemioAudioFormat) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_format(f: SemioAudioFormat) -> &'static str {
     match f {
         SemioAudioFormat::Pcm8 => "pcm8",
         SemioAudioFormat::Pcm16 => "pcm16",
@@ -444,7 +478,8 @@ pub(crate) async fn enc_format(f: SemioAudioFormat) -> &'static str {
         SemioAudioFormat::Float64 => "f64",
     }
 }
-pub(crate) async fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
     match s {
         "pcm8" => Ok(SemioAudioFormat::Pcm8),
         "pcm16" => Ok(SemioAudioFormat::Pcm16),
@@ -458,59 +493,70 @@ pub(crate) async fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
 
 /// 🔢️ Exact-round-trip `f32` list — `to_bits()` hex tokens inside a bracket, never decimal
 /// text (sidesteps float-formatting precision loss and NaN/-0.0 print-ambiguity entirely).
-pub(crate) async fn enc_f32_list(v: &[f32]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_f32_list(v: &[f32]) -> String {
     format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
+    let inner = strip_brackets(s)?;
     if inner.is_empty() {
         return Ok(Vec::new());
     }
     split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
 }
 
-pub(crate) async fn enc_channel(c: &SemioAudioChannel) -> String {
-    enc_f32_list(&c.samples).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_channel(c: &SemioAudioChannel) -> String {
+    enc_f32_list(&c.samples)
 }
-pub(crate) async fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
-    Ok(SemioAudioChannel { samples: dec_f32_list(s).await? })
-}
-
-async fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String {
-    encode_option(&d.samples, |v| enc_f32_list(v)).await
-}
-async fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> {
-    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
 }
 
-pub(crate) async fn enc_tag(t: &SemioAudioTag) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String {
+    encode_option(&d.samples, |v| enc_f32_list(v))
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> {
+    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", hex_encode(t.key.as_bytes()), hex_encode(t.value.as_bytes()))
 }
-pub(crate) async fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAudioTag { key: hex_decode_string(key).await?, value: hex_decode_string(value).await? })
+    Ok(SemioAudioTag { key: hex_decode_string(key)?, value: hex_decode_string(value)? })
 }
 
 /// 🧩️ Full bracket encoding of a snapshot — used both by [`protocol::DiffCodec`]'s `SetSnapshot`
 /// payload (via the mutations module) and directly nowhere else; kept here alongside its sibling
 /// value codecs.
-pub(crate) async fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
     format!("[{},{},{},[{}],[{}]]", hex_encode(s.schema.as_bytes()), s.sample_rate, enc_format(s.format), s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","), s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),)
 }
-pub(crate) async fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema_hex, sample_rate, format, channels_s, tags_s] = parts.as_slice() else {
         return Err(format!("snapshot: expected 5 fields, got {}", parts.len()));
     };
-    let channels = split_top_level(strip_brackets(channels_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
-    let tags = split_top_level(strip_brackets(tags_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex).await?, sample_rate: parse_u32(sample_rate).await?, format: dec_format(format).await?, channels, tags })
+    let channels = split_top_level(strip_brackets(channels_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
+    let tags = split_top_level(strip_brackets(tags_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex)?, sample_rate: parse_u32(sample_rate)?, format: dec_format(format)?, channels, tags })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_audio_diff(d: &SemioAudioDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_audio_diff(d: &SemioAudioDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.sample_rate {
         tokens.push(format!("rate={v}"));
@@ -526,22 +572,23 @@ async fn print_audio_diff(d: &SemioAudioDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
     let mut d = SemioAudioDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("rate=") {
-            d.sample_rate = Some(parse_u32(rest).await?);
+            d.sample_rate = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("format=") {
-            d.format = Some(dec_format(rest).await?);
+            d.format = Some(dec_format(rest)?);
         } else if let Some(rest) = token.strip_prefix("channels{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "channels: missing closing brace".to_string())?;
-            d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel).await?);
+            d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel)?);
         } else if let Some(rest) = token.strip_prefix("tags{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "tags: missing closing brace".to_string())?;
-            d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag).await?);
+            d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag)?);
         } else {
             return Err(format!("audio diff: unknown token {token:?}"));
         }
@@ -552,22 +599,24 @@ async fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
 /// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
 impl DiffCodec for SemioAudioDiff {
     async fn print_diff(&self) -> String {
-        print_audio_diff(self).await
+        print_audio_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_audio_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_audio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut. `format u8` + `presence u8` (bit0=`sample_rate` bit1=`format` bit2=`channels`
@@ -598,7 +647,7 @@ impl DiffCodec for SemioAudioDiff {
             write_str_lp(&mut out, &v.to_string());
         }
         if let Some(v) = self.format {
-            write_str_lp(&mut out, enc_format(v).await);
+            write_str_lp(&mut out, enc_format(v));
         }
         if let Some(v) = &self.channels {
             write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel));
@@ -617,28 +666,28 @@ impl DiffCodec for SemioAudioDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
         let sample_rate = if presence & 0b0001 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
-            Some(parse_u32(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
+            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
         } else {
             None
         };
         let format = if presence & 0b0010 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
-            Some(dec_format(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
+            Some(dec_format(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
         } else {
             None
         };
         let channels = if presence & 0b0100 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
         } else {
             None
         };
         let tags = if presence & 0b1000 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
         } else {
             None
         };
@@ -653,8 +702,10 @@ impl DiffCodec for SemioAudioDiff {
 /// both collection triples) — single source of truth for `diff_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioAudioDiff> {
-    async fn channel(seed: f32, len: usize) -> SemioAudioChannel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn channel(seed: f32, len: usize) -> SemioAudioChannel {
         SemioAudioChannel { samples: (0..len).map(|i| seed + i as f32 * 0.1).collect() }
     }
     let a = SemioAudioSnapshot {
@@ -680,11 +731,13 @@ pub(crate) async fn demo_diff_cases() -> Vec<SemioAudioDiff> {
 mod tests {
     use super::*;
 
-    async fn channel(seed: f32, len: usize) -> SemioAudioChannel {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn channel(seed: f32, len: usize) -> SemioAudioChannel {
         SemioAudioChannel { samples: (0..len).map(|i| seed + i as f32 * 0.1).collect() }
     }
 
-    async fn base_snapshot() -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> SemioAudioSnapshot {
         SemioAudioSnapshot {
             sample_rate: 44_100,
             format: SemioAudioFormat::Pcm16,

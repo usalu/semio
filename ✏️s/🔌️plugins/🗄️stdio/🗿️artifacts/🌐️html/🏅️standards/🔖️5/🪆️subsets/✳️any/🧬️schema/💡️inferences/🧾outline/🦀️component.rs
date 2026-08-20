@@ -19,14 +19,15 @@ pub struct HtmlOutline {
 
 /// 🌳️ Recursively walks `node`, returning `(element_count, max_depth, text_length)` — `depth` is
 /// the caller's own nesting level (the root element call passes `1`).
-async fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
     match node {
         HtmlNode::Element { children, .. } => {
             let mut count = 1u32;
             let mut max_depth = depth;
             let mut text_length = 0u32;
             for child in children {
-                let (c, d, t) = Box::pin(walk(child, depth + 1)).await;
+                let (c, d, t) = Box::pin(walk(child, depth + 1));
                 count += c;
                 max_depth = max_depth.max(d);
                 text_length += t;
@@ -40,8 +41,9 @@ async fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
 }
 
 impl HtmlOutline {
-    pub async fn compute(snapshot: &HtmlSnapshot) -> Self {
-        let (element_count, max_depth, text_length) = walk(&snapshot.root, 1).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &HtmlSnapshot) -> Self {
+        let (element_count, max_depth, text_length) = walk(&snapshot.root, 1);
         Self { element_count, max_depth, text_length }
     }
 }

@@ -18,15 +18,17 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::deflate::create_deflate_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Codec
 /// 📐️ `DeflateLevelHint <-> lowercase keyword` — shared by `render`'s summary line and the surface
 /// root's `parse_level_hint` (`replace-text` reverse direction).
-pub async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
     match hint {
         DeflateLevelHint::Fastest => "fastest",
         DeflateLevelHint::Fast => "fast",
@@ -37,7 +39,8 @@ pub async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
 
 /// 📐️ Inverse of [`level_hint_keyword`]. `None` on an unrecognized keyword — the surface root
 /// treats that as a malformed `replace-text` (documented no-op), never a panic.
-pub async fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
     match keyword {
         "fastest" => Some(DeflateLevelHint::Fastest),
         "fast" => Some(DeflateLevelHint::Fast),
@@ -48,7 +51,8 @@ pub async fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
 }
 
 /// 📐️ `dict_id -> "none" | "<id>"` — shared by `render` and the surface root's reverse parse.
-pub async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
     match dict_id {
         Some(id) => id.to_string(),
         None => "none".into(),
@@ -60,7 +64,8 @@ pub async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// ✏️ Real `DeflateSnapshot -> UiNode`: a `key=value` line per header field, editable
 /// (`read_only: false`), plus a trailing `#`-prefixed comment line stating the payload byte count
 /// (informational only — `#`-prefixed lines are never parsed back on `replace-text`).
-pub async fn render(document: &DeflateSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &DeflateSnapshot) -> UiNode {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,
@@ -69,7 +74,7 @@ pub async fn render(document: &DeflateSnapshot) -> UiNode {
         preset_dictionary_text(document.dict_id),
         document.payload.len(),
     );
-    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: false }).await
+    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: false })
 }
 //#endregion 🔖️Render
 

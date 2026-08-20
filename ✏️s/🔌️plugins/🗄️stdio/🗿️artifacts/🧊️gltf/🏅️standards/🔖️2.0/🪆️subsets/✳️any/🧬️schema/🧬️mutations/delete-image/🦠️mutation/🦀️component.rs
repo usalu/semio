@@ -8,5 +8,7 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-image.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/images"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfDeleteImagePayload { pub index: usize }
-pub async fn validate(payload: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.images.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/images", "index must address an item")); }  Ok(()) }
-pub async fn apply(payload: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); images_op(&mut next, GltfTopLevelFamily::Images, payload.index, None, None)?;  Ok(next) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.images.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/images", "index must address an item")); }  Ok(()) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); images_op(&mut next, GltfTopLevelFamily::Images, payload.index, None, None)?;  Ok(next) }

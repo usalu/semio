@@ -1,0 +1,105 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-window-kits:typecheck
+
+> nx run @semio-tech/plugin-window-kits:typecheck
+
+> bun ./📜️script.ts typecheck
+
+../../../../../🔨️modules/🎠️kernel/🟦️component.ts(9,3): error TS2305: Module '"../\uD83D\uDEC2\uFE0Fmanifest/\uD83D\uDFE6\uFE0Fcomponent.ts"' has no exported member 'PluginUiNode'.
+../../../../../🔨️modules/🎠️kernel/🟦️component.ts(239,47): error TS2339: Property 'contributions' does not exist on type 'PluginManifest'.
+../../../../../🔨️modules/🎠️kernel/🟦️component.ts(240,48): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../../../../🔨️modules/🎠️kernel/🟦️component.ts(329,59): error TS7006: Parameter 'child' implicitly has an 'any' type.
+../../../../../🔨️modules/🎠️kernel/🟦️component.ts(333,59): error TS7006: Parameter 'child' implicitly has an 'any' type.
+../../../../../🔨️modules/🎭️actor/🤖️generated/🟦️actor.ts(167,115): error TS2322: Type 'bigint' is not assignable to type 'string | number | symbol'.
+../../../../../🔨️modules/📡️replication/🟦️component.ts(35,54): error TS2304: Cannot find name 'encodePackValue'.
+../../../../../🔨️modules/📡️replication/🟦️component.ts(41,45): error TS2322: Type 'unknown[]' is not assignable to type 'readonly number[]'.
+  Type 'unknown' is not assignable to type 'number'.
+../../../../../🔨️modules/📡️replication/🟦️component.ts(42,63): error TS2322: Type 'unknown[]' is not assignable to type 'readonly number[]'.
+  Type 'unknown' is not assignable to type 'number'.
+../../../../../🔨️modules/📡️replication/🟦️component.ts(49,55): error TS2304: Cannot find name 'decodePackValue'.
+../../../../../🔨️modules/🕹️interaction/🟦️component.ts(273,35): error TS2345: Argument of type 'HoverSpec' is not assignable to parameter of type 'SelectionSpec'.
+  Type 'HoverSpec' is missing the following properties from type 'SelectionSpec': modes, methods, merges
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(230,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(231,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(594,54): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(916,33): error TS2339: Property 'glob' does not exist on type 'ImportMeta'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(189,9): error TS2304: Cannot find name 'ConfigSpec'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(194,17): error TS2304: Cannot find name 'CommandGrammar'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(213,100): error TS2552: Cannot find name 'ArtifactPresentation'. Did you mean 'ArgPresentation'?
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,117): error TS2304: Cannot find name 'FileTypeContribution'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,233): error TS2304: Cannot find name 'TopicContribution'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,442): error TS2304: Cannot find name 'IoEntryDescriptor'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(415,485): error TS2552: Cannot find name 'ComposerEntryDescriptor'. Did you mean 'PropertyDescriptor'?
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(801,27): error TS2304: Cannot find name 'TopicContribution'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(834,79): error TS2304: Cannot find name 'TopicContribution'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,68): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,109): error TS2304: Cannot find name 'StyleSpec'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1142,150): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1149,42): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1149,55): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1151,136): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1153,161): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1155,60): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1155,97): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1157,89): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1157,231): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1159,40): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1161,95): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1163,183): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1203,124): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1205,52): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1207,99): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1207,164): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1209,63): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1211,170): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1226,35): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1226,140): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1228,67): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1228,132): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1230,60): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1230,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1232,51): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1242,8): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1244,125): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1253,55): error TS2304: Cannot find name 'Label'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1317,9): error TS2304: Cannot find name 'Locale'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1321,14): error TS2304: Cannot find name 'Terminology'.
+../../../../../🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1400,143): error TS2304: Cannot find name 'WindowStackCorner'.
+../../../🟦️component.ts(20,33): error TS2300: Duplicate identifier 'DirectoryEvent'.
+../../../🟦️component.ts(217,76): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+../../../🟦️component.ts(226,74): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+../../../🟦️component.ts(3144,15): error TS2300: Duplicate identifier 'DirectoryEvent'.
+../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1484,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1485,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts(1388,7): error TS2322: Type '"packaging-violation"' is not assignable to type '"ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role"'.
+Warning: command "bun ./📜️script.ts typecheck" exited with non-zero status code
+
+
+ NX   Running target typecheck for project @semio-tech/plugin-window-kits failed
+
+Failed tasks:
+
+- @semio-tech/plugin-window-kits:typecheck
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/plugin-window-kits:typecheck exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:635:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15435:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+EXIT:1

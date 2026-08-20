@@ -35,7 +35,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 /// corner's resolved position/uv/normal to the accumulators. Negative/relative OBJ indices are
 /// already resolved to absolute 0-based indices by the OBJ codec upstream (per `ObjFaceVertex`'s
 /// own doc comment) -- this only does the corner lookup + fan expansion.
-async fn append_triangulated_face(from: &ObjSnapshot, face: &ObjFace, positions: &mut Vec<SemioPoint3>, normals: &mut Vec<SemioPoint3>, uvs: &mut Vec<SemioUv>) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn append_triangulated_face(from: &ObjSnapshot, face: &ObjFace, positions: &mut Vec<SemioPoint3>, normals: &mut Vec<SemioPoint3>, uvs: &mut Vec<SemioUv>) -> Result<(), String> {
     if face.vertices.len() < 3 {
         return Err(format!("obj face has {} corners, need at least 3", face.vertices.len()));
     }
@@ -88,7 +89,7 @@ impl ArtifactDeserializer for SemioMeshFromObj {
             let mut uvs = Vec::new();
             for &fi in &face_indices {
                 let face = from.faces.get(fi).ok_or_else(|| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
-                semio_framework_plugin::resolve_ready(append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs)).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
+                append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
             }
             Ok(SemioPrimitive { id, topology: SemioTopology::Triangles, positions, normals, uvs, colors: Vec::new(), indices: Vec::new(), material_id: None })
         };
@@ -115,7 +116,8 @@ mod tests {
     use super::*;
     use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjNormal, ObjTexCoord, ObjVertex};
 
-    async fn sample_obj() -> ObjSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_obj() -> ObjSnapshot {
         ObjSnapshot {
             schema: "stdio.obj".into(),
             vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],

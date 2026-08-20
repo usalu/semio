@@ -118,7 +118,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -144,13 +144,13 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph.
         pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document).await;
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
         pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(DocxParagraph::text(text.into()).await).await
+            self.add_paragraph(DocxParagraph::text(text.into())).await
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
@@ -161,7 +161,7 @@ pub mod derived_construction {
         /// ➕️ Appends a table.
         pub async fn add_table(mut self, table: DocxTable) -> Self {
             self.snapshot.document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document).await;
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
@@ -172,7 +172,7 @@ pub mod derived_construction {
             } else {
                 self.snapshot.document.styles.push(style);
             }
-            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document).await;
+            self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
     }
@@ -207,7 +207,7 @@ pub mod derived_analysis {
             // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
             // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_docx_bytes(bytes).await => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_docx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -259,7 +259,7 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
     use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
     let document = DocxDocument {
         body: vec![
-            DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo").await }),
+            DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo") }),
             DocxBlock::Paragraph(DocxParagraph {
                 runs: vec![DocxRun { text: "Bold and ".into(), bold: true, ..Default::default() }, DocxRun { text: "italic".into(), italic: true, ..Default::default() }, DocxRun { text: " text".into(), ..Default::default() }],
                 style: None,
@@ -267,15 +267,15 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
             }),
             DocxBlock::Table(DocxTable {
                 rows: vec![
-                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1").await], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2").await], ..Default::default() }], ..Default::default() },
-                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C1").await], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C2").await], ..Default::default() }], ..Default::default() },
+                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C1")], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R1C2")], ..Default::default() }], ..Default::default() },
+                    DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C1")], ..Default::default() }, DocxTableCell { blocks: vec![DocxBlock::paragraph("R2C2")], ..Default::default() }], ..Default::default() },
                 ],
                 ..Default::default()
             }),
         ],
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
-    let mut snap = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(document).await;
+    let mut snap = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(document);
     snap.opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
     snap
 }

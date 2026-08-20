@@ -28,17 +28,20 @@ impl Default for MdArtifact {
 
 impl MdArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> MdSnapshot {
         MdSnapshot { schema: self.schema.clone(), blocks: self.blocks.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: MdSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: MdSnapshot) -> Self {
         Self { schema: snapshot.schema, blocks: snapshot.blocks }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: MdSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: MdSnapshot) {
         self.schema = snapshot.schema;
         self.blocks = snapshot.blocks;
     }
@@ -47,7 +50,8 @@ impl MdArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.md`.
-pub async fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.md",
         artifact: schema::FacetLeaves {
@@ -112,7 +116,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::md::schema::mutations::apply_md_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <MdDiff as protocol::MutationDiff<MdSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -150,11 +154,12 @@ pub mod derived_analysis {
 
     /// 🔍 Markdown has no magic bytes — sniff by actually running the real block parser
     /// and checking for structural (non-paragraph) blocks, which plain text never produces.
-    async fn looks_like_markdown(text: &str) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_markdown(text: &str) -> IoConfidence {
         if text.trim().is_empty() {
             return IoConfidence::Low;
         }
-        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text).await;
+        let blocks = crate::artifacts::md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         if blocks.is_empty() {
             return IoConfidence::Low;
         }
@@ -183,15 +188,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_markdown(body).await
+                    looks_like_markdown(body)
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_markdown(&text).await,
+                        Ok(text) => looks_like_markdown(&text),
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_markdown(text).await,
+                        Ok(text) => looks_like_markdown(text),
                         Err(_) => IoConfidence::Low,
                     },
                 },
@@ -253,7 +258,8 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_md_snapshot() -> MdSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_md_snapshot() -> MdSnapshot {
     MdSnapshot::default()
 }
 
@@ -284,7 +290,8 @@ pub async fn empty_md_snapshot() -> MdSnapshot {
 /// calls `LINE`/`REST`) — `BlockQuote`/`Paragraph` (both `LINE`-dependent) are placed BEFORE the
 /// fence, never after it, sidestepping the corruption entirely rather than fixing the shared lexer
 /// (out of this wave's ownership boundary).
-pub async fn demo_md_snapshot() -> MdSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_md_snapshot() -> MdSnapshot {
     use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
     let blocks = vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] },
@@ -648,7 +655,8 @@ mod tests {
     //#endregion 🔖️ParserUnitTests
 
     //#region 🔖️Fixtures
-    async fn sample_snapshot() -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> MdSnapshot {
         MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Title".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hello".into() }] }] }
     }
 
@@ -662,7 +670,8 @@ mod tests {
     /// in `between(a, b)` and the top-level `added` tail in `between(b, a)` --
     /// `between_roundtrip_law`/`field_sweep` both check both directions, matching xml's F1
     /// precedent.
-    async fn sweep_a() -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> MdSnapshot {
         MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
@@ -678,7 +687,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> MdSnapshot {
         MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![
@@ -690,7 +700,8 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    async fn sample_mutations() -> Vec<MdMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_mutations() -> Vec<MdMutation> {
         vec![
             MdMutation::NoMutation,
             MdMutation::SetSnapshot { snapshot: sweep_b() },
@@ -740,11 +751,13 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn two_para_root(a: &str, b: &str) -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_para_root(a: &str, b: &str) -> MdSnapshot {
         MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: a.into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: b.into() }] }] }
     }
 
-    async fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -752,7 +765,8 @@ mod tests {
         absorbed
     }
 
-    async fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
         diff.blocks.as_ref().expect("blocks diff present")
     }
 

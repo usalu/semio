@@ -38,18 +38,22 @@ impl Default for SemioBrepArtifact {
 }
 
 impl SemioBrepArtifact {
-    pub async fn to_snapshot(&self) -> SemioBrepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioBrepSnapshot {
         SemioBrepSnapshot { schema: self.schema.clone(), vertices: self.vertices.clone(), edges: self.edges.clone(), loops: self.loops.clone(), faces: self.faces.clone(), shells: self.shells.clone(), solids: self.solids.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
         Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
-        *self = Self::from_snapshot(snapshot).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
+        *self = Self::from_snapshot(snapshot);
     }
 }
 
-pub async fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_brep_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.brep",
         artifact: schema::FacetLeaves {

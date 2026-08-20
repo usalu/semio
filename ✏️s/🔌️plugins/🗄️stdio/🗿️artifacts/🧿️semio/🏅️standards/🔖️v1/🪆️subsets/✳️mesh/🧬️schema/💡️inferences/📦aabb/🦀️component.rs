@@ -51,10 +51,12 @@ pub struct SemioAabb {
 /// contain `:`, so parsing the key back into two ids would be ambiguous; comparing constructed
 /// keys is not. O(meshes × primitives) per lookup — first-cut correctness over performance, same
 /// documented tradeoff the proven `🎛flat-position` pilot's own `assignment_for` makes.
-async fn find_primitive_by_key<'a>(snapshot: &'a SemioMeshSnapshot, key: &str) -> Option<(&'a SemioMesh, &'a SemioPrimitive)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_primitive_by_key<'a>(snapshot: &'a SemioMeshSnapshot, key: &str) -> Option<(&'a SemioMesh, &'a SemioPrimitive)> {
     snapshot.meshes.iter().find_map(|mesh| mesh.primitives.iter().find(|p| aabb_key(&mesh.id, &p.id) == key).map(|p| (mesh, p)))
 }
-pub(crate) async fn aabb_key(mesh_id: &str, primitive_id: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn aabb_key(mesh_id: &str, primitive_id: &str) -> String {
     format!("{mesh_id}:{primitive_id}")
 }
 //#endregion 🔖️Lookup
@@ -81,14 +83,14 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     /// AABB) — an unrelated field touch on the SAME primitive must still hit the cache, proven by
     /// the incrementality-law test below.
     async fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        match find_primitive_by_key(snapshot, key).await {
+        match find_primitive_by_key(snapshot, key) {
             Some((_, primitive)) => serde_json::to_vec(&primitive.positions).unwrap_or_default(),
             None => Vec::new(),
         }
     }
 
     async fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let Some((_, primitive)) = find_primitive_by_key(snapshot, key).await else {
+        let Some((_, primitive)) = find_primitive_by_key(snapshot, key) else {
             return SemioAabb::default();
         };
         let Some(first) = primitive.positions.first().copied() else {
@@ -116,7 +118,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn two_primitive_snapshot() -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_primitive_snapshot() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             meshes: vec![SemioMesh {
                 id: "mesh-a".into(),

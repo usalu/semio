@@ -37,7 +37,7 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
         let mut tags = Vec::new();
         if let Some(id3v2) = &from.id3v2 {
             for frame in &id3v2.frames {
-                tags.push(SemioAudioTag { key: frame.id.clone(), value: decode_id3_text(&frame.data).await });
+                tags.push(SemioAudioTag { key: frame.id.clone(), value: decode_id3_text(&frame.data) });
             }
         }
         if let Some(id3v1) = &from.id3v1 {
@@ -51,7 +51,8 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
 /// 📐️ MPEG-1/2/2.5 Layer III sample rate table (ISO/IEC 11172-3 Table 3.B.2), keyed by
 /// `(mpeg_version_id, sample_rate_index)`. `sample_rate_index == 3` is spec-reserved; falls back
 /// honestly to `0` (never a fabricated guess) for both the reserved index and unrecognized version.
-async fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
     match (version_id, index) {
         (3, 0) => 44_100,
         (3, 1) => 48_000,
@@ -70,7 +71,8 @@ async fn mpeg_sample_rate(version_id: u8, index: u8) -> u32 {
 /// w/ BOM, `2`/`3`=UTF-16BE/UTF-8 in ID3v2.4) followed by the text; falls back to a lossy
 /// byte-for-byte Latin-1 mapping on anything this doesn't recognize -- never panics, never drops
 /// the frame outright.
-async fn decode_id3_text(data: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_id3_text(data: &[u8]) -> String {
     match data.first() {
         Some(0) => data[1..].iter().map(|&b| b as char).collect(),
         Some(3) => String::from_utf8_lossy(&data[1..]).into_owned(),
@@ -89,7 +91,8 @@ mod tests {
     use super::*;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader};
 
-    async fn real_world_mp3() -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_mp3() -> Mp3Snapshot {
         Mp3Snapshot {
             schema: "stdio.mp3".into(),
             id3v2: Some(Id3v2Tag {

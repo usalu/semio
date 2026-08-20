@@ -87,7 +87,8 @@ pub enum GifMutation {
 /// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
 /// `demo_mutation_cases()`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };
     vec![
@@ -109,14 +110,15 @@ pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range image indices are no-ops rather than panics.
-pub async fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
-    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
+    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -128,7 +130,7 @@ impl Mutation<GifSnapshot> for GifMutation {
     async fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             GifMutation::NoMutation => GifDiff::default(),
-            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
             GifMutation::SetGlobalColorTable { gct } => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
             GifMutation::SetBackgroundColorIndex { index } => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
@@ -142,7 +144,7 @@ impl Mutation<GifSnapshot> for GifMutation {
                     let at = (*to).min(images.len());
                     images.insert(at, item);
                 }
-                GifDiff { images: Some(GifImagesDiff::between(&base.images, &images).await), ..Default::default() }
+                GifDiff { images: Some(GifImagesDiff::between(&base.images, &images)), ..Default::default() }
             }
             GifMutation::SetImageGeometry { index, left, top, width, height } => {
                 let d = GifImageDiff { left: Some(*left), top: Some(*top), width: Some(*width), height: Some(*height), ..Default::default() };
@@ -243,15 +245,18 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 
-    async fn sample_image(seed: u8) -> GifImage {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_image(seed: u8) -> GifImage {
         GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0, 1, 1, 0] }
     }
 
-    async fn base_snapshot() -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> GifSnapshot {
         GifSnapshot { schema: "stdio.gif".into(), width: 2, height: 2, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![sample_image(1), sample_image(2), sample_image(3)] }
     }
 
-    async fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         let diff = mutation.diff(base);
         let mutated = diff.diff().apply(base).expect("diff must apply to base");
         let inverses = mutation.inverse(base);

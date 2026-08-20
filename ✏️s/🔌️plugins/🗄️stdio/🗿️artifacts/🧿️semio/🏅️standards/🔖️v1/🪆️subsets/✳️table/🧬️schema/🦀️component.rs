@@ -26,20 +26,24 @@ impl Default for SemioTableArtifact {
 }
 
 impl SemioTableArtifact {
-    pub async fn to_snapshot(&self) -> SemioTableSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioTableSnapshot {
         SemioTableSnapshot { schema: self.schema.clone(), columns: self.columns.clone(), rows: self.rows.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioTableSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioTableSnapshot) -> Self {
         Self { schema: snapshot.schema, columns: snapshot.columns, rows: snapshot.rows }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioTableSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioTableSnapshot) {
         self.schema = snapshot.schema;
         self.columns = snapshot.columns;
         self.rows = snapshot.rows;
     }
 }
 
-pub async fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.table",
         artifact: schema::FacetLeaves {
@@ -87,16 +91,19 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioTableBuilderConstruction {
         /// 🏗️ Starts a fresh, empty table document.
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             Self { snapshot: SemioTableSnapshot::default() }
         }
         /// 🏗️ Appends one column, in order.
-        pub async fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
             self.snapshot.columns.push(SemioTableColumn { name: name.into(), kind });
             self
         }
         /// 🏗️ Appends one row, in order.
-        pub async fn add_row(mut self, row: SemioTableRow) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_row(mut self, row: SemioTableRow) -> Self {
             self.snapshot.rows.push(row);
             self
         }

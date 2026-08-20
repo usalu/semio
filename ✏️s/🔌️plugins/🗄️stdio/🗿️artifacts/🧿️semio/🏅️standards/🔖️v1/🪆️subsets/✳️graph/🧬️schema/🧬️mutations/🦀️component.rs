@@ -70,7 +70,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn fixture() -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioGraphSnapshot {
         SemioGraphSnapshot {
             nodes: vec![
                 SemioGraphNode {
@@ -94,13 +95,15 @@ mod tests {
     /// legitimately lands it at the end. Comparing snapshots for round-trip fidelity must therefore
     /// be order-INSENSITIVE over `nodes`/`edges` (same SET, not same SEQUENCE) — a physical `Vec`
     /// is the storage representation, not the domain's equality contract.
-    async fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
         s.nodes.sort_by(|a, b| a.id.value.cmp(&b.id.value));
         s.edges.sort_by(|a, b| a.id.value.cmp(&b.id.value));
         s
     }
 
-    async fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

@@ -25,11 +25,12 @@ pub struct TiffDimensions {
 }
 
 /// 📐️ Computes [`TiffDimensions`] from a snapshot's IFD 0 tags — pure, total, O(1).
-pub async fn compute_tiff_dimensions(snapshot: &TiffSnapshot) -> TiffDimensions {
-    let width = snapshot.width().await.unwrap_or(0);
-    let height = snapshot.height().await.unwrap_or(0);
-    let bit_depth = snapshot.tag(TAG_BITS_PER_SAMPLE).await.and_then(|tag| tag.values.first_u32()).unwrap_or(1);
-    let samples_per_pixel = snapshot.tag(TAG_SAMPLES_PER_PIXEL).await.and_then(|tag| tag.values.first_u32());
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_tiff_dimensions(snapshot: &TiffSnapshot) -> TiffDimensions {
+    let width = snapshot.width().unwrap_or(0);
+    let height = snapshot.height().unwrap_or(0);
+    let bit_depth = snapshot.tag(TAG_BITS_PER_SAMPLE).and_then(|tag| tag.values.first_u32()).unwrap_or(1);
+    let samples_per_pixel = snapshot.tag(TAG_SAMPLES_PER_PIXEL).and_then(|tag| tag.values.first_u32());
     let has_alpha = samples_per_pixel.map(|samples| samples > 3).unwrap_or(false);
     TiffDimensions { width, height, bit_depth, has_alpha, pixel_count: width as u64 * height as u64 }
 }
@@ -41,7 +42,8 @@ mod tests {
     use super::*;
     use crate::artifacts::tiff::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
 
-    async fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {
         TiffSnapshot { ifds: vec![TiffIfd { entries: tags }], ..TiffSnapshot::default() }
     }
 

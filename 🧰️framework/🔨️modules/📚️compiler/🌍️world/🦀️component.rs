@@ -36,7 +36,7 @@ pub struct FontSet {
 }
 
 impl FontSet {
-    pub async fn get(&self, role: FontRole) -> &'static [u8] {
+    pub fn get(&self, role: FontRole) -> &'static [u8] {
         match role {
             FontRole::Math => self.math,
             FontRole::Serif => self.serif,
@@ -48,7 +48,7 @@ impl FontSet {
 }
 
 /// @emoji 🏗️ The native/host font provider — bytes baked into the binary at compile time.
-pub async fn embedded_fonts() -> FontSet {
+pub fn embedded_fonts() -> FontSet {
     FontSet {
         math: include_bytes!("🗚️fonts/🔤️LibertinusMath-Regular.otf"),
         serif: include_bytes!("🗚️fonts/🔤️LibertinusSerif-Regular.otf"),
@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     #[test]
-    async fn embedded_fonts_are_non_empty_and_look_like_sfnt() {
+    fn embedded_fonts_are_non_empty_and_look_like_sfnt() {
         let fonts = embedded_fonts();
         for (role, bytes) in [(FontRole::Math, fonts.math), (FontRole::Serif, fonts.serif), (FontRole::SerifItalic, fonts.serif_italic), (FontRole::Mono, fonts.mono), (FontRole::Emoji, fonts.emoji)] {
             assert!(bytes.len() > 1024, "{role:?} font is suspiciously small: {} bytes", bytes.len());
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    async fn font_set_get_matches_field_by_role() {
+    fn font_set_get_matches_field_by_role() {
         let fonts = embedded_fonts();
         assert_eq!(fonts.get(FontRole::Math).as_ptr(), fonts.math.as_ptr());
         assert_eq!(fonts.get(FontRole::Emoji).as_ptr(), fonts.emoji.as_ptr());

@@ -218,20 +218,20 @@ pub struct FontAtlas {
 /// 🗂️ A `fontique::Collection` with no system-font scanning (deterministic, self-contained —
 /// every family this atlas ever shapes with is one of the four `FAMILY_*` names registered from
 /// `include_bytes!`-embedded assets).
-async fn empty_font_context() -> FontContext {
+fn empty_font_context() -> FontContext {
     FontContext { collection: Collection::new(CollectionOptions { shared: false, system_fonts: false }), source_cache: SourceCache::default() }
 }
 
 /// 📥️ Registers `bytes` into `collection` under a forced `family` name (ignoring whatever family
 /// name the font file's own `name` table declares), so multi-file families like Noto Emoji's 12
 /// codepoint-range buckets always merge into one fontique family.
-async fn register_family(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
+fn register_family(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
     let over = FontInfoOverride { family_name: Some(family), ..Default::default() };
     collection.register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id)
 }
 
 impl FontAtlas {
-    pub async fn builtin() -> Self {
+    pub fn builtin() -> Self {
         Self {
             width: 2048,
             height: 2048,
@@ -255,7 +255,7 @@ impl FontAtlas {
         }
     }
 
-    pub async fn take_dirty(&mut self) -> bool {
+    pub fn take_dirty(&mut self) -> bool {
         let dirty = self.dirty;
         self.dirty = false;
         dirty
@@ -264,7 +264,7 @@ impl FontAtlas {
     /// 🌈️ Same contract as `take_dirty` for the RGBA emoji atlas page (`color_pixels`). Wiring
     /// this into an actual GPU upload is a `gpu`-region call site left as a wiring request — see
     /// `GpuContext::upload_font_atlas`/`upload_emoji_atlas` in the report.
-    pub async fn take_color_dirty(&mut self) -> bool {
+    pub fn take_color_dirty(&mut self) -> bool {
         let dirty = self.color_dirty;
         self.color_dirty = false;
         dirty
@@ -276,7 +276,7 @@ impl FontAtlas {
     /// parses as a real font, replaces the embedded Anta bytes as the `FAMILY_SANS` source (this
     /// is how `from_bytes` keeps honoring whatever bytes the host fetched) — falling back to the
     /// embedded copy keeps this constructor infallible even for garbage/empty-ish input.
-    async fn shaped(primary_override: Option<&[u8]>) -> Self {
+    fn shaped(primary_override: Option<&[u8]>) -> Self {
         let mut collection = Collection::new(CollectionOptions { shared: false, system_fonts: false });
         let sans_bytes: &[u8] = match primary_override {
             Some(bytes) if SwashFontRef::from_index(bytes, 0).is_some() => bytes,
@@ -324,7 +324,7 @@ impl FontAtlas {
     /// `Shaped` mode (registering the embedded Anta/Kelly Slab/Share Tech Mono/Noto Emoji
     /// families regardless), which is a strict improvement over the old fontdue-only pipeline's
     /// "garbage bytes ⇒ crude ASCII boxes" behavior.
-    pub async fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         if bytes.is_empty() {
             return Ok(Self::builtin());
         }
@@ -333,7 +333,7 @@ impl FontAtlas {
 
     /// 🔑️ Quantizes a float px size to the glyph-cache's integer key component, so float jitter
     /// (e.g. 15.999999 vs 16.0) doesn't fragment the cache into near-duplicate entries.
-    async fn quantize_size(size_px: f32) -> u32 {
+    fn quantize_size(size_px: f32) -> u32 {
         size_px.round().max(1.0) as u32
     }
 
@@ -341,7 +341,7 @@ impl FontAtlas {
     /// `(char, size_px)` so the same character rasterized at two different sizes never returns the
     /// wrong bitmap (the pre-fix bug: a `char`-only key meant later sizes reused the first size's
     /// rasterization, blurring text at any size other than whichever was cached first).
-    pub async fn ensure_glyph(&mut self, ch: char, size_px: f32) -> &GlyphEntry {
+    pub fn ensure_glyph(&mut self, ch: char, size_px: f32) -> &GlyphEntry {
         let key = (ch, Self::quantize_size(size_px));
         if !self.glyphs.contains_key(&key) {
             self.rasterize_glyph(key);
@@ -349,7 +349,7 @@ impl FontAtlas {
         self.glyphs.get(&key).expect("glyph inserted")
     }
 
-    async fn rasterize_glyph(&mut self, key: (char, u32)) {
+    fn rasterize_glyph(&mut self, key: (char, u32)) {
         let (ch, size_px) = key;
         let glyph = match self.mode {
             AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch),
@@ -362,7 +362,7 @@ impl FontAtlas {
     /// is what performs family resolution and (via parley's built-in emoji-cluster detection)
     /// automatic fallback into the registered `GenericFamily::Emoji` family. Returns `None` when
     /// no registered font (including the emoji fallback) could shape the codepoint at all.
-    async fn shape_single_char(&mut self, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
+    fn shape_single_char(&mut self, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
         let text = ch.to_string();
         let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, &text, 1.0, true);
         builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(FAMILY_SANS))));
@@ -384,7 +384,7 @@ impl FontAtlas {
     /// embedded color bitmaps — what carries Noto Emoji's color) over the plain scalable outline,
     /// so any glyph the resolved font can render in color comes back as `Content::Color` RGBA and
     /// everything else comes back as an 8-bit alpha mask.
-    async fn render_resolved(&mut self, resolved: &ResolvedGlyph, size_px: f32) -> Option<RasterizedGlyph> {
+    fn render_resolved(&mut self, resolved: &ResolvedGlyph, size_px: f32) -> Option<RasterizedGlyph> {
         let data = resolved.font_data.data();
         let font_ref = SwashFontRef::from_index(data, resolved.font_index as usize)?;
         let mut scaler = self.scale_cx.builder(font_ref).size(size_px).hint(true).build();
@@ -405,7 +405,7 @@ impl FontAtlas {
     /// (see `rasterize_bitmap_glyph`) when no registered font — including the emoji fallback —
     /// can shape `ch` at all (e.g. scripts none of Anta/Kelly Slab/Share Tech Mono/Noto Emoji
     /// cover, such as CJK or Arabic; a pre-existing limitation this atlas doesn't newly regress).
-    async fn rasterize_shaped_glyph(&mut self, ch: char, size_px: f32) -> RasterizedGlyph {
+    fn rasterize_shaped_glyph(&mut self, ch: char, size_px: f32) -> RasterizedGlyph {
         let Some(resolved) = self.shape_single_char(ch, size_px) else {
             return self.rasterize_bitmap_glyph(ch);
         };
@@ -415,7 +415,7 @@ impl FontAtlas {
         RasterizedGlyph { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, advance: resolved.advance, is_color: false }
     }
 
-    async fn rasterize_bitmap_glyph(&self, ch: char) -> RasterizedGlyph {
+    fn rasterize_bitmap_glyph(&self, ch: char) -> RasterizedGlyph {
         let index = ch as u32;
         let glyph_index = if (32..127).contains(&index) { (index - 32) as usize } else { 0 };
         let pattern = &BITMAP_FONT[glyph_index.min(BITMAP_FONT.len() - 1)];
@@ -432,7 +432,7 @@ impl FontAtlas {
 
     /// 📐️ Bin-packs one rasterized glyph into the alpha (`pixels`) or color (`color_pixels`)
     /// atlas page, per `RasterizedGlyph::is_color`, and records the resulting `GlyphEntry`.
-    async fn pack_glyph(&mut self, key: (char, u32), glyph: RasterizedGlyph) {
+    fn pack_glyph(&mut self, key: (char, u32), glyph: RasterizedGlyph) {
         let RasterizedGlyph { bitmap, width, height, bearing_x, bearing_y, advance, is_color } = glyph;
         let (atlas_x, atlas_y) = if is_color {
             if self.color_cursor_x + width + 2 >= self.color_width {
@@ -476,7 +476,7 @@ impl FontAtlas {
         self.glyphs.insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y, is_color });
     }
 
-    pub async fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
+    pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
         for ch in text.chars() {
@@ -487,7 +487,7 @@ impl FontAtlas {
         (width, max_height.max(size))
     }
 
-    pub async fn measure_text_wrapped(&mut self, text: &str, max_width: f32, size: f32) -> (f32, f32) {
+    pub fn measure_text_wrapped(&mut self, text: &str, max_width: f32, size: f32) -> (f32, f32) {
         let mut lines = Vec::new();
         let mut current = String::new();
         for word in text.split_whitespace() {
@@ -546,7 +546,7 @@ mod tests {
     use super::FontAtlas;
 
     #[test]
-    async fn from_bytes_falls_back_to_embedded_fonts_for_unparseable_input() {
+    fn from_bytes_falls_back_to_embedded_fonts_for_unparseable_input() {
         assert!(FontAtlas::from_bytes(&[]).is_ok());
         let woff2 = b"wOF2\x00\x01\x00\x00";
         let mut atlas = FontAtlas::from_bytes(woff2).expect("unparseable bytes still register embedded fonts");
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    async fn same_char_at_different_sizes_does_not_collide_in_the_glyph_cache() {
+    fn same_char_at_different_sizes_does_not_collide_in_the_glyph_cache() {
         let mut atlas = FontAtlas::builtin();
         atlas.ensure_glyph('A', 16.0);
         assert_eq!(atlas.glyphs.len(), 1);
@@ -567,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    async fn shaped_mode_resolves_real_font_metrics_that_differ_from_the_bitmap_fallback() {
+    fn shaped_mode_resolves_real_font_metrics_that_differ_from_the_bitmap_fallback() {
         let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
         let glyph = atlas.ensure_glyph('W', 24.0);
         assert!(glyph.width > 0 && glyph.height > 0);
@@ -581,7 +581,7 @@ mod tests {
     /// like any other outline glyph. `packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty`
     /// below exercises the RGBA color-page path directly, since these assets never trigger it.
     #[test]
-    async fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
+    fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
         let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
         let glyph = atlas.ensure_glyph('😀', 32.0);
         assert!(glyph.width > 0 && glyph.height > 0, "emoji glyph must produce a non-empty raster");
@@ -590,7 +590,7 @@ mod tests {
     }
 
     #[test]
-    async fn packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty() {
+    fn packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty() {
         let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
         assert!(!atlas.take_color_dirty());
         atlas.pack_glyph(('🔥', 32), super::RasterizedGlyph { bitmap: vec![255u8; 4 * 4 * 4], width: 4, height: 4, bearing_x: 0.0, bearing_y: 0.0, advance: 32.0, is_color: true });

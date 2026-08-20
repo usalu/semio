@@ -113,7 +113,8 @@ pub enum GifMutation {
 /// every one of the 21 real variants, incl. `Some`/`None` shapes of every `Option<T>` field
 /// (`gct`, `loop_count`, `transparent_index`) — mirrors 87a's own `demo_mutation_cases()`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     // 🧭️ Deliberately a small, hand-built snapshot for `SetSnapshot`'s own payload — NOT
     // `engine::demo_gif_snapshot()` (the real, 800×800/54-frame `dancing.gif` fixture used by
     // the snapshot-facet conformance laws): embedding that full fixture inside a `SetSnapshot`
@@ -177,14 +178,15 @@ pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range frame/comment/extension indices are no-ops
 /// rather than panics -- a stale index (e.g. from a concurrent edit) should degrade gracefully.
-pub async fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
-    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
+    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -196,7 +198,7 @@ impl Mutation<GifSnapshot> for GifMutation {
     async fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             GifMutation::NoMutation => GifDiff::default(),
-            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
             GifMutation::SetGlobalColorTable { gct } => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
             GifMutation::SetBackgroundColorIndex { index } => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
@@ -211,7 +213,7 @@ impl Mutation<GifSnapshot> for GifMutation {
                     let at = (*to).min(frames.len());
                     frames.insert(at, item);
                 }
-                GifDiff { frames: Some(GifFramesDiff::between(&base.frames, &frames).await), ..Default::default() }
+                GifDiff { frames: Some(GifFramesDiff::between(&base.frames, &frames)), ..Default::default() }
             }
             GifMutation::SetFrameGeometry { index, left, top, width, height } => {
                 let d = GifFrameDiff { left: Some(*left), top: Some(*top), width: Some(*width), height: Some(*height), ..Default::default() };
@@ -360,7 +362,8 @@ impl OpBinary for GifMutation {
 mod tests {
     use super::*;
 
-    async fn sample_frame(seed: u8) -> GifFrame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_frame(seed: u8) -> GifFrame {
         GifFrame {
             left: 0,
             top: 0,
@@ -377,7 +380,8 @@ mod tests {
         }
     }
 
-    async fn base_snapshot() -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> GifSnapshot {
         GifSnapshot {
             schema: "stdio.gif.89a".into(),
             width: 2,
@@ -392,7 +396,8 @@ mod tests {
         }
     }
 
-    async fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         let diff = mutation.diff(base);
         let mutated = diff.diff().apply(base).expect("diff must apply to base");
         let inverses = mutation.inverse(base);

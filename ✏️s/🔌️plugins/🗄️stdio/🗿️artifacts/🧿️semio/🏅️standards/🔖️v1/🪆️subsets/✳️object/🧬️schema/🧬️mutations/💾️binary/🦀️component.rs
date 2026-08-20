@@ -13,7 +13,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#region 🔖️OpBinary
 const OP_KEYWORDS: [&str; 9] = ["moveObject", "rotateObject", "scaleObject", "createBrep", "deleteBrep", "createMesh", "deleteMesh", "createProperties", "deleteProperties"];
 
-async fn variant_ordinal(m: &SemioObjectMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioObjectMutation) -> u8 {
     match m {
         SemioObjectMutation::MoveObject(_) => 0,
         SemioObjectMutation::RotateObject(_) => 1,
@@ -27,9 +28,10 @@ async fn variant_ordinal(m: &SemioObjectMutation) -> u8 {
     }
 }
 
-async fn print_op_args(m: &SemioObjectMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_op_args(m: &SemioObjectMutation) -> String {
     use protocol::OpText;
-    match m.print_op().await.split_once(':') {
+    match m.print_op().split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -38,8 +40,8 @@ async fn print_op_args(m: &SemioObjectMutation) -> String {
 impl protocol::OpBinary for SemioObjectMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_op_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {

@@ -22,19 +22,23 @@ impl Default for SemioArtifact {
 }
 
 impl SemioArtifact {
-    pub async fn to_snapshot(&self) -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioSnapshot {
         SemioSnapshot { schema: self.schema.clone(), subset: self.subset.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioSnapshot) -> Self {
         Self { schema: snapshot.schema, subset: snapshot.subset }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioSnapshot) {
         self.schema = snapshot.schema;
         self.subset = snapshot.subset;
     }
 }
 
-pub async fn semio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio",
         artifact: schema::FacetLeaves {
@@ -97,7 +101,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioDiff as protocol::MutationDiff<SemioSnapshot>>::apply(&diff, &self.snapshot).await?;

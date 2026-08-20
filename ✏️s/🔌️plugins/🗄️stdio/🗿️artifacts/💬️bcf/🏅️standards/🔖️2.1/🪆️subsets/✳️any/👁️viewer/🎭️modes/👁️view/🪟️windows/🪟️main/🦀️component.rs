@@ -16,19 +16,21 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
-    TableWindowKit::window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `BcfSnapshot -> UiNode` read: one row per topic, real fields
 /// (guid/title/status/priority/creation author) straight off the document.
-pub async fn render(document: &BcfSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &BcfSnapshot) -> UiNode {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows: Vec<Vec<String>> = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     let view = TableView { columns, rows };
-    TableWindowKit::render(&view).await
+    TableWindowKit::render(&view)
 }
 //#endregion 🔖️Render
 

@@ -23,13 +23,16 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️IndexedCollectionAlgebra
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see `🧬️schema-design.md`
 /// §Absorb for the derivation. `excluded_sorted` must be sorted ascending.
-async fn count_le(sorted: &[usize], x: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -39,17 +42,20 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 
-async fn indexed_is_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn indexed_is_empty<D, T>(d: &IndexedTripleDiff<D, T>) -> bool {
     d.removed.is_empty() && d.modified.is_empty() && d.added.is_empty()
 }
 
 /// 🧭️ Position-pairwise state delta: `0..min(len)` compare as `modified`, base's tail is `removed`,
 /// other's tail is `added` — per `🧬️schema-design.md`'s `between` matching rule for index keys.
-async fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
     let min = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -65,7 +71,8 @@ async fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: imp
 
 /// ▶️ Apply semantics (normative, `🧬️schema-design.md`): modify against BASE indices, remove
 /// descending, then insert `added` ascending at `min(index, len)` against the FINAL positions.
-async fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_item: impl Fn(&D, &T) -> T) -> Vec<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_item: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(slot) = next.get_mut(m.index) {
@@ -95,7 +102,8 @@ async fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], 
 /// 🧮️ Sequential-coalesce absorb (base->mid composed with mid->after). Canonical correctness cases
 /// (Insert+Remove-before, Insert+Insert-same-index, Insert+SetField-into-added) are proven in this
 /// module's tests against the innermost `keyframes` level.
-async fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
     let removed1_sorted = {
         let mut v = mine.removed.clone();
         v.sort_unstable();
@@ -128,8 +136,8 @@ async fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             merged_added.retain(|a| a.index != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
-            merged_removed_base.push(base_index.await);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
         }
     }
     merged_removed_base.sort_unstable();
@@ -152,11 +160,11 @@ async fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, m2.diff.clone())).or_insert(m2.diff);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, m2.diff.clone())).or_insert(m2.diff);
         }
     }
     //#endregion Modified
@@ -184,7 +192,8 @@ async fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
 }
 
 /// ↩️ Diff-level inverse for an index-keyed triple, given the ORIGINAL base items.
-async fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedTripleDiff<D, T> {
     let removed_sorted = {
         let mut v = diff.removed.clone();
         v.sort_unstable();
@@ -201,7 +210,7 @@ async fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items
     for m in &diff.modified {
         if let Some(orig) = base_items.get(m.index) {
             let after_index = transport_forward(m.index, &removed_sorted, &added_index_sorted);
-            inv_modified.push(IndexModified { index: after_index.await, diff: diff_inverse(&m.diff, orig) });
+            inv_modified.push(IndexModified { index: after_index, diff: diff_inverse(&m.diff, orig) });
         }
     }
     let mut inv_added: Vec<IndexAdded<T>> = Vec::new();
@@ -217,43 +226,52 @@ async fn inverse_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base_items
 //#endregion 🔖️IndexedCollectionAlgebra
 
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -266,7 +284,8 @@ pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>
 /// lexes as ONE fused identifier token, not two; the grammar's `"c" ":" hex` production could
 /// never match a glued token otherwise. Matches `📸️snapshot/🦀️component.rs`'s own duplicated
 /// `enc_property`/`dec_property` field-for-field.
-pub(crate) async fn enc_property(p: &AnimTargetProperty) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_property(p: &AnimTargetProperty) -> String {
     match p {
         AnimTargetProperty::Translation => "t".to_string(),
         AnimTargetProperty::Rotation => "r".to_string(),
@@ -275,7 +294,8 @@ pub(crate) async fn enc_property(p: &AnimTargetProperty) -> String {
         AnimTargetProperty::Custom { name } => format!("c:{}", enc_str(name)),
     }
 }
-pub(crate) async fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
     match s {
         "t" => Ok(AnimTargetProperty::Translation),
         "r" => Ok(AnimTargetProperty::Rotation),
@@ -283,26 +303,30 @@ pub(crate) async fn dec_property(s: &str) -> Result<AnimTargetProperty, String> 
         "w" => Ok(AnimTargetProperty::Weights),
         other => {
             let rest = other.strip_prefix("c:").ok_or_else(|| format!("bad property {other:?}"))?;
-            Ok(AnimTargetProperty::Custom { name: dec_str(rest).await? })
+            Ok(AnimTargetProperty::Custom { name: dec_str(rest)? })
         }
     }
 }
-pub(crate) async fn enc_target(t: &AnimTarget) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_target(t: &AnimTarget) -> String {
     format!("[{},{}]", enc_str(&t.node), enc_property(&t.property))
 }
-pub(crate) async fn dec_target(s: &str) -> Result<AnimTarget, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_target(s: &str) -> Result<AnimTarget, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [node, prop] = parts.as_slice() else { return Err(format!("target: expected 2 fields, got {}", parts.len())) };
-    Ok(AnimTarget { node: dec_str(node).await?, property: dec_property(prop).await? })
+    Ok(AnimTarget { node: dec_str(node)?, property: dec_property(prop)? })
 }
-pub(crate) async fn enc_interpolation(i: AnimInterpolation) -> char {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_interpolation(i: AnimInterpolation) -> char {
     match i {
         AnimInterpolation::Linear => 'l',
         AnimInterpolation::Step => 's',
         AnimInterpolation::CubicSpline => 'c',
     }
 }
-pub(crate) async fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
     match s {
         "l" => Ok(AnimInterpolation::Linear),
         "s" => Ok(AnimInterpolation::Step),
@@ -310,7 +334,8 @@ pub(crate) async fn dec_interpolation(s: &str) -> Result<AnimInterpolation, Stri
         other => Err(format!("bad interpolation {other:?}")),
     }
 }
-pub(crate) async fn enc_value(v: &AnimValue) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_value(v: &AnimValue) -> String {
     match v {
         AnimValue::Scalar { value } => format!("S:{value}"),
         AnimValue::Vec3 { value } => format!("V:[{},{},{}]", value.x, value.y, value.z),
@@ -318,47 +343,54 @@ pub(crate) async fn enc_value(v: &AnimValue) -> String {
         AnimValue::Weights { values } => format!("W:{}", enc_list(values, |v| v.to_string())),
     }
 }
-pub(crate) async fn dec_value(s: &str) -> Result<AnimValue, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_value(s: &str) -> Result<AnimValue, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("value: bad shape {s:?}"))?;
     match tag {
-        "S" => Ok(AnimValue::Scalar { value: parse_f64(rest).await? }),
+        "S" => Ok(AnimValue::Scalar { value: parse_f64(rest)? }),
         "V" => {
-            let parts = split_top_level(strip_brackets(rest).await?, ',').await;
+            let parts = split_top_level(strip_brackets(rest)?, ',');
             let [x, y, z] = parts.as_slice() else { return Err(format!("vec3: expected 3 fields, got {}", parts.len())) };
-            Ok(AnimValue::Vec3 { value: SemioPoint3 { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await? } })
+            Ok(AnimValue::Vec3 { value: SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? } })
         }
         "Q" => {
-            let parts = split_top_level(strip_brackets(rest).await?, ',').await;
+            let parts = split_top_level(strip_brackets(rest)?, ',');
             let [x, y, z, w] = parts.as_slice() else { return Err(format!("quat: expected 4 fields, got {}", parts.len())) };
-            Ok(AnimValue::Quat { value: SemioQuaternion { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await?, w: parse_f64(w).await? } })
+            Ok(AnimValue::Quat { value: SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? } })
         }
-        "W" => Ok(AnimValue::Weights { values: dec_list(rest, parse_f64).await? }),
+        "W" => Ok(AnimValue::Weights { values: dec_list(rest, parse_f64)? }),
         other => Err(format!("value: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_keyframe(k: &AnimKeyframe) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_keyframe(k: &AnimKeyframe) -> String {
     format!("[{},{}]", k.t, enc_value(&k.value))
 }
-pub(crate) async fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [t, value] = parts.as_slice() else { return Err(format!("keyframe: expected 2 fields, got {}", parts.len())) };
-    Ok(AnimKeyframe { t: parse_f64(t).await?, value: dec_value(value).await? })
+    Ok(AnimKeyframe { t: parse_f64(t)?, value: dec_value(value)? })
 }
-pub(crate) async fn enc_channel(c: &AnimChannel) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_channel(c: &AnimChannel) -> String {
     format!("[{},{},{}]", enc_target(&c.target), enc_interpolation(c.interpolation), enc_list(&c.keyframes, enc_keyframe))
 }
-pub(crate) async fn dec_channel(s: &str) -> Result<AnimChannel, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_channel(s: &str) -> Result<AnimChannel, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [target, interp, kfs] = parts.as_slice() else { return Err(format!("channel: expected 3 fields, got {}", parts.len())) };
-    Ok(AnimChannel { target: dec_target(target).await?, interpolation: dec_interpolation(interp).await?, keyframes: dec_list(kfs, dec_keyframe).await? })
+    Ok(AnimChannel { target: dec_target(target)?, interpolation: dec_interpolation(interp)?, keyframes: dec_list(kfs, dec_keyframe)? })
 }
-pub(crate) async fn enc_timeline(t: &AnimTimeline) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_timeline(t: &AnimTimeline) -> String {
     format!("[{},{}]", encode_option(&t.name, |n| enc_str(n)), enc_list(&t.channels, enc_channel))
 }
-pub(crate) async fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, channels] = parts.as_slice() else { return Err(format!("timeline: expected 2 fields, got {}", parts.len())) };
-    Ok(AnimTimeline { name: decode_option(name, dec_str).await?, channels: dec_list(channels, dec_channel).await? })
+    Ok(AnimTimeline { name: decode_option(name, dec_str)?, channels: dec_list(channels, dec_channel)? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -373,13 +405,16 @@ pub struct AnimKeyframeDiff {
 }
 
 impl AnimKeyframeDiff {
-    async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
         self.t.is_none() && self.value.is_none()
     }
-    async fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn between(base: &AnimKeyframe, other: &AnimKeyframe) -> Self {
         Self { t: (base.t != other.t).then_some(other.t), value: (base.value != other.value).then_some(other.value.clone()) }
     }
-    async fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply(&self, base: &AnimKeyframe) -> AnimKeyframe {
         let mut next = base.clone();
         if let Some(v) = self.t {
             next.t = v;
@@ -389,10 +424,12 @@ impl AnimKeyframeDiff {
         }
         next
     }
-    async fn inverse(&self, base: &AnimKeyframe) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &AnimKeyframe) -> Self {
         Self { t: self.t.map(|_| base.t), value: self.value.as_ref().map(|_| base.value.clone()) }
     }
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.t.is_some() {
             self.t = other.t;
         }
@@ -402,7 +439,8 @@ impl AnimKeyframeDiff {
     }
 }
 
-async fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.t {
         parts.push(format!("T:{v}"));
@@ -412,8 +450,9 @@ async fn enc_keyframe_diff(d: &AnimKeyframeDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = AnimKeyframeDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -421,8 +460,8 @@ async fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("keyframe diff: bad entry {entry:?}"))?;
         match tag {
-            "T" => d.t = Some(parse_f64(val).await?),
-            "Y" => d.value = Some(dec_value(val).await?),
+            "T" => d.t = Some(parse_f64(val)?),
+            "Y" => d.value = Some(dec_value(val)?),
             other => return Err(format!("keyframe diff: unknown tag {other:?}")),
         }
     }
@@ -443,14 +482,17 @@ pub struct AnimChannelDiff {
 }
 
 impl AnimChannelDiff {
-    async fn is_empty(&self) -> bool {
-        self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().map(indexed_is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
+        self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
-    async fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
         let kf = between_indexed(&base.keyframes, &other.keyframes, AnimKeyframeDiff::between, AnimKeyframeDiff::is_empty);
         Self { target: (base.target != other.target).then_some(other.target.clone()), interpolation: (base.interpolation != other.interpolation).then_some(other.interpolation), keyframes: (!indexed_is_empty(&kf)).then_some(kf) }
     }
-    async fn apply(&self, base: &AnimChannel) -> AnimChannel {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply(&self, base: &AnimChannel) -> AnimChannel {
         let mut next = base.clone();
         if let Some(v) = &self.target {
             next.target = v.clone();
@@ -459,14 +501,16 @@ impl AnimChannelDiff {
             next.interpolation = v;
         }
         if let Some(d) = &self.keyframes {
-            next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply(item)).await;
+            next.keyframes = apply_indexed(d, &next.keyframes, |d, item| d.apply(item));
         }
         next
     }
-    async fn inverse(&self, base: &AnimChannel) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &AnimChannel) -> Self {
         Self { target: self.target.as_ref().map(|_| base.target.clone()), interpolation: self.interpolation.map(|_| base.interpolation), keyframes: self.keyframes.as_ref().map(|d| inverse_indexed(d, &base.keyframes, |d, item| d.inverse(item))) }
     }
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.target.is_some() {
             self.target = other.target;
         }
@@ -474,14 +518,15 @@ impl AnimChannelDiff {
             self.interpolation = other.interpolation;
         }
         match (&mut self.keyframes, other.keyframes) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)).await,
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
     }
 }
 
-async fn enc_channel_diff(d: &AnimChannelDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_channel_diff(d: &AnimChannelDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.target {
         parts.push(format!("G:{}", enc_target(v)));
@@ -494,8 +539,9 @@ async fn enc_channel_diff(d: &AnimChannelDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = AnimChannelDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -503,9 +549,9 @@ async fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("channel diff: bad entry {entry:?}"))?;
         match tag {
-            "G" => d.target = Some(dec_target(val).await?),
-            "I" => d.interpolation = Some(dec_interpolation(val).await?),
-            "K" => d.keyframes = Some(dec_indexed_triple(strip_brackets(val).await?, dec_keyframe_diff, dec_keyframe).await?),
+            "G" => d.target = Some(dec_target(val)?),
+            "I" => d.interpolation = Some(dec_interpolation(val)?),
+            "K" => d.keyframes = Some(dec_indexed_triple(strip_brackets(val)?, dec_keyframe_diff, dec_keyframe)?),
             other => return Err(format!("channel diff: unknown tag {other:?}")),
         }
     }
@@ -525,39 +571,45 @@ pub struct AnimTimelineDiff {
 }
 
 impl AnimTimelineDiff {
-    async fn is_empty(&self) -> bool {
-        self.name.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
+        self.name.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
-    async fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
         let ch = between_indexed(&base.channels, &other.channels, AnimChannelDiff::between, AnimChannelDiff::is_empty);
         Self { name: (base.name != other.name).then_some(other.name.clone()), channels: (!indexed_is_empty(&ch)).then_some(ch) }
     }
-    async fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply(&self, base: &AnimTimeline) -> AnimTimeline {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
         }
         if let Some(d) = &self.channels {
-            next.channels = apply_indexed(d, &next.channels, |d, item| d.apply(item)).await;
+            next.channels = apply_indexed(d, &next.channels, |d, item| d.apply(item));
         }
         next
     }
-    async fn inverse(&self, base: &AnimTimeline) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &AnimTimeline) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), channels: self.channels.as_ref().map(|d| inverse_indexed(d, &base.channels, |d, item| d.inverse(item))) }
     }
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
         match (&mut self.channels, other.channels) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)).await,
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
     }
 }
 
-async fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.name {
         parts.push(format!("N:{}", encode_option(v, |n| enc_str(n))));
@@ -567,8 +619,9 @@ async fn enc_timeline_diff(d: &AnimTimelineDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = AnimTimelineDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -576,8 +629,8 @@ async fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("timeline diff: bad entry {entry:?}"))?;
         match tag {
-            "N" => d.name = Some(decode_option(val, dec_str).await?),
-            "C" => d.channels = Some(dec_indexed_triple(strip_brackets(val).await?, dec_channel_diff, dec_channel).await?),
+            "N" => d.name = Some(decode_option(val, dec_str)?),
+            "C" => d.channels = Some(dec_indexed_triple(strip_brackets(val)?, dec_channel_diff, dec_channel)?),
             other => return Err(format!("timeline diff: unknown tag {other:?}")),
         }
     }
@@ -598,8 +651,9 @@ pub struct SemioAnimationDiff {
 }
 
 impl SemioAnimationDiff {
-    pub async fn is_empty_diff(&self) -> bool {
-        self.timelines.as_ref().map(indexed_is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
+        self.timelines.as_ref().map(indexed_is_empty).unwrap_or(true)
     }
 }
 
@@ -607,15 +661,15 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
     async fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"]).await?;
-            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply(item)).await;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
+            next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply(item));
         }
         Ok(next)
     }
 
     async fn absorb(&mut self, other: Self) {
         match (&mut self.timelines, other.timelines) {
-            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)).await,
+            (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -633,13 +687,14 @@ impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimationSnapshot) -> SemioAnimationDiff {
-    <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimationSnapshot) -> SemioAnimationDiff {
+    <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 
@@ -651,18 +706,20 @@ pub async fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAn
 /// are lowercase hex — no escaping needed, matching this artifact's own `ArtifactDsl` and the
 /// gif 89a precedent. Binary = the text bytes verbatim (same simplification `WriterDiff`'s
 /// hand-rolled `DiffCodec` and gif 89a's own `GifDiff` use).
-async fn print_semio_animation_diff(d: &SemioAnimationDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_animation_diff(d: &SemioAnimationDiff) -> String {
     match &d.timelines {
         Some(v) => format!("timelines{{{}}}", enc_indexed_triple(v, enc_timeline_diff, enc_timeline)),
         None => String::new(),
     }
 }
-async fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> {
     if line.is_empty() {
         return Ok(SemioAnimationDiff::default());
     }
     let body = line.strip_prefix("timelines{").and_then(|s| s.strip_suffix('}')).ok_or_else(|| format!("diff: bad shape {line:?}"))?;
-    let d = dec_indexed_triple(body, dec_timeline_diff, dec_timeline).await?;
+    let d = dec_indexed_triple(body, dec_timeline_diff, dec_timeline)?;
     Ok(SemioAnimationDiff { timelines: (!indexed_is_empty(&d)).then_some(d) })
 }
 
@@ -676,17 +733,17 @@ const DIFF_BINARY_FORMAT: u8 = 1;
 
 impl DiffCodec for SemioAnimationDiff {
     async fn print_diff(&self) -> String {
-        print_semio_animation_diff(self).await
+        print_semio_animation_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_animation_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_animation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![DIFF_BINARY_FORMAT];
         match &self.timelines {
             Some(v) => {
                 out.push(1u8);
-                out.extend_from_slice(enc_indexed_triple(v, enc_timeline_diff, enc_timeline).await.as_bytes());
+                out.extend_from_slice(enc_indexed_triple(v, enc_timeline_diff, enc_timeline).as_bytes());
             }
             None => out.push(0u8),
         }
@@ -702,7 +759,7 @@ impl DiffCodec for SemioAnimationDiff {
             0 => None,
             1 => {
                 let text = std::str::from_utf8(rest).map_err(|e| malformed("diff payload utf8", e.to_string()))?;
-                Some(dec_indexed_triple(text, dec_timeline_diff, dec_timeline).await.map_err(|e| malformed("diff payload", e))?)
+                Some(dec_indexed_triple(text, dec_timeline_diff, dec_timeline).map_err(|e| malformed("diff payload", e))?)
             }
             other => return Err(malformed("diff presence", format!("unknown presence byte {other}"))),
         };
@@ -716,15 +773,18 @@ impl DiffCodec for SemioAnimationDiff {
 /// every prior semio wave's report documents (a private item of a child `mod tests` isn't visible
 /// to a sibling module).
 #[cfg(test)]
-pub(crate) async fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
     AnimKeyframe { t, value }
 }
 #[cfg(test)]
-pub(crate) async fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
     AnimChannel { target: AnimTarget { node: node.into(), property }, interpolation, keyframes }
 }
 #[cfg(test)]
-pub(crate) async fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
     AnimTimeline { name: name.map(String::from), channels }
 }
 
@@ -732,7 +792,8 @@ pub(crate) async fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> 
 /// single source of truth for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`,
 /// reused by this module's own `diff_codec_text_binary_roundtrip_law` test below.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
     let a = SemioAnimationSnapshot {
         timelines: vec![timeline(Some("gone"), vec![]), timeline(Some("kept"), vec![channel("n", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])],
         ..SemioAnimationSnapshot::default()

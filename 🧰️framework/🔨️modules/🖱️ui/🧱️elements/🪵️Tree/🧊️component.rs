@@ -26,12 +26,12 @@ use crate::wgpu::theme::Theme;
 use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
 
-pub(crate) async fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
+pub(crate) fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
     let collapsed = HashMap::new();
     measure_tree_sections_width_state(sections, atlas, theme, &collapsed, 0)
 }
 
-pub(crate) async fn measure_tree_sections_width_state<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+pub(crate) fn measure_tree_sections_width_state<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
     let mut max_w = 0.0f32;
     for section in sections {
         let section_key = format!("section.{}", section.id);
@@ -49,7 +49,7 @@ pub(crate) async fn measure_tree_sections_width_state<E>(sections: &[TreeSection
     max_w.max(120.0)
 }
 
-pub(crate) async fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+pub(crate) fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
     if item.dimmed {
         return 0.0;
     }
@@ -76,12 +76,12 @@ pub(crate) async fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut F
     w
 }
 
-pub(crate) async fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
+pub(crate) fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
     let collapsed = HashMap::new();
     measure_tree_sections_state(sections, &collapsed)
 }
 
-pub(crate) async fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashMap<String, bool>) -> f32 {
+pub(crate) fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashMap<String, bool>) -> f32 {
     let mut height = 0.0;
     for section in sections {
         height += TREE_ROW_HEIGHT;
@@ -97,7 +97,7 @@ pub(crate) async fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], 
     height
 }
 
-pub(crate) async fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
+pub(crate) fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
     if item.dimmed {
         return 0.0;
     }
@@ -112,7 +112,7 @@ pub(crate) async fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &
     height
 }
 
-pub(crate) async fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &[String], highlighted_ids: &[String], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &[String], highlighted_ids: &[String], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let mut y = bounds.y;
     for section in sections {
         let section_key = format!("section.{}", section.id);
@@ -131,7 +131,7 @@ pub(crate) async fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_
     }
 }
 
-pub(crate) async fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bounds: Rect, y: f32, collapsed: bool, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bounds: Rect, y: f32, collapsed: bool, ctx: &mut WidgetContext<'_, E>) {
     let row = Rect::new(bounds.x, y, bounds.w, TREE_ROW_HEIGHT);
     let gutter_w = TREE_TOGGLE_WIDTH;
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
@@ -149,7 +149,7 @@ pub(crate) async fn render_tree_section_header<E: Clone>(section: &TreeSection<E
     }
 }
 
-pub(crate) async fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>, depth: u32, selected_ids: &[String], highlighted_ids: &[String], is_last_at_level: &[bool]) -> f32 {
+pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>, depth: u32, selected_ids: &[String], highlighted_ids: &[String], is_last_at_level: &[bool]) -> f32 {
     if item.dimmed {
         return 0.0;
     }

@@ -29,13 +29,16 @@ impl Default for SemioCadArtifact {
 }
 
 impl SemioCadArtifact {
-    pub async fn to_snapshot(&self) -> SemioCadSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioCadSnapshot {
         SemioCadSnapshot { schema: self.schema.clone(), layers: self.layers.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
         Self { schema: snapshot.schema, layers: snapshot.layers, blocks: snapshot.blocks, entities: snapshot.entities }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
         self.schema = snapshot.schema;
         self.layers = snapshot.layers;
         self.blocks = snapshot.blocks;
@@ -43,7 +46,8 @@ impl SemioCadArtifact {
     }
 }
 
-pub async fn semio_cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.cad",
         artifact: schema::FacetLeaves {
@@ -106,7 +110,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_cad_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, &self.snapshot).await?;

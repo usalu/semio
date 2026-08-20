@@ -55,7 +55,8 @@ pub mod derived_composition {
     /// concern, out of scope for a pure decode-time validator).
     pub struct SemioObjectValidator;
 
-    async fn wrong_kind(field: &str, expected_subset: &str, target: &store::os_io::ArtifactRef) -> Option<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn wrong_kind(field: &str, expected_subset: &str, target: &store::os_io::ArtifactRef) -> Option<dsl::Diagnostic> {
         if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.subset != expected_subset {
             Some(dsl::Diagnostic::error(
                 "stdio.semio_object.validate-child-kind-mismatch",
@@ -92,33 +93,37 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioObjectValidator>)
     }
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
-    async fn io_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_entries() -> &'static [ComposerEntry] {
         &[]
     }
     //#endregion 🔖️IoEntries
 
     //#region 🔖️Register
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::object::schema::semio_object_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::object::schema::semio_object_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioObjectSnapshot, crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation>(
             crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.object.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::object::schema::inferences::semio_object_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::object::schema::inferences::semio_object_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 

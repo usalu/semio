@@ -10,16 +10,18 @@ pub struct GltfUnbindSceneRootNodePayload {
     pub scene: usize,
     pub node: usize,
 }
-pub async fn validate(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
-    checked_index(payload.scene, base.document.scenes.len(), "document/scenes").await?;
-    checked_index(payload.node, base.document.nodes.len(), "document/nodes").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
     if !base.document.scenes[payload.scene].nodes.contains(&payload.node) {
-        return Err(reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene").await);
+        return Err(reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"));
     }
     Ok(())
 }
-pub async fn apply(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
     let mut next = base.clone();
     let position =
         next.document.scenes[payload.scene].nodes.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?;

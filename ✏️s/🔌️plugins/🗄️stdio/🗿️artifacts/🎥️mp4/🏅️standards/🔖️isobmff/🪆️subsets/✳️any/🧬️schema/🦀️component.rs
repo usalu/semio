@@ -21,13 +21,16 @@ pub struct Mp4Artifact {
 }
 
 impl Mp4Artifact {
-    pub async fn to_snapshot(&self) -> Mp4Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> Mp4Snapshot {
         Mp4Snapshot { schema: self.schema.clone(), ftyp: self.ftyp.clone(), movie: self.movie.clone(), tracks: self.tracks.clone() }
     }
-    pub async fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
         Self { schema: snapshot.schema, ftyp: snapshot.ftyp, movie: snapshot.movie, tracks: snapshot.tracks }
     }
-    pub async fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
         self.ftyp = snapshot.ftyp;
         self.movie = snapshot.movie;
@@ -35,7 +38,8 @@ impl Mp4Artifact {
     }
 }
 
-pub async fn mp4_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mp4_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.mp4",
         artifact: schema::FacetLeaves {

@@ -8,10 +8,12 @@ pub struct GltfAspectRatiosInference;
 impl GltfInferenceLeaf for GltfAspectRatiosInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.aspect-ratios.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.aspect-ratios.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub async fn descriptor() -> GltfInferenceLeafDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfAspectRatiosInference::DESCRIPTOR
 }
-pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
     exact(
@@ -19,12 +21,14 @@ pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Gltf
         GltfUnit::Unitless,
         context.sample_count,
         Some(context.topology),
-    ).await
+    )
 }
-pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
-pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.proportion.aspect_ratios)
 }
 

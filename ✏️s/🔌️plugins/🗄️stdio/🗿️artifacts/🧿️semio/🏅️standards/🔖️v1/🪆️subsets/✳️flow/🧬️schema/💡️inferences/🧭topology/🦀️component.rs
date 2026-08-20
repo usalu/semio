@@ -37,7 +37,8 @@ impl Default for SemioFlowTopology {
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub async fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTopology {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTopology {
     let node_count = snapshot.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = snapshot.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
     let mut indegree: BTreeMap<String, u32> = snapshot.nodes.iter().map(|node| (node.id.clone(), 0u32)).collect();
@@ -90,15 +91,18 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 
-    async fn node(id: &str) -> FlowNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(id: &str) -> FlowNode {
         FlowNode { id: id.into(), kind: "task".into(), label: id.into(), params: Vec::new(), position: Default::default() }
     }
 
-    async fn edge(id: &str, from_node: &str, to_node: &str) -> FlowEdge {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge(id: &str, from_node: &str, to_node: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: "data".into() }
     }
 
-    async fn chain_snapshot() -> SemioFlowSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn chain_snapshot() -> SemioFlowSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }

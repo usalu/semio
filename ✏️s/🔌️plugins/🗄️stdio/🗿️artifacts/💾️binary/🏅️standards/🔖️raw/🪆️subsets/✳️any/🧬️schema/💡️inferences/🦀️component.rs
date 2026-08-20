@@ -29,7 +29,7 @@ pub struct BinaryInference {
 
 impl protocol::Inference<BinarySnapshot> for BinaryInference {
     async fn infer(snapshot: &BinarySnapshot) -> Self {
-        Self { extent: compute_binary_extent(snapshot).await }
+        Self { extent: compute_binary_extent(snapshot) }
     }
 }
 
@@ -68,7 +68,8 @@ impl ArtifactInferrer for crate::artifacts::binary::standards::v_raw::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `binary_artifact_schema_descriptor`'s registration.
-pub async fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn binary_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.binary.inference",
         inference: schema::FacetLeaves {
@@ -140,7 +141,8 @@ mod tests {
 
     //#region 🔖️FieldSweep
     /// 🧹 Canonical "every mutable field differs" snapshot A.
-    async fn sweep_a() -> BinarySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> BinarySnapshot {
         BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 3, 4, 5, 6, 7, 8] }
     }
 
@@ -148,7 +150,8 @@ mod tests {
     /// inserted mid-buffer), a pure-removal region (bytes 3,4 dropped), and a pure-replacement
     /// region (byte 8 → 88) -- one splice can't express all three at once, exercising the
     /// splice mechanism's full range per the artifact's own field-sweep note.
-    async fn sweep_b() -> BinarySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> BinarySnapshot {
         BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 100, 5, 6, 7, 88] }
     }
 

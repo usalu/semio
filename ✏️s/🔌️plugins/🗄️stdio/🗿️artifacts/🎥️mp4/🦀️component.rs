@@ -24,7 +24,8 @@ pub const MP4_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standar
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.mp4".into(),
         name: "Mp4".into(),
@@ -53,19 +54,21 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// call did — mp4 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("mp4", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("mp4", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("mp4").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("mp4")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
-        .await.composers(crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry::entries())
-        .await.document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA)
-        .await.try_build()
+        .schema(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
+        .composers(crate::artifacts::mp4::standards::isobmff::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA)
+        .try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
@@ -81,12 +84,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("Mp4Composer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(std_composer::entries());
     }
 }

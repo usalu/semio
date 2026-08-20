@@ -255,11 +255,11 @@ fn author_spec() -> RecordSpec {
     }
 }
 
-async fn doc_spec() -> RecordSpec {
+fn doc_spec() -> RecordSpec {
     RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
 }
 
-async fn edit_spec() -> RecordSpec {
+fn edit_spec() -> RecordSpec {
     RecordSpec::new(
         Some("edit"),
         RecordLayout::Inline,
@@ -274,7 +274,7 @@ async fn edit_spec() -> RecordSpec {
     )
 }
 
-async fn change_spec() -> RecordSpec {
+fn change_spec() -> RecordSpec {
     RecordSpec::new(
         Some("change"),
         RecordLayout::Inline,
@@ -287,7 +287,7 @@ async fn change_spec() -> RecordSpec {
     )
 }
 
-async fn checkpoint_spec() -> RecordSpec {
+fn checkpoint_spec() -> RecordSpec {
     RecordSpec::new(
         Some("checkpoint"),
         RecordLayout::Inline,
@@ -302,7 +302,7 @@ async fn checkpoint_spec() -> RecordSpec {
     )
 }
 
-async fn alternative_spec() -> RecordSpec {
+fn alternative_spec() -> RecordSpec {
     RecordSpec::new(
         Some("alternative"),
         RecordLayout::Inline,
@@ -310,13 +310,13 @@ async fn alternative_spec() -> RecordSpec {
     )
 }
 
-async fn active_spec() -> RecordSpec {
+fn active_spec() -> RecordSpec {
     RecordSpec::new(Some("active"), RecordLayout::Inline, vec![FieldSpec::new(F_ACTIVE_ID, "", Shape::Text).positional(0)])
 }
 
 /// @emoji 🎯️ `cursor applied=[...] redo=[...] checkpoint=<id>` — carries the FULL applied/redo
 /// edit-id lists (see `HistoryCursor`'s doc for why a single marker id is insufficient).
-async fn cursor_spec() -> RecordSpec {
+fn cursor_spec() -> RecordSpec {
     RecordSpec::new(
         Some("cursor"),
         RecordLayout::Inline,
@@ -324,29 +324,29 @@ async fn cursor_spec() -> RecordSpec {
     )
 }
 
-async fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
+fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
     RecordValue { fields: fields.into_iter().collect() }
 }
 
-async fn field_text(record: &RecordValue, id: u16) -> Option<String> {
+fn field_text(record: &RecordValue, id: u16) -> Option<String> {
     match record.get(id) {
         Some(FieldValue::Text(s)) => Some(s.clone()),
         _ => None,
     }
 }
 
-async fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<String, ProtocolError> {
-    field_text(record, id).await.ok_or_else(|| ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() })
+fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<String, ProtocolError> {
+    field_text(record, id).ok_or_else(|| ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() })
 }
 
-async fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
+fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
     match record.get(id) {
         Some(FieldValue::List(items)) => items.iter().filter_map(|v| if let FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
         _ => Vec::new(),
     }
 }
 
-async fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
+fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
     match record.get(id) {
         Some(FieldValue::List(items)) => {
             // 🚫️async: R10 shape 1 — `field_text` is async now, but `filter_map`'s closure is sync;
@@ -354,7 +354,7 @@ async fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
             let mut out = Vec::new();
             for v in items.iter() {
                 let FieldValue::Record(rec) = v else { continue };
-                let (Some(id), Some(name)) = (field_text(rec, F_AUTHOR_ID).await, field_text(rec, F_AUTHOR_NAME).await) else { continue };
+                let (Some(id), Some(name)) = (field_text(rec, F_AUTHOR_ID), field_text(rec, F_AUTHOR_NAME)) else { continue };
                 out.push(HistoryAuthor { id, name });
             }
             out
@@ -373,7 +373,7 @@ fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
 /// op line (never interpreted). Unlike `crate::os_store::replay_ops`, this never replays operation semantics
 /// (ops are opaque here) — `HistoryEdit::meta`/inverse are simply never populated from text.
-pub async fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
+pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
         id: String,
         actor: Option<String>,
@@ -387,7 +387,7 @@ pub async fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     let mut pending: Option<PendingEdit> = None;
     let mut forwards: Vec<OpPayload> = Vec::new();
 
-    async fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut Vec<HistoryEdit>) {
+    fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut Vec<HistoryEdit>) {
         if let Some(header) = pending.take() {
             edits.push(HistoryEdit {
                 id: header.id,
@@ -412,68 +412,68 @@ pub async fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
             forwards.push(OpPayload { text: Some(trimmed.to_string()), binary: None });
             continue;
         }
-        flush(&mut pending, &mut forwards, &mut log.edits).await;
+        flush(&mut pending, &mut forwards, &mut log.edits);
 
         let opts = ParseOptions::default();
         let keyword = trimmed.split_whitespace().next().unwrap_or("");
         match keyword {
             "doc" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &doc_spec().await, &opts).await.map_err(text_error_to_protocol)?;
-                log.doc_id = required_text(&record, F_DOC_ID, "doc id").await?;
-                log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema").await?;
+                let record = crate::os_dsl::schema::parse(trimmed, &doc_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.doc_id = required_text(&record, F_DOC_ID, "doc id")?;
+                log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema")?;
             }
             "edit" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &edit_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &edit_spec(), &opts).map_err(text_error_to_protocol)?;
                 pending = Some(PendingEdit {
-                    id: required_text(&record, F_EDIT_ID, "edit id").await?,
-                    started_at: required_text(&record, F_EDIT_STARTED, "edit started").await?,
-                    actor: field_text(&record, F_EDIT_ACTOR).await,
-                    finished_at: field_text(&record, F_EDIT_FINISHED).await,
-                    coalesce_key: field_text(&record, F_EDIT_KEY).await,
-                    description: field_text(&record, F_EDIT_DESCRIPTION).await,
+                    id: required_text(&record, F_EDIT_ID, "edit id")?,
+                    started_at: required_text(&record, F_EDIT_STARTED, "edit started")?,
+                    actor: field_text(&record, F_EDIT_ACTOR),
+                    finished_at: field_text(&record, F_EDIT_FINISHED),
+                    coalesce_key: field_text(&record, F_EDIT_KEY),
+                    description: field_text(&record, F_EDIT_DESCRIPTION),
                 });
                 forwards = Vec::new();
             }
             "change" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &change_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &change_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.changes.push(HistoryChange {
-                    id: required_text(&record, F_CHANGE_ID, "change id").await?,
-                    saved_at: required_text(&record, F_CHANGE_SAVED, "change saved").await?,
-                    edit_ids: field_text_list(&record, F_CHANGE_EDITS).await,
-                    description: field_text(&record, F_CHANGE_DESCRIPTION).await,
+                    id: required_text(&record, F_CHANGE_ID, "change id")?,
+                    saved_at: required_text(&record, F_CHANGE_SAVED, "change saved")?,
+                    edit_ids: field_text_list(&record, F_CHANGE_EDITS),
+                    description: field_text(&record, F_CHANGE_DESCRIPTION),
                 });
             }
             "checkpoint" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &checkpoint_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &checkpoint_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.checkpoints.push(HistoryCheckpoint {
-                    id: required_text(&record, F_CHECKPOINT_ID, "checkpoint id").await?,
-                    timestamp: required_text(&record, F_CHECKPOINT_AT, "checkpoint at").await?,
-                    change_ids: field_text_list(&record, F_CHECKPOINT_CHANGES).await,
-                    parent_id: field_text(&record, F_CHECKPOINT_PARENT).await,
-                    authors: field_authors(&record, F_CHECKPOINT_BY).await,
-                    message: field_text(&record, F_CHECKPOINT_MESSAGE).await,
+                    id: required_text(&record, F_CHECKPOINT_ID, "checkpoint id")?,
+                    timestamp: required_text(&record, F_CHECKPOINT_AT, "checkpoint at")?,
+                    change_ids: field_text_list(&record, F_CHECKPOINT_CHANGES),
+                    parent_id: field_text(&record, F_CHECKPOINT_PARENT),
+                    authors: field_authors(&record, F_CHECKPOINT_BY),
+                    message: field_text(&record, F_CHECKPOINT_MESSAGE),
                 });
             }
             "alternative" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &alternative_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &alternative_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.alternatives.push(HistoryAlternative {
-                    id: required_text(&record, F_ALTERNATIVE_ID, "alternative id").await?,
-                    name: required_text(&record, F_ALTERNATIVE_NAME, "alternative name").await?,
-                    checkpoint_ids: field_text_list(&record, F_ALTERNATIVE_CHECKPOINTS).await,
+                    id: required_text(&record, F_ALTERNATIVE_ID, "alternative id")?,
+                    name: required_text(&record, F_ALTERNATIVE_NAME, "alternative name")?,
+                    checkpoint_ids: field_text_list(&record, F_ALTERNATIVE_CHECKPOINTS),
                 });
             }
             "active" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &active_spec().await, &opts).await.map_err(text_error_to_protocol)?;
-                log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id").await?);
+                let record = crate::os_dsl::schema::parse(trimmed, &active_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id")?);
             }
             "cursor" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &cursor_spec().await, &opts).await.map_err(text_error_to_protocol)?;
-                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED).await, redo_edit_ids: field_text_list(&record, F_CURSOR_REDO).await, checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT).await });
+                let record = crate::os_dsl::schema::parse(trimmed, &cursor_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED), redo_edit_ids: field_text_list(&record, F_CURSOR_REDO), checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT) });
             }
             other => return Err(ProtocolError::Malformed { what: "ops text line", offset: 0, detail: format!("unknown line keyword '{other}'") }),
         }
     }
-    flush(&mut pending, &mut forwards, &mut log.edits).await;
+    flush(&mut pending, &mut forwards, &mut log.edits);
     Ok(log)
 }
 
@@ -483,11 +483,11 @@ pub async fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
 /// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
-pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
+pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let mut out = String::new();
 
-    let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]).await;
-    out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec().await, JoinMode::Inline).await);
+    let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]);
+    out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec(), JoinMode::Inline));
     out.push('\n');
 
     for edit in &log.edits {
@@ -504,7 +504,7 @@ pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(description) = &edit.description {
             fields.push((F_EDIT_DESCRIPTION, FieldValue::Text(description.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &edit_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &edit_spec(), JoinMode::Inline));
         out.push('\n');
         for op in &edit.ops {
             let Some(text) = &op.text else {
@@ -521,7 +521,7 @@ pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(description) = &change.description {
             fields.push((F_CHANGE_DESCRIPTION, FieldValue::Text(description.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &change_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &change_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
@@ -538,13 +538,13 @@ pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         // hoisted into a plain loop so each author record can be awaited.
         let mut author_records = Vec::with_capacity(checkpoint.authors.len());
         for a in &checkpoint.authors {
-            author_records.push(FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))]).await));
+            author_records.push(FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))])));
         }
         fields.push((F_CHECKPOINT_BY, FieldValue::List(author_records)));
         if let Some(message) = &checkpoint.message {
             fields.push((F_CHECKPOINT_MESSAGE, FieldValue::Text(message.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &checkpoint_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &checkpoint_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
@@ -554,12 +554,12 @@ pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
             (F_ALTERNATIVE_NAME, FieldValue::Text(alternative.name.clone())),
             (F_ALTERNATIVE_CHECKPOINTS, FieldValue::List(alternative.checkpoint_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
         ];
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &alternative_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &alternative_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
     if let Some(active_id) = &log.active_alternative_id {
-        out.push_str(&crate::os_dsl::schema::print(&record_with(vec![(F_ACTIVE_ID, FieldValue::Text(active_id.clone()))]).await, &active_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(vec![(F_ACTIVE_ID, FieldValue::Text(active_id.clone()))]), &active_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
@@ -569,7 +569,7 @@ pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(checkpoint_id) = &cursor.checkpoint_id {
             fields.push((F_CURSOR_CHECKPOINT, FieldValue::Text(checkpoint_id.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &cursor_spec().await, JoinMode::Inline).await);
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &cursor_spec(), JoinMode::Inline));
         out.push('\n');
     }
 
@@ -2367,39 +2367,39 @@ mod tests {
         for edit in &mut log.edits {
             edit.meta = None;
         }
-        let text = print_ops_text(&log).await.unwrap();
-        let parsed = parse_ops_text(&text).await.unwrap();
+        let text = print_ops_text(&log).unwrap();
+        let parsed = parse_ops_text(&text).unwrap();
         assert_eq!(parsed, log);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ops_text_is_a_fixpoint_under_reprint() {
         let log = sample_log().await;
-        let text = print_ops_text(&log).await.unwrap();
-        let reparsed = parse_ops_text(&text).await.unwrap();
-        assert_eq!(print_ops_text(&reparsed).await.unwrap(), text);
+        let text = print_ops_text(&log).unwrap();
+        let reparsed = parse_ops_text(&text).unwrap();
+        assert_eq!(print_ops_text(&reparsed).unwrap(), text);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ops_text_skips_comments_and_blank_lines() {
         let text = "doc doc-1 schema=s1\n\n# a comment\nactive alt-1\n";
-        let log = parse_ops_text(text).await.unwrap();
+        let log = parse_ops_text(text).unwrap();
         assert_eq!(log.doc_id, "doc-1");
         assert_eq!(log.active_alternative_id.as_deref(), Some("alt-1"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ops_text_rejects_unknown_line_keyword() {
-        let err = parse_ops_text("doc doc-1 schema=s1\nbogus x\n").await.unwrap_err();
+        let err = parse_ops_text("doc doc-1 schema=s1\nbogus x\n").unwrap_err();
         assert!(matches!(err, ProtocolError::Malformed { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ops_text_edit_without_active_line_leaves_none() {
         let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), active_alternative_id: None, ..Default::default() };
-        let text = print_ops_text(&log).await.unwrap();
+        let text = print_ops_text(&log).unwrap();
         assert!(!text.contains("active"));
-        assert_eq!(parse_ops_text(&text).await.unwrap().active_alternative_id, None);
+        assert_eq!(parse_ops_text(&text).unwrap().active_alternative_id, None);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2411,18 +2411,18 @@ mod tests {
         // A single tail-edit marker cannot represent this: edit-1 undone (moved to redo), then a
         // later apply produced edit-2 — edit-1 precedes edit-2 in file order but is NOT applied.
         log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-2".to_string()], redo_edit_ids: vec!["edit-1".to_string()], checkpoint_id: Some("ck-1".to_string()) });
-        let text = print_ops_text(&log).await.unwrap();
+        let text = print_ops_text(&log).unwrap();
         assert!(text.contains("cursor"));
-        let parsed = parse_ops_text(&text).await.unwrap();
+        let parsed = parse_ops_text(&text).unwrap();
         assert_eq!(parsed, log);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ops_text_without_a_cursor_line_leaves_cursor_none() {
         let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), ..Default::default() };
-        let text = print_ops_text(&log).await.unwrap();
+        let text = print_ops_text(&log).unwrap();
         assert!(!text.contains("cursor"));
-        assert_eq!(parse_ops_text(&text).await.unwrap().cursor, None);
+        assert_eq!(parse_ops_text(&text).unwrap().cursor, None);
     }
     //#endregion 🔖️TextGrammar
 

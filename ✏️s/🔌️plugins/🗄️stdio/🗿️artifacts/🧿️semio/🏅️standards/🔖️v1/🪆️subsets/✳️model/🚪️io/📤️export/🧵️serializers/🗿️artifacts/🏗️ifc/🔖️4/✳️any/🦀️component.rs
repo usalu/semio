@@ -39,15 +39,17 @@ impl ArtifactSerializer for SemioModelToIfc {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(ifc_from_model(from).await)
+        Ok(ifc_from_model(from))
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Classify
-async fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
     match kind {
         SpatialKind::Site => "IFCSITE",
         SpatialKind::Building => "IFCBUILDING",
@@ -56,7 +58,8 @@ async fn ifc_type_of_spatial_kind(kind: SpatialKind) -> &'static str {
     }
 }
 
-async fn ifc_type_of_element_class(class: &ElementClass) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ifc_type_of_element_class(class: &ElementClass) -> String {
     match class {
         ElementClass::Wall => "IFCWALL".into(),
         ElementClass::Slab => "IFCSLAB".into(),
@@ -75,7 +78,8 @@ async fn ifc_type_of_element_class(class: &ElementClass) -> String {
 //#region 🔖️Geometry
 /// 🧭️ Inverse of the deserializer's `quat_from_rotation_columns` — standard quaternion -> 3x3
 /// rotation matrix, columns = x/y/z basis vectors (matches `Mat4`'s own layout).
-async fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
     let (x, y, z, w) = (q.x, q.y, q.z, q.w);
     [[1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)], [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)], [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)]]
 }
@@ -84,7 +88,8 @@ async fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
 //#region 🔖️IdAlloc
 struct IdAlloc(u64);
 impl IdAlloc {
-    async fn next(&mut self) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
     }
@@ -92,11 +97,13 @@ impl IdAlloc {
 //#endregion 🔖️IdAlloc
 
 //#region 🔖️Builders
-async fn owner_history_instance(id: u64) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn owner_history_instance(id: u64) -> Part21Instance {
     Part21Instance { id, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Unset, Part21Value::Int(0)])] }
 }
 
-async fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -108,25 +115,27 @@ async fn project_instance(id: u64, owner_id: u64) -> Part21Instance {
 
 /// 📍️ Builds `IfcCartesianPoint`/`IfcDirection`×2/`IfcAxis2Placement3D`/`IfcLocalPlacement`
 /// (absolute — `PlacementRelTo` unset) for `transform`, returns the `IfcLocalPlacement` id.
-async fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, transform: &SemioTransform) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, transform: &SemioTransform) -> u64 {
     let r = quat_to_rotation_columns(&transform.rotation);
     let loc_id = alloc.next();
     instances.push(Part21Instance {
-        id: loc_id.await,
+        id: loc_id,
         entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x.into()), Part21Value::Real(transform.translation.y.into()), Part21Value::Real(transform.translation.z.into())])])],
     });
     let axis_id = alloc.next();
-    instances.push(Part21Instance { id: axis_id.await, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])] });
+    instances.push(Part21Instance { id: axis_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])] });
     let refdir_id = alloc.next();
-    instances.push(Part21Instance { id: refdir_id.await, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])] });
+    instances.push(Part21Instance { id: refdir_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])] });
     let placement3d_id = alloc.next();
-    instances.push(Part21Instance { id: placement3d_id.await, entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id.await), Part21Value::Ref(axis_id.await), Part21Value::Ref(refdir_id.await)])] });
+    instances.push(Part21Instance { id: placement3d_id, entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id), Part21Value::Ref(axis_id), Part21Value::Ref(refdir_id)])] });
     let local_id = alloc.next();
-    instances.push(Part21Instance { id: local_id.await, entities: vec![("IFCLOCALPLACEMENT".into(), vec![Part21Value::Unset, Part21Value::Ref(placement3d_id.await)])] });
-    local_id.await
+    instances.push(Part21Instance { id: local_id, entities: vec![("IFCLOCALPLACEMENT".into(), vec![Part21Value::Unset, Part21Value::Ref(placement3d_id)])] });
+    local_id
 }
 
-async fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &str, placement_id: u64) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &str, placement_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -146,7 +155,8 @@ async fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, na
     }
 }
 
-async fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placement_id: u64) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placement_id: u64) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -167,7 +177,8 @@ async fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, pl
     }
 }
 
-async fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u64]) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, children: &[u64]) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -177,7 +188,8 @@ async fn rel_aggregates_instance(id: u64, owner_id: u64, parent_id: u64, childre
     }
 }
 
-async fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u64]) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u64]) -> Part21Instance {
     Part21Instance {
         id,
         entities: vec![(
@@ -187,7 +199,8 @@ async fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, element
     }
 }
 
-async fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     match v {
         PsetValue::Text { value } => Part21Value::Typed("IFCTEXT".into(), vec![Part21Value::Str(value.clone())]),
         PsetValue::Number { value } => Part21Value::Typed("IFCREAL".into(), vec![Part21Value::Real((*value).into())]),
@@ -195,16 +208,17 @@ async fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     }
 }
 
-async fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::PropertySet) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::PropertySet) {
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();
-        instances.push(Part21Instance { id: pid.await, entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value).await, Part21Value::Unset])] });
+        instances.push(Part21Instance { id: pid, entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value), Part21Value::Unset])] });
         prop_ids.push(pid);
     }
     let pset_id = alloc.next();
     instances.push(Part21Instance {
-        id: pset_id.await,
+        id: pset_id,
         entities: vec![(
             "IFCPROPERTYSET".into(),
             vec![Part21Value::Str(format!("pset-{pset_id}")), Part21Value::Ref(owner_id), Part21Value::Str(pset.name.clone()), Part21Value::Unset, Part21Value::List(prop_ids.iter().map(|p| Part21Value::Ref(*p)).collect())],
@@ -212,30 +226,31 @@ async fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, ow
     });
     let rel_id = alloc.next();
     instances.push(Part21Instance {
-        id: rel_id.await,
+        id: rel_id,
         entities: vec![(
             "IFCRELDEFINESBYPROPERTIES".into(),
-            vec![Part21Value::Str(format!("rel-{rel_id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::List(vec![Part21Value::Ref(element_id)]), Part21Value::Ref(pset_id.await)],
+            vec![Part21Value::Str(format!("rel-{rel_id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::List(vec![Part21Value::Ref(element_id)]), Part21Value::Ref(pset_id)],
         )],
     });
 }
 //#endregion 🔖️Builders
 
 //#region 🔖️Entry
-pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     let mut instances: Vec<Part21Instance> = Vec::new();
     let mut alloc = IdAlloc(0);
     let owner_id = alloc.next();
-    instances.push(owner_history_instance(owner_id.await).await);
+    instances.push(owner_history_instance(owner_id));
     let project_id = alloc.next();
-    instances.push(project_instance(project_id.await, owner_id.await).await);
+    instances.push(project_instance(project_id, owner_id));
 
     let mut spatial_ids: HashMap<String, u64> = HashMap::new();
     for node in &from.spatial {
         let placement_id = build_placement(&mut instances, &mut alloc, &node.placement);
         let numeric_id = alloc.next();
-        instances.push(spatial_instance(numeric_id.await, ifc_type_of_spatial_kind(node.kind).await, &node.id, owner_id.await, &node.name, placement_id.await).await);
-        spatial_ids.insert(node.id.clone(), numeric_id.await);
+        instances.push(spatial_instance(numeric_id, ifc_type_of_spatial_kind(node.kind), &node.id, owner_id, &node.name, placement_id));
+        spatial_ids.insert(node.id.clone(), numeric_id);
     }
 
     let mut project_children = Vec::new();
@@ -249,21 +264,21 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     }
     if !project_children.is_empty() {
         let rel_id = alloc.next();
-        instances.push(rel_aggregates_instance(rel_id.await, owner_id.await, project_id.await, &project_children).await);
+        instances.push(rel_aggregates_instance(rel_id, owner_id, project_id, &project_children));
     }
     for (parent_guid, children) in &spatial_children {
         let rel_id = alloc.next();
-        instances.push(rel_aggregates_instance(rel_id.await, owner_id.await, spatial_ids[parent_guid], children).await);
+        instances.push(rel_aggregates_instance(rel_id, owner_id, spatial_ids[parent_guid], children));
     }
 
     let mut element_ids: HashMap<String, u64> = HashMap::new();
     for el in &from.elements {
         let placement_id = build_placement(&mut instances, &mut alloc, &el.placement);
         let numeric_id = alloc.next();
-        instances.push(element_instance(numeric_id.await, &ifc_type_of_element_class(&el.class), &el.id, owner_id.await, placement_id.await).await);
-        element_ids.insert(el.id.clone(), numeric_id.await);
+        instances.push(element_instance(numeric_id, &ifc_type_of_element_class(&el.class), &el.id, owner_id, placement_id));
+        element_ids.insert(el.id.clone(), numeric_id);
         for pset in &el.psets {
-            build_pset(&mut instances, &mut alloc, owner_id.await, numeric_id.await, pset);
+            build_pset(&mut instances, &mut alloc, owner_id, numeric_id, pset);
         }
     }
     let mut spatial_elements: HashMap<String, Vec<u64>> = HashMap::new();
@@ -276,7 +291,7 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     }
     for (spatial_guid, els) in &spatial_elements {
         let rel_id = alloc.next();
-        instances.push(rel_contained_instance(rel_id.await, owner_id.await, spatial_ids[spatial_guid], els).await);
+        instances.push(rel_contained_instance(rel_id, owner_id, spatial_ids[spatial_guid], els));
     }
 
     let doc = Part21Document {
@@ -295,7 +310,7 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
         },
         instances,
     };
-    crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc).await
+    crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
 }
 //#endregion 🔖️Entry
 
@@ -306,7 +321,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
 
-    async fn rich_model() -> SemioModelSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn rich_model() -> SemioModelSnapshot {
         SemioModelSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![

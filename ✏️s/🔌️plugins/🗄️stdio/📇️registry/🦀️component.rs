@@ -175,27 +175,29 @@ pub struct CapabilityLedger {
     pub verified: CapabilityCounts,
 }
 
-async fn capability_counts<T>(items: &[T], status: impl Fn(&T) -> &str, registered: impl Fn(&T) -> bool) -> (usize, usize, usize, usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn capability_counts<T>(items: &[T], status: impl Fn(&T) -> &str, registered: impl Fn(&T) -> bool) -> (usize, usize, usize, usize) {
     (items.len(), items.iter().filter(|item| registered(item)).count(), items.iter().filter(|item| status(item) == "implemented").count(), items.iter().filter(|item| status(item) == "verified").count())
 }
 
 /// 📊️ Returns separate schema declaration, runtime registration, implementation, and verification counts.
-pub async fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
-    let values = sources().await?;
-    validate_catalog(&values).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
+    let values = sources()?;
+    validate_catalog(&values)?;
     let mut ledger = CapabilityLedger::default();
     for source in &values {
-        let (declared, registered, implemented, verified) = capability_counts(&source.codecs, |item| &item.status, |item| item.executable_registration).await;
+        let (declared, registered, implemented, verified) = capability_counts(&source.codecs, |item| &item.status, |item| item.executable_registration);
         ledger.declared.codecs += declared;
         ledger.registered.codecs += registered;
         ledger.implemented.codecs += implemented;
         ledger.verified.codecs += verified;
-        let (declared, registered, implemented, verified) = capability_counts(&source.mutations, |item| &item.status, |item| item.executable_registration).await;
+        let (declared, registered, implemented, verified) = capability_counts(&source.mutations, |item| &item.status, |item| item.executable_registration);
         ledger.declared.mutations += declared;
         ledger.registered.mutations += registered;
         ledger.implemented.mutations += implemented;
         ledger.verified.mutations += verified;
-        let (declared, registered, implemented, verified) = capability_counts(&source.inferences, |item| &item.status, |item| item.executable_registration).await;
+        let (declared, registered, implemented, verified) = capability_counts(&source.inferences, |item| &item.status, |item| item.executable_registration);
         ledger.declared.inferences += declared;
         ledger.registered.inferences += registered;
         ledger.implemented.inferences += implemented;
@@ -245,69 +247,79 @@ const SOURCES: [&str; 36] = [
     include_str!("../🗿️artifacts/🌐️html/🧬️schema/📜️artifact-definition.json"),
 ];
 
-async fn failure(message: impl Into<String>) -> PluginAssemblyError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn failure(message: impl Into<String>) -> PluginAssemblyError {
     PluginAssemblyError::new("stdio.definition", message)
 }
 
-async fn descriptor<T: Serialize>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn descriptor<T: Serialize>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
     serde_json::to_vec(value).map_err(|error| failure(format!("cannot serialize definition descriptor: {error}")))
 }
 
-async fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
     SOURCES.into_iter().map(|value| serde_json::from_str(value).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))).collect()
 }
 //#endregion SourceLoading
 
 //#region Validation
-async fn id(value: &str) -> Result<(), PluginAssemblyError> {
-    ArtifactIdentity::parse(value).await.map(|_| ()).map_err(PluginAssemblyError::definition)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn id(value: &str) -> Result<(), PluginAssemblyError> {
+    ArtifactIdentity::parse(value).map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
-async fn child<'a>(id: &'a str, owner: &str, namespace: &str) -> Result<&'a str, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn child<'a>(id: &'a str, owner: &str, namespace: &str) -> Result<&'a str, PluginAssemblyError> {
     id.strip_prefix(&format!("{owner}.{namespace}.")).filter(|value| !value.contains('.')).ok_or_else(|| failure(format!("{id:?} is not a direct {namespace} leaf of {owner}")))
 }
 
-async fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
     let leaf = id.strip_prefix(prefix).ok_or_else(|| failure(format!("{id:?} is not owned by {prefix:?}")))?;
     let (semantic, version) = leaf.rsplit_once(".v").ok_or_else(|| failure(format!("{id:?} must end in a canonical vN leaf")))?;
     if semantic.is_empty() || semantic.contains('.') || version.is_empty() || !version.bytes().all(|byte| byte.is_ascii_digit()) || version.starts_with('0') {
-        return Err(failure(format!("{id:?} must end in a canonical vN leaf")).await);
+        return Err(failure(format!("{id:?} must end in a canonical vN leaf")));
     }
-    ArtifactIdentity::parse(id).await.map(|_| ()).map_err(PluginAssemblyError::definition)
+    ArtifactIdentity::parse(id).map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
-async fn leaf_kind(category: &str) -> Result<ArtifactCapabilityKind, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn leaf_kind(category: &str) -> Result<ArtifactCapabilityKind, PluginAssemblyError> {
     match category {
-        "schema" => Ok(ArtifactCapabilityKind::schema().await),
-        "inference" => Ok(ArtifactCapabilityKind::inference().await),
-        "codec" => Ok(ArtifactCapabilityKind::codec().await),
-        "representation" => Ok(ArtifactCapabilityKind::representation().await),
-        "grammar" => Ok(ArtifactCapabilityKind::grammar().await),
-        "composer" => Ok(ArtifactCapabilityKind::composer().await),
-        "subset-validator" => Ok(ArtifactCapabilityKind::subset_validator().await),
-        _ => Err(failure(format!("unknown runtime capability category {category:?}")).await),
+        "schema" => Ok(ArtifactCapabilityKind::schema()),
+        "inference" => Ok(ArtifactCapabilityKind::inference()),
+        "codec" => Ok(ArtifactCapabilityKind::codec()),
+        "representation" => Ok(ArtifactCapabilityKind::representation()),
+        "grammar" => Ok(ArtifactCapabilityKind::grammar()),
+        "composer" => Ok(ArtifactCapabilityKind::composer()),
+        "subset-validator" => Ok(ArtifactCapabilityKind::subset_validator()),
+        _ => Err(failure(format!("unknown runtime capability category {category:?}"))),
     }
 }
 
-async fn representation_claims(item: &Representation) -> BTreeSet<(String, String)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn representation_claims(item: &Representation) -> BTreeSet<(String, String)> {
     item.mimes.iter().map(|value| ("mime".into(), value.clone())).chain(item.extensions.iter().map(|value| ("extension".into(), value.clone()))).collect()
 }
 
-async fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
     item.claims.iter().map(|claim| (claim.namespace.clone(), claim.value.clone())).collect()
 }
 
 /// 🧷️ Maps exactly the schema leaves that declare a native executable.
-async fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
     let services = match source.artifact.as_str() {
-        "gltf" => crate::artifacts::gltf::gltf_inference_services().await,
+        "gltf" => crate::artifacts::gltf::gltf_inference_services(),
         _ => Vec::new(),
     };
     let mut mappings = BTreeMap::new();
     for service in services {
         let id = service.metadata().inference_schema.to_owned();
         if mappings.insert(id.clone(), service.executable_identity()).is_some() {
-            return Err(failure(format!("{} repeats executable mapping {id}", source.id)).await);
+            return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
         }
     }
     if source.artifact == "gltf" {
@@ -315,14 +327,15 @@ async fn executable_mappings(source: &Source) -> Result<BTreeMap<String, Artifac
             let id = descriptor.command_id.to_owned();
             let identity = ArtifactExecutableIdentity::from_function_pointer(descriptor.plan as *const ());
             if mappings.insert(id.clone(), identity).is_some() {
-                return Err(failure(format!("{} repeats executable mapping {id}", source.id)).await);
+                return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
             }
         }
     }
     Ok(mappings)
 }
 
-async fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
     source
         .codecs
         .iter()
@@ -334,17 +347,19 @@ async fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
         .collect()
 }
 
-async fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIterator<Item = String>) -> Result<(), PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIterator<Item = String>) -> Result<(), PluginAssemblyError> {
     if left.into_iter().collect::<BTreeSet<_>>() != right.into_iter().collect::<BTreeSet<_>>() {
-        return Err(failure(format!("{label} diverges from its schema collection")).await);
+        return Err(failure(format!("{label} diverges from its schema collection")));
     }
     Ok(())
 }
 
-async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     let owner = format!("s.stdio.{}", source.artifact);
     if source.definition_version != 1 || source.id != owner {
-        return Err(failure(format!("{owner} must use definition_version 1")).await);
+        return Err(failure(format!("{owner} must use definition_version 1")));
     }
     if source.standards.is_empty()
         || source.profiles.is_empty()
@@ -354,36 +369,36 @@ async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         || source.localized_descriptors.len() != 2
         || source.conformance_suites.is_empty()
     {
-        return Err(failure(format!("{owner} omits a required collection")).await);
+        return Err(failure(format!("{owner} omits a required collection")));
     }
-    id(&source.id).await?;
+    id(&source.id)?;
     let standards = source.standards.iter().map(|item| item.id.clone()).collect::<BTreeSet<_>>();
     for item in &source.standards {
         if item.id != format!("{owner}.standard.{}", item.revision) {
-            return Err(failure(format!("invalid standard {}", item.id)).await);
+            return Err(failure(format!("invalid standard {}", item.id)));
         }
         if item.status == "unverified" && (item.normative_source.is_some() || item.publication_date.is_some() || item.source_checksum.is_some() || item.redistribution_status != "unknown" || !item.clauses_or_features.is_empty()) {
-            return Err(failure(format!("unverified standard {} carries unverifiable provenance", item.id)).await);
+            return Err(failure(format!("unverified standard {} carries unverifiable provenance", item.id)));
         }
         if item.status == "verified" && (item.normative_source.is_none() || item.publication_date.is_none() || item.source_checksum.is_none() || item.redistribution_status == "unknown" || item.clauses_or_features.is_empty()) {
-            return Err(failure(format!("verified standard {} lacks provenance", item.id)).await);
+            return Err(failure(format!("verified standard {} lacks provenance", item.id)));
         }
         if !matches!(item.status.as_str(), "unverified" | "verified") {
-            return Err(failure(format!("invalid standard status {}", item.status)).await);
+            return Err(failure(format!("invalid standard status {}", item.status)));
         }
-        id(&item.id).await?;
+        id(&item.id)?;
     }
     for item in &source.profiles {
         if !standards.contains(&item.standard) || item.id != format!("{}.profile.{}", item.standard, item.profile) || !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
-            return Err(failure(format!("invalid profile {}", item.id)).await);
+            return Err(failure(format!("invalid profile {}", item.id)));
         }
-        id(&item.id).await?;
+        id(&item.id)?;
     }
     for item in &source.source_dialects {
         if !standards.contains(&item.standard) || item.id != format!("{}.dialect.{}", item.standard, item.dialect) || !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
-            return Err(failure(format!("invalid source dialect {}", item.id)).await);
+            return Err(failure(format!("invalid source dialect {}", item.id)));
         }
-        id(&item.id).await?;
+        id(&item.id)?;
     }
     for item in &source.representations {
         if !standards.contains(&item.standard)
@@ -392,90 +407,90 @@ async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
             || item.extensions.iter().any(|extension| !extension.starts_with('.'))
             || item.status != "declared"
         {
-            return Err(failure(format!("invalid representation {}", item.id)).await);
+            return Err(failure(format!("invalid representation {}", item.id)));
         }
         if item.mimes.iter().collect::<BTreeSet<_>>().len() != item.mimes.len() || item.extensions.iter().collect::<BTreeSet<_>>().len() != item.extensions.len() {
-            return Err(failure(format!("duplicate representation claim {}", item.id)).await);
+            return Err(failure(format!("duplicate representation claim {}", item.id)));
         }
-        id(&item.id).await?;
+        id(&item.id)?;
     }
     if standards != source.representations.iter().map(|item| item.standard.clone()).collect::<BTreeSet<_>>() {
-        return Err(failure(format!("{owner} must give every declared standard its own representation")).await);
+        return Err(failure(format!("{owner} must give every declared standard its own representation")));
     }
     if source.artifact == "epw" && source.representations.iter().any(|item| !item.mimes.is_empty()) {
-        return Err(failure("EPW must remain MIME-unregistered").await);
+        return Err(failure("EPW must remain MIME-unregistered"));
     }
     let locales = source.localized_descriptors.iter().map(|item| item.locale.as_str()).collect::<BTreeSet<_>>();
     if locales != BTreeSet::from(["de", "en"]) {
-        return Err(failure(format!("{owner} must own English and German descriptors")).await);
+        return Err(failure(format!("{owner} must own English and German descriptors")));
     }
     for item in &source.localized_descriptors {
         if item.id != format!("{owner}.localization.{}", item.locale) || item.name.is_empty() || item.description.is_empty() {
-            return Err(failure(format!("invalid localization {}", item.id)).await);
+            return Err(failure(format!("invalid localization {}", item.id)));
         }
-        id(&item.id).await?;
+        id(&item.id)?;
     }
     for item in &source.resources {
         if item.status != "unimplemented" || item.external_reference_policy.is_empty() {
-            return Err(failure(format!("invalid resource {}", item.id)).await);
+            return Err(failure(format!("invalid resource {}", item.id)));
         }
-        child(&item.id, &owner, "resource").await?;
-        id(&item.id).await?;
+        child(&item.id, &owner, "resource")?;
+        id(&item.id)?;
     }
     for item in &source.conformance_suites {
         if item.status != "unimplemented" {
-            return Err(failure(format!("invalid conformance suite {}", item.id)).await);
+            return Err(failure(format!("invalid conformance suite {}", item.id)));
         }
-        child(&item.id, &owner, "conformance-suite").await?;
-        id(&item.id).await?;
+        child(&item.id, &owner, "conformance-suite")?;
+        id(&item.id)?;
         for fixture in &item.fixtures {
-            id(fixture).await?;
+            id(fixture)?;
         }
     }
     for item in &source.codecs {
         let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
-        versioned_leaf(&item.id, &format!("{}.codec.", standard.id)).await?;
+        versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
         if item.from.is_empty() || item.to.is_empty() || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
-            return Err(failure(format!("invalid codec {}", item.id)).await);
+            return Err(failure(format!("invalid codec {}", item.id)));
         }
     }
     for (category, item) in source.mutations.iter().map(|item| ("mutation", item)).chain(source.inferences.iter().map(|item| ("inference", item))) {
-        versioned_leaf(&item.id, &format!("{owner}.{category}.")).await?;
+        versioned_leaf(&item.id, &format!("{owner}.{category}."))?;
         if source.artifact == "gltf" && (item.id.contains(".no-mutation.") || item.id.contains(".set-snapshot.") || item.id.contains(".set-")) {
-            return Err(failure(format!("GLTF capability {} is not a specific semantic command", item.id)).await);
+            return Err(failure(format!("GLTF capability {} is not a specific semantic command", item.id)));
         }
         if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
-            return Err(failure(format!("invalid {category} {}", item.id)).await);
+            return Err(failure(format!("invalid {category} {}", item.id)));
         }
     }
-    let mappings = executable_mappings(source).await?;
-    if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected_executable_ids(source).await {
-        return Err(failure(format!("{} executable mapping keys diverge from schema registrations", source.id)).await);
+    let mappings = executable_mappings(source)?;
+    if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected_executable_ids(source) {
+        return Err(failure(format!("{} executable mapping keys diverge from schema registrations", source.id)));
     }
     let mut runtime_ids = BTreeSet::new();
     let mut runtime_claim_sets = BTreeSet::new();
     for item in &source.runtime_capabilities {
         let prefix = format!("{owner}.runtime.{}.", item.category);
-        leaf_kind(&item.category).await?;
-        versioned_leaf(&item.id, &prefix).await?;
+        leaf_kind(&item.category)?;
+        versioned_leaf(&item.id, &prefix)?;
         if item.descriptor.trim().is_empty() || item.claims.is_empty() || !runtime_ids.insert(item.id.clone()) {
-            return Err(failure(format!("invalid runtime capability {}", item.id)).await);
+            return Err(failure(format!("invalid runtime capability {}", item.id)));
         }
-        let claims = runtime_claims(item).await;
+        let claims = runtime_claims(item);
         if claims.len() != item.claims.len()
             || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "codec" | "extension" | "mime" | "dialect" | "grammar") && !claim.value.trim().is_empty())
             || !runtime_claim_sets.insert((item.category.clone(), claims.clone()))
         {
-            return Err(failure(format!("invalid runtime capability claims for {}", item.id)).await);
+            return Err(failure(format!("invalid runtime capability claims for {}", item.id)));
         }
         if item.category == "representation" && !source.representations.iter().any(|representation| representation_claims(representation) == claims) {
-            return Err(failure(format!("runtime representation {} does not claim a representation leaf", item.id)).await);
+            return Err(failure(format!("runtime representation {} does not claim a representation leaf", item.id)));
         }
     }
     let ledger = &source.support_ledger;
     let states = [&ledger.read, &ledger.write, &ledger.lossless, &ledger.canonical];
     if !states.into_iter().all(|state| matches!(state.as_str(), "unimplemented" | "opaque" | "implemented")) {
-        return Err(failure(format!("{owner} has an invalid support state")).await);
+        return Err(failure(format!("{owner} has an invalid support state")));
     }
     if states.into_iter().any(|state| state == "implemented")
         && (ledger.normative_source.is_none()
@@ -486,13 +501,13 @@ async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
             || ledger.validators.is_empty()
             || ledger.fixtures.is_empty())
     {
-        return Err(failure(format!("{owner} claims implementation without normative, validator, and fixture evidence")).await);
+        return Err(failure(format!("{owner} claims implementation without normative, validator, and fixture evidence")));
     }
-    same("ledger profiles", ledger.profiles.clone(), source.profiles.iter().map(|item| item.id.clone())).await?;
-    same("ledger code points", ledger.registered_code_points.clone(), source.source_dialects.iter().flat_map(|item| item.registered_code_points.clone())).await?;
-    same("ledger mutations", ledger.mutations.clone(), source.mutations.iter().map(|item| item.id.clone())).await?;
-    same("ledger inferences", ledger.inferences.clone(), source.inferences.iter().map(|item| item.id.clone())).await?;
-    same("ledger fixtures", ledger.fixtures.clone(), source.conformance_suites.iter().flat_map(|item| item.fixtures.clone())).await?;
+    same("ledger profiles", ledger.profiles.clone(), source.profiles.iter().map(|item| item.id.clone()))?;
+    same("ledger code points", ledger.registered_code_points.clone(), source.source_dialects.iter().flat_map(|item| item.registered_code_points.clone()))?;
+    same("ledger mutations", ledger.mutations.clone(), source.mutations.iter().map(|item| item.id.clone()))?;
+    same("ledger inferences", ledger.inferences.clone(), source.inferences.iter().map(|item| item.id.clone()))?;
+    same("ledger fixtures", ledger.fixtures.clone(), source.conformance_suites.iter().flat_map(|item| item.fixtures.clone()))?;
     let local = source
         .profiles
         .iter()
@@ -505,15 +520,16 @@ async fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         .collect::<BTreeSet<_>>();
     for reference in ledger.validators.iter().chain(&ledger.mutations).chain(&ledger.inferences).chain(&ledger.fixtures) {
         if !local.contains(reference) {
-            return Err(failure(format!("{owner} ledger reference {reference:?} does not resolve locally")).await);
+            return Err(failure(format!("{owner} ledger reference {reference:?} does not resolve locally")));
         }
     }
     Ok(())
 }
 
-async fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> {
     if values.len() != 36 {
-        return Err(failure(format!("expected 36 artifact definitions, got {}", values.len())).await);
+        return Err(failure(format!("expected 36 artifact definitions, got {}", values.len())));
     }
     let mut identities = BTreeSet::new();
     let mut directories = BTreeSet::new();
@@ -522,44 +538,44 @@ async fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> 
     let mut dialects = BTreeSet::new();
     let mut runtime_capabilities = BTreeSet::new();
     for source in values {
-        validate(source).await?;
+        validate(source)?;
         if !identities.insert(source.id.clone()) || !directories.insert(source.directory.clone()) {
-            return Err(failure(format!("duplicate artifact {}", source.id)).await);
+            return Err(failure(format!("duplicate artifact {}", source.id)));
         }
         for representation in &source.representations {
             for extension in &representation.extensions {
                 if let Some(existing) = extensions.insert(extension.clone(), source.id.clone()) {
                     if existing != source.id {
-                        return Err(failure(format!("extension {extension} is claimed by both {existing} and {}", source.id)).await);
+                        return Err(failure(format!("extension {extension} is claimed by both {existing} and {}", source.id)));
                     }
                 }
             }
             for mime in &representation.mimes {
                 if let Some(existing) = mimes.insert(mime.clone(), source.id.clone()) {
                     if existing != source.id {
-                        return Err(failure(format!("MIME {mime} is claimed by both {existing} and {}", source.id)).await);
+                        return Err(failure(format!("MIME {mime} is claimed by both {existing} and {}", source.id)));
                     }
                 }
             }
         }
         for capability in &source.runtime_capabilities {
             if !runtime_capabilities.insert(capability.id.clone()) {
-                return Err(failure(format!("duplicate runtime capability {}", capability.id)).await);
+                return Err(failure(format!("duplicate runtime capability {}", capability.id)));
             }
         }
         for dialect in &source.source_dialects {
             if !dialects.insert(dialect.id.clone()) {
-                return Err(failure(format!("duplicate dialect {}", dialect.id)).await);
+                return Err(failure(format!("duplicate dialect {}", dialect.id)));
             }
         }
         for dependency in &source.dependencies {
             if dependency == &source.id || !values.iter().any(|candidate| candidate.id == *dependency) {
-                return Err(failure(format!("{} has unresolved dependency {dependency}", source.id)).await);
+                return Err(failure(format!("{} has unresolved dependency {dependency}", source.id)));
             }
         }
     }
     if !values.iter().find(|source| source.artifact == "txt").is_some_and(|source| source.representations.iter().any(|item| item.mimes.iter().any(|mime| mime == "text/plain"))) {
-        return Err(failure("TXT must own text/plain").await);
+        return Err(failure("TXT must own text/plain"));
     }
     Ok(())
 }
@@ -573,87 +589,94 @@ pub enum ArtifactAssembly {
 }
 
 /// 🧷️ Binds an executable artifact root to the definition it owns.
-pub async fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory: fn(ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError>) -> Result<ArtifactAssembly, PluginAssemblyError> {
-    if definition.identity().await.as_str() != format!("s.stdio.{artifact}") {
-        return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())).await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory: fn(ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError>) -> Result<ArtifactAssembly, PluginAssemblyError> {
+    if definition.identity().as_str() != format!("s.stdio.{artifact}") {
+        return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())));
     }
     factory(definition).map(ArtifactAssembly::Runtime).map_err(PluginAssemblyError::definition)
 }
 
 /// 🧾️ Preserves a schema-only artifact without fabricating runtime capabilities.
-pub async fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError> {
-    if definition.identity().await.as_str() != format!("s.stdio.{artifact}") {
-        return Err(failure(format!("definition-only artifact {artifact} received definition {}", definition.identity())).await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError> {
+    if definition.identity().as_str() != format!("s.stdio.{artifact}") {
+        return Err(failure(format!("definition-only artifact {artifact} received definition {}", definition.identity())));
     }
     Ok(ArtifactAssembly::Definition(definition))
 }
 
-async fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
-    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).await.map_err(PluginAssemblyError::definition)?, kind).await.descriptor(descriptor(value).await?).await.map_err(PluginAssemblyError::definition)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
+    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
     if let Some(executable) = mappings.get(id) {
-        capability = capability.executable(*executable).await;
+        capability = capability.executable(*executable);
     }
     Ok(capability)
 }
 
-async fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, PluginAssemblyError> {
-    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(&item.id).await.map_err(PluginAssemblyError::definition)?, leaf_kind(&item.category).await?).await.descriptor(item.descriptor.as_bytes().to_vec()).await.map_err(PluginAssemblyError::definition)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, PluginAssemblyError> {
+    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(&item.id).map_err(PluginAssemblyError::definition)?, leaf_kind(&item.category)?).descriptor(item.descriptor.as_bytes().to_vec()).map_err(PluginAssemblyError::definition)?;
     for claim in &item.claims {
         capability = capability
-            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(&claim.namespace).await.map_err(PluginAssemblyError::definition)?, &claim.value).await.map_err(PluginAssemblyError::definition)?)
-            .await.map_err(PluginAssemblyError::definition)?;
+            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(&claim.namespace).map_err(PluginAssemblyError::definition)?, &claim.value).map_err(PluginAssemblyError::definition)?)
+            .map_err(PluginAssemblyError::definition)?;
     }
     Ok(capability)
 }
 
-async fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
-    let mappings = executable_mappings(source).await?;
-    let mut definition = ArtifactDefinition::stdio(&source.artifact).await.map_err(PluginAssemblyError::definition)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
+    let mappings = executable_mappings(source)?;
+    let mut definition = ArtifactDefinition::stdio(&source.artifact).map_err(PluginAssemblyError::definition)?;
     for item in &source.standards {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::standard().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::standard(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.profiles {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::profile().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::profile(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.source_dialects {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::source_dialect().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::source_dialect(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.representations {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::representation().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::representation(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.codecs {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::codec().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::codec(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.mutations {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::mutation().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::mutation(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.inferences {
-        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::inference().await, item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::inference(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.runtime_capabilities {
-        definition = definition.capability(runtime_capability(item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(runtime_capability(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.resources {
-        definition = definition.resource(child(&item.id, &source.id, "resource").await?, descriptor(item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.resource(child(&item.id, &source.id, "resource")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.localized_descriptors {
-        definition = definition.localization(ArtifactLocale::parse(&item.locale).await.map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.localization(ArtifactLocale::parse(&item.locale).map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.conformance_suites {
-        definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite").await?, descriptor(item).await?).await.map_err(PluginAssemblyError::definition)?;
+        definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
     }
     Ok(definition)
 }
 
 /// 🧾️ Builds every schema-owned artifact definition in catalog order.
-pub async fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyError> {
-    let values = sources().await?;
-    validate_catalog(&values).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyError> {
+    let values = sources()?;
+    validate_catalog(&values)?;
     values.iter().map(build).collect()
 }
 
 /// 🧭️ Assembles every artifact root in schema-catalog order.
-async fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
     BTreeMap::from([
         ("binary", crate::artifacts::binary::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
         ("txt", crate::artifacts::txt::assembly),
@@ -695,17 +718,19 @@ async fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -
 }
 
 /// 🧭️ Assembles every artifact root by its schema-owned artifact key.
-pub async fn artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyError> {
-    let factories = artifact_factories().await;
-    let values = sources().await?;
-    validate_catalog(&values).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyError> {
+    let factories = artifact_factories();
+    let values = sources()?;
+    validate_catalog(&values)?;
     if factories.keys().copied().collect::<BTreeSet<_>>() != values.iter().map(|source| source.artifact.as_str()).collect() {
-        return Err(failure("artifact factory keys diverge from schema artifacts").await);
+        return Err(failure("artifact factory keys diverge from schema artifacts"));
     }
     values.iter().map(|source| factories.get(source.artifact.as_str()).ok_or_else(|| failure(format!("missing factory for {}", source.artifact)))?(build(source)?)).collect()
 }
 
-async fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
     source
         .runtime_capabilities
         .iter()
@@ -730,8 +755,9 @@ async fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescript
 }
 
 /// 🗂️ Derives one runtime root's format descriptors from its exact representation capability records.
-pub async fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
-    let values = sources().await.and_then(|values| {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
+    let values = sources().and_then(|values| {
         validate_catalog(&values)?;
         let source = values.iter().find(|source| source.artifact == artifact).ok_or_else(|| failure(format!("unknown stdio artifact {artifact}")))?;
         source_format_descriptors(source)
@@ -740,9 +766,10 @@ pub async fn format_descriptors_for(artifact: &str) -> Result<Vec<FormatDescript
 }
 
 /// 🛂️ Derives every runtime format descriptor from schema-owned representations.
-pub async fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
-    let values = sources().await?;
-    validate_catalog(&values).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
+    let values = sources()?;
+    validate_catalog(&values)?;
     values.iter().map(source_format_descriptors).collect::<Result<Vec<_>, _>>().map(|groups| groups.into_iter().flatten().collect())
 }
 
@@ -750,15 +777,18 @@ pub async fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssembl
 mod tests {
     use super::*;
 
-    async fn runtime_key(category: &str, claims: impl IntoIterator<Item = (String, String)>) -> String {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn runtime_key(category: &str, claims: impl IntoIterator<Item = (String, String)>) -> String {
         format!("{category}|{}", claims.into_iter().map(|(namespace, value)| format!("{namespace}:{value}")).collect::<BTreeSet<_>>().into_iter().collect::<Vec<_>>().join("|"))
     }
 
-    async fn schema_runtime_keys(source: &Source) -> BTreeSet<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn schema_runtime_keys(source: &Source) -> BTreeSet<String> {
         source.runtime_capabilities.iter().map(|capability| runtime_key(&capability.category, runtime_claims(capability))).collect()
     }
 
-    async fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
         declaration
             .runtime_capability_requirements()
             .unwrap()

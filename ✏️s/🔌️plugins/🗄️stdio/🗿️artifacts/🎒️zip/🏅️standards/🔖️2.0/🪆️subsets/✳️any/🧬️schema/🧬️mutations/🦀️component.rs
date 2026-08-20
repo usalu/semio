@@ -39,14 +39,15 @@ pub enum ZipMutation {
 //#endregion 🔖️Model
 
 //#region 🔖️Algebra
-pub async fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
-    let outcome = mutation.diff(snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
+    let outcome = mutation.diff(snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -56,12 +57,12 @@ impl Mutation<ZipSnapshot> for ZipMutation {
     async fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Self::NoMutation => ZipDiff::default(),
-            Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            Self::SetArchiveComment { comment } => diff::diff_set_archive_comment(comment).await,
-            Self::AddEntry { entry } => diff::diff_add_entry(entry.clone()).await,
-            Self::RemoveEntry { name } => diff::diff_remove_entry(name).await,
-            Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name).await,
-            Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()).await,
+            Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            Self::SetArchiveComment { comment } => diff::diff_set_archive_comment(comment),
+            Self::AddEntry { entry } => diff::diff_add_entry(entry.clone()),
+            Self::RemoveEntry { name } => diff::diff_remove_entry(name),
+            Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
+            Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
         })
     }
 
@@ -112,17 +113,20 @@ impl protocol::OpBinary for ZipMutation {
 //#endregion 🔖️Codecs
 
 #[cfg(test)]
-pub(crate) async fn entry(name: &str, data: &[u8]) -> ZipEntry {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn entry(name: &str, data: &[u8]) -> ZipEntry {
     ZipEntry { name: name.into(), data: data.to_vec() }
 }
 
 #[cfg(test)]
-pub(crate) async fn base_snapshot() -> ZipSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn base_snapshot() -> ZipSnapshot {
     ZipSnapshot { schema: "stdio.zip".into(), entries: vec![entry("a.txt", b"aaa"), entry("b.txt", b"bbb")], comment: "archive".into() }
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<ZipMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
     vec![
         ZipMutation::NoMutation,
         ZipMutation::SetSnapshot { snapshot: base_snapshot() },

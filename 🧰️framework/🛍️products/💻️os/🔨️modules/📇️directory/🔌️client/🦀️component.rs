@@ -400,7 +400,10 @@ pub mod native {
     }
 
     impl HttpTransport for UreqHttpTransport {
-        async fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
+        // 🚫️async: E1-adjacent — `HttpTransport::call` is deliberately sync in its trait
+        // definition (🛎️services/🦀️component.rs) so `Arc<dyn HttpTransport>` stays dyn-object-safe
+        // (documented there); no suspension point in this body either (ureq is a sync HTTP client).
+        fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
             let mut builder = match request.method.as_str() {
                 "GET" => self.agent.get(&request.url),
                 "POST" => self.agent.post(&request.url),
@@ -492,7 +495,7 @@ pub mod native {
         /// runtime itself.
         pub async fn with_new_http_pool(runtime: Arc<R>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
             let transport: Arc<dyn HttpTransport> = Arc::new(UreqHttpTransport { agent: ureq::Agent::new() });
-            Self::new(runtime, scope, Arc::new(HttpPool::new(transport, compute, bytes_per_minute_cap, outstanding_cap)), package, actor)
+            Self::new(runtime, scope, Arc::new(HttpPool::new(transport, compute, bytes_per_minute_cap, outstanding_cap).await), package, actor).await
         }
     }
 
@@ -507,7 +510,7 @@ pub mod native {
             if let Some(token) = bearer {
                 headers.push(("Authorization".to_string(), format!("Bearer {token}")));
             }
-            let request = PoolHttpRequest { method: http_method_str(method).to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
+            let request = PoolHttpRequest { method: http_method_str(method).await.to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
             match self
                 .http_pool
                 .request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request)

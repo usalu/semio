@@ -81,7 +81,7 @@ impl<'a> PresentCx<'a> {
 /// 🌳️ One node of the builder-side presentation tree a [`Present::present`] returns. Recursive by
 /// design (see the module doc); children are addressed positionally through `children`, never through
 /// an id, since no id exists yet at this stage.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct TreeNode {
     pub key: String,
     pub component: ui_contract::Component,
@@ -147,7 +147,7 @@ pub fn assert_unique_sibling_keys(children: &[TreeNode]) {
 }
 
 /// 🌳️ The complete presentation tree one [`Present::present`] call produced.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ComponentTree {
     pub root: TreeNode,
 }

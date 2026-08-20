@@ -23,15 +23,17 @@ use crate::artifacts::txt::TxtSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-async fn join_runs(runs: &[DocRun]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn join_runs(runs: &[DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join("")
 }
 
 /// 🧱 One `DocBlock` -> zero or more plain-text lines.
-pub(crate) async fn block_to_lines(block: &DocBlock) -> Vec<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn block_to_lines(block: &DocBlock) -> Vec<String> {
     match block {
-        DocBlock::Paragraph { runs, .. } => vec![join_runs(runs).await],
-        DocBlock::Heading { runs, .. } => vec![join_runs(runs).await],
+        DocBlock::Paragraph { runs, .. } => vec![join_runs(runs)],
+        DocBlock::Heading { runs, .. } => vec![join_runs(runs)],
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(block_to_lines)).collect(),
         DocBlock::Table { rows } => rows.iter().map(|row| row.cells.iter().map(|cell| cell.blocks.iter().flat_map(block_to_lines).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join("\t")).collect(),
         DocBlock::Code { text, .. } => text.lines().map(str::to_string).collect(),
@@ -64,7 +66,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    async fn sample_semio() -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),

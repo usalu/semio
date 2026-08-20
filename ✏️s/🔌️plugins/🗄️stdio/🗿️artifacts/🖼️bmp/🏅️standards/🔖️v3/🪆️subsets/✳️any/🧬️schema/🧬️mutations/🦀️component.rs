@@ -79,14 +79,15 @@ pub enum BmpMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
-    let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
+    let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -98,7 +99,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
     async fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BmpMutation::NoMutation => BmpDiff::default(),
-            BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BmpMutation::SetHeaderFields { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } => BmpDiff {
                 header_size: *header_size,
                 width: *width,
@@ -201,12 +202,14 @@ impl protocol::OpBinary for BmpMutation {
 /// mirroring `stdio.png`'s own `demo_base_snapshot()` placement) so `demo_mutation_cases()`
 /// below AND `⚙️engine/🦀️component.rs`'s `conformance_laws` module can both reach it.
 #[cfg(test)]
-async fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
     BmpPaletteEntry { b, g, r, reserved }
 }
 
 #[cfg(test)]
-async fn base_snapshot() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base_snapshot() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -230,7 +233,8 @@ async fn base_snapshot() -> BmpSnapshot {
 /// to one value, a 2-entry palette (index 0 stable, index 1 will be modified in every
 /// field), 4x3 pixels.
 #[cfg(test)]
-async fn sweep_a() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sweep_a() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -257,7 +261,8 @@ async fn sweep_a() -> BmpSnapshot {
 /// below splits its collection assertions across BOTH `between()` directions), and pixels
 /// change size (8x6) + content.
 #[cfg(test)]
-async fn sweep_b() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sweep_b() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 56,
@@ -284,7 +289,8 @@ async fn sweep_b() -> BmpSnapshot {
 /// same consolidation `stdio.png`'s own `demo_mutation_cases()` already made (single source of
 /// truth, per this repo's own CLAUDE.md).
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<BmpMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
     let base = base_snapshot();
     vec![
         BmpMutation::NoMutation,

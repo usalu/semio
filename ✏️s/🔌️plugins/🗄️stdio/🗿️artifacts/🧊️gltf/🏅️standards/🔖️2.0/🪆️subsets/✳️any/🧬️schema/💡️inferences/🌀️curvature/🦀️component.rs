@@ -32,19 +32,20 @@ pub(crate) struct GltfCurvatureRaw {
     pub(crate) sharp_feature_proportion: f64,
 }
 
-pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
     let mut edge_curvatures = Vec::new();
     let mut sharp_length = 0.0;
     let mut edge_length = 0.0;
     for (&(first, second), adjacent_faces) in &context.edge_faces {
-        let length = norm(sub(context.points[second], context.points[first]).await);
+        let length = norm(sub(context.points[second], context.points[first]));
         edge_length += length;
         if adjacent_faces.len() == 2 {
             let normal = |face_index: usize| {
                 let face = context.faces[face_index];
                 normalize(cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]])))
             };
-            let angle = dot(normal(adjacent_faces[0].0).await, normal(adjacent_faces[1].0).await).await.clamp(-1.0, 1.0).acos();
+            let angle = dot(normal(adjacent_faces[0].0), normal(adjacent_faces[1].0)).clamp(-1.0, 1.0).acos();
             if length > 0.0 {
                 edge_curvatures.push(angle / length);
             }
@@ -61,7 +62,7 @@ pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
             let vertex = face[corner];
             let first = sub(context.points[face[(corner + 1) % 3]], context.points[vertex]);
             let second = sub(context.points[face[(corner + 2) % 3]], context.points[vertex]);
-            angle_sums[vertex] += dot(normalize(first.await).await, normalize(second.await).await).await.clamp(-1.0, 1.0).acos();
+            angle_sums[vertex] += dot(normalize(first), normalize(second)).clamp(-1.0, 1.0).acos();
             vertex_areas[vertex] += area / 3.0;
         }
     }
@@ -83,19 +84,19 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            mean_curvature: mean_curvature::from_raw(context, &raw).await,
-            gaussian_curvature: gaussian_curvature::from_raw(context, &raw).await,
-            curvature_histogram: curvature_histogram::from_raw(context, &raw).await,
-            sharp_feature_proportion: sharp_feature_proportion::from_raw(context, &raw).await,
+            mean_curvature: mean_curvature::from_raw(context, &raw),
+            gaussian_curvature: gaussian_curvature::from_raw(context, &raw),
+            curvature_histogram: curvature_histogram::from_raw(context, &raw),
+            sharp_feature_proportion: sharp_feature_proportion::from_raw(context, &raw),
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            mean_curvature: mean_curvature::unavailable_measure(diagnostic_ids).await,
-            gaussian_curvature: gaussian_curvature::unavailable_measure(diagnostic_ids).await,
-            curvature_histogram: curvature_histogram::unavailable_measure(diagnostic_ids).await,
-            sharp_feature_proportion: sharp_feature_proportion::unavailable_measure(diagnostic_ids).await,
+            mean_curvature: mean_curvature::unavailable_measure(diagnostic_ids),
+            gaussian_curvature: gaussian_curvature::unavailable_measure(diagnostic_ids),
+            curvature_histogram: curvature_histogram::unavailable_measure(diagnostic_ids),
+            sharp_feature_proportion: sharp_feature_proportion::unavailable_measure(diagnostic_ids),
         }
     }
 }

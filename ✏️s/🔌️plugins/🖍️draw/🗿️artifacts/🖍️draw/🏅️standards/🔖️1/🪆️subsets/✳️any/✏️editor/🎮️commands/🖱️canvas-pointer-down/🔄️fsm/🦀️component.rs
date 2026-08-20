@@ -10,21 +10,21 @@ mod host {
 
     //#region 🔖️Host
 
-    /// 🌐️ Executes the side effects a [`crate::Command`] describes. No `async fn` —
+    /// 🌐️ Executes the side effects a [`crate::Command`] describes. No `fn` —
     /// hosts own their own tasks/timers and report completion back as ordinary events.
     pub trait Host<M: Machine> {
         /// 🎇️ Executes a consumer-defined effect requested by a running actor.
-        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect);
+        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect);
         /// ⏱️ Schedules a delayed-transition timer for the given actor.
-        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64);
+        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64);
         /// ⏱️ Cancels a previously scheduled timer (invoked when its owning state exits).
-        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId);
+        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId);
         /// 🚀️ Starts the task/actor backing an `invoke` declaration.
-        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId);
+        fn start_task(&mut self, actor: ActorId, invoke: InvokeId);
         /// 🛑️ Stops a previously started task (invoked when its owning state exits).
-        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId);
+        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId);
         /// 🕰️ The host's current clock reading, in milliseconds.
-        async fn now_ms(&self) -> u64;
+        fn now_ms(&self) -> u64;
     }
 
     //#endregion 🔖️Host
@@ -45,27 +45,27 @@ mod host {
 
     impl<M: Machine> NativeHost<M> {
         /// 🖥️ A fresh host whose clock starts at zero.
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self { start: std::time::Instant::now(), effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇️ Effects recorded so far, in emission order.
-        pub async fn effects(&self) -> &[(ActorId, M::Effect)] {
+        pub fn effects(&self) -> &[(ActorId, M::Effect)] {
             &self.effects
         }
 
         /// 🎇️ Drains and returns every recorded effect.
-        pub async fn drain_effects(&mut self) -> Vec<(ActorId, M::Effect)> {
+        pub fn drain_effects(&mut self) -> Vec<(ActorId, M::Effect)> {
             core::mem::take(&mut self.effects)
         }
 
         /// 🚀️ Tasks started via `invoke`, still pending cancellation.
-        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// ⏱️ Removes and returns every timer whose deadline has passed.
-        pub async fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
+        pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
             let now = self.now_ms();
             let mut due = Vec::new();
             self.pending_timers.retain(|(actor, timer, at)| {
@@ -87,29 +87,29 @@ mod host {
     }
 
     impl<M: Machine> Host<M> for NativeHost<M> {
-        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             self.effects.push((actor, effect));
         }
 
-        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             let at = self.now_ms() + delay_ms;
             self.pending_timers.push((actor, timer, at));
         }
 
-        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
             self.cancelled_tasks.push((actor, invoke));
         }
 
-        async fn now_ms(&self) -> u64 {
+        fn now_ms(&self) -> u64 {
             self.start.elapsed().as_millis() as u64
         }
     }
@@ -129,27 +129,27 @@ mod host {
 
     impl<M: Machine> TestHost<M> {
         /// 🧪️ A fresh simulated host whose clock starts at zero.
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self { clock_ms: 0, effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇️ Effects recorded so far, in emission order.
-        pub async fn effects(&self) -> &[(ActorId, M::Effect)] {
+        pub fn effects(&self) -> &[(ActorId, M::Effect)] {
             &self.effects
         }
 
         /// 🚀️ Tasks currently started (not yet cancelled), for invoke-lifecycle assertions.
-        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// 🛑️ Tasks that have been cancelled, for invoke-lifecycle assertions.
-        pub async fn cancelled_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub fn cancelled_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.cancelled_tasks
         }
 
         /// ⏱️ Advances the simulated clock and returns timers that became due, removing them.
-        pub async fn advance(&mut self, delay_ms: u64) -> Vec<(ActorId, TimerId)> {
+        pub fn advance(&mut self, delay_ms: u64) -> Vec<(ActorId, TimerId)> {
             self.clock_ms += delay_ms;
             let now = self.clock_ms;
             let mut due = Vec::new();
@@ -172,28 +172,28 @@ mod host {
     }
 
     impl<M: Machine> Host<M> for TestHost<M> {
-        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             self.effects.push((actor, effect));
         }
 
-        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             self.pending_timers.push((actor, timer, self.clock_ms + delay_ms));
         }
 
-        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
             self.cancelled_tasks.push((actor, invoke));
         }
 
-        async fn now_ms(&self) -> u64 {
+        fn now_ms(&self) -> u64 {
             self.clock_ms
         }
     }
@@ -214,7 +214,7 @@ mod host {
             type Output = ();
             type Effect = &'static str;
             type Config = crate::BitSet<1>;
-            async fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
+            fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
                 unimplemented!("host tests never step a machine")
             }
         }
@@ -276,14 +276,14 @@ mod inspect {
     /// 🔎️ Observer of [`InspectionEvent`]s — implemented by hosts/tooling that need microstep visibility.
     pub trait Inspector<M: Machine> {
         /// 👀️ Called once per [`InspectionEvent`] in emission order.
-        async fn observe(&mut self, event: InspectionEvent<'_, M>);
+        fn observe(&mut self, event: InspectionEvent<'_, M>);
     }
 
     /// 🔎️ An [`Inspector`] that discards every event — the default for callers that don't need tracing.
     pub struct NullInspector;
 
     impl<M: Machine> Inspector<M> for NullInspector {
-        async fn observe(&mut self, _event: InspectionEvent<'_, M>) {}
+        fn observe(&mut self, _event: InspectionEvent<'_, M>) {}
     }
 
     /// 🔎️ One recorded microstep — the exited/entered node sets, in kernel-execution order.
@@ -306,7 +306,7 @@ mod inspect {
     }
 
     impl<M: Machine> Inspector<M> for TraceInspector<M> {
-        async fn observe(&mut self, event: InspectionEvent<'_, M>) {
+        fn observe(&mut self, event: InspectionEvent<'_, M>) {
             if let InspectionEvent::Microstep { exited, entered } = event {
                 self.entries.push(MicrostepTrace { exited: exited.to_vec(), entered: entered.to_vec() });
             }
@@ -459,7 +459,7 @@ mod kernel {
 
     //#region 🔖️Configuration
 
-    async fn is_descendant(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
+    fn is_descendant(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
         if a == ancestor {
             return false;
         }
@@ -473,11 +473,11 @@ mod kernel {
         false
     }
 
-    async fn is_descendant_or_self(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
+    fn is_descendant_or_self(nodes: &[NodeDef], a: NodeId, ancestor: NodeId) -> bool {
         a == ancestor || is_descendant(nodes, a, ancestor)
     }
 
-    async fn depth_of(nodes: &[NodeDef], id: NodeId) -> u32 {
+    fn depth_of(nodes: &[NodeDef], id: NodeId) -> u32 {
         let mut depth = 0;
         let mut cur = nodes[id.0 as usize].parent;
         while let Some(p) = cur {
@@ -487,17 +487,17 @@ mod kernel {
         depth
     }
 
-    async fn is_compound_or_parallel(nodes: &[NodeDef], id: NodeId) -> bool {
+    fn is_compound_or_parallel(nodes: &[NodeDef], id: NodeId) -> bool {
         matches!(nodes[id.0 as usize].kind, NodeKind::Compound | NodeKind::Parallel)
     }
 
-    async fn is_leafish(nodes: &[NodeDef], id: NodeId) -> bool {
+    fn is_leafish(nodes: &[NodeDef], id: NodeId) -> bool {
         matches!(nodes[id.0 as usize].kind, NodeKind::Atomic | NodeKind::Final)
     }
 
     /// 🌳️ The transition domain per SCXML `getTransitionDomain` — the innermost compound/parallel
     /// ancestor whose descendants fully cover source+targets. Always terminates at [`ROOT`].
-    async fn compute_domain(nodes: &[NodeDef], source: NodeId, targets: &[NodeId], kind: TransitionKind) -> NodeId {
+    fn compute_domain(nodes: &[NodeDef], source: NodeId, targets: &[NodeId], kind: TransitionKind) -> NodeId {
         if targets.is_empty() {
             return source;
         }
@@ -514,7 +514,7 @@ mod kernel {
         ROOT
     }
 
-    async fn set_history(history: &mut Vec<(NodeId, Vec<NodeId>)>, key: NodeId, value: Vec<NodeId>) {
+    fn set_history(history: &mut Vec<(NodeId, Vec<NodeId>)>, key: NodeId, value: Vec<NodeId>) {
         if let Some(entry) = history.iter_mut().find(|(k, _)| *k == key) {
             entry.1 = value;
         } else {
@@ -522,7 +522,7 @@ mod kernel {
         }
     }
 
-    async fn resolve_effective_targets(nodes: &[NodeDef], targets: &[NodeId], history: &[(NodeId, Vec<NodeId>)]) -> Vec<NodeId> {
+    fn resolve_effective_targets(nodes: &[NodeDef], targets: &[NodeId], history: &[(NodeId, Vec<NodeId>)]) -> Vec<NodeId> {
         let mut out = Vec::new();
         for &t in targets {
             match nodes[t.0 as usize].kind {
@@ -549,7 +549,7 @@ mod kernel {
         out
     }
 
-    async fn add_descendant_states_to_enter(nodes: &[NodeDef], state: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
+    fn add_descendant_states_to_enter(nodes: &[NodeDef], state: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
         if matches!(nodes[state.0 as usize].kind, NodeKind::HistoryShallow | NodeKind::HistoryDeep) {
             for r in resolve_effective_targets(nodes, core::slice::from_ref(&state), history) {
                 add_descendant_states_to_enter(nodes, r, history, out);
@@ -577,7 +577,7 @@ mod kernel {
         }
     }
 
-    async fn add_ancestor_states_to_enter(nodes: &[NodeDef], state: NodeId, stop_at: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
+    fn add_ancestor_states_to_enter(nodes: &[NodeDef], state: NodeId, stop_at: NodeId, history: &[(NodeId, Vec<NodeId>)], out: &mut Vec<NodeId>) {
         let mut anc = nodes[state.0 as usize].parent;
         while let Some(a) = anc {
             if a == stop_at {
@@ -597,7 +597,7 @@ mod kernel {
         }
     }
 
-    async fn state_done(nodes: &[NodeDef], config: &impl Configuration, node: NodeId) -> bool {
+    fn state_done(nodes: &[NodeDef], config: &impl Configuration, node: NodeId) -> bool {
         match nodes[node.0 as usize].kind {
             NodeKind::Final => true,
             NodeKind::Compound => {
@@ -613,7 +613,7 @@ mod kernel {
         }
     }
 
-    async fn compute_done_nodes<M: Machine>(def: &MachineDefinition<M>, config: &M::Config) -> Vec<NodeId> {
+    fn compute_done_nodes<M: Machine>(def: &MachineDefinition<M>, config: &M::Config) -> Vec<NodeId> {
         let mut out = Vec::new();
         for id in config.iter_ones() {
             if is_compound_or_parallel(def.nodes, id) && state_done(def.nodes, config, id) {
@@ -668,16 +668,16 @@ mod kernel {
     }
 
     impl<M: Machine> Snapshot<M> {
-        pub(crate) async fn from_parts(configuration: M::Config, context: M::Context, status: Status<M::Output>, history: Vec<(NodeId, Vec<NodeId>)>) -> Self {
+        pub(crate) fn from_parts(configuration: M::Config, context: M::Context, status: Status<M::Output>, history: Vec<(NodeId, Vec<NodeId>)>) -> Self {
             Self { configuration, context, status, history }
         }
 
-        pub(crate) async fn history_entries(&self) -> &[(NodeId, Vec<NodeId>)] {
+        pub(crate) fn history_entries(&self) -> &[(NodeId, Vec<NodeId>)] {
             &self.history
         }
 
         /// 🔎️ Whether the state with this stable id is part of the active configuration.
-        pub async fn matches(&self, stable_id: &str) -> bool {
+        pub fn matches(&self, stable_id: &str) -> bool {
             let def = M::definition();
             self.configuration.iter_ones().any(|id| def.nodes[id.0 as usize].stable_id == stable_id)
         }
@@ -715,7 +715,7 @@ mod kernel {
         Timer(TimerId),
     }
 
-    async fn candidates_for<M: Machine>(def: &MachineDefinition<M>, config: &M::Config, context: &M::Context, event: Option<&M::Event>, selector: Selector, done: &[NodeId]) -> Vec<usize> {
+    fn candidates_for<M: Machine>(def: &MachineDefinition<M>, config: &M::Config, context: &M::Context, event: Option<&M::Event>, selector: Selector, done: &[NodeId]) -> Vec<usize> {
         let mut out = Vec::new();
         for (i, t) in def.transitions.iter().enumerate() {
             if !config.contains(t.source) {
@@ -744,7 +744,7 @@ mod kernel {
 
     /// 🥊️ Keeps the deepest-source transition when two candidates' exit domains overlap
     /// (child preemption); ties keep document order.
-    async fn resolve_conflicts(nodes: &[NodeDef], transitions: &[TransitionDef], mut candidates: Vec<usize>) -> Vec<usize> {
+    fn resolve_conflicts(nodes: &[NodeDef], transitions: &[TransitionDef], mut candidates: Vec<usize>) -> Vec<usize> {
         candidates.sort_by_key(|&i| transitions[i].doc_index);
         let mut selected: Vec<usize> = Vec::new();
         'outer: for cand in candidates {
@@ -771,7 +771,7 @@ mod kernel {
         selected
     }
 
-    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) {
+    fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) {
         let nodes = def.nodes;
 
         let mut exit_ids: Vec<NodeId> = Vec::new();
@@ -857,7 +857,7 @@ mod kernel {
 
     //#region 🔖️Macrostep
 
-    async fn finalize_status<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>) {
+    fn finalize_status<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>) {
         if matches!(snapshot.status, Status::Done(_)) {
             return;
         }
@@ -868,7 +868,7 @@ mod kernel {
         }
     }
 
-    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
+    fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let def = M::definition();
         inspector.observe(InspectionEvent::MacrostepStart);
         let mut queue: VecDeque<ActiveTrigger<M>> = VecDeque::new();
@@ -918,7 +918,7 @@ mod kernel {
 
     /// 🚀️ Builds a fresh [`Snapshot`] from `input`, entering the root's default descendant chain
     /// and settling any eventless/done transitions enabled immediately on init.
-    pub async fn init<M: Machine>(input: M::Input, sink: &mut Vec<Command<M>>) -> Snapshot<M> {
+    pub fn init<M: Machine>(input: M::Input, sink: &mut Vec<Command<M>>) -> Snapshot<M> {
         let def = M::definition();
         let mut snapshot = Snapshot { configuration: <M::Config as Default>::default(), context: (def.context_from_input)(input), status: Status::Running, history: Vec::new() };
         let mut entry_ids: Vec<NodeId> = Vec::new();
@@ -943,14 +943,14 @@ mod kernel {
 
     /// 🏃️ Runs one external event to completion (a "macrostep"): the triggered microstep,
     /// then every enabled eventless/`on_done` microstep, until the configuration settles.
-    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Event(event.event_id()), event: Some(event) };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
     /// ⏱️ Runs an `after`-timer firing to completion — the runtime's entry point when a
     /// [`crate::Host`] reports a scheduled [`TimerId`] elapsed.
-    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Timer(timer), event: None };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
@@ -974,10 +974,10 @@ mod kernel {
 
         impl StatechartEvent for ToggleEvent {
             const EVENT_COUNT: u16 = 1;
-            async fn event_id(&self) -> EventId {
+            fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            async fn event_name(id: EventId) -> &'static str {
+            fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Flip",
                     _ => "?",
@@ -991,11 +991,11 @@ mod kernel {
             allow: bool,
         }
 
-        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut Vec<Command<ToggleMachine>>) {
+        fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut Vec<Command<ToggleMachine>>) {
             ctx.count += 1;
         }
 
-        async fn toggle_allowed(ctx: &ToggleContext, _event: Option<&ToggleEvent>) -> bool {
+        fn toggle_allowed(ctx: &ToggleContext, _event: Option<&ToggleEvent>) -> bool {
             ctx.allow
         }
 
@@ -1018,7 +1018,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            async fn definition() -> &'static MachineDefinition<Self> {
+            fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<ToggleMachine> = MachineDefinition {
                     id: "toggle",
                     nodes: TOGGLE_NODES,
@@ -1076,7 +1076,7 @@ mod kernel {
 
         impl StatechartEvent for PlayerEvent {
             const EVENT_COUNT: u16 = 5;
-            async fn event_id(&self) -> EventId {
+            fn event_id(&self) -> EventId {
                 match self {
                     PlayerEvent::Open => EventId(0),
                     PlayerEvent::Pause => EventId(1),
@@ -1085,7 +1085,7 @@ mod kernel {
                     PlayerEvent::Resume => EventId(4),
                 }
             }
-            async fn event_name(id: EventId) -> &'static str {
+            fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Open",
                     1 => "Pause",
@@ -1125,7 +1125,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            async fn definition() -> &'static MachineDefinition<Self> {
+            fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<PlayerMachine> =
                     MachineDefinition { id: "player", nodes: PLAYER_NODES, transitions: PLAYER_TRANSITIONS, context_from_input: |_| PlayerContext, make_output: None, guards: &[], actions: &[], fingerprint: 2, manifest_json: "{}" };
                 &DEF
@@ -1183,14 +1183,14 @@ mod kernel {
 
         impl StatechartEvent for RecorderEvent {
             const EVENT_COUNT: u16 = 3;
-            async fn event_id(&self) -> EventId {
+            fn event_id(&self) -> EventId {
                 match self {
                     RecorderEvent::Start => EventId(0),
                     RecorderEvent::AudioStop => EventId(1),
                     RecorderEvent::VideoStop => EventId(2),
                 }
             }
-            async fn event_name(id: EventId) -> &'static str {
+            fn event_name(id: EventId) -> &'static str {
                 match id.0 {
                     0 => "Start",
                     1 => "AudioStop",
@@ -1230,7 +1230,7 @@ mod kernel {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            async fn definition() -> &'static MachineDefinition<Self> {
+            fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<RecorderMachine> =
                     MachineDefinition { id: "recorder", nodes: RECORDER_NODES, transitions: RECORDER_TRANSITIONS, context_from_input: |_| RecorderContext, make_output: None, guards: &[], actions: &[], fingerprint: 3, manifest_json: "{}" };
                 &DEF
@@ -1321,14 +1321,14 @@ mod persist {
     }
 
     /// 💾️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
-    pub async fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
+    pub fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
         let def = M::definition();
         let states = snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect();
         let history = snapshot.history_entries().iter().map(|(owner, ids)| (def.nodes[owner.0 as usize].stable_id.to_string(), ids.iter().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect())).collect();
         PersistedSnapshot { version: 1, fingerprint: def.fingerprint, states, history, done: matches!(snapshot.status, Status::Done(_)) }
     }
 
-    async fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
+    fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
         def_nodes.iter().position(|n| n.stable_id == stable_id).map(|idx| NodeId(idx as u16)).ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
     }
 
@@ -1491,12 +1491,12 @@ mod runtime {
 
     impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
         /// 🎬️ A fresh system with no actors yet, owning `host`.
-        pub async fn new(host: H) -> Self {
+        pub fn new(host: H) -> Self {
             Self { host, actors: Vec::new(), next_id: 0 }
         }
 
         /// 🎬️ Initializes and registers a root actor, routing its initial commands immediately.
-        pub async fn spawn_root(&mut self, input: M::Input) -> ActorId {
+        pub fn spawn_root(&mut self, input: M::Input) -> ActorId {
             let id = ActorId(self.next_id);
             self.next_id += 1;
             let mut buffer: Vec<Command<M>> = Vec::new();
@@ -1507,12 +1507,12 @@ mod runtime {
         }
 
         /// 🎬️ The current [`Snapshot`] of an actor, if it exists.
-        pub async fn snapshot(&self, id: ActorId) -> Option<&Snapshot<M>> {
+        pub fn snapshot(&self, id: ActorId) -> Option<&Snapshot<M>> {
             self.actors.iter().find(|a| a.id == id).map(|a| &a.snapshot)
         }
 
         /// 🎬️ Enqueues an event for delivery on the next [`ActorSystem::drain`].
-        pub async fn send(&mut self, to: ActorId, event: M::Event) {
+        pub fn send(&mut self, to: ActorId, event: M::Event) {
             if let Some(actor) = self.actors.iter_mut().find(|a| a.id == to) {
                 actor.mailbox.push_back(event);
             }
@@ -1520,7 +1520,7 @@ mod runtime {
 
         /// 🎬️ Delivers a [`TimerId`](crate::TimerId) elapsed notification straight to `macrostep`'s
         /// timer entry point for `to`.
-        pub async fn timer_elapsed(&mut self, to: ActorId, timer: crate::TimerId) -> Option<StepReport> {
+        pub fn timer_elapsed(&mut self, to: ActorId, timer: crate::TimerId) -> Option<StepReport> {
             let idx = self.actors.iter().position(|a| a.id == to)?;
             let mut buffer: Vec<Command<M>> = Vec::new();
             let mut inspector = NullInspector;
@@ -1530,7 +1530,7 @@ mod runtime {
         }
 
         /// 🎬️ Drains every actor's mailbox to quiescence, running one macrostep per delivered event.
-        pub async fn drain(&mut self) -> Vec<StepReport> {
+        pub fn drain(&mut self) -> Vec<StepReport> {
             let mut reports = Vec::new();
             loop {
                 let mut progressed = false;
@@ -1553,7 +1553,7 @@ mod runtime {
             reports
         }
 
-        async fn route_commands(&mut self, actor: ActorId, commands: Vec<Command<M>>) {
+        fn route_commands(&mut self, actor: ActorId, commands: Vec<Command<M>>) {
             let mut sends = Vec::new();
             if let Some(idx) = self.actors.iter().position(|a| a.id == actor) {
                 for command in commands {
@@ -1571,7 +1571,7 @@ mod runtime {
     /// 🎬️ Applies one [`Command`] to `host`/`snapshot`; returns a `Send` command's
     /// `(to, event)` pair for the caller to route on, since a lone [`Host`]+[`Snapshot`]
     /// pair (e.g. a single `export_wasm_machine!` instance) has no other actor to deliver it to.
-    pub async fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {
+    pub fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {
         match command {
             Command::Effect(effect) => {
                 host.execute_effect(actor, effect);
@@ -1655,7 +1655,7 @@ mod testing {
 
     impl<M: Machine> Model<M> {
         /// 🧭️ A model that explores with exactly these representative events.
-        pub async fn new(events: Vec<M::Event>) -> Self {
+        pub fn new(events: Vec<M::Event>) -> Self {
             Self { events }
         }
     }
@@ -1664,7 +1664,7 @@ mod testing {
 
     //#region 🔖️Paths
 
-    async fn active_stable_ids<M: Machine>(snapshot: &Snapshot<M>) -> Vec<&'static str> {
+    fn active_stable_ids<M: Machine>(snapshot: &Snapshot<M>) -> Vec<&'static str> {
         let def = M::definition();
         snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id).collect()
     }
@@ -1684,7 +1684,7 @@ mod testing {
     /// 🧭️ Breadth-first walk over reachable configurations, trying every event in
     /// `model` from each newly-discovered configuration. Approximates reachability by
     /// configuration only — guard outcomes that depend on context may under-approximate.
-    pub async fn explore<M: Machine>(model: &Model<M>, input: M::Input) -> Coverage
+    pub fn explore<M: Machine>(model: &Model<M>, input: M::Input) -> Coverage
     where
         M::Context: Clone,
     {
@@ -1740,7 +1740,7 @@ mod testing {
     }
 
     /// 🧭️ Runs every invariant against `snapshot`, returning one formatted message per violation.
-    pub async fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invariant<M>]) -> Vec<String> {
+    pub fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invariant<M>]) -> Vec<String> {
         invariants.iter().filter_map(|inv| (inv.check)(snapshot).err().map(|reason| format!("{}: {}", inv.name, reason))).collect()
     }
 
@@ -1757,7 +1757,7 @@ mod testing {
 
     /// 🧭️ Runs `steps` against a freshly-initialized machine, failing fast with a
     /// descriptive message naming the offending step and the actual active configuration.
-    pub async fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
+    pub fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
         let mut sink: Vec<Command<M>> = Vec::new();
         let mut snapshot = init::<M>(input, &mut sink);
         for (index, step) in steps.iter().enumerate() {
@@ -1786,10 +1786,10 @@ mod testing {
 
         impl StatechartEvent for UnitEvent {
             const EVENT_COUNT: u16 = 1;
-            async fn event_id(&self) -> EventId {
+            fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            async fn event_name(_id: EventId) -> &'static str {
+            fn event_name(_id: EventId) -> &'static str {
                 "Unit"
             }
         }
@@ -1801,10 +1801,10 @@ mod testing {
 
         impl StatechartEvent for UnitToggleEvent {
             const EVENT_COUNT: u16 = 1;
-            async fn event_id(&self) -> EventId {
+            fn event_id(&self) -> EventId {
                 EventId(0)
             }
-            async fn event_name(_id: EventId) -> &'static str {
+            fn event_name(_id: EventId) -> &'static str {
                 "Flip"
             }
         }
@@ -1834,14 +1834,14 @@ mod testing {
             type Output = ();
             type Effect = ();
             type Config = BitSet<1>;
-            async fn definition() -> &'static MachineDefinition<Self> {
+            fn definition() -> &'static MachineDefinition<Self> {
                 static DEF: MachineDefinition<UnitToggleMachine> =
                     MachineDefinition { id: "unit_toggle", nodes: NODES, transitions: TRANSITIONS, context_from_input: |_| UnitToggleContext::default(), make_output: None, guards: &[], actions: &[], fingerprint: 42, manifest_json: "{}" };
                 &DEF
             }
         }
 
-        pub async fn unit_toggle_definition() -> &'static MachineDefinition<UnitToggleMachine> {
+        pub fn unit_toggle_definition() -> &'static MachineDefinition<UnitToggleMachine> {
             UnitToggleMachine::definition()
         }
     }
@@ -1936,7 +1936,7 @@ pub struct BitSet<const W: usize> {
 
 impl<const W: usize> BitSet<W> {
     /// 🧮️ An empty bitset with no bits set.
-    pub async fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { words: [0u64; W] }
     }
 }
@@ -1954,17 +1954,17 @@ impl<const W: usize> Default for BitSet<W> {
 /// simultaneously-active states.
 pub trait Configuration: Clone + PartialEq + Default {
     /// ➕️ Marks `id` as part of the active configuration.
-    async fn set(&mut self, id: NodeId);
+    fn set(&mut self, id: NodeId);
     /// ➖️ Removes `id` from the active configuration.
-    async fn clear(&mut self, id: NodeId);
+    fn clear(&mut self, id: NodeId);
     /// ❓️ Whether `id` is part of the active configuration.
-    async fn contains(&self, id: NodeId) -> bool;
+    fn contains(&self, id: NodeId) -> bool;
     /// 🔁️ Iterates active `NodeId`s in ascending order.
-    async fn iter_ones(&self) -> ConfigurationIter<'_, Self>;
+    fn iter_ones(&self) -> ConfigurationIter<'_, Self>;
     /// 🧹️ Clears every bit.
-    async fn clear_all(&mut self);
+    fn clear_all(&mut self);
     /// ❓️ Whether no bit is set.
-    async fn is_empty(&self) -> bool;
+    fn is_empty(&self) -> bool;
 }
 
 /// 🔁️ Iterator over the active `NodeId`s of a [`Configuration`].
@@ -1992,30 +1992,30 @@ impl<'a, C: Configuration> Iterator for ConfigurationIter<'a, C> {
 }
 
 impl<const W: usize> Configuration for BitSet<W> {
-    async fn set(&mut self, id: NodeId) {
+    fn set(&mut self, id: NodeId) {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] |= 1u64 << bit;
     }
 
-    async fn clear(&mut self, id: NodeId) {
+    fn clear(&mut self, id: NodeId) {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] &= !(1u64 << bit);
     }
 
-    async fn contains(&self, id: NodeId) -> bool {
+    fn contains(&self, id: NodeId) -> bool {
         let (word, bit) = (id.0 as usize / 64, id.0 as usize % 64);
         self.words[word] & (1u64 << bit) != 0
     }
 
-    async fn iter_ones(&self) -> ConfigurationIter<'_, Self> {
+    fn iter_ones(&self) -> ConfigurationIter<'_, Self> {
         ConfigurationIter { words: &self.words, word_index: 0, current: 0, _marker: core::marker::PhantomData }
     }
 
-    async fn clear_all(&mut self) {
+    fn clear_all(&mut self) {
         self.words = [0u64; W];
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.words.iter().all(|w| *w == 0)
     }
 }
@@ -2031,9 +2031,9 @@ pub trait StatechartEvent: Clone {
     /// 🔢️ Number of distinct event variants.
     const EVENT_COUNT: u16;
     /// 🔢️ The dense id of this event's variant.
-    async fn event_id(&self) -> EventId;
+    fn event_id(&self) -> EventId;
     /// 🏷️ The variant's declared name, for diagnostics/inspection/manifest.
-    async fn event_name(id: EventId) -> &'static str;
+    fn event_name(id: EventId) -> &'static str;
 }
 
 /// 🎭️ A compiled statechart: consumer-owned types bound to a static [`MachineDefinition`].
@@ -2054,7 +2054,7 @@ pub trait Machine: Sized + 'static {
     type Config: Configuration;
 
     /// 📐️ The compiled static definition backing this machine.
-    async fn definition() -> &'static MachineDefinition<Self>;
+    fn definition() -> &'static MachineDefinition<Self>;
 }
 
 /// 🏷️ Struct-level field name/type metadata, embedded as JSON — feeds TypeScript
@@ -2097,7 +2097,7 @@ mod wasm_bridge {
     /// 🌐️ A [`Host`] backed by browser timers and a JS effect callback. Timers are
     /// polled by the caller via [`WasmHost::due_timers`] (driven by the generated
     /// `export_wasm_machine!` wrapper's `tick()`), matching [`crate::NativeHost`] and
-    /// [`crate::TestHost`]'s caller-driven clock — no `async fn` anywhere in the host.
+    /// [`crate::TestHost`]'s caller-driven clock — no `fn` anywhere in the host.
     pub struct WasmHost<M: Machine> {
         effect_callback: Option<js_sys::Function>,
         pending_timers: Vec<(ActorId, TimerId, f64)>,
@@ -2107,22 +2107,22 @@ mod wasm_bridge {
 
     impl<M: Machine> WasmHost<M> {
         /// 🌐️ A fresh host with no effect callback registered yet.
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self { effect_callback: None, pending_timers: Vec::new(), started_tasks: Vec::new(), _marker: core::marker::PhantomData }
         }
 
         /// 🌐️ Registers the JS function invoked as `(actorId: number, effectJson: string) => void`.
-        pub async fn set_effect_callback(&mut self, callback: js_sys::Function) {
+        pub fn set_effect_callback(&mut self, callback: js_sys::Function) {
             self.effect_callback = Some(callback);
         }
 
         /// 🚀️ Tasks started via `invoke`, still pending cancellation.
-        pub async fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
             &self.started_tasks
         }
 
         /// ⏱️ Removes and returns every timer whose deadline has passed, per `js_sys::Date::now()`.
-        pub async fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
+        pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
             let now = js_sys::Date::now();
             let mut due = Vec::new();
             self.pending_timers.retain(|(actor, timer, at)| {
@@ -2147,7 +2147,7 @@ mod wasm_bridge {
     where
         M::Effect: serde::Serialize,
     {
-        async fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
             if let Some(callback) = &self.effect_callback {
                 if let Ok(json) = serde_json::to_string(&effect) {
                     let _ = callback.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_f64(actor.0 as f64), &wasm_bindgen::JsValue::from_str(&json));
@@ -2155,23 +2155,23 @@ mod wasm_bridge {
             }
         }
 
-        async fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
             self.pending_timers.push((actor, timer, js_sys::Date::now() + delay_ms as f64));
         }
 
-        async fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
             self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
         }
 
-        async fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.push((actor, invoke));
         }
 
-        async fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
             self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
         }
 
-        async fn now_ms(&self) -> u64 {
+        fn now_ms(&self) -> u64 {
             js_sys::Date::now() as u64
         }
     }
@@ -2188,7 +2188,7 @@ mod wasm_smoke {
     #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
     pub struct ToggleContext;
 
-    async fn build_context(_input: ()) -> ToggleContext {
+    fn build_context(_input: ()) -> ToggleContext {
         ToggleContext
     }
 
@@ -2271,23 +2271,23 @@ mod checkout_integration {
         pub attempts: u32,
     }
 
-    async fn build_context(_input: ()) -> CheckoutContext {
+    fn build_context(_input: ()) -> CheckoutContext {
         CheckoutContext::default()
     }
 
-    async fn allow_select(ctx: &CheckoutContext, _event: Option<&checkout::Event>) -> bool {
+    fn allow_select(ctx: &CheckoutContext, _event: Option<&checkout::Event>) -> bool {
         ctx.attempts < 3
     }
 
-    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
+    fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.method_set = true;
     }
 
-    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
+    fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.attempts += 1;
     }
 
-    async fn make_receipt(ctx: &CheckoutContext) -> Receipt {
+    fn make_receipt(ctx: &CheckoutContext) -> Receipt {
         Receipt { attempts: ctx.attempts }
     }
 

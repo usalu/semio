@@ -46,7 +46,8 @@ pub struct SemioTableDiff {
 }
 
 impl SemioTableDiff {
-    pub async fn is_empty_diff(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
         self.columns.is_none() && self.rows.is_none()
     }
 }
@@ -86,7 +87,7 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
         SemioTableDiff { columns: self.columns.as_ref().map(|_| SemioTableColumnList { values: base.columns.clone() }), rows: self.rows.as_ref().map(|_| SemioTableRowList { values: base.rows.clone() }) }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 //#endregion 🔖️Diff
@@ -100,24 +101,29 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 /// purely a top-level field separator).
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{dec_column, dec_row, enc_column, enc_row};
 
-async fn enc_columns(list: &SemioTableColumnList) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_columns(list: &SemioTableColumnList) -> String {
     format!("[{}]", list.values.iter().map(enc_column).collect::<Vec<_>>().join(","))
 }
-async fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
-    let values = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
+    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
-async fn enc_rows(list: &SemioTableRowList) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rows(list: &SemioTableRowList) -> String {
     format!("[{}]", list.values.iter().map(enc_row).collect::<Vec<_>>().join(","))
 }
-async fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
-    let values = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
+    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }
 
-async fn print_table_diff(d: &SemioTableDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_table_diff(d: &SemioTableDiff) -> String {
     let mut parts = Vec::new();
     if let Some(list) = &d.columns {
         parts.push(format!("columns={}", enc_columns(list)));
@@ -127,7 +133,8 @@ async fn print_table_diff(d: &SemioTableDiff) -> String {
     }
     parts.join(";")
 }
-async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
     if line.is_empty() {
         return Ok(SemioTableDiff::default());
     }
@@ -135,9 +142,9 @@ async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
     let mut rows = None;
     for token in split_top_level(line, ';') {
         if let Some(rest) = token.strip_prefix("columns=") {
-            columns = Some(dec_columns(rest).await?);
+            columns = Some(dec_columns(rest)?);
         } else if let Some(rest) = token.strip_prefix("rows=") {
-            rows = Some(dec_rows(rest).await?);
+            rows = Some(dec_rows(rest)?);
         } else {
             return Err(format!("table diff: unknown token {token:?}"));
         }
@@ -147,10 +154,10 @@ async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
 
 impl protocol::DiffCodec for SemioTableDiff {
     async fn print_diff(&self) -> String {
-        print_table_diff(self).await
+        print_table_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_table_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_table_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are
@@ -196,7 +203,7 @@ impl protocol::DiffCodec for SemioTableDiff {
             let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff columns count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                values.push(read_column(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff column", offset: 2, detail: e })?);
+                values.push(read_column(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff column", offset: 2, detail: e })?);
             }
             Some(SemioTableColumnList { values })
         } else {
@@ -209,7 +216,7 @@ impl protocol::DiffCodec for SemioTableDiff {
                 let cell_count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff row cell count", offset: 2, detail: e.to_string() })?;
                 let mut cells = Vec::with_capacity(cell_count as usize);
                 for _ in 0..cell_count {
-                    cells.push(dec_semio_value_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff cell", offset: 2, detail: e })?);
+                    cells.push(dec_semio_value_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff cell", offset: 2, detail: e })?);
                 }
                 values.push(SemioTableRow { cells });
             }
@@ -227,7 +234,8 @@ impl protocol::DiffCodec for SemioTableDiff {
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`. Covers: empty, columns-only, rows-only, and
 /// both-present (the two-optional-field `;`-joined `print_diff` shape).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioTableDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{demo_table_snapshot, SemioTableCellKind, SemioTableColumn, SemioTableRow};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
@@ -250,7 +258,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use protocol::DiffCodec;
 
-    async fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
         SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: vec![SemioTableColumn { name: name.into(), kind }], rows: vec![SemioTableRow { cells: vec![value] }] }
     }
 

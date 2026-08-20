@@ -10,15 +10,18 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema
 
 // #region 🔖️Fixtures
 
-async fn box_solid(kernel: &mut Brep) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn box_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.box_prim_sync(1.0, 1.0, 1.0).expect("box_prim_sync")
 }
 
-async fn sphere_solid(kernel: &mut Brep) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sphere_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.sphere_prim_sync(1.0).expect("sphere_prim_sync")
 }
 
-async fn torus_solid(kernel: &mut Brep) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn torus_solid(kernel: &mut Brep) -> GeometryHandle {
     kernel.torus_prim_sync(2.0, 0.5).expect("torus_prim_sync")
 }
 
@@ -26,7 +29,8 @@ async fn torus_solid(kernel: &mut Brep) -> GeometryHandle {
 /// overlapping fuses — used to reveal per-face-count scaling for tessellation,
 /// fillet, and closest-point queries (which all require a single `SolidId`, not
 /// a compound, ruling out `linear_pattern_sync` as a many-face fixture).
-async fn multi_box_solid(kernel: &mut Brep, boxes: usize) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn multi_box_solid(kernel: &mut Brep, boxes: usize) -> GeometryHandle {
     let mut current = box_solid(kernel);
     for i in 1..boxes {
         let next = box_solid(kernel);
@@ -36,31 +40,37 @@ async fn multi_box_solid(kernel: &mut Brep, boxes: usize) -> GeometryHandle {
     current
 }
 
-async fn profile_face(kernel: &mut Brep) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn profile_face(kernel: &mut Brep) -> GeometryHandle {
     let wire = kernel.rectangle_wire_sync(1.0, 1.0).expect("rectangle_wire_sync");
     kernel.planar_face_from_wire_sync(&wire).expect("planar_face_from_wire_sync")
 }
 
-async fn straight_path(kernel: &mut Brep) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn straight_path(kernel: &mut Brep) -> GeometryHandle {
     kernel.line_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 5.0]).expect("line_curve_sync")
 }
 
-async fn polyline_path(kernel: &mut Brep, segments: usize) -> GeometryHandle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn polyline_path(kernel: &mut Brep, segments: usize) -> GeometryHandle {
     let points: Vec<Vec3> = (0..=segments).map(|i| [0.3 * (i as f64 * 0.7).sin(), 0.3 * (i as f64 * 0.7).cos(), i as f64 * (5.0 / segments as f64)]).collect();
     kernel.polyline_wire_sync(&points).expect("polyline_wire_sync")
 }
 
-async fn point_cloud(n: usize) -> Vec<Vec3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_cloud(n: usize) -> Vec<Vec3> {
     (0..n).map(|i| [i as f64 * 0.1, (i as f64 * 0.3).sin(), (i as f64 * 0.17).cos()]).collect()
 }
 
-async fn surface_grid(rows: usize, cols: usize) -> Vec<Vec<Vec3>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn surface_grid(rows: usize, cols: usize) -> Vec<Vec<Vec3>> {
     (0..rows).map(|r| (0..cols).map(|c| [r as f64, c as f64, (r as f64 * 0.5 + c as f64 * 0.3).sin()]).collect()).collect()
 }
 // #endregion 🔖️Fixtures
 
 // #region 🔖️Primitives
-async fn bench_primitives(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_primitives(c: &mut Criterion) {
     let mut group = c.benchmark_group("primitives");
     group.bench_function("box", |b| {
         b.iter(|| {
@@ -79,7 +89,8 @@ async fn bench_primitives(c: &mut Criterion) {
 // #endregion 🔖️Primitives
 
 // #region 🔖️CurvesSurfaces
-async fn bench_curves_surfaces(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_curves_surfaces(c: &mut Criterion) {
     let mut group = c.benchmark_group("curves_surfaces");
     for &n in &[10usize, 100, 500] {
         let points = point_cloud(n);
@@ -104,7 +115,8 @@ async fn bench_curves_surfaces(c: &mut Criterion) {
 // #endregion 🔖️CurvesSurfaces
 
 // #region 🔖️Sweeps
-async fn bench_sweeps(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_sweeps(c: &mut Criterion) {
     let mut group = c.benchmark_group("sweeps");
     group.bench_function("sweep_straight", |b| {
         b.iter(|| {
@@ -144,7 +156,8 @@ async fn bench_sweeps(c: &mut Criterion) {
 ///
 /// 🔁️ `repeated_cut_same_torus_x10` runs repeated cuts against the *same* static torus operand — the
 /// slider-drag motivating case for a coarse-mesh cache in `boolean_mesh_sync`.
-async fn bench_booleans(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_booleans(c: &mut Criterion) {
     let mut group = c.benchmark_group("booleans");
     group.bench_function("fuse_box_box", |b| {
         b.iter(|| {
@@ -187,7 +200,8 @@ async fn bench_booleans(c: &mut Criterion) {
 // #endregion 🔖️Booleans
 
 // #region 🔖️Transforms
-async fn bench_transforms(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_transforms(c: &mut Criterion) {
     let mut group = c.benchmark_group("transforms");
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("translate", boxes), &boxes, |b, &boxes| {
@@ -203,7 +217,8 @@ async fn bench_transforms(c: &mut Criterion) {
 // #endregion 🔖️Transforms
 
 // #region 🔖️Features
-async fn bench_features(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_features(c: &mut Criterion) {
     let mut group = c.benchmark_group("features");
     for &boxes in &[1usize, 5, 15] {
         group.bench_with_input(BenchmarkId::new("fillet_all_edges", boxes), &boxes, |b, &boxes| {
@@ -226,7 +241,8 @@ async fn bench_features(c: &mut Criterion) {
 // #endregion 🔖️Features
 
 // #region 🔖️IntersectMeasure
-async fn bench_intersect_measure(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_intersect_measure(c: &mut Criterion) {
     let mut group = c.benchmark_group("intersect_measure");
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("closest_point", boxes), &boxes, |b, &boxes| {
@@ -261,7 +277,8 @@ async fn bench_intersect_measure(c: &mut Criterion) {
 // #endregion 🔖️IntersectMeasure
 
 // #region 🔖️Tessellation
-async fn bench_tessellation(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_tessellation(c: &mut Criterion) {
     let mut group = c.benchmark_group("tessellation");
     for &tolerance in &[0.5f64, 0.1, 0.01] {
         group.bench_with_input(BenchmarkId::new("box_tolerance", format!("{tolerance}")), &tolerance, |b, &tolerance| {
@@ -287,7 +304,8 @@ async fn bench_tessellation(c: &mut Criterion) {
 // #endregion 🔖️Tessellation
 
 // #region 🔖️Patterns
-async fn bench_patterns(c: &mut Criterion) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bench_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("patterns");
     for &count in &[5usize, 50, 200] {
         group.bench_with_input(BenchmarkId::new("linear_pattern", count), &count, |b, &count| {

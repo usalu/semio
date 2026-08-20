@@ -36,10 +36,12 @@ pub struct HtmlAttr {
 }
 
 impl HtmlAttr {
-    pub async fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
         Self { name: name.into(), value: Some(value.into()) }
     }
-    pub async fn boolean(name: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn boolean(name: impl Into<String>) -> Self {
         Self { name: name.into(), value: None }
     }
 }
@@ -56,13 +58,15 @@ pub enum RawTextKind {
 }
 
 impl RawTextKind {
-    pub async fn tag_name(self) -> &'static str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tag_name(self) -> &'static str {
         match self {
             RawTextKind::Script => "script",
             RawTextKind::Style => "style",
         }
     }
-    async fn from_tag_name(name: &str) -> Option<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn from_tag_name(name: &str) -> Option<Self> {
         if name.eq_ignore_ascii_case("script") {
             Some(RawTextKind::Script)
         } else if name.eq_ignore_ascii_case("style") {
@@ -104,7 +108,8 @@ pub enum HtmlNode {
 }
 
 impl HtmlNode {
-    pub async fn element(name: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn element(name: impl Into<String>) -> Self {
         HtmlNode::Element { name: name.into(), attributes: Vec::new(), children: Vec::new() }
     }
 }
@@ -141,7 +146,8 @@ impl Default for HtmlSnapshot {
 /// carry children; the encoder must not emit `</tag>` (or self-close `/>`) for them.
 const VOID_ELEMENTS: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
 
-pub async fn is_void_element(name: &str) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn is_void_element(name: &str) -> bool {
     VOID_ELEMENTS.iter().any(|v| v.eq_ignore_ascii_case(name))
 }
 //#endregion 🔖️VoidElements
@@ -150,7 +156,8 @@ pub async fn is_void_element(name: &str) -> bool {
 /// 🔓️ Decodes the small honest entity subset (see module doc comment) inside text/attribute
 /// content. Any `&`-sequence outside that subset (malformed, or a real named reference like
 /// `&nbsp;` this subset doesn't model) is passed through byte-for-byte, never dropped or errored.
-async fn decode_entities(raw: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_entities(raw: &str) -> String {
     let bytes = raw.as_bytes();
     let mut out = String::with_capacity(raw.len());
     let mut i = 0usize;
@@ -162,7 +169,7 @@ async fn decode_entities(raw: &str) -> String {
             i += ch_len;
             continue;
         }
-        if let Some((decoded, consumed)) = try_decode_entity(&raw[i..]).await {
+        if let Some((decoded, consumed)) = try_decode_entity(&raw[i..]) {
             out.push(decoded);
             i += consumed;
         } else {
@@ -173,7 +180,8 @@ async fn decode_entities(raw: &str) -> String {
     out
 }
 
-async fn utf8_char_len(lead: u8) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn utf8_char_len(lead: u8) -> usize {
     if lead >= 0xF0 {
         4
     } else if lead >= 0xE0 {
@@ -186,7 +194,8 @@ async fn utf8_char_len(lead: u8) -> usize {
 }
 
 /// 🔓️ Attempts to decode ONE entity starting at `s[0] == '&'`. Returns `(char, bytes_consumed)`.
-async fn try_decode_entity(s: &str) -> Option<(char, usize)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn try_decode_entity(s: &str) -> Option<(char, usize)> {
     let named: &[(&str, char)] = &[("&amp;", '&'), ("&lt;", '<'), ("&gt;", '>'), ("&quot;", '"'), ("&apos;", '\'')];
     for (lit, ch) in named {
         if s.starts_with(lit) {
@@ -214,7 +223,8 @@ async fn try_decode_entity(s: &str) -> Option<(char, usize)> {
 }
 
 /// 🔒️ Escapes text-node content for re-serialization (`&`, `<`, `>`).
-async fn encode_text(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_text(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for ch in s.chars() {
         match ch {
@@ -230,7 +240,8 @@ async fn encode_text(s: &str) -> String {
 /// 🔒️ Escapes an attribute value for re-serialization. Attribute values are ALWAYS re-emitted
 /// double-quoted (see module doc comment on quote-style normalization), so only `&` and `"` need
 /// escaping.
-async fn encode_attr_value(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_attr_value(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for ch in s.chars() {
         match ch {
@@ -258,20 +269,24 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    async fn new(text: &'a str) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(text: &'a str) -> Self {
         Self { src: text, bytes: text.as_bytes(), pos: 0, line: 1, col: 1 }
     }
 
-    async fn peek(&self) -> Option<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek(&self) -> Option<u8> {
         self.bytes.get(self.pos).copied()
     }
 
-    async fn peek_at(&self, offset: usize) -> Option<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek_at(&self, offset: usize) -> Option<u8> {
         self.bytes.get(self.pos + offset).copied()
     }
 
-    async fn advance(&mut self) -> Option<u8> {
-        let byte = self.peek().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn advance(&mut self) -> Option<u8> {
+        let byte = self.peek()?;
         self.pos += 1;
         if byte == b'\n' {
             self.line += 1;
@@ -282,33 +297,38 @@ impl<'a> Parser<'a> {
         Some(byte)
     }
 
-    async fn span(&self) -> TextSpan {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn span(&self) -> TextSpan {
         TextSpan::at(self.line, self.col)
     }
 
-    async fn err(&self, message: impl Into<String>) -> TextError {
-        TextError::new(message, self.span().await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn err(&self, message: impl Into<String>) -> TextError {
+        TextError::new(message, self.span())
     }
 
-    async fn skip_ws(&mut self) {
-        while matches!(self.peek().await, Some(b' ' | b'\t' | b'\n' | b'\r' | 0x0C)) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn skip_ws(&mut self) {
+        while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r' | 0x0C)) {
             self.advance();
         }
     }
 
-    async fn expect(&mut self, byte: u8) -> Result<(), TextError> {
-        match self.peek().await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn expect(&mut self, byte: u8) -> Result<(), TextError> {
+        match self.peek() {
             Some(b) if b == byte => {
                 self.advance();
                 Ok(())
             }
-            Some(other) => Err(self.err(format!("expected '{}', found '{}'", byte as char, other as char)).await),
-            None => Err(self.err(format!("expected '{}', found end of input", byte as char)).await),
+            Some(other) => Err(self.err(format!("expected '{}', found '{}'", byte as char, other as char))),
+            None => Err(self.err(format!("expected '{}', found end of input", byte as char))),
         }
     }
 
     /// 🔎 Literal, case-sensitive prefix check at the current position (no consumption).
-    async fn peek_str(&self, lit: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek_str(&self, lit: &str) -> bool {
         self.src[self.pos..].starts_with(lit)
     }
 
@@ -317,19 +337,22 @@ impl<'a> Parser<'a> {
     /// with no guarantee of landing on a UTF-8 char boundary, and `&str` slicing at a non-boundary
     /// offset panics where `&[u8]` slicing does not (same rationale as
     /// `read_raw_text_until_close`'s probe).
-    async fn peek_str_ci(&self, lit: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek_str_ci(&self, lit: &str) -> bool {
         let end = self.pos + lit.len();
         end <= self.bytes.len() && self.bytes[self.pos..end].eq_ignore_ascii_case(lit.as_bytes())
     }
 
-    async fn slice(&self, start: usize, end: usize) -> &'a str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn slice(&self, start: usize, end: usize) -> &'a str {
         &self.src[start..end]
     }
 
     /// 🔎 Whether the byte at `pos + offset` is a "tag boundary" (whitespace, `>`, `/`) — used to
     /// avoid matching `</script2>` when looking for `</script>`.
-    async fn is_boundary_at(&self, offset: usize) -> bool {
-        match self.peek_at(offset).await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_boundary_at(&self, offset: usize) -> bool {
+        match self.peek_at(offset) {
             None => true,
             Some(b) => matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C | b'>' | b'/'),
         }
@@ -338,37 +361,40 @@ impl<'a> Parser<'a> {
 
 /// 🔤️ Valid HTML5 tag-name / attribute-name continuation character (permissive superset: ASCII
 /// alnum plus the common `-`/`:`/`_`/`.` seen in custom elements and `data-*`/namespaced attrs).
-async fn is_name_byte(b: u8) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_name_byte(b: u8) -> bool {
     b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b':' | b'.')
 }
 
 impl<'a> Parser<'a> {
-    async fn parse_name(&mut self) -> Result<String, TextError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn parse_name(&mut self) -> Result<String, TextError> {
         let start = self.pos;
-        while matches!(self.peek().await, Some(b) if is_name_byte(b).await) {
+        while matches!(self.peek(), Some(b) if is_name_byte(b)) {
             self.advance();
         }
         if self.pos == start {
-            return Err(self.err("expected a name").await);
+            return Err(self.err("expected a name"));
         }
         Ok(self.slice(start, self.pos).to_string())
     }
 
     /// 🏷️ `name` / `name=value` / `name="value"` / `name='value'`.
-    async fn parse_attribute(&mut self) -> Result<HtmlAttr, TextError> {
-        let name = self.parse_name().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn parse_attribute(&mut self) -> Result<HtmlAttr, TextError> {
+        let name = self.parse_name()?;
         let save = self.pos;
         self.skip_ws();
         if self.peek() == Some(b'=') {
             self.advance();
             self.skip_ws();
-            let raw = match self.peek().await {
+            let raw = match self.peek() {
                 Some(q @ (b'"' | b'\'')) => {
                     self.advance();
                     let start = self.pos;
                     while self.peek() != Some(q) {
-                        if self.advance().await.is_none() {
-                            return Err(self.err(format!("unterminated attribute value for '{name}'")).await);
+                        if self.advance().is_none() {
+                            return Err(self.err(format!("unterminated attribute value for '{name}'")));
                         }
                     }
                     let raw = self.slice(start, self.pos).to_string();
@@ -377,14 +403,14 @@ impl<'a> Parser<'a> {
                 }
                 Some(_) => {
                     let start = self.pos;
-                    while matches!(self.peek().await, Some(b) if !matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C | b'>')) {
+                    while matches!(self.peek(), Some(b) if !matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C | b'>')) {
                         self.advance();
                     }
                     self.slice(start, self.pos).to_string()
                 }
-                None => return Err(self.err(format!("unterminated tag: expected value for attribute '{name}'")).await),
+                None => return Err(self.err(format!("unterminated tag: expected value for attribute '{name}'"))),
             };
-            Ok(HtmlAttr { name, value: Some(decode_entities(&raw).await) })
+            Ok(HtmlAttr { name, value: Some(decode_entities(&raw)) })
         } else {
             // ↩️ No '=' -- rewind past any whitespace we speculatively skipped; the caller's own
             // loop re-does `skip_ws()` before deciding what comes next.
@@ -394,24 +420,25 @@ impl<'a> Parser<'a> {
     }
 
     /// 🏗️ `<name attr...>` or `<name attr.../>`, returning `(name, attributes, self_closed)`.
-    async fn parse_start_tag(&mut self) -> Result<(String, Vec<HtmlAttr>, bool), TextError> {
-        self.expect(b'<').await?;
-        let name = self.parse_name().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn parse_start_tag(&mut self) -> Result<(String, Vec<HtmlAttr>, bool), TextError> {
+        self.expect(b'<')?;
+        let name = self.parse_name()?;
         let mut attributes = Vec::new();
         let self_closed = loop {
             self.skip_ws();
-            match self.peek().await {
+            match self.peek() {
                 Some(b'>') => {
                     self.advance();
                     break false;
                 }
                 Some(b'/') => {
                     self.advance();
-                    self.expect(b'>').await.map_err(|_| self.err(format!("expected '>' after '/' in tag '<{name}'")))?;
+                    self.expect(b'>').map_err(|_| self.err(format!("expected '>' after '/' in tag '<{name}'")))?;
                     break true;
                 }
-                Some(_) => attributes.push(self.parse_attribute().await?),
-                None => return Err(self.err(format!("unterminated start tag '<{name}'")).await),
+                Some(_) => attributes.push(self.parse_attribute()?),
+                None => return Err(self.err(format!("unterminated start tag '<{name}'"))),
             }
         };
         Ok((name, attributes, self_closed))
@@ -419,21 +446,23 @@ impl<'a> Parser<'a> {
 
     /// 🚪️ `</name>` (whitespace before `>` tolerated). Returns the closing tag's own name (NOT
     /// forced to match the caller's expectation — the caller compares case-insensitively).
-    async fn parse_end_tag(&mut self) -> Result<String, TextError> {
-        self.expect(b'<').await?;
-        self.expect(b'/').await?;
-        let name = self.parse_name().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn parse_end_tag(&mut self) -> Result<String, TextError> {
+        self.expect(b'<')?;
+        self.expect(b'/')?;
+        let name = self.parse_name()?;
         self.skip_ws();
-        self.expect(b'>').await.map_err(|_| self.err(format!("expected '>' to close end tag '</{name}'")))?;
+        self.expect(b'>').map_err(|_| self.err(format!("expected '>' to close end tag '</{name}'")))?;
         Ok(name)
     }
 
-    async fn read_comment(&mut self) -> Result<String, TextError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_comment(&mut self) -> Result<String, TextError> {
         // 🎯 Assumes "<!--" already consumed by the caller.
         let start = self.pos;
         while !self.peek_str("-->") {
-            if self.advance().await.is_none() {
-                return Err(self.err("unterminated comment, expected '-->'").await);
+            if self.advance().is_none() {
+                return Err(self.err("unterminated comment, expected '-->'"));
             }
         }
         let content = self.slice(start, self.pos).to_string();
@@ -451,7 +480,8 @@ impl<'a> Parser<'a> {
     /// right after a stray `</`, and `&str` slicing at a non-boundary offset panics; `&[u8]`
     /// slicing never does, so byte comparison keeps this parser panic-free on adversarial input
     /// (falls through to "not a match, keep scanning" instead of crashing).
-    async fn read_raw_text_until_close(&mut self, tag: &str) -> Result<String, TextError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_raw_text_until_close(&mut self, tag: &str) -> Result<String, TextError> {
         let start = self.pos;
         loop {
             if self.peek() == Some(b'<') && self.peek_at(1) == Some(b'/') {
@@ -459,43 +489,45 @@ impl<'a> Parser<'a> {
                 let probe_end = probe_start + tag.len();
                 if probe_end <= self.bytes.len() && self.bytes[probe_start..probe_end].eq_ignore_ascii_case(tag.as_bytes()) {
                     let saved_offset = probe_end - self.pos;
-                    if self.is_boundary_at(saved_offset).await {
+                    if self.is_boundary_at(saved_offset) {
                         break;
                     }
                 }
             }
-            if self.advance().await.is_none() {
-                return Err(self.err(format!("unterminated raw text content, expected '</{tag}>'")).await);
+            if self.advance().is_none() {
+                return Err(self.err(format!("unterminated raw text content, expected '</{tag}>'")));
             }
         }
         Ok(self.slice(start, self.pos).to_string())
     }
 
-    async fn read_text_until_lt(&mut self) -> Result<String, TextError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_text_until_lt(&mut self) -> Result<String, TextError> {
         let start = self.pos;
-        while !matches!(self.peek().await, Some(b'<') | None) {
+        while !matches!(self.peek(), Some(b'<') | None) {
             self.advance();
         }
-        Ok(decode_entities(self.slice(start, self.pos).await).await)
+        Ok(decode_entities(self.slice(start, self.pos)))
     }
 
     /// 🌳 Parses one element and its full subtree, starting at `<`.
-    async fn parse_element(&mut self) -> Result<HtmlNode, TextError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn parse_element(&mut self) -> Result<HtmlNode, TextError> {
         let open_span = self.span();
-        let (name, attributes, self_closed) = self.parse_start_tag().await?;
+        let (name, attributes, self_closed) = self.parse_start_tag()?;
 
-        if is_void_element(&name).await {
+        if is_void_element(&name) {
             return Ok(HtmlNode::Element { name, attributes, children: Vec::new() });
         }
         if self_closed {
-            return Err(TextError::new(format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"), open_span.await));
+            return Err(TextError::new(format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"), open_span));
         }
 
-        if let Some(kind) = RawTextKind::from_tag_name(&name).await {
-            let raw = self.read_raw_text_until_close(&name).await?;
-            let close_name = self.parse_end_tag().await?;
+        if let Some(kind) = RawTextKind::from_tag_name(&name) {
+            let raw = self.read_raw_text_until_close(&name)?;
+            let close_name = self.parse_end_tag()?;
             if !close_name.eq_ignore_ascii_case(&name) {
-                return Err(self.err(format!("mismatched close tag: expected '</{name}>', found '</{close_name}>'")).await);
+                return Err(self.err(format!("mismatched close tag: expected '</{name}>', found '</{close_name}>'")));
             }
             let children = if raw.is_empty() { Vec::new() } else { vec![HtmlNode::RawText { parent_kind: kind, text: raw }] };
             return Ok(HtmlNode::Element { name, attributes, children });
@@ -503,24 +535,24 @@ impl<'a> Parser<'a> {
 
         let mut children = Vec::new();
         loop {
-            match self.peek().await {
-                None => return Err(TextError::new(format!("unterminated element '<{name}>', expected '</{name}>'"), open_span.await)),
+            match self.peek() {
+                None => return Err(TextError::new(format!("unterminated element '<{name}>', expected '</{name}>'"), open_span)),
                 Some(b'<') => {
-                    if self.peek_str("<!--").await {
+                    if self.peek_str("<!--") {
                         self.pos += 4;
                         self.col += 4;
-                        children.push(HtmlNode::Comment { text: self.read_comment().await? });
+                        children.push(HtmlNode::Comment { text: self.read_comment()? });
                     } else if self.peek_at(1) == Some(b'/') {
-                        let close_name = self.parse_end_tag().await?;
+                        let close_name = self.parse_end_tag()?;
                         if !close_name.eq_ignore_ascii_case(&name) {
-                            return Err(self.err(format!("mismatched close tag: expected '</{name}>', found '</{close_name}>'")).await);
+                            return Err(self.err(format!("mismatched close tag: expected '</{name}>', found '</{close_name}>'")));
                         }
                         break;
                     } else {
-                        children.push(self.parse_element().await?);
+                        children.push(self.parse_element()?);
                     }
                 }
-                Some(_) => children.push(HtmlNode::Text { text: self.read_text_until_lt().await? }),
+                Some(_) => children.push(HtmlNode::Text { text: self.read_text_until_lt()? }),
             }
         }
         Ok(HtmlNode::Element { name, attributes, children })
@@ -530,33 +562,34 @@ impl<'a> Parser<'a> {
 /// 🔓️ Parses a complete well-formed HTML5 document (optional leading `<!DOCTYPE ...>` + exactly
 /// one root element + only whitespace before/after). See the module doc comment for the "honest
 /// boundary" this subset draws.
-pub async fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
-    let mut p = Parser::new(text).await;
-    p.skip_ws().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
+    let mut p = Parser::new(text);
+    p.skip_ws();
 
-    let doctype = if p.peek_str_ci("<!doctype").await {
-        p.expect(b'<').await?;
-        p.expect(b'!').await?;
+    let doctype = if p.peek_str_ci("<!doctype") {
+        p.expect(b'<')?;
+        p.expect(b'!')?;
         let start = p.pos;
-        while p.peek().await != Some(b'>') {
-            if p.advance().await.is_none() {
-                return Err(p.err("unterminated <!DOCTYPE ...> declaration, expected '>'").await);
+        while p.peek() != Some(b'>') {
+            if p.advance().is_none() {
+                return Err(p.err("unterminated <!DOCTYPE ...> declaration, expected '>'"));
             }
         }
-        let content = p.slice(start, p.pos).await.to_string();
-        p.advance().await;
+        let content = p.slice(start, p.pos).to_string();
+        p.advance();
         Some(content)
-    } else if p.peek_str("<!").await && !p.peek_str("<!--").await {
-        return Err(p.err("unsupported '<!' construct at document top level (only <!DOCTYPE ...> and <!-- comments --> are supported)").await);
+    } else if p.peek_str("<!") && !p.peek_str("<!--") {
+        return Err(p.err("unsupported '<!' construct at document top level (only <!DOCTYPE ...> and <!-- comments --> are supported)"));
     } else {
         None
     };
 
-    p.skip_ws().await;
-    let root = p.parse_element().await?;
-    p.skip_ws().await;
+    p.skip_ws();
+    let root = p.parse_element()?;
+    p.skip_ws();
     if p.pos != p.bytes.len() {
-        return Err(p.err("trailing content after the root element").await);
+        return Err(p.err("trailing content after the root element"));
     }
     Ok(HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype, root })
 }
@@ -572,7 +605,8 @@ pub async fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> 
 /// always re-emitted double-quoted regardless of the source's original quote style (a second
 /// documented normalization — the `HtmlAttr{name,value}` shape has no slot to remember which quote
 /// character was used).
-pub async fn write_html_document(snapshot: &HtmlSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn write_html_document(snapshot: &HtmlSnapshot) -> String {
     let mut out = String::new();
     if let Some(doctype) = &snapshot.doctype {
         out.push_str("<!");
@@ -584,7 +618,8 @@ pub async fn write_html_document(snapshot: &HtmlSnapshot) -> String {
     out
 }
 
-async fn write_node(node: &HtmlNode, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_node(node: &HtmlNode, out: &mut String) {
     match node {
         HtmlNode::Text { text } => out.push_str(&encode_text(text)),
         HtmlNode::Comment { text } => {
@@ -606,7 +641,7 @@ async fn write_node(node: &HtmlNode, out: &mut String) {
                 }
             }
             out.push('>');
-            if is_void_element(name).await {
+            if is_void_element(name) {
                 return;
             }
             for child in children {
@@ -623,7 +658,8 @@ async fn write_node(node: &HtmlNode, out: &mut String) {
 //#region 🔖️Navigation
 /// 🧭️ Resolves `path` (a chain of child indices from the document root) against `snapshot`,
 /// erroring on any non-`Element` intermediate node or out-of-range index.
-pub async fn node_at<'a>(snapshot: &'a HtmlSnapshot, path: &[usize]) -> Result<&'a HtmlNode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn node_at<'a>(snapshot: &'a HtmlSnapshot, path: &[usize]) -> Result<&'a HtmlNode, String> {
     let mut current = &snapshot.root;
     for &index in path {
         match current {
@@ -639,7 +675,8 @@ pub async fn node_at<'a>(snapshot: &'a HtmlSnapshot, path: &[usize]) -> Result<&
 /// 🔎 Reads attribute `name`'s value from an `Element` node — `None` both when the attribute is
 /// absent and when `node` isn't an `Element` (callers that need to distinguish those already have
 /// `node_at`'s own `Result`).
-pub async fn element_attr<'a>(node: &'a HtmlNode, name: &str) -> Option<&'a Option<String>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn element_attr<'a>(node: &'a HtmlNode, name: &str) -> Option<&'a Option<String>> {
     match node {
         HtmlNode::Element { attributes, .. } => attributes.iter().find(|a| a.name == name).map(|a| &a.value),
         _ => None,
@@ -659,7 +696,7 @@ impl store::ArtifactDsl for HtmlSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_html_document(body).await
+        parse_html_document(body)
     }
 
     async fn print_dsl(&self) -> String {
@@ -672,7 +709,7 @@ impl store::ArtifactDsl for HtmlSnapshot {
 impl store::ArtifactPack for HtmlSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_html_document(self).await.into_bytes();
+        let raw = write_html_document(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -684,7 +721,7 @@ impl store::ArtifactPack for HtmlSnapshot {
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        parse_html_document(text).await.map_err(|e| store::PackError::Schema(e.to_string()))
+        parse_html_document(text).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -696,10 +733,12 @@ mod tests {
 
     const FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🌐️example.html");
 
-    async fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
         HtmlNode::Element { name: name.into(), attributes: attrs, children }
     }
-    async fn text(s: &str) -> HtmlNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn text(s: &str) -> HtmlNode {
         HtmlNode::Text { text: s.into() }
     }
 

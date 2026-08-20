@@ -35,7 +35,8 @@ pub struct SemioObjectDiff {
 }
 
 impl SemioObjectDiff {
-    pub async fn is_empty_diff(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
         self.transform.is_none() && self.brep.is_none() && self.mesh.is_none() && self.properties.is_none()
     }
 }
@@ -93,7 +94,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
         }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 //#endregion 🔖️Diff
@@ -103,7 +104,8 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.
-async fn print_object_diff(d: &SemioObjectDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_object_diff(d: &SemioObjectDiff) -> String {
     let mut lines = Vec::new();
     if let Some(t) = &d.transform {
         lines.push(format!("t={}", enc_transform(t)));
@@ -119,7 +121,8 @@ async fn print_object_diff(d: &SemioObjectDiff) -> String {
     }
     lines.join(";")
 }
-async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
     let mut d = SemioObjectDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -127,10 +130,10 @@ async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
     for field in line.split(';') {
         let (tag, rest) = field.split_once('=').ok_or_else(|| format!("object diff: missing '=' in {field:?}"))?;
         match tag {
-            "t" => d.transform = Some(dec_transform(rest).await?),
-            "b" => d.brep = Some(dec_child_opt(rest).await?),
-            "m" => d.mesh = Some(dec_child_opt(rest).await?),
-            "p" => d.properties = Some(dec_child_opt(rest).await?),
+            "t" => d.transform = Some(dec_transform(rest)?),
+            "b" => d.brep = Some(dec_child_opt(rest)?),
+            "m" => d.mesh = Some(dec_child_opt(rest)?),
+            "p" => d.properties = Some(dec_child_opt(rest)?),
             other => return Err(format!("object diff: unknown field tag {other:?}")),
         }
     }
@@ -139,10 +142,10 @@ async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
 
 impl protocol::DiffCodec for SemioObjectDiff {
     async fn print_diff(&self) -> String {
-        print_object_diff(self).await
+        print_object_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_object_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
@@ -188,12 +191,12 @@ impl protocol::DiffCodec for SemioObjectDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
         let map_err = |e: String| protocol::ProtocolError::Malformed { what: "object diff field", offset: 2, detail: e };
-        let transform = if presence & 0b0001 != 0 { Some(read_transform(&mut reader).await.map_err(map_err)?) } else { None };
-        let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
-        let mesh = if presence & 0b0100 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
-        let properties = if presence & 0b1000 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
+        let transform = if presence & 0b0001 != 0 { Some(read_transform(&mut reader).map_err(map_err)?) } else { None };
+        let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
+        let mesh = if presence & 0b0100 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
+        let properties = if presence & 0b1000 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
         Ok(SemioObjectDiff { transform, brep, mesh, properties })
     }
 }
@@ -203,7 +206,8 @@ impl protocol::DiffCodec for SemioObjectDiff {
 /// 🌱 Representative `SemioObjectDiff` cases — single source of truth for
 /// `diff_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioObjectDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),

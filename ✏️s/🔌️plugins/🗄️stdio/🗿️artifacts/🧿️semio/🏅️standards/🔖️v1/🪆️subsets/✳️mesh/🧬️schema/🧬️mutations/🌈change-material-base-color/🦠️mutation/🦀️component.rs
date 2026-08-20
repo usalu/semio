@@ -16,10 +16,10 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMate
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-base-color", kind: "change-material-base-color", record: "ChangedMaterialBaseColor" };
 
     async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         format!("Change material \"{}\" base color", self.id)

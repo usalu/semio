@@ -19,7 +19,8 @@ pub struct KnotVector {
 
 impl KnotVector {
     /// 🧵️ Builds and validates a knot vector: non-decreasing, correct length for `(n, degree)`.
-    pub async fn new(knots: Vec<f64>, degree: usize, control_point_count: usize) -> Option<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(knots: Vec<f64>, degree: usize, control_point_count: usize) -> Option<Self> {
         if knots.len() != control_point_count + degree + 1 {
             return None;
         }
@@ -30,7 +31,8 @@ impl KnotVector {
     }
     /// 🧵️ A clamped (open) uniform knot vector: the first and last knots repeat `degree+1` times,
     /// the standard choice so the curve interpolates its first/last control points.
-    pub async fn clamped_uniform(control_point_count: usize, degree: usize) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn clamped_uniform(control_point_count: usize, degree: usize) -> Self {
         let n = control_point_count;
         let p = degree;
         let interior = n.saturating_sub(p + 1);
@@ -41,22 +43,27 @@ impl KnotVector {
         knots.extend(std::iter::repeat_n(1.0, p + 1));
         KnotVector { knots, degree: p }
     }
-    pub async fn domain(&self) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn domain(&self) -> (f64, f64) {
         (self.knots[self.degree], self.knots[self.knots.len() - self.degree - 1])
     }
-    pub async fn control_point_count(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn control_point_count(&self) -> usize {
         self.knots.len() - self.degree - 1
     }
-    pub async fn is_periodic_compatible(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_periodic_compatible(&self) -> bool {
         // A periodic (non-clamped) knot vector has no repeated end knots beyond multiplicity 1.
         self.multiplicity_at_index(0) == 1
     }
-    async fn multiplicity_at_index(&self, i: usize) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn multiplicity_at_index(&self, i: usize) -> usize {
         self.knots.iter().filter(|&&k| k == self.knots[i]).count()
     }
     /// 🧵️ Finds the knot span index `i` such that `knots[i] <= u < knots[i+1]` (or the last valid
     /// span if `u` equals the domain's upper bound), via binary search — O(log n) per evaluation.
-    pub async fn find_span(&self, u: f64) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn find_span(&self, u: f64) -> usize {
         let n = self.control_point_count() - 1;
         let p = self.degree;
         if u >= self.knots[n + 1] {
@@ -79,7 +86,8 @@ impl KnotVector {
     }
     /// 🧵️ The multiplicity of the knot value equal to `u`, or `0` if `u` is not an existing knot
     /// (within exact equality — callers should snap to a known knot value before calling this).
-    pub async fn multiplicity(&self, u: f64) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn multiplicity(&self, u: f64) -> usize {
         self.knots.iter().filter(|&&k| k == u).count()
     }
 }
@@ -91,7 +99,8 @@ impl KnotVector {
 /// 🧵️ Evaluates all `degree+1` nonzero basis functions at `u` in the knot span `span` (the
 /// Cox-de Boor triangular recurrence, computed bottom-up per the standard NURBS-book algorithm —
 /// `O(p²)` and numerically stable, unlike the naive top-down recursive definition).
-pub async fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64> {
     let p = knots.degree;
     let mut n = vec![0.0; p + 1];
     n[0] = 1.0;
@@ -114,7 +123,8 @@ pub async fn basis_functions(knots: &KnotVector, span: usize, u: f64) -> Vec<f64
 
 /// 🧵️ Evaluates the nonzero basis functions and their derivatives up to order `max_deriv` at `u`
 /// in `span`. Returns `derivs[k][j]` = the `k`-th derivative of the `j`-th nonzero basis function.
-pub async fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64, max_deriv: usize) -> Vec<Vec<f64>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64, max_deriv: usize) -> Vec<Vec<f64>> {
     let p = knots.degree;
     let max_deriv = max_deriv.min(p);
     let mut ndu = vec![vec![0.0; p + 1]; p + 1];
@@ -182,10 +192,11 @@ pub async fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64,
 
 /// 🧵️ De Boor's algorithm for a rational (homogeneous) curve, evaluating one weighted-coordinate
 /// channel — call once per coordinate (x, y, z, w) and divide by the resulting `w` to dehomogenize.
-pub async fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
     let span = knots.find_span(u);
     let p = knots.degree;
-    let n = basis_functions(knots, span.await, u);
+    let n = basis_functions(knots, span, u);
     (0..=p).map(|j| n[j] * control_values[span - p + j]).sum()
 }
 
@@ -196,9 +207,10 @@ pub async fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 
 /// 🧵️ Inserts a single knot `u` (Boehm's algorithm), returning the new knot vector and the new
 /// control values for one coordinate channel — geometrically a no-op (the curve is unchanged),
 /// used to raise local control or to harmonize two curves onto a shared knot vector.
-pub async fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotVector, Vec<f64>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotVector, Vec<f64>) {
     let p = knots.degree;
-    let span = knots.find_span(u).await;
+    let span = knots.find_span(u);
     let mut new_knots = knots.knots.clone();
     new_knots.insert(span + 1, u);
     let n = control_values.len();
@@ -216,7 +228,8 @@ pub async fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> 
 /// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier`] elevation
 /// formula, exposed here so B-spline code can raise a single-span curve's degree without
 /// round-tripping through the `Bernstein`/`Poly` types.
-pub async fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
     let n = control_values.len() - 1;
     let m = n + 1;
     (0..=m)
@@ -237,7 +250,8 @@ pub async fn elevate_bezier_span(control_values: &[f64]) -> Vec<f64> {
 mod tests {
     use super::*;
 
-    async fn cubic_clamped_5cp() -> KnotVector {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn cubic_clamped_5cp() -> KnotVector {
         // degree 3, 5 control points -> knot vector length 9: [0,0,0,0, 0.5, 1,1,1,1]
         KnotVector::new(vec![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0], 3, 5).unwrap()
     }
@@ -271,7 +285,8 @@ mod tests {
         }
     }
 
-    async fn brute_force_span(kv: &KnotVector, u: f64) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn brute_force_span(kv: &KnotVector, u: f64) -> usize {
         let n = kv.control_point_count() - 1;
         for i in kv.degree..=n {
             if u >= kv.knots[i] && u < kv.knots[i + 1] {

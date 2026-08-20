@@ -6,8 +6,8 @@
 
 // #region 🔌️Adapters
 import { useEffect, useMemo, useState } from "react";
-import { type ComponentSceneHostProps, type IconRenderRequest } from "@semio-tech/framework";
-import { IconShotFrame, iconRenderPort, useLabel } from "@semio-tech/ui-react";
+import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { IconShotFrame, iconRenderPort, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 
 //#region 🔖️IconRenderHost

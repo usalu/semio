@@ -42,7 +42,8 @@ pub struct GraphNodeId {
 }
 
 impl GraphNodeId {
-    pub async fn new(value: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
 }
@@ -57,7 +58,8 @@ pub struct GraphEdgeId {
 }
 
 impl GraphEdgeId {
-    pub async fn new(value: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
 }
@@ -154,63 +156,77 @@ impl Default for SemioGraphSnapshot {
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
 /// style `✳️text`'s own `📸️snapshot`/`🔺️diff`/`🧬️mutations` facets already establish, duplicated
 /// locally (not imported across facets) to keep each facet module independently compilable.
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 /// 🆔️ `GraphNodeId`/`GraphEdgeId` encode as a bare hex token directly — same convention a run's
 /// `language` field uses in `✳️text`.
-pub(crate) async fn enc_node_id(id: &GraphNodeId) -> String {
-    enc_str(&id.value).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_node_id(id: &GraphNodeId) -> String {
+    enc_str(&id.value)
 }
-pub(crate) async fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
-    Ok(GraphNodeId::new(dec_str(s).await?).await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
+    Ok(GraphNodeId::new(dec_str(s)?))
 }
-pub(crate) async fn enc_edge_id(id: &GraphEdgeId) -> String {
-    enc_str(&id.value).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_edge_id(id: &GraphEdgeId) -> String {
+    enc_str(&id.value)
 }
-pub(crate) async fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
-    Ok(GraphEdgeId::new(dec_str(s).await?).await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
+    Ok(GraphEdgeId::new(dec_str(s)?))
 }
 
 /// 🔢 `SemioPoint2`'s `x`/`y` are `f64`; encoded as `hex(x.to_string())`/`hex(y.to_string())`
 /// (text-lexeme style — never round-tripped through a binary float type in the TEXT codec), parsed
 /// back with `.parse::<f64>()`. Two flat comma-separated tokens, no wrapping brackets, so they slot
 /// directly into an outer bracketed field list (matches this facet's committed grammar).
-pub(crate) async fn enc_point2_fields(p: &SemioPoint2) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point2_fields(p: &SemioPoint2) -> String {
     format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
 }
-pub(crate) async fn dec_f64_hex(s: &str) -> Result<f64, String> {
-    dec_str(s).await?.parse::<f64>().map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f64_hex(s: &str) -> Result<f64, String> {
+    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
 }
 
-pub(crate) async fn enc_port_kind(k: SemioGraphPortKind) -> char {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_port_kind(k: SemioGraphPortKind) -> char {
     match k {
         SemioGraphPortKind::In => 'i',
         SemioGraphPortKind::Out => 'o',
         SemioGraphPortKind::InOut => 'x',
     }
 }
-pub(crate) async fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
     match s {
         "i" => Ok(SemioGraphPortKind::In),
         "o" => Ok(SemioGraphPortKind::Out),
@@ -218,55 +234,65 @@ pub(crate) async fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String>
         other => Err(format!("bad port kind {other:?}")),
     }
 }
-pub(crate) async fn enc_port(p: &SemioGraphPort) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_port(p: &SemioGraphPort) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
 }
-pub(crate) async fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioGraphPort { name: dec_str(name).await?, kind: dec_port_kind(kind).await? })
+    Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
 }
 
 /// 🍃️ A property list element is `enc_semio_value_entry(&p)`'s raw output (`hexkey:value`),
 /// embedded directly as one comma-separated list element — its own internal `:` never collides
 /// with the outer `,`/`[]` delimiters, so no extra wrapping brackets are needed (REUSE of
 /// `✳️value`'s diff-facet helpers, not a locally reinvented codec).
-pub(crate) async fn enc_property(p: &SemioValueEntry) -> String {
-    enc_semio_value_entry(p).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_property(p: &SemioValueEntry) -> String {
+    enc_semio_value_entry(p)
 }
-pub(crate) async fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
-    dec_semio_value_entry(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
+    dec_semio_value_entry(s)
 }
 
-pub(crate) async fn enc_node(n: &SemioGraphNode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_node(n: &SemioGraphNode) -> String {
     format!("[{},{},{},{},{},{}]", enc_node_id(&n.id), enc_str(&n.kind), enc_str(&n.label), enc_point2_fields(&n.position), enc_list(&n.ports, enc_port), enc_list(&n.properties, enc_property),)
 }
-pub(crate) async fn dec_node(s: &str) -> Result<SemioGraphNode, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_node(s: &str) -> Result<SemioGraphNode, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, label, x, y, ports, properties] = parts.as_slice() else {
         return Err(format!("node: expected 7 fields, got {}", parts.len()));
     };
-    Ok(SemioGraphNode { id: dec_node_id(id).await?, kind: dec_str(kind).await?, label: dec_str(label).await?, position: SemioPoint2 { x: dec_f64_hex(x).await?, y: dec_f64_hex(y).await? }, ports: dec_list(ports, dec_port).await?, properties: dec_list(properties, dec_property).await? })
+    Ok(SemioGraphNode { id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?, position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? }, ports: dec_list(ports, dec_port)?, properties: dec_list(properties, dec_property)? })
 }
 
-pub(crate) async fn enc_edge(e: &SemioGraphEdge) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_edge(e: &SemioGraphEdge) -> String {
     format!("[{},{},{},{},{}]", enc_edge_id(&e.id), enc_node_id(&e.source), enc_node_id(&e.target), enc_str(&e.kind), enc_str(&e.label))
 }
-pub(crate) async fn dec_edge(s: &str) -> Result<SemioGraphEdge, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_edge(s: &str) -> Result<SemioGraphEdge, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, source, target, kind, label] = parts.as_slice() else {
         return Err(format!("edge: expected 5 fields, got {}", parts.len()));
     };
-    Ok(SemioGraphEdge { id: dec_edge_id(id).await?, source: dec_node_id(source).await?, target: dec_node_id(target).await?, kind: dec_str(kind).await?, label: dec_str(label).await? })
+    Ok(SemioGraphEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)? })
 }
 
 /// 📄️ The real structured graph body: three lines — `schema=<hex>`, `nodes=[<node>,...]`,
 /// `edges=[<edge>,...]` — matching the grammar's `document = artifact-mark schema-line nodes-line
 /// edges-line`. Newlines are pure lexer trivia in the shared dialect.
-async fn print_graph_snapshot_body(s: &SemioGraphSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_graph_snapshot_body(s: &SemioGraphSnapshot) -> String {
     format!("schema={}\nnodes={}\nedges={}", enc_str(&s.schema), enc_list(&s.nodes, enc_node), enc_list(&s.edges, enc_edge))
 }
-async fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot, String> {
     let mut schema = None;
     let mut nodes = Vec::new();
     let mut edges = Vec::new();
@@ -276,11 +302,11 @@ async fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot, Str
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest).await?);
+            schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("nodes=") {
-            nodes = dec_list(rest, dec_node).await?;
+            nodes = dec_list(rest, dec_node)?;
         } else if let Some(rest) = line.strip_prefix("edges=") {
-            edges = dec_list(rest, dec_edge).await?;
+            edges = dec_list(rest, dec_edge)?;
         } else {
             return Err(format!("semio graph snapshot: unknown line {line:?}"));
         }
@@ -292,29 +318,35 @@ async fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot, Str
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers every other real semio codec in this standard uses).
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-pub(crate) async fn port_kind_tag(k: SemioGraphPortKind) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn port_kind_tag(k: SemioGraphPortKind) -> u8 {
     match k {
         SemioGraphPortKind::In => 0,
         SemioGraphPortKind::Out => 1,
         SemioGraphPortKind::InOut => 2,
     }
 }
-pub(crate) async fn port_kind_from_tag(tag: u8) -> Result<SemioGraphPortKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn port_kind_from_tag(tag: u8) -> Result<SemioGraphPortKind, String> {
     match tag {
         0 => Ok(SemioGraphPortKind::In),
         1 => Ok(SemioGraphPortKind::Out),
@@ -322,39 +354,46 @@ pub(crate) async fn port_kind_from_tag(tag: u8) -> Result<SemioGraphPortKind, St
         other => Err(format!("unsupported port kind tag {other}")),
     }
 }
-pub(crate) async fn write_port(out: &mut Vec<u8>, p: &SemioGraphPort) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_port(out: &mut Vec<u8>, p: &SemioGraphPort) {
     write_str_lp(out, &p.name);
-    out.push(port_kind_tag(p.kind).await);
+    out.push(port_kind_tag(p.kind));
 }
-pub(crate) async fn read_port(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphPort, String> {
-    let name = read_str_lp(reader).await?;
-    let kind = port_kind_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_port(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphPort, String> {
+    let name = read_str_lp(reader)?;
+    let kind = port_kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
     Ok(SemioGraphPort { name, kind })
 }
 
-pub(crate) async fn write_property(out: &mut Vec<u8>, p: &SemioValueEntry) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_property(out: &mut Vec<u8>, p: &SemioValueEntry) {
     write_str_lp(out, &p.key);
     enc_semio_value_bin(&p.value, out);
 }
-pub(crate) async fn read_property(reader: &mut store::ByteReader<'_>) -> Result<SemioValueEntry, String> {
-    let key = read_str_lp(reader).await?;
-    let value = dec_semio_value_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_property(reader: &mut store::ByteReader<'_>) -> Result<SemioValueEntry, String> {
+    let key = read_str_lp(reader)?;
+    let value = dec_semio_value_bin(reader)?;
     Ok(SemioValueEntry { key, value })
 }
 
 /// 🔢 `SemioPoint2`'s `x`/`y` written raw (8+8 bytes, no length prefix needed for a fixed-size
 /// float) via `f64::to_le_bytes()`/`f64::from_le_bytes()`.
-pub(crate) async fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
 }
-pub(crate) async fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
-    let x = f64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "point2: short x".to_string())?);
-    let y = f64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "point2: short y".to_string())?);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
+    let x = f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "point2: short x".to_string())?);
+    let y = f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "point2: short y".to_string())?);
     Ok(SemioPoint2 { x, y })
 }
 
-pub(crate) async fn write_node(out: &mut Vec<u8>, n: &SemioGraphNode) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_node(out: &mut Vec<u8>, n: &SemioGraphNode) {
     write_str_lp(out, &n.id.value);
     write_str_lp(out, &n.kind);
     write_str_lp(out, &n.label);
@@ -368,44 +407,48 @@ pub(crate) async fn write_node(out: &mut Vec<u8>, n: &SemioGraphNode) {
         write_property(out, p);
     }
 }
-pub(crate) async fn read_node(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphNode, String> {
-    let id = GraphNodeId::new(read_str_lp(reader).await?);
-    let kind = read_str_lp(reader).await?;
-    let label = read_str_lp(reader).await?;
-    let position = read_point2(reader).await?;
-    let port_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_node(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphNode, String> {
+    let id = GraphNodeId::new(read_str_lp(reader)?);
+    let kind = read_str_lp(reader)?;
+    let label = read_str_lp(reader)?;
+    let position = read_point2(reader)?;
+    let port_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut ports = Vec::with_capacity(port_count as usize);
     for _ in 0..port_count {
-        ports.push(read_port(reader).await?);
+        ports.push(read_port(reader)?);
     }
-    let property_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let property_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut properties = Vec::with_capacity(property_count as usize);
     for _ in 0..property_count {
-        properties.push(read_property(reader).await?);
+        properties.push(read_property(reader)?);
     }
     Ok(SemioGraphNode { id, kind, label, position, ports, properties })
 }
 
-pub(crate) async fn write_edge(out: &mut Vec<u8>, e: &SemioGraphEdge) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_edge(out: &mut Vec<u8>, e: &SemioGraphEdge) {
     write_str_lp(out, &e.id.value);
     write_str_lp(out, &e.source.value);
     write_str_lp(out, &e.target.value);
     write_str_lp(out, &e.kind);
     write_str_lp(out, &e.label);
 }
-pub(crate) async fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphEdge, String> {
-    let id = GraphEdgeId::new(read_str_lp(reader).await?);
-    let source = GraphNodeId::new(read_str_lp(reader).await?);
-    let target = GraphNodeId::new(read_str_lp(reader).await?);
-    let kind = read_str_lp(reader).await?;
-    let label = read_str_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphEdge, String> {
+    let id = GraphEdgeId::new(read_str_lp(reader)?);
+    let source = GraphNodeId::new(read_str_lp(reader)?);
+    let target = GraphNodeId::new(read_str_lp(reader)?);
+    let kind = read_str_lp(reader)?;
+    let label = read_str_lp(reader)?;
     Ok(SemioGraphEdge { id, source, target, kind, label })
 }
 
 /// 🎁 `format u8` + varint-length-prefixed `schema` UTF-8 — both genuinely, individually
 /// protocol-walkable — then `nodes`/`edges` (varint count + per-record fields) as the honest opaque
 /// `payload` tail (`protocol-array-of-records` gap — homogeneous, variable-length repeated records).
-async fn encode_graph_snapshot_binary(s: &SemioGraphSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_graph_snapshot_binary(s: &SemioGraphSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -420,23 +463,24 @@ async fn encode_graph_snapshot_binary(s: &SemioGraphSnapshot) -> Vec<u8> {
     }
     out
 }
-async fn decode_graph_snapshot_binary(bytes: &[u8]) -> Result<SemioGraphSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_graph_snapshot_binary(bytes: &[u8]) -> Result<SemioGraphSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes).await;
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader).await?;
-    let node_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader)?;
+    let node_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut nodes = Vec::with_capacity(node_count as usize);
     for _ in 0..node_count {
-        nodes.push(read_node(&mut reader).await?);
+        nodes.push(read_node(&mut reader)?);
     }
-    let edge_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let edge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(edge_count as usize);
     for _ in 0..edge_count {
-        edges.push(read_edge(&mut reader).await?);
+        edges.push(read_edge(&mut reader)?);
     }
     Ok(SemioGraphSnapshot { schema, nodes, edges })
 }
@@ -455,7 +499,7 @@ impl store::ArtifactDsl for SemioGraphSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_graph_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_graph_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -479,7 +523,7 @@ impl store::ArtifactPack for SemioGraphSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_graph_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
+        decode_graph_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -490,7 +534,8 @@ impl store::ArtifactPack for SemioGraphSnapshot {
 /// least once. Single source of truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` and for the conformance-law tests in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_graph_snapshot() -> SemioGraphSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
     SemioGraphSnapshot {
         schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(),
         nodes: vec![
@@ -521,7 +566,8 @@ pub(crate) async fn demo_graph_snapshot() -> SemioGraphSnapshot {
 mod tests {
     use super::*;
 
-    async fn populated() -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioGraphSnapshot {
         demo_graph_snapshot()
     }
 

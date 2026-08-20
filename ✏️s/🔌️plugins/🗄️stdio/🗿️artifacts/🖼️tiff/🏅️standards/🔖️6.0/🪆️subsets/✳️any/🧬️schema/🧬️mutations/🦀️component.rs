@@ -72,14 +72,15 @@ pub enum TiffMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv/png precedent).
-pub async fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
-    let outcome = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
+    let outcome = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -91,12 +92,12 @@ impl Mutation<TiffSnapshot> for TiffMutation {
     async fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TiffMutation::NoMutation => TiffDiff::default(),
-            TiffMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            TiffMutation::SetByteOrder { byte_order } => diff::diff_set_byte_order(base, *byte_order).await,
-            TiffMutation::InsertIfd { index, ifd } => diff::diff_insert_ifd(base, *index, ifd.clone()).await,
-            TiffMutation::RemoveIfd { index } => diff::diff_remove_ifd(base, *index).await,
-            TiffMutation::SetTag { ifd_index, tag, kind, values } => diff::diff_set_tag(base, *ifd_index, *tag, *kind, values.clone()).await,
-            TiffMutation::RemoveTag { ifd_index, tag } => diff::diff_remove_tag(base, *ifd_index, *tag).await,
+            TiffMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            TiffMutation::SetByteOrder { byte_order } => diff::diff_set_byte_order(base, *byte_order),
+            TiffMutation::InsertIfd { index, ifd } => diff::diff_insert_ifd(base, *index, ifd.clone()),
+            TiffMutation::RemoveIfd { index } => diff::diff_remove_ifd(base, *index),
+            TiffMutation::SetTag { ifd_index, tag, kind, values } => diff::diff_set_tag(base, *ifd_index, *tag, *kind, values.clone()),
+            TiffMutation::RemoveTag { ifd_index, tag } => diff::diff_remove_tag(base, *ifd_index, *tag),
             TiffMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
         })
     }
@@ -137,16 +138,19 @@ impl Mutation<TiffSnapshot> for TiffMutation {
 /// second time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the
 /// derive's own handcrafted-wrapper convention uses), one match arm per variant (no `DslVariants`
 /// scaffolding available since nothing here derives it).
-async fn enc_snapshot(s: &TiffSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_snapshot(s: &TiffSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_byte_order(s.byte_order), enc_list(&s.ifds, enc_ifd), hex_encode(&s.pixels))
 }
-async fn dec_snapshot(s: &str) -> Result<TiffSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_snapshot(s: &str) -> Result<TiffSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, byte_order, ifds, pixels] = parts.as_slice() else { return Err(format!("tiff snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(TiffSnapshot { schema: dec_str(schema).await?, byte_order: dec_byte_order(byte_order).await?, ifds: dec_list(ifds, dec_ifd).await?, pixels: hex_decode(pixels).await? })
+    Ok(TiffSnapshot { schema: dec_str(schema)?, byte_order: dec_byte_order(byte_order)?, ifds: dec_list(ifds, dec_ifd)?, pixels: hex_decode(pixels)? })
 }
 
-async fn print_tiff_mutation(m: &TiffMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_tiff_mutation(m: &TiffMutation) -> String {
     match m {
         TiffMutation::NoMutation => "no-mutation".to_string(),
         TiffMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -160,7 +164,8 @@ async fn print_tiff_mutation(m: &TiffMutation) -> String {
         TiffMutation::SetPixels { pixels } => format!("set-pixels pixels={}", hex_encode(pixels)),
     }
 }
-async fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
     if line == "no-mutation" {
         return Ok(TiffMutation::NoMutation);
     }
@@ -170,23 +175,23 @@ async fn parse_tiff_mutation(line: &str) -> Result<TiffMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { parse_num::<usize>(arg(k)?) };
     let u16_arg = |k: &str| -> Result<u16, String> { parse_num::<u16>(arg(k)?) };
     match keyword {
-        "set-snapshot" => Ok(TiffMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?).await? }),
-        "set-byte-order" => Ok(TiffMutation::SetByteOrder { byte_order: dec_byte_order(arg("byte-order")?).await? }),
-        "insert-ifd" => Ok(TiffMutation::InsertIfd { index: usize_arg("index")?, ifd: dec_ifd(arg("ifd")?).await? }),
+        "set-snapshot" => Ok(TiffMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? }),
+        "set-byte-order" => Ok(TiffMutation::SetByteOrder { byte_order: dec_byte_order(arg("byte-order")?)? }),
+        "insert-ifd" => Ok(TiffMutation::InsertIfd { index: usize_arg("index")?, ifd: dec_ifd(arg("ifd")?)? }),
         "remove-ifd" => Ok(TiffMutation::RemoveIfd { index: usize_arg("index")? }),
-        "set-tag" => Ok(TiffMutation::SetTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")?, kind: dec_field_type(arg("kind")?).await?, values: dec_values(arg("values")?).await? }),
+        "set-tag" => Ok(TiffMutation::SetTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")?, kind: dec_field_type(arg("kind")?)?, values: dec_values(arg("values")?)? }),
         "remove-tag" => Ok(TiffMutation::RemoveTag { ifd_index: usize_arg("ifd-index")?, tag: u16_arg("tag")? }),
-        "set-pixels" => Ok(TiffMutation::SetPixels { pixels: hex_decode(arg("pixels")?).await? }),
+        "set-pixels" => Ok(TiffMutation::SetPixels { pixels: hex_decode(arg("pixels")?)? }),
         other => Err(format!("tiff mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for TiffMutation {
     async fn print_op(&self) -> String {
-        print_tiff_mutation(self).await
+        print_tiff_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_tiff_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_tiff_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -195,7 +200,8 @@ impl OpText for TiffMutation {
 /// `TiffDiff`'s `pub(crate)` [`write_str_lp`]/[`read_str_lp`]/[`write_bytes_lp`]/[`read_bytes_lp`]/
 /// [`enc_ifd_bin`]/[`dec_ifd_bin`] (`../🔺️diff/🦀️component.rs`), same intra-artifact reuse
 /// convention this file's own text codec already uses off `TiffDiff`'s grammar primitives.
-async fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(match s.byte_order {
         TiffByteOrder::LittleEndian => 0,
@@ -205,15 +211,16 @@ async fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
     s.ifds.iter().for_each(|ifd| enc_ifd_bin(ifd, out));
     write_bytes_lp(out, &s.pixels);
 }
-async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let byte_order = if reader.read_u8().await.map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let byte_order = if reader.read_u8().map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut ifds = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        ifds.push(dec_ifd_bin(reader).await?);
+        ifds.push(dec_ifd_bin(reader)?);
     }
-    let pixels = read_bytes_lp(reader).await?;
+    let pixels = read_bytes_lp(reader)?;
     Ok(TiffSnapshot { schema, byte_order, ifds, pixels })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -238,7 +245,7 @@ impl OpBinary for TiffMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             TiffMutation::NoMutation => {}
-            TiffMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out).await,
+            TiffMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
             TiffMutation::SetByteOrder { byte_order } => out.push(match byte_order {
                 TiffByteOrder::LittleEndian => 0,
                 TiffByteOrder::BigEndian => 1,
@@ -258,7 +265,7 @@ impl OpBinary for TiffMutation {
                 store::pack_rt::write_varint_u64(&mut out, *ifd_index as u64);
                 out.extend_from_slice(&tag.to_le_bytes());
             }
-            TiffMutation::SetPixels { pixels } => write_bytes_lp(&mut out, pixels).await,
+            TiffMutation::SetPixels { pixels } => write_bytes_lp(&mut out, pixels),
         }
         Ok(out)
     }
@@ -271,7 +278,7 @@ impl OpBinary for TiffMutation {
         match tag {
             0 => Ok(TiffMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(TiffMutation::SetSnapshot { snapshot })
             }
             2 => {
@@ -280,7 +287,7 @@ impl OpBinary for TiffMutation {
             }
             3 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let ifd = dec_ifd_bin(&mut reader).await.map_err(|e| malformed("op ifd", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let ifd = dec_ifd_bin(&mut reader).map_err(|e| malformed("op ifd", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(TiffMutation::InsertIfd { index, ifd })
             }
             4 => {
@@ -290,8 +297,8 @@ impl OpBinary for TiffMutation {
             5 => {
                 let ifd_index = reader.read_varint_u64().await.map_err(|e| malformed("op ifd_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let tag = reader.read_u16_le().await.map_err(|e| malformed("op tag", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let kind = TiffFieldType::from_u16(reader.read_u8().await.map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16).await.map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let values = dec_values_bin(&mut reader).await.map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let kind = TiffFieldType::from_u16(reader.read_u8().await.map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16).map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(TiffMutation::SetTag { ifd_index, tag, kind, values })
             }
             6 => {
@@ -300,7 +307,7 @@ impl OpBinary for TiffMutation {
                 Ok(TiffMutation::RemoveTag { ifd_index, tag })
             }
             7 => {
-                let pixels = read_bytes_lp(&mut reader).await.map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let pixels = read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(TiffMutation::SetPixels { pixels })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -314,7 +321,8 @@ impl OpBinary for TiffMutation {
 /// field-type family the recursive `SetTag` payload can carry) — the single source of truth
 /// reused by `ops_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️component.rs`).
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<TiffMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
         TiffMutation::NoMutation,
         TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
@@ -339,11 +347,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    async fn short_tag(tag: u16, v: u16) -> TiffTag {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn short_tag(tag: u16, v: u16) -> TiffTag {
         TiffTag { tag, kind: TiffFieldType::Short, values: TiffValues::Short(vec![v]) }
     }
 
-    async fn base_snapshot() -> TiffSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
@@ -368,7 +378,8 @@ mod tests {
     /// directions workaround (positional pairwise matching), while the TAG-level triple is
     /// id-keyed via a `BTreeMap` union, so it genuinely shows removed+modified+added from a
     /// SINGLE `between()` call — no split needed there.
-    async fn sweep_a() -> TiffSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
@@ -380,7 +391,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> TiffSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> TiffSnapshot {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::BigEndian,
@@ -391,7 +403,8 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️mutation_diff_law
-    async fn assert_mutation_diff_law(base: &TiffSnapshot, mutation: TiffMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_mutation_diff_law(base: &TiffSnapshot, mutation: TiffMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_tiff_mutation(&mut applied_snapshot, &mutation);
@@ -399,7 +412,8 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    async fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
         vec![
             TiffMutation::NoMutation,
             TiffMutation::SetSnapshot {
@@ -456,7 +470,8 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    async fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).unwrap();
         let d2 = m2.diff(&mid);

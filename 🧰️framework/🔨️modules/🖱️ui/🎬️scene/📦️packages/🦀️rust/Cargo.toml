@@ -1,0 +1,27 @@
+[package]
+name = "semio-framework-ui-scene"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Product scene payloads (World3dScene/TableScene/...) and their pack-encoded SurfaceDoc bridge, plus generic 3D scene math — wasm-safe, depends on ui-contract and serde only"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+
+[dependencies.semio-framework-geometry]
+path = "../../../../📐️geometry/📦️packages/🦀️rust"
+package = "semio-framework-geometry"
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

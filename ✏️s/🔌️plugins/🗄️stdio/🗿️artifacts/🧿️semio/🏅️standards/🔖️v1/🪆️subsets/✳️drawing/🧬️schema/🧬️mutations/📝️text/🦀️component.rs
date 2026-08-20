@@ -25,27 +25,33 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️NodePathPrimitive
 /// 🧭️ `[layer,[p0,p1,...]]` — mirrors `NodePath`'s own field shape.
-async fn enc_node_path(np: &NodePath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_path(np: &NodePath) -> String {
     format!("[{},{}]", np.layer, enc_list(&np.path, |i: &usize| i.to_string()))
 }
-async fn dec_node_path(s: &str) -> Result<NodePath, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_path(s: &str) -> Result<NodePath, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [layer, path] = parts.as_slice() else { return Err(format!("node path: expected 2 fields, got {}", parts.len())) };
-    Ok(NodePath { layer: layer.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, path: dec_list(path, |v| v.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())).await? })
+    Ok(NodePath { layer: layer.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, path: dec_list(path, |v| v.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string()))? })
 }
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_indices(indices: &[usize]) -> String {
-    enc_list(indices, |i: &usize| i.to_string()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_indices(indices: &[usize]) -> String {
+    enc_list(indices, |i: &usize| i.to_string())
 }
-async fn dec_indices(s: &str) -> Result<Vec<usize>, String> {
-    dec_list(s, parse_usize).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_indices(s: &str) -> Result<Vec<usize>, String> {
+    dec_list(s, parse_usize)
 }
 //#endregion 🔖️NodePathPrimitive
 
 //#region 🔖️OpText
-async fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     match m {
         SemioDrawingMutation::CreateLayer(p) => format!("createLayer:{},{}", p.index, enc_layer(&p.layer)),
         SemioDrawingMutation::DeleteLayer(p) => format!("deleteLayer:{}", enc_str(&p.id)),
@@ -67,76 +73,77 @@ async fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     }
 }
 
-async fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("drawing mutation: missing ':' in {line:?}"))?;
     match tag {
         "createLayer" => {
             let (idx, layer) = rest.split_once(',').ok_or_else(|| "createLayer: missing comma".to_string())?;
-            Ok(SemioDrawingMutation::CreateLayer(CreateLayer { index: parse_usize(idx).await?, layer: dec_layer(layer).await? }))
+            Ok(SemioDrawingMutation::CreateLayer(CreateLayer { index: parse_usize(idx)?, layer: dec_layer(layer)? }))
         }
-        "deleteLayer" => Ok(SemioDrawingMutation::DeleteLayer(DeleteLayer { id: dec_str(rest).await? })),
+        "deleteLayer" => Ok(SemioDrawingMutation::DeleteLayer(DeleteLayer { id: dec_str(rest)? })),
         "createNode" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [parent, index, node] = parts.as_slice() else { return Err(format!("createNode: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::CreateNode(CreateNode { parent: dec_node_path(parent).await?, index: parse_usize(index).await?, node: dec_node(node).await? }))
+            Ok(SemioDrawingMutation::CreateNode(CreateNode { parent: dec_node_path(parent)?, index: parse_usize(index)?, node: dec_node(node)? }))
         }
-        "deleteNode" => Ok(SemioDrawingMutation::DeleteNode(DeleteNode { at: dec_node_path(rest).await? })),
+        "deleteNode" => Ok(SemioDrawingMutation::DeleteNode(DeleteNode { at: dec_node_path(rest)? })),
         "moveNode" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [at, new_origin] = parts.as_slice() else { return Err(format!("moveNode: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::MoveNode(MoveNode { at: dec_node_path(at).await?, new_origin: dec_point2(new_origin).await? }))
+            Ok(SemioDrawingMutation::MoveNode(MoveNode { at: dec_node_path(at)?, new_origin: dec_point2(new_origin)? }))
         }
         "dragNodes" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [ats, offset] = parts.as_slice() else { return Err(format!("dragNodes: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::DragNodes(DragNodes { ats: dec_list(ats, dec_node_path).await?, offset: dec_point2(offset).await? }))
+            Ok(SemioDrawingMutation::DragNodes(DragNodes { ats: dec_list(ats, dec_node_path)?, offset: dec_point2(offset)? }))
         }
         "rotate" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [at, new_rotation] = parts.as_slice() else { return Err(format!("rotate: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Rotate(Rotate { at: dec_node_path(at).await?, new_rotation: dec_quaternion(new_rotation).await? }))
+            Ok(SemioDrawingMutation::Rotate(Rotate { at: dec_node_path(at)?, new_rotation: dec_quaternion(new_rotation)? }))
         }
         "scale" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [at, new_scale] = parts.as_slice() else { return Err(format!("scale: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Scale(Scale { at: dec_node_path(at).await?, new_scale: dec_point3(new_scale).await? }))
+            Ok(SemioDrawingMutation::Scale(Scale { at: dec_node_path(at)?, new_scale: dec_point3(new_scale)? }))
         }
         "reorderNodes" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [parent, from, to] = parts.as_slice() else { return Err(format!("reorderNodes: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::ReorderNodes(ReorderNodes { parent: dec_node_path(parent).await?, from: parse_usize(from).await?, to: parse_usize(to).await? }))
+            Ok(SemioDrawingMutation::ReorderNodes(ReorderNodes { parent: dec_node_path(parent)?, from: parse_usize(from)?, to: parse_usize(to)? }))
         }
         "group" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [parent, indices, transform] = parts.as_slice() else { return Err(format!("group: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Group(GroupNodes { parent: dec_node_path(parent).await?, indices: dec_indices(indices).await?, transform: dec_transform(transform).await? }))
+            Ok(SemioDrawingMutation::Group(GroupNodes { parent: dec_node_path(parent)?, indices: dec_indices(indices)?, transform: dec_transform(transform)? }))
         }
-        "ungroup" => Ok(SemioDrawingMutation::Ungroup(UngroupNode { at: dec_node_path(rest).await? })),
-        "flatten" => Ok(SemioDrawingMutation::Flatten(FlattenNode { at: dec_node_path(rest).await? })),
+        "ungroup" => Ok(SemioDrawingMutation::Ungroup(UngroupNode { at: dec_node_path(rest)? })),
+        "flatten" => Ok(SemioDrawingMutation::Flatten(FlattenNode { at: dec_node_path(rest)? })),
         "unflatten" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [at, original] = parts.as_slice() else { return Err(format!("unflatten: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Unflatten(UnflattenNode { at: dec_node_path(at).await?, original: dec_node(original).await? }))
+            Ok(SemioDrawingMutation::Unflatten(UnflattenNode { at: dec_node_path(at)?, original: dec_node(original)? }))
         }
         "replacePath" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [at, new_segments] = parts.as_slice() else { return Err(format!("replacePath: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::ReplacePath(ReplacePath { at: dec_node_path(at).await?, new_segments: dec_list(new_segments, dec_path_segment).await? }))
+            Ok(SemioDrawingMutation::ReplacePath(ReplacePath { at: dec_node_path(at)?, new_segments: dec_list(new_segments, dec_path_segment)? }))
         }
         "replaceFill" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, fill] = parts.as_slice() else { return Err(format!("replaceFill: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::ReplaceFill(ReplaceFill { style_name: dec_str(name).await?, new_fill: decode_option(fill, dec_rgba).await? }))
+            Ok(SemioDrawingMutation::ReplaceFill(ReplaceFill { style_name: dec_str(name)?, new_fill: decode_option(fill, dec_rgba)? }))
         }
         "changeStrokeColor" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, color] = parts.as_slice() else { return Err(format!("changeStrokeColor: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::ChangeStrokeColor(ChangeStrokeColor { style_name: dec_str(name).await?, new_color: decode_option(color, dec_rgba).await? }))
+            Ok(SemioDrawingMutation::ChangeStrokeColor(ChangeStrokeColor { style_name: dec_str(name)?, new_color: decode_option(color, dec_rgba)? }))
         }
         "changeStrokeWidth" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, width] = parts.as_slice() else { return Err(format!("changeStrokeWidth: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::ChangeStrokeWidth(ChangeStrokeWidth { style_name: dec_str(name).await?, new_width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await? }))
+            Ok(SemioDrawingMutation::ChangeStrokeWidth(ChangeStrokeWidth { style_name: dec_str(name)?, new_width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))? }))
         }
         other => Err(format!("drawing mutation: unknown keyword {other:?}")),
     }
@@ -144,10 +151,10 @@ async fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, Stri
 
 impl protocol::OpText for SemioDrawingMutation {
     async fn print_op(&self) -> String {
-        print_drawing_mutation(self).await
+        print_drawing_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_drawing_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_drawing_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText

@@ -10,16 +10,18 @@ pub struct GltfUnbindNodeChildPayload {
     pub parent: usize,
     pub child: usize,
 }
-pub async fn validate(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
-    checked_index(payload.parent, base.document.nodes.len(), "document/nodes").await?;
-    checked_index(payload.child, base.document.nodes.len(), "document/nodes").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
     if !base.document.nodes[payload.parent].children.contains(&payload.child) {
-        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent").await);
+        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"));
     }
     Ok(())
 }
-pub async fn apply(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
     let mut next = base.clone();
     let position =
         next.document.nodes[payload.parent].children.iter().position(|child| *child == payload.child).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"))?;

@@ -34,13 +34,16 @@ impl Default for PdfArtifact {
 }
 
 impl PdfArtifact {
-    pub async fn to_snapshot(&self) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> PdfSnapshot {
         PdfSnapshot { schema: self.schema.clone(), declared_version: self.declared_version.clone(), pages: self.pages.clone(), info: self.info.clone(), objects: self.objects.clone(), trailer: self.trailer.clone() }
     }
-    pub async fn from_snapshot(snapshot: PdfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
         Self { schema: snapshot.schema, declared_version: snapshot.declared_version, pages: snapshot.pages, info: snapshot.info, objects: snapshot.objects, trailer: snapshot.trailer }
     }
-    pub async fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
         self.declared_version = snapshot.declared_version;
         self.pages = snapshot.pages;
@@ -50,7 +53,8 @@ impl PdfArtifact {
     }
 }
 
-pub async fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pdf.1.7",
         artifact: schema::FacetLeaves {
@@ -101,13 +105,15 @@ pub mod derived_construction {
     impl PdfBuilderConstruction {
         /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
         /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
-        pub async fn add_page(self, page: PdfPage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page }).await;
+            let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
             next
         }
-        pub async fn set_info(self, info: PdfInfo) -> Self {
-            let (next, _diff) = self.mutate(PdfMutation::SetInfo { info }).await;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(self, info: PdfInfo) -> Self {
+            let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
             next
         }
     }
@@ -130,7 +136,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;

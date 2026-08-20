@@ -339,13 +339,13 @@ pub async fn assert_ops_protocol_bidirectional(ops_text: &str) {
     let encode_options = crate::os_spr::history::EncodeOptions::default();
     let decode_options = crate::os_spr::history::DecodeOptions::default();
 
-    let log = crate::os_spr::history::parse_ops_text(ops_text).await.expect("parse_ops_text must succeed for well-formed ops text");
+    let log = crate::os_spr::history::parse_ops_text(ops_text).expect("parse_ops_text must succeed for well-formed ops text");
     let bytes = crate::os_spr::history::encode_history(&log, &encode_options).await.expect("encode_history must succeed for a well-formed HistoryLog");
     let decoded = crate::os_spr::history::decode_history(&bytes, &decode_options).await.expect("decode_history must succeed on encode_history's own output");
-    let printed = crate::os_spr::history::print_ops_text(&decoded).await.expect("print_ops_text must succeed for text-only generated ops");
+    let printed = crate::os_spr::history::print_ops_text(&decoded).expect("print_ops_text must succeed for text-only generated ops");
 
-    let reparsed = crate::os_spr::history::parse_ops_text(&printed).await.expect("parse_ops_text must succeed on print_ops_text's own output");
-    assert_eq!(crate::os_spr::history::print_ops_text(&reparsed).await.unwrap(), printed, "print_ops_text(parse_ops_text(text)) must be a fixpoint under a second parse/print pass");
+    let reparsed = crate::os_spr::history::parse_ops_text(&printed).expect("parse_ops_text must succeed on print_ops_text's own output");
+    assert_eq!(crate::os_spr::history::print_ops_text(&reparsed).unwrap(), printed, "print_ops_text(parse_ops_text(text)) must be a fixpoint under a second parse/print pass");
 }
 
 /// ✅️ LAW: streaming `log` through `crate::os_spr::HistoryAppender` one commit per record decodes

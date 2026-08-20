@@ -33,7 +33,8 @@ pub(crate) struct GltfCompactnessRaw {
     pub(crate) hull_volume: Option<f64>,
 }
 
-pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
     let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull_volume = convex_hull_metrics(&hull_input, tolerance).map(|(_, volume, _)| volume);
@@ -50,21 +51,21 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            compactness: compactness::from_raw(context, &raw).await,
-            surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw).await,
-            sphericity: sphericity::from_raw(context, &raw).await,
-            compactness_index: compactness_index::from_raw(context, &raw).await,
-            hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw).await,
+            compactness: compactness::from_raw(context, &raw),
+            surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw),
+            sphericity: sphericity::from_raw(context, &raw),
+            compactness_index: compactness_index::from_raw(context, &raw),
+            hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw),
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            compactness: compactness::unavailable_measure(diagnostic_ids).await,
-            surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids).await,
-            sphericity: sphericity::unavailable_measure(diagnostic_ids).await,
-            compactness_index: compactness_index::unavailable_measure(diagnostic_ids).await,
-            hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids).await,
+            compactness: compactness::unavailable_measure(diagnostic_ids),
+            surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),
+            sphericity: sphericity::unavailable_measure(diagnostic_ids),
+            compactness_index: compactness_index::unavailable_measure(diagnostic_ids),
+            hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids),
         }
     }
 }

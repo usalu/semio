@@ -12,17 +12,18 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
-async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").await.at([target, &index.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").await.at([target, &index.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
         }
     }
     let mut length = base_len - removed.len();
@@ -31,7 +32,7 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").await.at([target, &index.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
         }
         previous = Some(index);
         length += 1;
@@ -56,7 +57,8 @@ enum Lbl {
 
 /// ➡️ Simulates one collection-triple's position algebra over an abstract label array: remove
 /// the given base/mid indices, then insert `added` labels ascending at `min(index, current_len)`.
-async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -72,7 +74,8 @@ async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, L
 /// mid→after (`d2`). `merge_field_diff`/`patch_item` are the only per-entity-type logic —
 /// everything else (index transport, annihilate-on-remove, patch-into-added) is the recipe's
 /// normative algorithm, identical for `vlrs` and `points`.
-async fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
     d1_removed: &[usize],
     d1_modified: &[(usize, D)],
     d1_added: &[(usize, Item)],
@@ -88,7 +91,7 @@ async fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl).await;
+    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl);
 
     let mut mid_pos_of_base: HashMap<usize, usize> = HashMap::new();
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
@@ -177,7 +180,8 @@ pub struct LasVlrDiff {
     pub data: Option<Vec<u8>>,
 }
 
-async fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
     if let Some(v) = &diff.user_id {
         vlr.user_id = v.clone();
     }
@@ -192,7 +196,8 @@ async fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
     }
 }
 
-async fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
     LasVlrDiff {
         user_id: (a.user_id != b.user_id).then(|| b.user_id.clone()),
         record_id: (a.record_id != b.record_id).then_some(b.record_id),
@@ -201,7 +206,8 @@ async fn vlr_between(a: &LasVlr, b: &LasVlr) -> LasVlrDiff {
     }
 }
 
-async fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_vlr_diff(base: &mut LasVlrDiff, other: LasVlrDiff) {
     if other.user_id.is_some() {
         base.user_id = other.user_id;
     }
@@ -245,13 +251,15 @@ pub struct LasVlrsDiff {
 }
 
 impl LasVlrsDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple: `modified` by BASE index (no-op if since-removed), then `removed`
     /// (descending order doesn't matter — collected as a set), then `added` ascending, clamped.
-    async fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
         let mut items = base.to_vec();
         for m in &self.modified {
             apply_vlr_diff(&mut items[m.index], &m.diff);
@@ -269,18 +277,20 @@ impl LasVlrsDiff {
         items
     }
 
-    pub async fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
-        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs").await?;
-        Ok(self.apply_unchecked(base).await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
+        Ok(self.apply_unchecked(base))
     }
 
-    pub async fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
             let d = vlr_between(&base[i], &next[i]);
             if d != LasVlrDiff::default() {
-                modified.push(LasVlrModified { index: i, diff: d.await });
+                modified.push(LasVlrModified { index: i, diff: d });
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
@@ -289,7 +299,8 @@ impl LasVlrsDiff {
     }
 }
 
-async fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVlrsDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVlrsDiff> {
     let (d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -300,9 +311,9 @@ async fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option
     let d1a: Vec<(usize, LasVlr)> = d1.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
     let d2m: Vec<(usize, LasVlrDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasVlr)> = d2.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff).await;
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff);
     let merged = LasVlrsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() };
-    if merged.is_empty().await {
+    if merged.is_empty() {
         None
     } else {
         Some(merged)
@@ -347,7 +358,8 @@ pub struct LasPointDiff {
     pub rgb: Option<Option<(u16, u16, u16)>>,
 }
 
-async fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
     if let Some(v) = diff.x {
         p.x = v;
     }
@@ -392,7 +404,8 @@ async fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
     }
 }
 
-async fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
     LasPointDiff {
         x: (a.x != b.x).then_some(b.x),
         y: (a.y != b.y).then_some(b.y),
@@ -411,7 +424,8 @@ async fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
     }
 }
 
-async fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
     if other.x.is_some() {
         base.x = other.x;
     }
@@ -485,11 +499,13 @@ pub struct LasPointsDiff {
 }
 
 impl LasPointsDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    async fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
         let mut items = base.to_vec();
         for m in &self.modified {
             apply_point_diff(&mut items[m.index], &m.diff);
@@ -507,18 +523,20 @@ impl LasPointsDiff {
         items
     }
 
-    pub async fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
-        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points").await?;
-        Ok(self.apply_unchecked(base).await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
+        Ok(self.apply_unchecked(base))
     }
 
-    pub async fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
             let d = point_between(&base[i], &next[i]);
             if d != LasPointDiff::default() {
-                modified.push(LasPointModified { index: i, diff: d.await });
+                modified.push(LasPointModified { index: i, diff: d });
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
@@ -527,7 +545,8 @@ impl LasPointsDiff {
     }
 }
 
-async fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option<LasPointsDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option<LasPointsDiff> {
     let (d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -538,9 +557,9 @@ async fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> 
     let d1a: Vec<(usize, LasPoint)> = d1.added.iter().map(|a| (a.index, a.point.clone())).collect();
     let d2m: Vec<(usize, LasPointDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasPoint)> = d2.added.iter().map(|a| (a.index, a.point.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff).await;
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff);
     let merged = LasPointsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() };
-    if merged.is_empty().await {
+    if merged.is_empty() {
         None
     } else {
         Some(merged)
@@ -639,7 +658,8 @@ pub struct LasDiff {
 }
 
 /// ▶️ Applies every header scalar patch onto `header` in place.
-async fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
     if let Some(v) = d.version_major {
         header.version_major = v;
     }
@@ -720,19 +740,19 @@ async fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 impl MutationDiff<LasSnapshot> for LasDiff {
     async fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
         if let Some(diff) = &self.vlrs {
-            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs").await?;
+            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
         }
         if let Some(diff) = &self.points {
-            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points").await?;
+            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points")?;
         }
         let mut header = base.header.clone();
         apply_header_diff(&mut header, self);
         let vlrs = match &self.vlrs {
-            Some(vd) => vd.apply_unchecked(&base.vlrs).await,
+            Some(vd) => vd.apply_unchecked(&base.vlrs),
             None => base.vlrs.clone(),
         };
         let points = match &self.points {
-            Some(pd) => pd.apply_unchecked(&base.points).await,
+            Some(pd) => pd.apply_unchecked(&base.points),
             None => base.points.clone(),
         };
         Ok(LasSnapshot { schema: base.schema.clone(), header, vlrs, points })
@@ -816,8 +836,8 @@ impl MutationDiff<LasSnapshot> for LasDiff {
         if other.min_z.is_some() {
             self.min_z = other.min_z;
         }
-        self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs).await;
-        self.points = absorb_points(self.points.take(), other.points).await;
+        self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs);
+        self.points = absorb_points(self.points.take(), other.points);
     }
 }
 
@@ -844,8 +864,8 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
     async fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
         let bh = &base.header;
         let oh = &other.header;
-        let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs).await;
-        let points_diff = LasPointsDiff::between(&base.points, &other.points).await;
+        let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs);
+        let points_diff = LasPointsDiff::between(&base.points, &other.points);
         LasDiff {
             version_major: (bh.version_major != oh.version_major).then_some(oh.version_major),
             version_minor: (bh.version_minor != oh.version_minor).then_some(oh.version_minor),
@@ -872,8 +892,8 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
             min_y: (bh.min_y != oh.min_y).then_some(oh.min_y),
             max_z: (bh.max_z != oh.max_z).then_some(oh.max_z),
             min_z: (bh.min_z != oh.min_z).then_some(oh.min_z),
-            vlrs: if vlrs_diff.is_empty().await { None } else { Some(vlrs_diff) },
-            points: if points_diff.is_empty().await { None } else { Some(points_diff) },
+            vlrs: if vlrs_diff.is_empty() { None } else { Some(vlrs_diff) },
+            points: if points_diff.is_empty() { None } else { Some(points_diff) },
         }
     }
 
@@ -884,31 +904,40 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
 
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `LasDiff` to short-circuit into.
-pub async fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
-    LasDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
+    LasDiff::between(base, next)
 }
-pub async fn diff_set_version(major: u8, minor: u8) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_version(major: u8, minor: u8) -> LasDiff {
     LasDiff { version_major: Some(major), version_minor: Some(minor), ..Default::default() }
 }
-pub async fn diff_set_system_identifier(system_identifier: &str) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_system_identifier(system_identifier: &str) -> LasDiff {
     LasDiff { system_identifier: Some(system_identifier.to_string()), ..Default::default() }
 }
-pub async fn diff_set_software_info(generating_software: &str) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_software_info(generating_software: &str) -> LasDiff {
     LasDiff { generating_software: Some(generating_software.to_string()), ..Default::default() }
 }
-pub async fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
     LasDiff { creation_day_of_year: Some(day_of_year), creation_year: Some(year), ..Default::default() }
 }
-pub async fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
     LasDiff { x_scale: Some(scale.0), y_scale: Some(scale.1), z_scale: Some(scale.2), x_offset: Some(offset.0), y_offset: Some(offset.1), z_offset: Some(offset.2), ..Default::default() }
 }
-pub async fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {
     LasDiff { max_x: Some(max.0), max_y: Some(max.1), max_z: Some(max.2), min_x: Some(min.0), min_y: Some(min.1), min_z: Some(min.2), ..Default::default() }
 }
-pub async fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
     LasDiff { points_by_return: Some(counts), ..Default::default() }
 }
-pub async fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
     // 🧭️ Derived from the REAL collection length (`base.vlrs.len()`), never `base.header
     // .number_of_vlrs` — the header field can be desynced from reality (a raw-decoded fixture,
     // or a directly-constructed test snapshot), and `apply_las_mutation`'s imperative body
@@ -916,34 +945,39 @@ pub async fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> L
     // `mutation_diff_law` to hold unconditionally, not just on already-synced fixtures.
     LasDiff { number_of_vlrs: Some((base.vlrs.len() + 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }), ..Default::default() }
 }
-pub async fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_vlr(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.vlrs.len() {
         return LasDiff::default();
     }
     LasDiff { number_of_vlrs: Some((base.vlrs.len() - 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub async fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
     LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![LasVlrModified { index, diff: LasVlrDiff { data: Some(data), ..Default::default() } }], added: vec![] }), ..Default::default() }
 }
-pub async fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     // 🧭️ See `diff_insert_vlr`'s doc comment — derived from `base.points.len()`, not the
     // (possibly-desynced) `base.header.number_of_point_records`.
     LasDiff { number_of_point_records: Some((base.points.len() + 1) as u32), points: Some(LasPointsDiff { removed: vec![], modified: vec![], added: vec![LasPointAdded { index, point }] }), ..Default::default() }
 }
-pub async fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
     if index >= base.points.len() {
         return LasDiff::default();
     }
     LasDiff { number_of_point_records: Some((base.points.len() - 1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
-pub async fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
     match base.points.get(index) {
         Some(existing) => {
             let d = point_between(existing, &point);
             if d == LasPointDiff::default() {
                 LasDiff::default()
             } else {
-                LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d.await }], added: vec![] }), ..Default::default() }
+                LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d }], added: vec![] }), ..Default::default() }
             }
         }
         None => LasDiff::default(),
@@ -987,38 +1021,47 @@ pub async fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -
 /// `U`/`R`/`N`/`X`; `LasPointDiff`: `X`/`Y`/`Z`/`I`/`R`/`N`/`D`/`E`/`C`/`A`/`U`/`P`/`G`/`B` — each
 /// namespace is local to its own `[...]` block, no cross-type collision).
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn parse_u8(s: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_i8(s: &str) -> Result<i8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_i8(s: &str) -> Result<i8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_u16(s: &str) -> Result<u16, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive
 /// (identical to gif 89a's copy — own copy per artifact, no cross-artifact type sharing).
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1039,18 +1082,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1059,33 +1105,40 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_rgb(t: &(u16, u16, u16)) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rgb(t: &(u16, u16, u16)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
-pub(crate) async fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
-    Ok((parse_u16(r).await?, parse_u16(g).await?, parse_u16(b).await?))
+    Ok((parse_u16(r)?, parse_u16(g)?, parse_u16(b)?))
 }
-pub(crate) async fn enc_u32x5(a: &[u32; 5]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_u32x5(a: &[u32; 5]) -> String {
     format!("[{},{},{},{},{}]", a[0], a[1], a[2], a[3], a[4])
 }
-pub(crate) async fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let vals: Vec<u32> = parts.iter().map(|p| parse_u32(p)).collect::<Result<_, String>>()?;
     vals.try_into().map_err(|v: Vec<u32>| format!("points-by-return: expected 5 values, got {}", v.len()))
 }
-pub(crate) async fn enc_vlr(v: &LasVlr) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_vlr(v: &LasVlr) -> String {
     format!("[{},{},{},{}]", hex_encode(v.user_id.as_bytes()), v.record_id, hex_encode(v.description.as_bytes()), hex_encode(&v.data))
 }
-pub(crate) async fn dec_vlr(s: &str) -> Result<LasVlr, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_vlr(s: &str) -> Result<LasVlr, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [user_id, record_id, description, data] = parts.as_slice() else {
         return Err(format!("vlr: expected 4 fields, got {}", parts.len()));
     };
-    Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id).await?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id).await?, description: String::from_utf8(hex_decode(description).await?).map_err(|e| e.to_string())?, data: hex_decode(data).await? })
+    Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id)?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id)?, description: String::from_utf8(hex_decode(description)?).map_err(|e| e.to_string())?, data: hex_decode(data)? })
 }
-pub(crate) async fn enc_point(p: &LasPoint) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point(p: &LasPoint) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         p.x,
@@ -1104,32 +1157,34 @@ pub(crate) async fn enc_point(p: &LasPoint) -> String {
         encode_option(&p.rgb, enc_rgb),
     )
 }
-pub(crate) async fn dec_point(s: &str) -> Result<LasPoint, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb] = parts.as_slice() else {
         return Err(format!("point: expected 14 fields, got {}", parts.len()));
     };
     Ok(LasPoint {
-        x: parse_f64(x).await?,
-        y: parse_f64(y).await?,
-        z: parse_f64(z).await?,
-        intensity: parse_u16(intensity).await?,
-        return_number: parse_u8(return_number).await?,
-        number_of_returns: parse_u8(number_of_returns).await?,
+        x: parse_f64(x)?,
+        y: parse_f64(y)?,
+        z: parse_f64(z)?,
+        intensity: parse_u16(intensity)?,
+        return_number: parse_u8(return_number)?,
+        number_of_returns: parse_u8(number_of_returns)?,
         scan_direction_flag: *scan_direction_flag == "1",
         edge_of_flight_line: *edge_of_flight_line == "1",
-        classification: parse_u8(classification).await?,
-        scan_angle_rank: parse_i8(scan_angle_rank).await?,
-        user_data: parse_u8(user_data).await?,
-        point_source_id: parse_u16(point_source_id).await?,
-        gps_time: decode_option(gps_time, parse_f64).await?,
-        rgb: decode_option(rgb, dec_rgb).await?,
+        classification: parse_u8(classification)?,
+        scan_angle_rank: parse_i8(scan_angle_rank)?,
+        user_data: parse_u8(user_data)?,
+        point_source_id: parse_u16(point_source_id)?,
+        gps_time: decode_option(gps_time, parse_f64)?,
+        rgb: decode_option(rgb, dec_rgb)?,
     })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_vlr_diff(d: &LasVlrDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.user_id {
         parts.push(format!("U:{}", hex_encode(v.as_bytes())));
@@ -1145,8 +1200,9 @@ async fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = LasVlrDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1154,17 +1210,18 @@ async fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("vlr diff: bad entry {entry:?}"))?;
         match tag {
-            "U" => d.user_id = Some(String::from_utf8(hex_decode(val).await?).map_err(|e| e.to_string())?),
-            "R" => d.record_id = Some(parse_u16(val).await?),
-            "N" => d.description = Some(String::from_utf8(hex_decode(val).await?).map_err(|e| e.to_string())?),
-            "X" => d.data = Some(hex_decode(val).await?),
+            "U" => d.user_id = Some(String::from_utf8(hex_decode(val)?).map_err(|e| e.to_string())?),
+            "R" => d.record_id = Some(parse_u16(val)?),
+            "N" => d.description = Some(String::from_utf8(hex_decode(val)?).map_err(|e| e.to_string())?),
+            "X" => d.data = Some(hex_decode(val)?),
             other => return Err(format!("vlr diff: unknown tag {other:?}")),
         }
     }
     Ok(d)
 }
 
-async fn enc_point_diff(d: &LasPointDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_point_diff(d: &LasPointDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.x {
         parts.push(format!("X:{v}"));
@@ -1210,8 +1267,9 @@ async fn enc_point_diff(d: &LasPointDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = LasPointDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1219,20 +1277,20 @@ async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("point diff: bad entry {entry:?}"))?;
         match tag {
-            "X" => d.x = Some(parse_f64(val).await?),
-            "Y" => d.y = Some(parse_f64(val).await?),
-            "Z" => d.z = Some(parse_f64(val).await?),
-            "I" => d.intensity = Some(parse_u16(val).await?),
-            "R" => d.return_number = Some(parse_u8(val).await?),
-            "N" => d.number_of_returns = Some(parse_u8(val).await?),
+            "X" => d.x = Some(parse_f64(val)?),
+            "Y" => d.y = Some(parse_f64(val)?),
+            "Z" => d.z = Some(parse_f64(val)?),
+            "I" => d.intensity = Some(parse_u16(val)?),
+            "R" => d.return_number = Some(parse_u8(val)?),
+            "N" => d.number_of_returns = Some(parse_u8(val)?),
             "D" => d.scan_direction_flag = Some(val == "1"),
             "E" => d.edge_of_flight_line = Some(val == "1"),
-            "C" => d.classification = Some(parse_u8(val).await?),
-            "A" => d.scan_angle_rank = Some(parse_i8(val).await?),
-            "U" => d.user_data = Some(parse_u8(val).await?),
-            "P" => d.point_source_id = Some(parse_u16(val).await?),
-            "G" => d.gps_time = Some(decode_option(val, parse_f64).await?),
-            "B" => d.rgb = Some(decode_option(val, dec_rgb).await?),
+            "C" => d.classification = Some(parse_u8(val)?),
+            "A" => d.scan_angle_rank = Some(parse_i8(val)?),
+            "U" => d.user_data = Some(parse_u8(val)?),
+            "P" => d.point_source_id = Some(parse_u16(val)?),
+            "G" => d.gps_time = Some(decode_option(val, parse_f64)?),
+            "B" => d.rgb = Some(decode_option(val, dec_rgb)?),
             other => return Err(format!("point diff: unknown tag {other:?}")),
         }
     }
@@ -1241,16 +1299,18 @@ async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
 
 /// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser
 /// (identical shape to gif 89a's copy — own copy per artifact, no cross-artifact type sharing).
-async fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
-async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -1264,22 +1324,26 @@ async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, St
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
-async fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
-    enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
+    enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>())
 }
-async fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
+    let (removed, modified, added) = dec_collection_triple(body)?;
     Ok(LasVlrsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(LasVlrModified { index, diff: dec_vlr_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
         added: added.into_iter().map(|(index, enc)| Ok(LasVlrAdded { index, vlr: dec_vlr(&enc)? })).collect::<Result<Vec<_>, String>>()?,
     })
 }
-async fn enc_points_diff(d: &LasPointsDiff) -> String {
-    enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_points_diff(d: &LasPointsDiff) -> String {
+    enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>())
 }
-async fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
+    let (removed, modified, added) = dec_collection_triple(body)?;
     Ok(LasPointsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(LasPointModified { index, diff: dec_point_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1289,7 +1353,8 @@ async fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_las_diff(d: &LasDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_las_diff(d: &LasDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.version_major {
         tokens.push(format!("version-major={v}"));
@@ -1367,73 +1432,74 @@ async fn print_las_diff(d: &LasDiff) -> String {
         tokens.push(format!("min-z={v}"));
     }
     if let Some(v) = &d.vlrs {
-        tokens.push(enc_vlrs_diff(v).await);
+        tokens.push(enc_vlrs_diff(v));
     }
     if let Some(v) = &d.points {
-        tokens.push(enc_points_diff(v).await);
+        tokens.push(enc_points_diff(v));
     }
     tokens.join(" ")
 }
-async fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
     let mut d = LasDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("version-major=") {
-            d.version_major = Some(parse_u8(rest).await?);
+            d.version_major = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("version-minor=") {
-            d.version_minor = Some(parse_u8(rest).await?);
+            d.version_minor = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("system-identifier=") {
-            d.system_identifier = Some(String::from_utf8(hex_decode(rest).await?).map_err(|e| e.to_string())?);
+            d.system_identifier = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = token.strip_prefix("generating-software=") {
-            d.generating_software = Some(String::from_utf8(hex_decode(rest).await?).map_err(|e| e.to_string())?);
+            d.generating_software = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = token.strip_prefix("creation-day-of-year=") {
-            d.creation_day_of_year = Some(parse_u16(rest).await?);
+            d.creation_day_of_year = Some(parse_u16(rest)?);
         } else if let Some(rest) = token.strip_prefix("creation-year=") {
-            d.creation_year = Some(parse_u16(rest).await?);
+            d.creation_year = Some(parse_u16(rest)?);
         } else if let Some(rest) = token.strip_prefix("header-size=") {
-            d.header_size = Some(parse_u16(rest).await?);
+            d.header_size = Some(parse_u16(rest)?);
         } else if let Some(rest) = token.strip_prefix("offset-to-point-data=") {
-            d.offset_to_point_data = Some(parse_u32(rest).await?);
+            d.offset_to_point_data = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("number-of-vlrs=") {
-            d.number_of_vlrs = Some(parse_u32(rest).await?);
+            d.number_of_vlrs = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("point-data-format-id=") {
-            d.point_data_format_id = Some(parse_u8(rest).await?);
+            d.point_data_format_id = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("point-data-record-length=") {
-            d.point_data_record_length = Some(parse_u16(rest).await?);
+            d.point_data_record_length = Some(parse_u16(rest)?);
         } else if let Some(rest) = token.strip_prefix("number-of-point-records=") {
-            d.number_of_point_records = Some(parse_u32(rest).await?);
+            d.number_of_point_records = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("points-by-return=") {
-            d.points_by_return = Some(dec_u32x5(rest).await?);
+            d.points_by_return = Some(dec_u32x5(rest)?);
         } else if let Some(rest) = token.strip_prefix("x-scale=") {
-            d.x_scale = Some(parse_f64(rest).await?);
+            d.x_scale = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("y-scale=") {
-            d.y_scale = Some(parse_f64(rest).await?);
+            d.y_scale = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("z-scale=") {
-            d.z_scale = Some(parse_f64(rest).await?);
+            d.z_scale = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("x-offset=") {
-            d.x_offset = Some(parse_f64(rest).await?);
+            d.x_offset = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("y-offset=") {
-            d.y_offset = Some(parse_f64(rest).await?);
+            d.y_offset = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("z-offset=") {
-            d.z_offset = Some(parse_f64(rest).await?);
+            d.z_offset = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("max-x=") {
-            d.max_x = Some(parse_f64(rest).await?);
+            d.max_x = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("min-x=") {
-            d.min_x = Some(parse_f64(rest).await?);
+            d.min_x = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("max-y=") {
-            d.max_y = Some(parse_f64(rest).await?);
+            d.max_y = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("min-y=") {
-            d.min_y = Some(parse_f64(rest).await?);
+            d.min_y = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("max-z=") {
-            d.max_z = Some(parse_f64(rest).await?);
+            d.max_z = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("min-z=") {
-            d.min_z = Some(parse_f64(rest).await?);
+            d.min_z = Some(parse_f64(rest)?);
         } else if let Some(rest) = token.strip_prefix("vlrs{") {
-            d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?).await?);
+            d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?)?);
         } else if let Some(rest) = token.strip_prefix("points{") {
-            d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?).await?);
+            d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?)?);
         } else {
             return Err(format!("las diff: unknown token {token:?}"));
         }
@@ -1461,19 +1527,23 @@ async fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
 /// semio` file's DESCRIPTION of it bottoms out in one opaque trailing chain past the two real
 /// leading fields (`format`, `header_mask`).
 //#region 🔖️BinaryPrimitives
-pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1481,7 +1551,8 @@ pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<St
 /// 🧭️ Full (non-sparse) `LasHeader` binary record — every field always present, declaration
 /// order — reused by `🧬️mutations/🦀️component.rs`'s `SetSnapshot` binary payload (a whole
 /// `LasSnapshot` embeds a whole `LasHeader`, never a sparse patch).
-pub(crate) async fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
     out.push(h.version_major);
     out.push(h.version_minor);
     write_str_lp(out, &h.system_identifier);
@@ -1501,26 +1572,27 @@ pub(crate) async fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
         out.extend_from_slice(&v.to_le_bytes());
     }
 }
-pub(crate) async fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
-    let version_major = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let version_minor = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let system_identifier = read_str_lp(reader).await?;
-    let generating_software = read_str_lp(reader).await?;
-    let creation_day_of_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let creation_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let header_size = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let offset_to_point_data = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let number_of_vlrs = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let point_data_format_id = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let point_data_record_length = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let number_of_point_records = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
+    let version_major = reader.read_u8().map_err(|e| e.to_string())?;
+    let version_minor = reader.read_u8().map_err(|e| e.to_string())?;
+    let system_identifier = read_str_lp(reader)?;
+    let generating_software = read_str_lp(reader)?;
+    let creation_day_of_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let creation_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let header_size = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let offset_to_point_data = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let number_of_vlrs = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let point_data_format_id = reader.read_u8().map_err(|e| e.to_string())?;
+    let point_data_record_length = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let number_of_point_records = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     let mut points_by_return = [0u32; 5];
     for slot in points_by_return.iter_mut() {
-        *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     }
     let mut floats = [0.0f64; 12];
     for slot in floats.iter_mut() {
-        *slot = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+        *slot = reader.read_f64_le().map_err(|e| e.to_string())?;
     }
     let [x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] = floats;
     Ok(LasHeader {
@@ -1552,17 +1624,20 @@ pub(crate) async fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result
     })
 }
 
-pub(crate) async fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
     write_str_lp(out, &v.user_id);
     store::pack_rt::write_varint_u64(out, v.record_id as u64);
     write_str_lp(out, &v.description);
     write_bytes_lp(out, &v.data);
 }
-pub(crate) async fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
-    Ok(LasVlr { user_id: read_str_lp(reader).await?, record_id: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, description: read_str_lp(reader).await?, data: read_bytes_lp(reader).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
+    Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
 }
 
-pub(crate) async fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
@@ -1592,27 +1667,28 @@ pub(crate) async fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
-    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let intensity = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let return_number = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let number_of_returns = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let scan_direction_flag = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let edge_of_flight_line = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let classification = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let scan_angle_rank = reader.read_u8().await.map_err(|e| e.to_string())? as i8;
-    let user_data = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let point_source_id = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let gps_time = match reader.read_u8().await.map_err(|e| e.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
+    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let intensity = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let return_number = reader.read_u8().map_err(|e| e.to_string())?;
+    let number_of_returns = reader.read_u8().map_err(|e| e.to_string())?;
+    let scan_direction_flag = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let edge_of_flight_line = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let classification = reader.read_u8().map_err(|e| e.to_string())?;
+    let scan_angle_rank = reader.read_u8().map_err(|e| e.to_string())? as i8;
+    let user_data = reader.read_u8().map_err(|e| e.to_string())?;
+    let point_source_id = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let gps_time = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
+        1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
         other => return Err(format!("bad option tag {other}")),
     };
-    let rgb = match reader.read_u8().await.map_err(|e| e.to_string())? {
+    let rgb = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
+        1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
         other => return Err(format!("bad option tag {other}")),
     };
     Ok(LasPoint { x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb })
@@ -1625,7 +1701,8 @@ const VDF_RECORD_ID: u8 = 1 << 1;
 const VDF_DESCRIPTION: u8 = 1 << 2;
 const VDF_DATA: u8 = 1 << 3;
 
-async fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
     let mut mask = 0u8;
     if d.user_id.is_some() {
         mask |= VDF_USER_ID;
@@ -1653,20 +1730,21 @@ async fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
         write_bytes_lp(out, v);
     }
 }
-async fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
-    let mask = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
+    let mask = reader.read_u8().map_err(|e| e.to_string())?;
     let mut d = LasVlrDiff::default();
     if mask & VDF_USER_ID != 0 {
-        d.user_id = Some(read_str_lp(reader).await?);
+        d.user_id = Some(read_str_lp(reader)?);
     }
     if mask & VDF_RECORD_ID != 0 {
-        d.record_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.record_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & VDF_DESCRIPTION != 0 {
-        d.description = Some(read_str_lp(reader).await?);
+        d.description = Some(read_str_lp(reader)?);
     }
     if mask & VDF_DATA != 0 {
-        d.data = Some(read_bytes_lp(reader).await?);
+        d.data = Some(read_bytes_lp(reader)?);
     }
     Ok(d)
 }
@@ -1686,7 +1764,8 @@ const PDF_POINT_SOURCE_ID: u16 = 1 << 11;
 const PDF_GPS_TIME: u16 = 1 << 12;
 const PDF_RGB: u16 = 1 << 13;
 
-async fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
     let mut mask = 0u16;
     if d.x.is_some() {
         mask |= PDF_X;
@@ -1788,63 +1867,65 @@ async fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
-    let mask = reader.read_u16_le().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
+    let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
     let mut d = LasPointDiff::default();
     if mask & PDF_X != 0 {
-        d.x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_Y != 0 {
-        d.y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_Z != 0 {
-        d.z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_INTENSITY != 0 {
-        d.intensity = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.intensity = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_RETURN_NUMBER != 0 {
-        d.return_number = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.return_number = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_NUMBER_OF_RETURNS != 0 {
-        d.number_of_returns = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.number_of_returns = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_DIRECTION_FLAG != 0 {
-        d.scan_direction_flag = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
+        d.scan_direction_flag = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_EDGE_OF_FLIGHT_LINE != 0 {
-        d.edge_of_flight_line = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
+        d.edge_of_flight_line = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_CLASSIFICATION != 0 {
-        d.classification = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.classification = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_ANGLE_RANK != 0 {
-        d.scan_angle_rank = Some(reader.read_u8().await.map_err(|e| e.to_string())? as i8);
+        d.scan_angle_rank = Some(reader.read_u8().map_err(|e| e.to_string())? as i8);
     }
     if mask & PDF_USER_DATA != 0 {
-        d.user_data = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.user_data = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_POINT_SOURCE_ID != 0 {
-        d.point_source_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.point_source_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_GPS_TIME != 0 {
-        d.gps_time = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
+        d.gps_time = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
+            1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
             other => return Err(format!("bad option tag {other}")),
         });
     }
     if mask & PDF_RGB != 0 {
-        d.rgb = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
+        d.rgb = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
+            1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
             other => return Err(format!("bad option tag {other}")),
         });
     }
     Ok(d)
 }
 
-async fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1860,10 +1941,11 @@ async fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
         enc_vlr_bin(&a.vlr, out);
     }
 }
-async fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasVlrModified, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1871,7 +1953,7 @@ async fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrs
             Ok(LasVlrModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasVlrAdded, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1882,7 +1964,8 @@ async fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrs
     Ok(LasVlrsDiff { removed, modified, added })
 }
 
-async fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1898,10 +1981,11 @@ async fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
         enc_point_bin(&a.point, out);
     }
 }
-async fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasPointModified, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1909,7 +1993,7 @@ async fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPo
             Ok(LasPointModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasPointAdded, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1954,10 +2038,10 @@ const HDR_POINTS: u32 = 1 << 26;
 
 impl DiffCodec for LasDiff {
     async fn print_diff(&self) -> String {
-        print_las_diff(self).await
+        print_las_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_las_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_las_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ REAL binary frame (`format u8 | header_mask u32 | <present header fields> | <vlrs diff
     /// if present> | <points diff if present>`), matching `../💾️binary/📡️component.protocol.
@@ -2151,10 +2235,10 @@ impl DiffCodec for LasDiff {
                 d.version_minor = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_SYSTEM_IDENTIFIER != 0 {
-                d.system_identifier = Some(read_str_lp(&mut reader).await?);
+                d.system_identifier = Some(read_str_lp(&mut reader)?);
             }
             if mask & HDR_GENERATING_SOFTWARE != 0 {
-                d.generating_software = Some(read_str_lp(&mut reader).await?);
+                d.generating_software = Some(read_str_lp(&mut reader)?);
             }
             if mask & HDR_CREATION_DAY_OF_YEAR != 0 {
                 d.creation_day_of_year = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
@@ -2224,10 +2308,10 @@ impl DiffCodec for LasDiff {
                 d.min_z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_VLRS != 0 {
-                d.vlrs = Some(dec_vlrs_diff_bin(&mut reader).await?);
+                d.vlrs = Some(dec_vlrs_diff_bin(&mut reader)?);
             }
             if mask & HDR_POINTS != 0 {
-                d.points = Some(dec_points_diff_bin(&mut reader).await?);
+                d.points = Some(dec_points_diff_bin(&mut reader)?);
             }
             Ok(d)
         }
@@ -2239,7 +2323,8 @@ impl DiffCodec for LasDiff {
 /// 🧪️ Shared demo-case fixtures (moved out of `mod tests` so both `demo_diff_cases` below AND
 /// `mod tests` itself can use them without a `tests::` qualification cycle).
 #[cfg(test)]
-pub(crate) async fn base_point(seed: u8) -> LasPoint {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn base_point(seed: u8) -> LasPoint {
     LasPoint {
         x: 100.0 + seed as f64,
         y: -50.0 + seed as f64 * 0.5,
@@ -2259,7 +2344,8 @@ pub(crate) async fn base_point(seed: u8) -> LasPoint {
 }
 
 #[cfg(test)]
-pub(crate) async fn base_vlr(record_id: u16) -> LasVlr {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
     LasVlr { user_id: "LASF_Spec".into(), record_id, description: format!("vlr {record_id}"), data: vec![record_id as u8; 3] }
 }
 
@@ -2269,7 +2355,8 @@ pub(crate) async fn base_vlr(record_id: u16) -> LasVlr {
 /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<LasDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
     let mut pa0 = base_point(1);
     pa0.gps_time = Some(1000.0);
     let a = LasSnapshot {

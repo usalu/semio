@@ -32,16 +32,19 @@ impl Default for JpgArtifact {
 }
 
 impl JpgArtifact {
-    pub async fn to_snapshot(&self) -> JpgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> JpgSnapshot {
         // 🎪️ `JpgArtifact` is the reduced UI-editable view (schema+raster only) — it never
         // carries frame/table data, so `frame`/`sof_marker`/`arithmetic`/`quant_tables`/
         // `huffman_tables`/etc. fall back to `JpgSnapshot::default()`'s "no decoded frame" state.
         JpgSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, pixels: self.pixels.clone(), ..JpgSnapshot::default() }
     }
-    pub async fn from_snapshot(snapshot: JpgSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: JpgSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, pixels: snapshot.pixels }
     }
-    pub async fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -49,7 +52,8 @@ impl JpgArtifact {
     }
 }
 
-pub async fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn jpg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.jpg",
         artifact: schema::FacetLeaves {
@@ -241,7 +245,8 @@ semio_framework_plugin::derive_artifact_facets!(
 // cluster (superseded by `declaration()` in the artifact root, zero real callers) deleted
 // outright; the real codec (`encode_jpg`/`decode_jpg`/`JpgError` + every pure format algorithm)
 // and `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-pub async fn empty_jpg_snapshot() -> JpgSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_jpg_snapshot() -> JpgSnapshot {
     JpgSnapshot::default()
 }
 
@@ -257,7 +262,8 @@ pub async fn empty_jpg_snapshot() -> JpgSnapshot {
 /// width*height*3 needs a two-field product; other_segments' body length needs `Lp - 2`, neither
 /// expressible by this dialect's `Field`/`Array` primitives).
 #[cfg(test)]
-pub(crate) async fn demo_jpg_snapshot() -> JpgSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
     use crate::artifacts::jpg::JpgSnapshot;
     use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
     let (w, h) = (16u32, 16u32);

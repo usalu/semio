@@ -28,7 +28,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: 
 /// opaque `(r,g,b)` (and one canonical `(0,0,0)` slot for any transparent pixel) becomes exactly
 /// one palette entry, in first-seen order. Errors — never silently drops colors — once a 257th
 /// distinct entry would be needed (GIF's real `2..=256` palette-size ceiling).
-async fn quantize(frames: &[&[u8]]) -> Result<(GifColorTable, Vec<Vec<u8>>, Option<u8>), store::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn quantize(frames: &[&[u8]]) -> Result<(GifColorTable, Vec<Vec<u8>>, Option<u8>), store::PackError> {
     let mut colors: Vec<(u8, u8, u8)> = Vec::new();
     let mut transparent_index: Option<u8> = None;
     let mut indexed_frames = Vec::with_capacity(frames.len());
@@ -82,7 +83,7 @@ impl ArtifactSerializer for SemioImageToGif {
                 return Err(store::PackError::Schema("semio/image→gif: a frame's pixel length does not match width*height*4".into()));
             }
         }
-        let (gct, indexed_frames, transparent_index) = quantize(&refs).await?;
+        let (gct, indexed_frames, transparent_index) = quantize(&refs)?;
         let frames = from.frames.iter().zip(indexed_frames).map(|(f, indices)| GifFrame { left: 0, top: 0, width: from.width, height: from.height, indices, delay_cs: (f.delay_ms / 10) as u16, transparent_index, ..GifFrame::default() }).collect();
         let comments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| m.value.clone()).collect();
         let loop_count = from.metadata.iter().find(|m| m.key == "loopCount").and_then(|m| m.value.parse::<u16>().ok());
@@ -106,7 +107,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
-    async fn sample_semio() -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             colorspace: SemioColorspace::Indexed,
             bit_depth: 8,

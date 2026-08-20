@@ -28,6 +28,26 @@ pub mod checkpoint;
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestOutcome, TurnStatus, UiPatch, UiPatchOp};
+// 🧬️ Same gating rationale as the `kernel` import above: only the WIT-boundary code below names the
+// semantic-UI contract types (`UiIntent`, `UiRevision`, `Activity`), so an ungated alias warns as
+// unused on native. ALSO enabled under `cfg(test)` (M2, ticket 26/08/17 `design-unified.md`): the
+// native `test_support` module below (behind its own `#[cfg(test)]`) exercises `PATCHES`/`PRESENCE`
+// directly with real `ui_contract` values — `wit_bridge` still cannot run under `cargo test`
+// (wasm32-wasip2-only), but its own type vocabulary can be reused for a native fixture.
+#[cfg(any(test, all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2")))]
+use semio_framework_ui_contract as ui_contract;
+// 🧬️ Same gating rationale as `ui_contract` above: `is_stale_intent`/`DEFAULT_REVISION_TOLERANCE`
+// are only named inside `wit_bridge::poll`'s intent-batching loop (M1, ticket 26/08/17
+// `design-unified.md`) — gated identically to that module so an ungated alias never warns as unused
+// on native.
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+use semio_framework_ui_runtime::{is_stale_intent, DEFAULT_REVISION_TOLERANCE};
+/// 👥️ M2 (ticket 26/08/17 `design-unified.md`): standalone — needs no `EntityStore`/`UiRuntime`, just
+/// `record_own`/`record_peer`/`expire`/`flush` — so unlike the two imports directly above, this one
+/// is ungated: the `PRESENCE` thread_local right below references it on EVERY build, matching how
+/// `patches::PatchTracker` (an equally wit_bridge-only consumer) is reached through the ungated
+/// `pub mod patches;` at this file's top.
+use semio_framework_ui_runtime::PresenceHub;
 use std::cell::RefCell;
 // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `HashMap`/`VecDeque` back `TASK_RECORDS`/
 // `TASK_KEYS`/`TASK_RESUMES`/`INSTANCE_QUOTAS` below, which are deliberately UNGATED (native
@@ -42,6 +62,13 @@ thread_local! {
     // 🌉️ `thread_local!` initializer expressions run in a plain (non-const, non-async) context —
     // bridged via `resolve_ready` since every `::new()` here is a pure `Self::default()`.
     static PATCHES: patches::PatchTracker = patches::PatchTracker::new();
+    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): one `PresenceHub` shared by every instance this
+    /// actor hosts, beside `PATCHES` — same "surfaces are already namespaced by instance" reasoning
+    /// (a `PresenceHub` entry is keyed `(surface, node_key)`, and `surface` already embeds the
+    /// instance via `plugin_take_presence`'s `"<instance>:<body-key>"` stamping). Fed from each dirty
+    /// render's `plugin_take_presence(instance)` drain, expired and flushed once per `poll` — see
+    /// `poll`'s own body for both halves.
+    static PRESENCE: RefCell<PresenceHub> = RefCell::new(PresenceHub::new());
     /// 📮️ One `RequestRegistry` per actor (today: shared process-wide, matching the "one actor per
     /// app instance is the default" granularity design-abi.md §4 names — a multi-instance pooled
     /// actor is opt-in first-party-only future work, out of this wave).
@@ -359,6 +386,10 @@ mod wit_bridge {
 pub fn poll(events: Vec<crate::component::component::exports::semio::framework::reactor::Event>, budget: crate::component::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
     let mut app_commands: HashMap<u32, Vec<Vec<u8>>> = HashMap::new();
     let mut dirty_render: Vec<(u32, String)> = Vec::new();
+    // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): intents that survived the revision guard below,
+    // batched per instance exactly like `app_commands` — dispatched in its own pass, after
+    // `app_commands`, so a mutation from an app command this same turn is already visible.
+    let mut dirty_intents: HashMap<u32, Vec<ui_contract::UiIntent>> = HashMap::new();
 
     for event in events {
         // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `Event::InstanceClose`
@@ -399,17 +430,21 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
             Event::AppCommandEvent { instance, command, .. } => {
                 app_commands.entry(instance.0.parse::<u32>().unwrap_or(0)).or_default().push(command);
             }
-            // 🎬️ `sdk-flip` (26/08/20): decodes the pack-encoded `ui_contract::UiIntent` and marks
-            // its surface dirty so the next render observes whatever effect it had. Real intent
-            // DISPATCH — routing to a per-plugin `ui_runtime::HandleIntent` impl, the job
-            // `UiRuntime::route_intents` does inside the full runtime — is fleet-domain work this
-            // packet's `OWNS` does not cover (see `📓️terra-sdk-flip-report.md`'s decisions section);
-            // decode-and-mark-dirty is the honest interim, not a silent drop of the wire payload.
+            // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
+            // `ui_contract::UiIntent`, drops it if it targets a tree the user can no longer see (the
+            // revision guard, at the reconciler that owns the revision — `PATCHES.revision`,
+            // `ui_runtime::is_stale_intent` imported rather than reimplemented), and otherwise
+            // batches it per instance for the dispatch pass below (mirrors `app_commands`'
+            // batch-then-dispatch shape). Real dispatch replaces the prior packet's "decode-and-
+            // mark-dirty" interim — see `📓️terra-sdk-wire-report.md`'s M1 section for the full route.
             Event::UiIntent { instance, intent } => {
                 let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
                 if let Ok(intent_value) = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(&intent)) {
                     if let Ok(intent) = dsl::from_dsl_value::<ui_contract::UiIntent>(intent_value) {
-                        dirty_render.push((numeric_instance, intent.surface.0));
+                        let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
+                        if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
+                            dirty_intents.entry(numeric_instance).or_default().push(intent);
+                        }
                     }
                 }
             }
@@ -496,6 +531,51 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
         }
     }
 
+    // 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
+    // as `app_commands` above, immediately after it (so a mutation an app command made this turn is
+    // already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
+    // routes through the app's EXISTING typed command path (`PluginApp::handle_intent_frame` →
+    // `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
+    // Each handled batch's surfaces feed `dirty_render` so the reply patch — the next `UiPatch`
+    // revision bump — is produced in this SAME turn (design decision: no new reply channel).
+    for (instance, intents) in dirty_intents {
+        // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
+        // resolve synchronously here for the same reason as `plugin_exchange` above.
+        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(instance, &intents)) {
+            Ok(output) => {
+                for frame_bytes in output.frames {
+                    route_app_frame(instance, &frame_bytes, &mut effects);
+                }
+                for one in &output.effects {
+                    if let Ok(effect) = decode_wire_effect(one) {
+                        effects.push(effect);
+                    }
+                }
+                for one in &output.events {
+                    if let Ok(event) = decode_wire_app_event(one) {
+                        effects.push(Effect::PublishEvent { topic: event.kind, payload: semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&event.payload)) });
+                    }
+                }
+            }
+            Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
+        }
+        // 🌳️ Deduped per instance — several intents on the same surface this turn must not queue a
+        // redundant re-render (the second `diff()` would return `None` anyway, but there is no reason
+        // to pay for it).
+        let mut surfaces: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        for intent in &intents {
+            surfaces.insert(intent.surface.0.clone());
+        }
+        for surface in surfaces {
+            dirty_render.push((instance, surface));
+        }
+    }
+
+    // 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
+    // expiry stamping below and `PRESENCE.expire` at the end of this turn — a single wall-clock
+    // reading per poll, not one per presence update.
+    let now_ms = u64::try_from(semio_framework::io::resolve_ready(crate::host::now_ms())).unwrap_or(0);
+
     for (instance, surface) in dirty_render {
         // 🚫️async: E5 executor bridge — `plugin_render` stays genuinely `async fn`; see `poll`'s
         // `plugin_exchange` call above for the same safety argument. `PatchTracker::diff` (`sdk-flip`,
@@ -507,6 +587,20 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
                 // single accumulation point for the non-UI half of the turn.
                 PENDING_PATCHES.with(|pending| pending.borrow_mut().push(patch));
             }
+        }
+        // 👥️ M2: drains this instance's render-plane presence outbox (`VcsArtifactApp::
+        // pending_presence`, filled by `stamp_and_cache_interaction_ui` during the render just above)
+        // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
+        // its presence. NEVER touches `PENDING_PATCHES`/the document store — the whole point of this
+        // separate channel (see `PresenceHub`'s own doc: a mouse-move must never bump a revision).
+        for update in semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(instance)) {
+            PRESENCE.with(|hub| {
+                let mut hub = hub.borrow_mut();
+                hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
+                for peer in update.peers {
+                    hub.record_peer(update.surface.clone(), update.node_key.clone(), peer, update.ttl_ms, now_ms);
+                }
+            });
         }
     }
 
@@ -526,9 +620,17 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
     let more_work = more_work || resumes_remain || EXECUTOR.with(|executor| executor.has_ready());
 
     let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
+    // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
+    // the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
+    // between polls still costs exactly one update per `(surface, node_key)`).
+    let presence = PRESENCE.with(|hub| {
+        let mut hub = hub.borrow_mut();
+        hub.expire(now_ms);
+        hub.flush()
+    });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let result = semio_framework::kernel::TurnResult { ui_patches, effects, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first().copied()), status, fuel_used: 0 };
+    let result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first().copied()), status, fuel_used: 0 };
     Ok(kernel_turn_result_to_wit(result, budget))
 }
 
@@ -723,20 +825,19 @@ fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoi
 /// the seam — `max-effects`/`max-patch-bytes` capping is real, mechanical follow-up work (design-
 /// abi.md §4's "capped by `max-effects`, overflow carries over") not yet wired into this wave.
 ///
-/// 🎯️ `sdk-flip` (26/08/20): `presence` is unconditionally empty. `component.wit`'s
-/// `reactor::turn-result` grew a `presence: list<presence-update>` field in `wit-flip`, but the Rust
-/// `kernel::TurnResult` SSOT this function reads from was NOT given a matching field (that packet's
-/// own report flags the gap: "whoever wires `reactor::poll`'s real marshaling needs this field added
-/// first"). Real presence needs the full `ui_runtime::UiRuntime`/`PresenceHub` embedded per actor —
-/// this packet embeds `PatchTracker`'s `SurfaceReconciler` only (see that file's header doc for why),
-/// so there is no presence source yet either. Both gaps close together in whatever packet adds
-/// per-plugin `Present`/`HandleIntent` impls and can therefore justify the heavier `UiRuntime`.
+/// 👥️ M2 (ticket 26/08/17 `design-unified.md`): `presence` is now real — `kernel::TurnResult`
+/// gained the matching field this doc used to say it lacked (see `poll`'s own body for the
+/// `PresenceHub` that fills it). Marshaled through the SAME `presence-update.peer: pack` WIT field
+/// the schema already declares — that field is opaque `pack` bytes at the WIT boundary already, so
+/// no STRUCTURAL wit change is needed to repoint what it carries: `wit-flip`'s doc comment there
+/// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
+/// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
 fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
     use crate::component::component::exports::semio::framework::reactor as wit;
     wit::TurnResult {
         ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
         effects: result.effects.into_iter().map(kernel_effect_to_wit).collect(),
-        presence: Vec::new(),
+        presence: result.presence.into_iter().map(kernel_presence_update_to_wit).collect(),
         next_wake: result.next_wake,
         status: match result.status {
             TurnStatus::Idle => wit::TurnStatus::Idle,
@@ -746,6 +847,14 @@ fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budge
         },
         fuel_used: result.fuel_used,
     }
+}
+
+/// 👥️ M2: pack-encodes a whole `ui_contract::PresenceUpdate` into the WIT `presence-update.update`
+/// field — same `pack_patch_field` helper every `patch-op` variant already uses, since a
+/// render-plane presence update is exactly as opaque to the WIT boundary as a patch op's payload.
+fn kernel_presence_update_to_wit(update: ui_contract::PresenceUpdate) -> crate::component::component::exports::semio::framework::reactor::PresenceUpdate {
+    use crate::component::component::exports::semio::framework::reactor as wit;
+    wit::PresenceUpdate { update: pack_patch_field(&update) }
 }
 
 fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
@@ -956,4 +1065,127 @@ pub(crate) mod test_support {
     pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
         REGISTRY.with(|registry| registry.cancel_instance(instance))
     }
+
+    //#region 🔖️M2PresenceHooks
+    /// 🎯️ M1: the exact `PATCHES.revision` read `poll`'s intent-batching loop guards every
+    /// `UiIntent` against, exposed directly.
+    pub(crate) async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
+        PATCHES.with(|patches| patches.revision(surface))
+    }
+
+    /// 🩹️ The exact `PATCHES.diff` call `poll`'s dirty-render loop makes, exposed directly — lets a
+    /// native test drive the SAME reconciler `PRESENCE` sits beside, to prove the two never cross.
+    pub(crate) async fn patches_diff(surface: &str, tree: &semio_framework_ui_runtime::ComponentTree) -> Option<ui_contract::UiPatch> {
+        PATCHES.with(|patches| patches.diff(surface, tree))
+    }
+
+    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the exact `PRESENCE.record_own` call `poll`'s
+    /// dirty-render loop makes for each drained `PresenceUpdate`, exposed directly.
+    pub(crate) async fn presence_record_own(surface: &str, node_key: &str, own: ui_contract::OwnPresence, ttl_ms: u32) {
+        PRESENCE.with(|hub| hub.borrow_mut().record_own(ui_contract::SurfaceId::from(surface), node_key.to_string(), own, ttl_ms));
+    }
+
+    /// 👥️ M2: the exact `PRESENCE.record_peer` call, exposed directly.
+    pub(crate) async fn presence_record_peer(surface: &str, node_key: &str, mark: ui_contract::PeerMark, ttl_ms: u32, now_ms: u64) {
+        PRESENCE.with(|hub| hub.borrow_mut().record_peer(ui_contract::SurfaceId::from(surface), node_key.to_string(), mark, ttl_ms, now_ms));
+    }
+
+    /// 👥️ M2: the exact `expire`-then-`flush` sequence `poll` runs once per turn, exposed directly.
+    pub(crate) async fn presence_expire_and_flush(now_ms: u64) -> Vec<ui_contract::PresenceUpdate> {
+        PRESENCE.with(|hub| {
+            let mut hub = hub.borrow_mut();
+            hub.expire(now_ms);
+            hub.flush()
+        })
+    }
+    //#endregion 🔖️M2PresenceHooks
 }
+
+//#region 🧪️M1M2ReactorTests
+/// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `test_support`'s
+/// direct hooks into `PATCHES`/`PRESENCE` — the same two thread-locals `poll`'s real intent-batching
+/// and dirty-render loops touch, exercised without needing a wasm32-wasip2 build (`poll` itself,
+/// gated to `wit_bridge`, cannot run under a native `cargo test` — see `test_support`'s own doc).
+#[cfg(test)]
+mod m1_m2_reactor_tests {
+    use super::test_support::*;
+    use semio_framework_ui_contract as ui_contract;
+    use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+
+    fn leaf(key: &str) -> ComponentTree {
+        ComponentTree::new(TreeNode::new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})))
+    }
+
+    /// 🎯️ M1: `PATCHES.revision` reads 0 for a surface `poll` has never rendered, and
+    /// `ui_runtime::is_stale_intent` correctly classifies an intent at/behind/beyond the tolerance
+    /// against it — the exact two calls `poll`'s `Event::UiIntent` arm chains together.
+    #[semio_framework_async_macros::async_test]
+    async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() {
+        let current = patches_revision("never-rendered").await;
+        assert_eq!(current, ui_contract::UiRevision(0));
+        assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(0), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE));
+    }
+
+    /// 🎯️ M1: after one real render bumps `PATCHES`'s revision to 1, an intent stamped at revision
+    /// 0 (trailing by exactly the default tolerance of 1) is NOT stale — but one that trails by 2
+    /// (as if two more renders had happened since the client last saw the surface) IS. This is
+    /// exactly the acceptance criterion "an intent whose revision trails by 2 produces no patch and
+    /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
+    #[semio_framework_async_macros::async_test]
+    async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
+        patches_diff("s", &leaf("root")).await;
+        patches_diff("s", &leaf("root2")).await;
+        patches_diff("s", &leaf("root3")).await;
+        let current = patches_revision("s").await;
+        assert_eq!(current, ui_contract::UiRevision(3));
+        assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
+        assert!(semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(1), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by 2 must be rejected — no patch, no command");
+    }
+
+    /// 👥️ M2 acceptance: a turn where only presence changed touches `PRESENCE` and leaves `PATCHES`
+    /// completely untouched — no revision bump, no patch, because the two channels share no code
+    /// path (by construction: `stamp_and_cache_interaction_ui` writes `pending_presence`, never
+    /// `PENDING_PATCHES`/`PATCHES`).
+    #[semio_framework_async_macros::async_test]
+    async fn a_presence_only_turn_emits_presence_and_zero_patches() {
+        let before = patches_revision("presence-only").await;
+        presence_record_own("presence-only", "row-1", ui_contract::OwnPresence { selected: true, ..Default::default() }, 4_000).await;
+        let updates = presence_expire_and_flush(0).await;
+        assert_eq!(updates.len(), 1);
+        assert!(updates[0].own.selected);
+        // 🩹️ Zero ui_patches: the surface's revision is EXACTLY what it was before — nothing was ever
+        // diffed against `PATCHES` for it, so there is nothing for a subsequent `poll` to have sent.
+        assert_eq!(patches_revision("presence-only").await, before);
+    }
+
+    /// 👥️ M2 acceptance: a burst of same-key presence writes between two flushes coalesces to ONE
+    /// update per `(surface, node_key)` — the property `PresenceHub` itself guarantees, exercised
+    /// here through the reactor's own `PRESENCE` wiring rather than the hub in isolation.
+    #[semio_framework_async_macros::async_test]
+    async fn a_burst_of_same_key_presence_writes_between_polls_coalesces_to_one_update() {
+        let mark = |selected: bool, hovered: bool| ui_contract::PeerMark { actor: "user:bob#s1".into(), color: Some(2), hovered, selected, label: "user:bob#s1".into() };
+        presence_record_peer("burst", "row-1", mark(false, true), 4_000, 0).await;
+        presence_record_peer("burst", "row-1", mark(true, true), 4_000, 10).await;
+        presence_record_peer("burst", "row-1", mark(true, false), 4_000, 20).await;
+        let updates = presence_expire_and_flush(20).await;
+        assert_eq!(updates.len(), 1, "a burst on one key must cost exactly one update, got {updates:?}");
+        assert_eq!(updates[0].peers.len(), 1);
+        assert!(updates[0].peers[0].selected);
+        assert!(!updates[0].peers[0].hovered, "must reflect the LAST write, not the first");
+    }
+
+    /// 👥️ M2 acceptance: a peer mark not refreshed within its TTL ages out with no goodbye message —
+    /// the flush after expiry reports the now-empty peer list once, then the slot is forgotten.
+    #[semio_framework_async_macros::async_test]
+    async fn ttl_expiry_drops_a_peer_mark_with_no_goodbye_message() {
+        let mark = ui_contract::PeerMark { actor: "user:carol#s1".into(), color: Some(4), hovered: true, selected: false, label: "user:carol#s1".into() };
+        presence_record_peer("ttl", "row-1", mark, 1_000, 0).await;
+        let first = presence_expire_and_flush(0).await;
+        assert_eq!(first[0].peers.len(), 1);
+        let after_expiry = presence_expire_and_flush(1_000).await;
+        assert_eq!(after_expiry.len(), 1, "expiry at the TTL boundary must surface as one more update");
+        assert!(after_expiry[0].peers.is_empty(), "the expired peer must be omitted, not sent as a goodbye");
+        assert!(presence_expire_and_flush(2_000).await.is_empty(), "the now-empty slot was garbage-collected");
+    }
+}
+//#endregion 🧪️M1M2ReactorTests

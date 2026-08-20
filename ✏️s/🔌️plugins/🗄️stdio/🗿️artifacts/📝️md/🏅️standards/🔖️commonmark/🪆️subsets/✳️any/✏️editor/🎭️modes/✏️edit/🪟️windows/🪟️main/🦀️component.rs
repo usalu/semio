@@ -9,15 +9,17 @@ use store::ArtifactDsl;
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
-pub async fn definition() -> WindowKindDefinition {
-    TextWindowKit::editable_window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    TextWindowKit::editable_window_kind()
 }
 
 /// 📝️ The editable text buffer is the artifact's own DSL text envelope (`print_dsl`), not literal
 /// markup — the same textual form `parse_dsl` accepts back on `replace-text` (see the sibling root
 /// `handle`). Round-trips exactly for any document this format's own grammar can already print.
-pub async fn render(snapshot: &MdSnapshot) -> UiNode {
-    TextWindowKit::render(&TextView { text: snapshot.print_dsl().await, language: Some("md".into()), read_only: false }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(snapshot: &MdSnapshot) -> UiNode {
+    TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("md".into()), read_only: false })
 }
 
 #[cfg(test)]

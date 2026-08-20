@@ -18,7 +18,7 @@ use crate::os_spr::{ActorId, MutationId};
 use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles};
+use crate::os_store::{reconcile_alternative, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles};
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
@@ -38,11 +38,15 @@ mod envelope_serde {
     use serde::ser::SerializeSeq;
     use serde::{Deserializer, Serializer};
 
-    pub async fn serialize<S>(envelopes: &[MutationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
+    // 🚫️async: E1 pure encode/decode consumed by serde's `#[serde(with = ...)]` (a sync-only
+    // external-trait call shape) — see R9. `encode_envelopes`/`decode_envelopes` (📡️replication,
+    // out of this packet's scope) are I/O-free varint/byte framing with no real suspension point,
+    // bridged via `resolve_ready`.
+    pub fn serialize<S>(envelopes: &[MutationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let bytes = encode_envelopes(envelopes);
+        let bytes = crate::io::resolve_ready(encode_envelopes(envelopes));
         let mut seq = serializer.serialize_seq(Some(bytes.len()))?;
         for byte in bytes {
             seq.serialize_element(&byte)?;
@@ -50,7 +54,9 @@ mod envelope_serde {
         seq.end()
     }
 
-    pub async fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MutationEnvelope>, D::Error>
+    // 🚫️async: E1 pure encode/decode consumed by serde's `#[serde(with = ...)]` — see R9, same
+    // reasoning as `serialize` above.
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MutationEnvelope>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -76,7 +82,7 @@ mod envelope_serde {
         }
 
         let bytes = deserializer.deserialize_seq(BytesVisitor)?;
-        decode_envelopes(&bytes).map_err(serde::de::Error::custom)
+        crate::io::resolve_ready(decode_envelopes(&bytes)).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖️EnvelopeSerde
@@ -267,7 +273,7 @@ pub mod backbone_worker_wire {
     pub async fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(request)?;
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
         Ok(bytes)
     }
 
@@ -276,14 +282,14 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).await.map_err(|error| error.to_string())?;
         from_dsl_value(dsl)
     }
 
     pub async fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(response)?;
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
         Ok(bytes)
     }
 
@@ -292,7 +298,7 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).await.map_err(|error| error.to_string())?;
         from_dsl_value(dsl)
     }
 }
@@ -326,7 +332,7 @@ async fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
     let mut combined = Vec::with_capacity(pack.len() + spr.len());
     combined.extend_from_slice(pack);
     combined.extend_from_slice(spr);
-    semio_framework_hash::hash_bytes(&combined)
+    semio_framework_hash::hash_bytes(&combined).await
 }
 
 /// @emoji 🆔️ Every op id across every edit in an spr byte log — the actor's dedup/known-ids set,
@@ -334,11 +340,11 @@ async fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
 /// mints fresh random ids on every read and would make dedup unstable across reads).
 #[cfg(not(target_arch = "wasm32"))]
 async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
-    let reader = crate::os_spr::HistoryReader::open(spr, &crate::os_spr::DecodeOptions::default()).map_err(|error| error.to_string())?;
+    let reader = crate::os_spr::HistoryReader::open(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut ids = std::collections::HashSet::new();
-    for edit in reader.edits() {
+    for edit in reader.edits().await {
         let edit = edit.map_err(|error| error.to_string())?;
-        ids.extend(op_ids_of(&edit));
+        ids.extend(op_ids_of(&edit).await);
     }
     Ok(ids)
 }
@@ -350,7 +356,7 @@ async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, Str
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
 #[cfg(not(target_arch = "wasm32"))]
 async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
-    let op_ids = op_ids_of(edit);
+    let op_ids = op_ids_of(edit).await;
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
         let payload = op.binary.clone().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id))?;
@@ -359,7 +365,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
         let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
         let timestamp = match meta.and_then(|meta| meta.hlt) {
             Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
-            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
+            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0).await,
         };
         let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(MutationEnvelope {
@@ -384,7 +390,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
     crate::os_spr::HistoryEdit {
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
-        started_at: now_ms().to_string(),
+        started_at: now_ms().await.to_string(),
         finished_at: None,
         coalesce_key: None,
         description: None,
@@ -468,12 +474,12 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
 /// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
 async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
-    crate::os_spr::encode_presence_peer(peer)
+    crate::os_spr::encode_presence_peer(peer).await
 }
 
 /// @emoji 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
 async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
-    crate::os_spr::decode_presence_peer(bytes).ok()
+    crate::os_spr::decode_presence_peer(bytes).await.ok()
 }
 
 // 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
@@ -521,7 +527,7 @@ async fn actor_seed(actor: &str) -> u64 {
 /// carried through unchanged).
 async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
-    crate::os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms(), logical: *counter }
+    crate::os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
 }
 //#endregion 🔖️WireBridge
 
@@ -552,7 +558,7 @@ where
     /// @emoji 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
     /// is wired into the store, and the command/event channels are retained for wake + status.
     pub async fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
-        self.store.attach_backbone(Box::new(channels.channel_backbone)).map_err(|error| SyncError::Vcs(error.to_string()))?;
+        self.store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
         self.cmd_tx = Some(channels.cmd_tx);
         self.events = Some(events);
         Ok(())
@@ -563,7 +569,7 @@ where
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::Detach);
         }
-        self.store.detach_backbone();
+        self.store.detach_backbone().await;
         self.cmd_tx = None;
         self.events = None;
     }
@@ -593,7 +599,7 @@ where
                 }
             }
         }
-        self.store.tick().map_err(|error| SyncError::Vcs(error.to_string()))
+        self.store.tick().await.map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     /// @emoji 🚦️ The latest sync status seen on the event stream (updated by {@link SyncSession::tick}).
@@ -604,15 +610,15 @@ where
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
     pub async fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
-        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     pub async fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
-        let mut envelope = self.store.envelope().clone();
-        let alternative_id = reconcile_alternative(&mut envelope, alternative_name, message, authors).map_err(|error| SyncError::Vcs(error.to_string()))?;
-        let applied = self.store.applied_edit_ids().to_vec();
-        let redo = self.store.redo_edit_ids().to_vec();
-        self.store.reset(envelope, applied, redo).map_err(|error| SyncError::Vcs(error.to_string()))?;
+        let mut envelope = self.store.envelope().await.clone();
+        let alternative_id = reconcile_alternative(&mut envelope, alternative_name, message, authors).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
+        let applied = self.store.applied_edit_ids().await.to_vec();
+        let redo = self.store.redo_edit_ids().await.to_vec();
+        self.store.reset(envelope, applied, redo).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
         Ok(alternative_id)
     }
 }
@@ -641,7 +647,9 @@ impl Default for PresenceHeartbeatProducer {
 }
 
 impl PresenceHeartbeatProducer {
-    pub async fn new(interval_ms: u64) -> Self {
+    // 🚫️async: E1 pure struct-literal builder consumed by `impl Default` (sync-only external
+    // trait) — see R9. No I/O, no suspension point.
+    pub fn new(interval_ms: u64) -> Self {
         Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None }
     }
 
@@ -667,7 +675,7 @@ impl PresenceHeartbeatProducer {
 pub struct ArtifactChannels {
     pub cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
     /// @emoji 🔗️ The store-side backbone end. The caller owns store attachment:
-    /// `store.attach_backbone(Box::new(channels.channel_backbone))`.
+    /// `store.attach_backbone(Backbones::Channel(channels.channel_backbone))`.
     pub channel_backbone: ChannelBackbone,
 }
 
@@ -696,13 +704,13 @@ impl ArtifactHost {
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         self.close(&document_id);
-        let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}"));
+        let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
-        let join = spawn_actor(config, remote, cmd_rx, event_tx.clone());
+        let join = spawn_actor(config, remote, cmd_rx, event_tx.clone()).await;
         #[cfg(target_arch = "wasm32")]
-        spawn_actor(config, remote, cmd_rx, event_tx.clone());
+        spawn_actor(config, remote, cmd_rx, event_tx.clone()).await;
         let entry = OpenDocument {
             cmd_tx: cmd_tx.clone(),
             events: event_tx,
@@ -740,13 +748,15 @@ impl ArtifactHost {
     pub async fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
         let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(document) = documents.get_mut(document_id) else { return false };
-        let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
+        let Some(peer) = document.presence.offer(now_ms, peer).await else { return false };
         document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok()
     }
 
     /// @emoji ✂️ Stops a document's actor (flushing pending outbound operations first) and, on native, joins
     /// its thread.
-    pub async fn close(&self, document_id: &str) {
+    // 🚫️async: E1 pure lock/remove + sync channel send + blocking `JoinHandle::join` — no real
+    // suspension point — consumed by `impl Drop` (sync-only external trait); see R9.
+    pub fn close(&self, document_id: &str) {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
             let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
@@ -758,7 +768,9 @@ impl ArtifactHost {
     }
 
     /// @emoji 🧹️ Ids of every currently-open document.
-    pub async fn open_artifacts(&self) -> Vec<String> {
+    // 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
+    // R9. No I/O, no suspension point.
+    pub fn open_artifacts(&self) -> Vec<String> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect()
     }
 }
@@ -812,18 +824,18 @@ mod native_actor {
         /// fallback, a row is always written pack+spr together); `Err` = a real storage failure.
         async fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
+                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    if let Some(pack_files) = storage.read_pack(document_id, extension).map_err(|error| error.to_string())? {
+                    if let Some(pack_files) = storage.read_pack(document_id, extension).await.map_err(|error| error.to_string())? {
                         return Ok(Some((pack_files.pack, pack_files.spr)));
                     }
-                    let Some(text_files) = storage.read(document_id, extension).map_err(|error| error.to_string())? else {
+                    let Some(text_files) = storage.read(document_id, extension).await.map_err(|error| error.to_string())? else {
                         return Ok(None);
                     };
                     let codec = crate::os_store::document_codec(schema)
-                        .map_err(|error| error.to_string())?
+                        .await.map_err(|error| error.to_string())?
                         .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"))?;
-                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).map_err(|error| error.to_string())?;
+                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.map_err(|error| error.to_string())?;
                     Ok(Some((pack_files.pack, pack_files.spr)))
                 }
             }
@@ -834,14 +846,14 @@ mod native_actor {
         /// and schema codec; a missing or unavailable codec aborts the write before storage changes.
         async fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).map_err(|error| error.to_string()),
+                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let codec = crate::os_store::document_codec(schema)
-                        .map_err(|error| error.to_string())?
+                        .await.map_err(|error| error.to_string())?
                         .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
-                    let mirror = (codec.print_mirror)(pack, spr).map_err(|error| error.to_string())?;
+                    let mirror = (codec.print_mirror)(pack, spr).await.map_err(|error| error.to_string())?;
                     let pack_files = ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
-                    storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).map_err(|error| error.to_string())
+                    storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
                 }
             }
         }
@@ -907,8 +919,8 @@ mod native_actor {
                 match binding {
                     PersistenceBinding::Folder { path } => {
                         if folder.is_none() {
-                            folder = Some(build_folder_endpoint(path, &config.document_id, &config.schema));
-                            folder_watch_path = Some(folder_watch_path_for(path));
+                            folder = Some(build_folder_endpoint(path, &config.document_id, &config.schema).await);
+                            folder_watch_path = Some(folder_watch_path_for(path).await);
                         }
                     }
                     PersistenceBinding::Hub { base_url, space_id, token, surface } => {
@@ -921,7 +933,7 @@ mod native_actor {
                     }
                 }
             }
-            let hlc_seed = actor_seed(&config.actor);
+            let hlc_seed = actor_seed(&config.actor).await;
             Self {
                 document_id: config.document_id,
                 schema: config.schema,
@@ -959,7 +971,7 @@ mod native_actor {
         }
 
         pub(super) async fn run(mut self) {
-            self.setup();
+            self.setup().await;
             self.try_connect_hub().await;
             let mut poll = tokio::time::interval(Duration::from_millis(25));
             poll.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -992,11 +1004,11 @@ mod native_actor {
                     }
                     _ = sleep_opt(fs_deadline), if fs_deadline.is_some() => {
                         self.fs_deadline = None;
-                        self.handle_external_change();
+                        self.handle_external_change().await;
                     }
                     _ = poll.tick() => {
                         self.drain_and_relay().await;
-                        self.emit_status_if_changed();
+                        self.emit_status_if_changed().await;
                     }
                 }
             }
@@ -1004,17 +1016,21 @@ mod native_actor {
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored pack+spr and installs the file watcher.
         async fn setup(&mut self) {
-            if let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) {
-                if let Ok(op_ids) = spr_op_ids(&spr) {
+            let seeded = match self.folder.as_ref() {
+                Some(folder) => folder.read().await.ok().flatten(),
+                None => None,
+            };
+            if let Some((pack, spr)) = seeded {
+                if let Ok(op_ids) = spr_op_ids(&spr).await {
                     self.known_op_ids = op_ids;
-                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr));
+                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr).await);
                     self.current_pack = Some(pack);
                     self.current_spr = Some(spr);
                 }
             }
             if self.watch_external {
                 if let Some(watch_path) = self.folder_watch_path.clone() {
-                    if let Some((watcher, fs_rx)) = install_watcher(&watch_path) {
+                    if let Some((watcher, fs_rx)) = install_watcher(&watch_path).await {
                         self.watcher = Some(watcher);
                         self.fs_rx = Some(fs_rx);
                     }
@@ -1028,14 +1044,14 @@ mod native_actor {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay().await;
                     if !drained && !envelopes.is_empty() {
-                        self.persist_operations(&envelopes);
+                        self.persist_operations(&envelopes).await;
                         self.relay_operations_to_hub(&envelopes).await;
                     }
                     false
                 }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
-                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref());
-                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview).await;
+                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
+                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
                     false
                 }
                 ArtifactActorMsg::PublishPreview { key, seq, payload } => {
@@ -1043,7 +1059,7 @@ mod native_actor {
                     false
                 }
                 ArtifactActorMsg::ExternalChanged => {
-                    self.handle_external_change();
+                    self.handle_external_change().await;
                     false
                 }
                 ArtifactActorMsg::Detach => {
@@ -1056,17 +1072,17 @@ mod native_actor {
         /// @emoji 📤️ Drains the store's outbound queue, persisting + relaying each message. Returns
         /// whether anything was drained.
         async fn drain_and_relay(&mut self) -> bool {
-            let messages = self.remote.drain().unwrap_or_default();
+            let messages = self.remote.drain().await.unwrap_or_default();
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
                     BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                        self.persist_operations(&envelopes);
+                        let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+                        self.persist_operations(&envelopes).await;
                         self.relay_operations_to_hub(&envelopes).await;
                     }
                     BackboneMessage::Snapshot { pack, spr } => {
-                        self.persist_snapshot(pack, spr);
+                        self.persist_snapshot(pack, spr).await;
                         // 📸️ No client -> semio_hub whole-envelope push exists in wire v2
                         // (`crate::os_spr::wire::ClientFrame` has no snapshot-put variant — only
                         // causally-ordered `Commands`; the semio_hub -> client snapshot direction is
@@ -1091,8 +1107,8 @@ mod native_actor {
         /// self-write and ignore a real external change.
         async fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
-            if folder.write(pack, spr).is_ok() {
-                self.last_written_hash = Some(backbone_pack_hash(pack, spr));
+            if folder.write(pack, spr).await.is_ok() {
+                self.last_written_hash = Some(backbone_pack_hash(pack, spr).await);
             }
         }
 
@@ -1101,10 +1117,10 @@ mod native_actor {
             if self.folder.is_none() {
                 return;
             }
-            if let Ok(op_ids) = spr_op_ids(&spr) {
+            if let Ok(op_ids) = spr_op_ids(&spr).await {
                 self.known_op_ids = op_ids;
             }
-            self.persist_write(&pack, &spr);
+            self.persist_write(&pack, &spr).await;
             self.current_pack = Some(pack);
             self.current_spr = Some(spr);
         }
@@ -1116,12 +1132,15 @@ mod native_actor {
                 return;
             }
             let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
-            let new_edits: Vec<crate::os_spr::HistoryEdit> = envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())).map(history_edit_from_envelope).collect();
+            let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
+            for envelope in envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())) {
+                new_edits.push(history_edit_from_envelope(envelope).await);
+            }
             if new_edits.is_empty() {
                 return;
             }
-            let Ok(new_spr) = crate::os_store::append_history_edits_to_spr(&spr, &new_edits) else { return };
-            self.persist_write(&pack, &new_spr);
+            let Ok(new_spr) = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).await else { return };
+            self.persist_write(&pack, &new_spr).await;
             self.current_pack = Some(pack);
             self.current_spr = Some(new_spr);
         }
@@ -1130,22 +1149,26 @@ mod native_actor {
         /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         async fn handle_external_change(&mut self) {
-            let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) else { return };
-            let hash = backbone_pack_hash(&pack, &spr);
+            let seeded = match self.folder.as_ref() {
+                Some(folder) => folder.read().await.ok().flatten(),
+                None => None,
+            };
+            let Some((pack, spr)) = seeded else { return };
+            let hash = backbone_pack_hash(&pack, &spr).await;
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
             }
-            let Ok(file_ids) = spr_op_ids(&spr) else { return };
+            let Ok(file_ids) = spr_op_ids(&spr).await else { return };
             let lost: Vec<String> = self.known_op_ids.difference(&file_ids).cloned().collect();
             let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
 
             if lost.is_empty() && !new_ids.is_empty() {
-                let Ok(reader) = crate::os_spr::HistoryReader::open(&spr, &crate::os_spr::DecodeOptions::default()) else { return };
+                let Ok(reader) = crate::os_spr::HistoryReader::open(&spr, &crate::os_spr::DecodeOptions::default()).await else { return };
                 let mut appended = Vec::new();
-                for edit in reader.edits() {
+                for edit in reader.edits().await {
                     let Ok(edit) = edit else { break };
-                    if op_ids_of(&edit).iter().any(|id| new_ids.contains(id)) {
-                        if let Ok(mut envelopes) = envelopes_from_history_edit(&edit, &self.document_id, &self.schema) {
+                    if op_ids_of(&edit).await.iter().any(|id| new_ids.contains(id)) {
+                        if let Ok(mut envelopes) = envelopes_from_history_edit(&edit, &self.document_id, &self.schema).await {
                             appended.append(&mut envelopes);
                         }
                     }
@@ -1154,7 +1177,7 @@ mod native_actor {
                 self.current_pack = Some(pack);
                 self.current_spr = Some(spr);
                 self.last_written_hash = Some(hash);
-                self.deliver_remote_operations(appended);
+                self.deliver_remote_operations(appended).await;
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
                     self.emit(ArtifactEvent::Conflict(MutationMessage {
@@ -1163,13 +1186,13 @@ mod native_actor {
                         message: "external history diverged while local operations are pending".into(),
                         target: vec![format!("folder://{}", self.document_id)],
                         op_index: None,
-                    }));
+                    })).await;
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
                     self.current_spr = Some(spr.clone());
                     self.last_written_hash = Some(hash);
-                    self.deliver_snapshot(pack, spr);
+                    self.deliver_snapshot(pack, spr).await;
                 }
             }
         }
@@ -1180,8 +1203,8 @@ mod native_actor {
             let Some(base_url) = self.hub_base_url.clone() else { return };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
             let token = self.hub_token.clone();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref());
-            self.set_remote_state(RemoteState::Connecting);
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
+            self.set_remote_state(RemoteState::Connecting).await;
             match tokio_tungstenite::connect_async(url).await {
                 Ok((stream, _response)) => {
                     let (write, read) = stream.split();
@@ -1203,14 +1226,14 @@ mod native_actor {
                     self.send_client_frame(hello, Lane::Command).await;
                 }
                 Err(_error) => {
-                    self.schedule_reconnect();
+                    self.schedule_reconnect().await;
                 }
             }
         }
 
         async fn schedule_reconnect(&mut self) {
             let retry = self.backoff_ms;
-            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry });
+            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry }).await;
             self.reconnect_at = Some(Instant::now() + Duration::from_millis(retry));
             self.backoff_ms = (self.backoff_ms * 2).min(30_000);
         }
@@ -1218,8 +1241,8 @@ mod native_actor {
         async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
             match message {
                 Some(Ok(Message::Binary(bytes))) => {
-                    if let Ok((_lane, frame)) = decode_server_frame(&bytes) {
-                        self.on_hub_frame(frame);
+                    if let Ok((_lane, frame)) = decode_server_frame(&bytes).await {
+                        self.on_hub_frame(frame).await;
                     }
                 }
                 Some(Ok(Message::Ping(payload))) => {
@@ -1228,7 +1251,7 @@ mod native_actor {
                 Some(Ok(_)) => {}
                 Some(Err(_)) | None => {
                     self.semio_hub = None;
-                    self.schedule_reconnect();
+                    self.schedule_reconnect().await;
                 }
             }
         }
@@ -1240,7 +1263,7 @@ mod native_actor {
                     self.server_frontier = Some(server_frontier);
                     // 📡️ `Welcome` no longer carries a presence roster (wire v2 splits it into its own
                     // `ServerFrame::Presence`) — `peer_count` is corrected once that frame arrives.
-                    self.set_remote_state(RemoteState::Live { peer_count: 0 });
+                    self.set_remote_state(RemoteState::Live { peer_count: 0 }).await;
                     match bootstrap {
                         Bootstrap::None | Bootstrap::Tail => {}
                         Bootstrap::Snapshot { .. } => {
@@ -1258,27 +1281,33 @@ mod native_actor {
                     self.server_frontier = Some(frontier);
                     if origin != ActorId(self.actor.clone()) {
                         let converted = envelopes;
-                        self.persist_operations(&converted);
-                        self.deliver_remote_operations(converted);
+                        self.persist_operations(&converted).await;
+                        self.deliver_remote_operations(converted).await;
                     }
                 }
                 ServerFrame::Ack { batch_id, stages, frontier } => {
                     self.server_frontier = Some(frontier);
-                    self.handle_ack(batch_id, stages);
+                    self.handle_ack(batch_id, stages).await;
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
                     if actor != ActorId(self.actor.clone()) {
-                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
+                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload }).await;
                     }
                 }
                 ServerFrame::Presence { peers } => {
-                    let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
-                    self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
-                    self.emit(ArtifactEvent::Presence { peers });
+                    let mut decoded: Vec<PresencePeer> = Vec::new();
+                    for p in &peers {
+                        if let Some(peer) = presence_from_bytes(p).await {
+                            decoded.push(peer);
+                        }
+                    }
+                    let peers = decoded;
+                    self.set_remote_state(RemoteState::Live { peer_count: peers.len() }).await;
+                    self.emit(ArtifactEvent::Presence { peers }).await;
                 }
                 ServerFrame::Session { actor, color } => {
                     self.session_color = Some(color);
-                    self.emit(ArtifactEvent::Session { actor, color });
+                    self.emit(ArtifactEvent::Session { actor, color }).await;
                 }
                 ServerFrame::CreditGrant { .. } => {
                     // 🪙️ Command-lane credit-based flow control: no client-side backpressure
@@ -1292,7 +1321,7 @@ mod native_actor {
                         message,
                         target: vec![self.hub_base_url.clone().unwrap_or_default()],
                         op_index: None,
-                    }));
+                    })).await;
                 }
             }
         }
@@ -1307,26 +1336,32 @@ mod native_actor {
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
                 match *outcome {
                     ApplyOutcome::Accepted => {
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted }).await;
                     }
                     ApplyOutcome::Transformed { envelope } => {
-                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
-                        self.persist_operations(&rollbacks);
-                        self.deliver_remote_operations(rollbacks);
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
+                        self.persist_operations(&rollbacks).await;
+                        self.deliver_remote_operations(rollbacks).await;
                         let converted = *envelope;
-                        self.persist_operations(std::slice::from_ref(&converted));
-                        self.deliver_remote_operations(vec![converted]);
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                        self.persist_operations(std::slice::from_ref(&converted)).await;
+                        self.deliver_remote_operations(vec![converted]).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed }).await;
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
-                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
-                        self.persist_operations(&rollbacks);
-                        self.deliver_remote_operations(rollbacks);
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
+                        self.persist_operations(&rollbacks).await;
+                        self.deliver_remote_operations(rollbacks).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } }).await;
                     }
                 }
             }
-            self.emit_status_if_changed();
+            self.emit_status_if_changed().await;
         }
 
         async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
@@ -1335,14 +1370,18 @@ mod native_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+            let mut wire_envelopes: Vec<MutationEnvelope> = Vec::new();
+            for envelope in envelopes {
+                let timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
+                wire_envelopes.push(MutationEnvelope { timestamp, ..envelope.clone() });
+            }
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
-            self.emit_status_if_changed();
+            self.emit_status_if_changed().await;
         }
 
         async fn send_client_frame(&mut self, frame: ClientFrame, lane: Lane) {
-            let bytes = encode_client_frame(&frame, lane);
+            let bytes = encode_client_frame(&frame, lane).await;
             self.send_raw(Message::Binary(bytes.into())).await;
         }
 
@@ -1355,7 +1394,7 @@ mod native_actor {
             }
             if failed {
                 self.semio_hub = None;
-                self.schedule_reconnect();
+                self.schedule_reconnect().await;
             }
         }
         //#endregion 🔖️Hub
@@ -1366,14 +1405,14 @@ mod native_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
-            self.emit(ArtifactEvent::RemoteMutations { envelopes });
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
+            self.emit(ArtifactEvent::RemoteMutations { envelopes }).await;
         }
 
         /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
         async fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
-            let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() });
-            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr });
+            let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() }).await;
+            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr }).await;
         }
 
         async fn emit(&self, event: ArtifactEvent) {
@@ -1386,14 +1425,14 @@ mod native_actor {
 
         async fn set_remote_state(&mut self, state: RemoteState) {
             self.remote_state = state;
-            self.emit_status_if_changed();
+            self.emit_status_if_changed().await;
         }
 
         async fn emit_status_if_changed(&mut self) {
-            let status = self.status();
+            let status = self.status().await;
             if self.last_status.as_ref() != Some(&status) {
                 self.last_status = Some(status.clone());
-                self.emit(ArtifactEvent::Status(status));
+                self.emit(ArtifactEvent::Status(status)).await;
             }
         }
         //#endregion 🔖️Deliver
@@ -1406,9 +1445,9 @@ mod native_actor {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
-                FolderEndpoint::Pack { storage: FolderTextStorage::new(folder), document_id: document_id.to_string(), extension: extension.to_string(), schema: schema.to_string() }
+                FolderEndpoint::Pack { storage: FolderTextStorage::new(folder).await, document_id: document_id.to_string(), extension: extension.to_string(), schema: schema.to_string() }
             }
-            None => FolderEndpoint::Sqlite { storage: FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
+            None => FolderEndpoint::Sqlite { storage: FolderSqliteStorage::new(path.to_path_buf()).await, document_id: document_id.to_string(), schema: schema.to_string() },
         }
     }
 
@@ -1466,8 +1505,11 @@ mod native_actor {
         std::thread::Builder::new()
             .name(format!("sync-actor-{}", config.document_id))
             .spawn(move || {
-                let actor = ArtifactActor::new(config, remote, cmd_rx, events);
-                runtime.block_on(actor.run());
+                // 🚫️async: E5 executor bridge — this OS thread IS the runtime, block_on drives it
+                runtime.block_on(async move {
+                    let actor = ArtifactActor::new(config, remote, cmd_rx, events).await;
+                    actor.run().await;
+                });
             })
             .ok()
     }
@@ -1516,7 +1558,7 @@ mod wasm_actor {
         async fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref());
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
             let Ok(ws) = WebSocket::new(&url) else { return };
             ws.set_binary_type(BinaryType::Arraybuffer);
 
@@ -1541,7 +1583,7 @@ mod wasm_actor {
                 resume_token: self.resume_token.clone(),
                 frontier: self.server_frontier.clone(),
             };
-            let mut hello_bytes = encode_client_frame(&hello, Lane::Command);
+            let mut hello_bytes = encode_client_frame(&hello, Lane::Command).await;
             let ws_for_open = ws.clone();
             let onopen = Closure::wrap(Box::new(move || {
                 let _ = ws_for_open.send_with_u8_array(&mut hello_bytes);
@@ -1554,7 +1596,7 @@ mod wasm_actor {
 
         async fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
             if let Some(ws) = &self.ws {
-                let mut bytes = encode_client_frame(frame, lane);
+                let mut bytes = encode_client_frame(frame, lane).await;
                 let _ = ws.send_with_u8_array(&mut bytes);
             }
         }
@@ -1567,19 +1609,23 @@ mod wasm_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+            let mut wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
+            for envelope in envelopes {
+                let timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
+                wire_envelopes.push(crate::os_spr::MutationEnvelope { timestamp, ..envelope.clone() });
+            }
             self.pending_batches.insert(batch_id, envelopes.to_vec());
-            self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command);
+            self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
         }
 
         async fn drain_and_relay(&mut self) -> bool {
-            let messages = self.remote.drain().unwrap_or_default();
+            let messages = self.remote.drain().await.unwrap_or_default();
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
                     BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                        self.relay_operations(&envelopes);
+                        let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+                        self.relay_operations(&envelopes).await;
                     }
                     BackboneMessage::Snapshot { .. } => {
                         // 📸️ No client -> semio_hub whole-envelope push in wire v2 — see the native actor's
@@ -1594,24 +1640,24 @@ mod wasm_actor {
         async fn handle_cmd(&mut self, message: ArtifactActorMsg) {
             match message {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
-                    let drained = self.drain_and_relay();
+                    let drained = self.drain_and_relay().await;
                     if !drained && !envelopes.is_empty() {
-                        self.relay_operations(&envelopes);
+                        self.relay_operations(&envelopes).await;
                     }
                 }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
-                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref());
-                    self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview);
+                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
+                    self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
                 }
                 ArtifactActorMsg::PublishPreview { key, seq, payload } => {
-                    self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview);
+                    self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
                 }
                 ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
             }
         }
 
         async fn on_binary(&mut self, bytes: &[u8]) {
-            let Ok((_lane, frame)) = decode_server_frame(bytes) else { return };
+            let Ok((_lane, frame)) = decode_server_frame(bytes).await else { return };
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.resume_token = Some(resume_token);
@@ -1641,7 +1687,13 @@ mod wasm_actor {
                     }
                 }
                 ServerFrame::Presence { peers } => {
-                    let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
+                    let mut decoded: Vec<PresencePeer> = Vec::new();
+                    for p in &peers {
+                        if let Some(peer) = presence_from_bytes(p).await {
+                            decoded.push(peer);
+                        }
+                    }
+                    let peers = decoded;
                     let _ = self.events.send(ArtifactEvent::Presence { peers });
                 }
                 ServerFrame::Session { actor, color } => {
@@ -1671,14 +1723,20 @@ mod wasm_actor {
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
-                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
                         self.deliver_remote_operations(rollbacks);
                         let converted = *envelope;
                         self.deliver_remote_operations(vec![converted]);
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
-                        let rollbacks: Vec<MutationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
                         self.deliver_remote_operations(rollbacks);
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
                     }
@@ -1690,7 +1748,7 @@ mod wasm_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) });
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
             let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
         }
     }
@@ -1711,7 +1769,7 @@ mod wasm_actor {
                 }
             }
         }
-        let hlc_seed = actor_seed(&config.actor);
+        let hlc_seed = actor_seed(&config.actor).await;
         let mut actor = WasmActor {
             document_id: config.document_id,
             schema: config.schema,
@@ -1735,19 +1793,19 @@ mod wasm_actor {
             _open_closures: Vec::new(),
         };
         wasm_bindgen_futures::spawn_local(async move {
-            actor.connect();
+            actor.connect().await;
             loop {
                 tokio::select! {
                     cmd = cmd_rx.recv() => {
                         match cmd {
                             None => break,
-                            Some(ArtifactActorMsg::Detach) => { actor.drain_and_relay(); break; }
-                            Some(message) => actor.handle_cmd(message),
+                            Some(ArtifactActorMsg::Detach) => { actor.drain_and_relay().await; break; }
+                            Some(message) => actor.handle_cmd(message).await,
                         }
                     }
                     bytes = incoming_rx.recv() => {
                         match bytes {
-                            Some(bytes) => actor.on_binary(&bytes),
+                            Some(bytes) => actor.on_binary(&bytes).await,
                             None => break,
                         }
                     }
@@ -1894,7 +1952,7 @@ pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     fixture_dirs.sort();
     for fixture_dir in fixture_dirs {
         let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣️fixture.dsl")) else { continue };
-        let Some(manifest) = parse_fixture_dsl_manifest(&manifest_text) else { continue };
+        let Some(manifest) = parse_fixture_dsl_manifest(&manifest_text).await else { continue };
         let mut inbound = Vec::with_capacity(manifest.inbound.len());
         let mut all_resolved = true;
         for raw in manifest.inbound {
@@ -1948,8 +2006,8 @@ impl FolderSqliteStorage {
     async fn connection(&self) -> Result<rusqlite::Connection, vcs::VcsError> {
         let semio_dir = self.folder.join(".semio");
         std::fs::create_dir_all(&semio_dir).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let conn = rusqlite::Connection::open(self.db_path()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Self::ensure_schema(&conn)?;
+        let conn = rusqlite::Connection::open(self.db_path().await).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Self::ensure_schema(&conn).await?;
         Ok(conn)
     }
 
@@ -1975,18 +2033,18 @@ impl FolderSqliteStorage {
     /// @emoji 📖️ Reads the stored `(pack, spr)` bytes for `document_id`, or `None` if no row exists.
     pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?))).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji ✍️ Upserts `document_id`'s `(pack, spr)` bytes together (schema id, `updated_at` stamp)
     /// — both are written in the same statement, never independently.
     pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         conn.execute(
             "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
              ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
-            rusqlite::params![document_id, schema, pack, spr, now_ms() as i64],
+            rusqlite::params![document_id, schema, pack, spr, now_ms().await as i64],
         )
         .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(())
@@ -1994,7 +2052,7 @@ impl FolderSqliteStorage {
 
     /// @emoji 📇️ Lists every stored document id (newest write first), for a folder-wide index.
     pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         let mut statement = conn.prepare("SELECT id FROM document ORDER BY updated_at DESC").map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         let ids = statement.query_map([], |row| row.get::<_, String>(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?.collect::<Result<Vec<_>, _>>().map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(ids)
@@ -2043,12 +2101,12 @@ impl FolderTextStorage {
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
     pub async fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
-        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id)) {
+        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id).await) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id)) {
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id).await) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
@@ -2060,8 +2118,8 @@ impl FolderTextStorage {
     /// checkpoint/alternative).
     pub async fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        std::fs::write(self.dsl_path(document_id, envelope_id).await, &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
@@ -2071,12 +2129,12 @@ impl FolderTextStorage {
     /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
     /// manual edit, never a valid state to silently recover from.
     pub async fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactPackFiles>, vcs::VcsError> {
-        let pack = match std::fs::read(self.pack_path(document_id, envelope_id)) {
+        let pack = match std::fs::read(self.pack_path(document_id, envelope_id).await) {
             Ok(bytes) => bytes,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        let spr = std::fs::read(self.spr_path(document_id, envelope_id)).map_err(|err| {
+        let spr = std::fs::read(self.spr_path(document_id, envelope_id).await).map_err(|err| {
             if err.kind() == std::io::ErrorKind::NotFound {
                 vcs::VcsError::Backbone(format!(
                     "{document_id} pack.semio exists but spr.semio is missing for envelope {envelope_id}"
@@ -2085,7 +2143,7 @@ impl FolderTextStorage {
                 vcs::VcsError::Backbone(err.to_string())
             }
         })?;
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id)) {
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id).await) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
@@ -2098,10 +2156,10 @@ impl FolderTextStorage {
     /// initial snapshot) — the pack-aware sibling of `write`.
     pub async fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.pack_path(document_id, envelope_id), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.spr_path(document_id, envelope_id), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id), dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        std::fs::write(self.pack_path(document_id, envelope_id).await, &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.spr_path(document_id, envelope_id).await, &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, envelope_id).await, dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji ➕️ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
@@ -2109,7 +2167,7 @@ impl FolderTextStorage {
     pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id).await).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
@@ -2144,26 +2202,26 @@ impl FolderTextStorage {
 #[cfg(not(target_arch = "wasm32"))]
 impl crate::os_store::BlobStore for FolderSqliteStorage {
     async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
-        let hash = semio_framework_hash::hash_bytes(bytes);
-        let conn = self.connection()?;
+        let hash = semio_framework_hash::hash_bytes(bytes).await;
+        let conn = self.connection().await?;
         conn.execute("INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![hash, media_type, bytes.len() as i64, bytes]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
     }
 
     async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     async fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         let count: i64 = conn.query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(count > 0)
     }
 
     async fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
-        let conn = self.connection()?;
+        let conn = self.connection().await?;
         conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(())
     }
@@ -2173,12 +2231,16 @@ impl crate::os_store::BlobStore for FolderSqliteStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{Edit, OpBinary, OpText, Mutation, MutationDiff};
+    use crate::os_spr::{ArtifactId, Edit, OpBinary, OpText, Mutation, MutationDiff};
     use serde::{Deserialize, Serialize};
     use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, pack_rt, PackEncodeOptions, PackDecodeOptions, PackError, ParsedDocumentText};
 
+    // 🎯️ `id` must be dotted `plugin.artifact` — `os_semio`'s preamble validator rejects a bare
+    // extension (this crate never compiled with `--features sync` before this packet, so the
+    // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
+    // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
-    #[dsl(extension = "demo")]
+    #[dsl(id = "demo.demo")]
     struct DemoSnapshot {
         n: i32,
     }
@@ -2188,29 +2250,29 @@ mod tests {
         async fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
         async fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
             let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
-            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
-            Self::__dsl_from_record(&record)
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document }).await?;
+            Self::__dsl_from_record(&record).await
         }
         async fn print_dsl(&self) -> String {
-            let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
+            let body = crate::os_dsl::print(&self.__dsl_to_record().await, &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document).await;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
         }
     }
 
     impl ArtifactPack for DemoSnapshot {
         async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
         async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
             let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
-                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id().await {
+                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
             }
-            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-            Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
+            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+            Self::__dsl_from_record(&record).await.map_err(|err| PackError::Schema(err.to_string()))
         }
         async fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
     }
@@ -2249,26 +2311,26 @@ mod tests {
                         line,
                         &spec_fn(),
                         &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                    )?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                    ).await?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
         }
     }
 
     impl OpBinary for DemoMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
-            let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+            let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
             let mut out = Vec::with_capacity(2 + body.len());
             out.push(pack_rt::OP_BINARY_FORMAT);
             out.push(idx as u8);
@@ -2276,12 +2338,12 @@ mod tests {
             Ok(out)
         }
         async fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-            let mut reader = crate::os_pack::ByteReader::new(bytes);
-            let format = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+            let mut reader = crate::os_pack::ByteReader::new(bytes).await;
+            let format = reader.read_u8().await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
             if format != pack_rt::OP_BINARY_FORMAT {
                 return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
             }
-            let ordinal = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
+            let ordinal = reader.read_u8().await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed {
                 what: "op ordinal",
@@ -2289,11 +2351,12 @@ mod tests {
                 detail: format!("op ordinal {ordinal} out of range for {}", variants.len()),
             })?;
             let spec = spec_fn();
-            let body = &bytes[reader.position()..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            let body = &bytes[reader.position().await..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
+            let offset = reader.position().await as u64;
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed {
                 what: "op record",
-                offset: reader.position() as u64,
+                offset,
                 detail: error.to_string(),
             })
         }
@@ -2305,7 +2368,7 @@ mod tests {
         async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
-            })
+            }).await
         }
 
         async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -2318,10 +2381,10 @@ mod tests {
     /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
     /// mirroring a real app's program-init-time `register_document_codec_for_app` call.
     async fn ensure_demo_codec_registered() {
-        static ONCE: std::sync::Once = std::sync::Once::new();
-        ONCE.call_once(|| {
-            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
-        });
+        static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1").await).await.expect("register demo codec");
+        }
     }
 
     async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
@@ -2339,45 +2402,45 @@ mod tests {
         };
         let document_id = ArtifactId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
-        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).await.expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
     }
 
     //#region 🧪️SyncSession
     #[semio_framework_async_macros::async_test]
     async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope).expect("valid receive fixture");
-        let mut session = SyncSession::new(store);
-        session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
-        assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
-        assert_eq!(session.store.envelope().vcs.edits.len(), 1);
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let store = ArtifactStore::new(envelope).await.expect("valid receive fixture");
+        let mut session = SyncSession::new(store).await;
+        session.receive(sample_operation_envelope("edit-1", 5).await).await.expect("receive");
+        assert_eq!(session.store.snapshot().await.expect("snapshot").n, 5);
+        assert_eq!(session.store.envelope().await.vcs.edits.len(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
-        let store = ArtifactStore::new(envelope).expect("valid out-of-order fixture");
-        let mut session = SyncSession::new(store);
-        let first = sample_operation_envelope("edit-1", 5);
-        let mut second = sample_operation_envelope("edit-2", 9);
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let store = ArtifactStore::new(envelope).await.expect("valid out-of-order fixture");
+        let mut session = SyncSession::new(store).await;
+        let first = sample_operation_envelope("edit-1", 5).await;
+        let mut second = sample_operation_envelope("edit-2", 9).await;
         second.dependencies = vec![first.mutation_id.clone()];
-        session.receive(second).expect("receive second first");
-        assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
-        session.receive(first).expect("receive first");
-        assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
-        assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
+        session.receive(second).await.expect("receive second first");
+        assert_eq!(session.store.envelope().await.vcs.edits.len(), 0, "buffered until edit-1 arrives");
+        session.receive(first).await.expect("receive first");
+        assert_eq!(session.store.envelope().await.vcs.edits.len(), 2, "both edits now applied");
+        assert_eq!(session.store.snapshot().await.expect("snapshot").n, 9);
     }
     //#endregion 🧪️SyncSession
 
     //#region 🧪️Helpers
     #[semio_framework_async_macros::async_test]
     async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
-        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
-        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None), "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
-        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None), "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
+        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
+        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
+        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
         assert_eq!(
-            hub_ws_url("remote://host:6070", "studio-1", "doc-1", Some("s.space.home@1/*#editor")),
+            hub_ws_url("remote://host:6070", "studio-1", "doc-1", Some("s.space.home@1/*#editor")).await,
             "ws://host:6070/spaces/studio-1/documents/doc-1/ws?surface=s.space.home@1/*#editor",
             "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
         );
@@ -2392,11 +2455,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         let mut peer = PresencePeer { actor: "actor-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: Some(99), surface: Some("shell-should-never-set-this".into()), views: Vec::new(), ui: None };
-        stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor"));
+        stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
         assert_eq!(peer.color, Some(7));
         assert_eq!(peer.surface.as_deref(), Some("s.space.home@1/*#editor"));
 
-        stamp_session(&mut peer, None, None);
+        stamp_session(&mut peer, None, None).await;
         assert_eq!(peer.color, None, "no session color yet (folder-only document, or hub not yet assigned one)");
         assert_eq!(peer.surface, None, "folder-only document carries no surface");
     }
@@ -2409,8 +2472,8 @@ mod tests {
     // system enforces, not something a round-trip test needs to prove.
     #[semio_framework_async_macros::async_test]
     async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
-        let envelope = sample_operation_envelope("edit-1", 5);
-        let rollback = rollback_envelope(&envelope);
+        let envelope = sample_operation_envelope("edit-1", 5).await;
+        let rollback = rollback_envelope(&envelope).await;
         assert_eq!(rollback.dependencies, vec![envelope.mutation_id.clone()], "the undo depends on the operation it undoes");
         assert_eq!(rollback.diff.payload, envelope.inverse.payload, "the undo's forward diff IS the original's inverse");
         assert_ne!(rollback.mutation_id, envelope.mutation_id, "the undo gets its own operation id");
@@ -2441,17 +2504,17 @@ mod tests {
         }
 
         async fn write_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
-            let bytes = encode_client_frame(frame, lane);
+            let bytes = encode_client_frame(frame, lane).await;
             std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
-            let (decoded_lane, decoded) = crate::os_spr::decode_client_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
+            let (decoded_lane, decoded) = crate::os_spr::decode_client_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
             assert_eq!(decoded_lane, lane, "{name} lane round trip");
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
         async fn write_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
-            let bytes = crate::os_spr::encode_server_frame(frame, lane);
+            let bytes = crate::os_spr::encode_server_frame(frame, lane).await;
             std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
-            let (decoded_lane, decoded) = decode_server_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
+            let (decoded_lane, decoded) = decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
             assert_eq!(decoded_lane, lane, "{name} lane round trip");
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
@@ -2462,8 +2525,8 @@ mod tests {
             document_id: ArtifactId("doc-1".to_string()),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).await.expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).await.expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
 
@@ -2482,53 +2545,53 @@ mod tests {
                 frontier: None,
             },
             Lane::Command,
-        );
-        write_client(&fixtures_dir, "📦️client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
-        write_client(&fixtures_dir, "📦️client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
-        write_client(&fixtures_dir, "📦️client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
-        write_client(&fixtures_dir, "📦️client-presence.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction()) }, Lane::Preview);
-        write_client(&fixtures_dir, "📦️client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
-        write_client(&fixtures_dir, "📦️client-bye.bin", &ClientFrame::Bye, Lane::Command);
+        ).await;
+        write_client(&fixtures_dir, "📦️client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
+        write_client(&fixtures_dir, "📦️client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
+        write_client(&fixtures_dir, "📦️client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
+        write_client(&fixtures_dir, "📦️client-presence.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction().await).await }, Lane::Preview).await;
+        write_client(&fixtures_dir, "📦️client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
+        write_client(&fixtures_dir, "📦️client-bye.bin", &ClientFrame::Bye, Lane::Command).await;
         //#endregion 🔖️ClientFrame
 
         //#region 🔖️ServerFrame
-        write_server(&fixtures_dir, "📦️server-welcome-tail.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command);
+        write_server(&fixtures_dir, "📦️server-welcome-tail.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
         write_server(
             &fixtures_dir,
             "📦️server-welcome-snapshot-inline.bin",
             &ServerFrame::Welcome { session_id: "session-2".to_string(), resume_token: "resume-2".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) } },
             Lane::Command,
-        );
-        write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
-        write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
-        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command);
+        ).await;
+        write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command).await;
+        write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
+        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
         write_server(
             &fixtures_dir,
             "📦️server-ack-accepted.bin",
             &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
             Lane::Command,
-        );
+        ).await;
         write_server(
             &fixtures_dir,
             "📦️server-ack-transformed.bin",
             &ServerFrame::Ack {
                 batch_id: 2,
-                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures()) }) }],
+                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures().await) }) }],
                 frontier: frontier.clone(),
             },
             Lane::Command,
-        );
+        ).await;
         write_server(
             &fixtures_dir,
             "📦️server-ack-rejected.bin",
             &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }], frontier: frontier.clone() },
             Lane::Command,
-        );
-        write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
-        write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction())] }, Lane::Preview);
-        write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
-        write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
-        write_server(&fixtures_dir, "📦️server-session.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command);
+        ).await;
+        write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+        write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
+        write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
+        write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
+        write_server(&fixtures_dir, "📦️server-session.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command).await;
         //#endregion 🔖️ServerFrame
     }
 
@@ -2541,8 +2604,8 @@ mod tests {
             document_id: ArtifactId("doc-1".to_string()),
             actor: ActorId("actor-2".to_string()),
             dependencies: vec![MutationId("op-1".to_string())],
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).await.expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).await.expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
     }
@@ -2601,25 +2664,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
         let mut producer = PresenceHeartbeatProducer::new(100);
-        let mut first = sample_presence_peer_with_interaction();
+        let mut first = sample_presence_peer_with_interaction().await;
         first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_000, first.clone()), Some(first));
+        assert_eq!(producer.offer(1_000, first.clone()).await, Some(first));
 
-        let mut intermediate = sample_presence_peer_with_interaction();
+        let mut intermediate = sample_presence_peer_with_interaction().await;
         intermediate.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_040, intermediate), None);
+        assert_eq!(producer.offer(1_040, intermediate).await, None);
 
-        let mut latest = sample_presence_peer_with_interaction();
+        let mut latest = sample_presence_peer_with_interaction().await;
         latest.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_099, latest.clone()), None);
-        assert_eq!(producer.pending(), Some(&latest));
-        assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
-        assert!(producer.pending().is_none());
+        assert_eq!(producer.offer(1_099, latest.clone()).await, None);
+        assert_eq!(producer.pending().await, Some(&latest));
+        assert_eq!(producer.offer(1_100, latest.clone()).await, Some(latest));
+        assert!(producer.pending().await.is_none());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
-        let host = ArtifactHost::new();
+        let host = ArtifactHost::new().await;
         let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
         let (events, _) = broadcast::channel(1);
         host.inner.lock().unwrap().insert(
@@ -2633,17 +2696,17 @@ mod tests {
             },
         );
 
-        let first = sample_presence_peer_with_interaction();
-        assert!(host.presence_heartbeat("doc", 500, first.clone()));
+        let first = sample_presence_peer_with_interaction().await;
+        assert!(host.presence_heartbeat("doc", 500, first.clone()).await);
         assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == first));
 
-        let mut latest = sample_presence_peer_with_interaction();
+        let mut latest = sample_presence_peer_with_interaction().await;
         latest.ui = Some(crate::os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
-        assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
+        assert!(!host.presence_heartbeat("doc", 550, latest.clone()).await);
         assert!(cmd_rx.try_recv().is_err(), "sub-interval offer must not publish");
-        assert!(host.presence_heartbeat("doc", 600, latest.clone()));
+        assert!(host.presence_heartbeat("doc", 600, latest.clone()).await);
         assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == latest));
-        assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction()));
+        assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await).await);
     }
     //#endregion 🧪️PresenceInteraction
 
@@ -2659,14 +2722,14 @@ mod tests {
             finished_at: None,
             coalesce_key: None,
             description: None,
-            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
-            inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
+            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().await.expect("encode")) }],
+            inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().await.expect("encode")) }],
             meta: None,
         };
-        let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").expect("envelopes from history edit");
+        let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").await.expect("envelopes from history edit");
         assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
         assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
-        let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+        let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).await.expect("decode op");
         assert_eq!(recovered, DemoMutation::SetN { n: 42 });
     }
     //#endregion 🧪️Helpers
@@ -2683,12 +2746,15 @@ mod tests {
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
         async fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-            create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
+            create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await
         }
 
-        async fn wait_until(label: &str, mut predicate: impl FnMut() -> bool) {
+        async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
+        where
+            Fut: std::future::Future<Output = bool>,
+        {
             let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-            while !predicate() {
+            while !predicate().await {
                 if tokio::time::Instant::now() >= deadline {
                     panic!("{label} not satisfied before 5s deadline");
                 }
@@ -2696,10 +2762,13 @@ mod tests {
             }
         }
 
-        async fn wait_until_value<T>(label: &str, mut predicate: impl FnMut() -> Option<T>) -> T {
+        async fn wait_until_value<T, Fut>(label: &str, mut predicate: impl FnMut() -> Fut) -> T
+        where
+            Fut: std::future::Future<Output = Option<T>>,
+        {
             let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
             loop {
-                if let Some(value) = predicate() {
+                if let Some(value) = predicate().await {
                     return value;
                 }
                 if tokio::time::Instant::now() >= deadline {
@@ -2727,23 +2796,23 @@ mod tests {
         // 🔬️ External folder edit → RemoteMutations event + the store timeline grows on tick().
         #[tokio::test]
         async fn folder_external_edit_delivers_remote_operations() {
-            ensure_demo_codec_registered();
+            ensure_demo_codec_registered().await;
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = ArtifactHost::new();
-            let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
-            let mut events = host.subscribe("doc-a");
-            let mut store = ArtifactStore::new(demo_envelope("doc-a")).expect("valid actor fixture");
-            store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
+            let host = ArtifactHost::new().await;
+            let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+            let mut events = host.subscribe("doc-a").await;
+            let mut store = ArtifactStore::new(demo_envelope("doc-a").await).await.expect("valid actor fixture");
+            store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
             channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
-            let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-            let (pack, spr) = wait_until_value("persisted edit on disk", || {
-                let (pack, spr) = storage.read("doc-a").expect("read")?;
-                if spr_op_ids(&spr).ok()?.is_empty() {
+            let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+            let (pack, spr) = wait_until_value("persisted edit on disk", || async {
+                let (pack, spr) = storage.read("doc-a").await.expect("read")?;
+                if spr_op_ids(&spr).await.ok()?.is_empty() {
                     None
                 } else {
                     Some((pack, spr))
@@ -2760,12 +2829,12 @@ mod tests {
                 finished_at: None,
                 coalesce_key: None,
                 description: None,
-                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
-                inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
+                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().await.expect("encode")) }],
+                inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode")) }],
                 meta: None,
             };
-            let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &[external_edit]).expect("append external edit");
-            storage.write("doc-a", "demo/v1", &pack, &new_spr).expect("out-of-band write");
+            let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &[external_edit]).await.expect("append external edit");
+            storage.write("doc-a", "demo/v1", &pack, &new_spr).await.expect("out-of-band write");
 
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
             channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
@@ -2780,9 +2849,9 @@ mod tests {
             }
 
             // The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
-            store.tick().expect("tick");
-            assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
-            assert_eq!(store.snapshot().expect("snapshot").n, 42);
+            store.tick().await.expect("tick");
+            assert_eq!(store.envelope().await.vcs.edits.len(), 2, "external edit joined the timeline");
+            assert_eq!(store.snapshot().await.expect("snapshot").n, 42);
             host.close("doc-a");
         }
 
@@ -2826,7 +2895,7 @@ mod tests {
             let (mut write, mut read) = ws.split();
             // Expect Hello first.
             let requested_ordinal = match read.next().await {
-                Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes) {
+                Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes).await {
                     Ok((_, ClientFrame::Hello { frontier, .. })) => frontier.map_or(0, |frontier| frontier.head_edit_ordinal),
                     _ => return,
                 },
@@ -2836,15 +2905,15 @@ mod tests {
                 let log = semio_hub.log.lock().await;
                 let ordinal = log.last().map_or(0, |(ordinal, _)| *ordinal);
                 let backlog: Vec<MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
-                (mock_frontier(ordinal), backlog)
+                (mock_frontier(ordinal).await, backlog)
             };
             let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
-            if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).into())).await.is_err() {
+            if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).await.into())).await.is_err() {
                 return;
             }
             if !backlog.is_empty() {
                 let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".to_string()), frontier: frontier.clone() };
-                if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).into())).await.is_err() {
+                if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
                     return;
                 }
             }
@@ -2854,7 +2923,7 @@ mod tests {
                     incoming = read.next() => {
                         match incoming {
                             Some(Ok(WsMessage::Binary(bytes))) => {
-                                match decode_client_frame(&bytes) {
+                                match decode_client_frame(&bytes).await {
                                     Ok((_, ClientFrame::Commands { batch_id, envelopes })) => {
                                         let mut assigned_frontier = frontier.clone();
                                         for envelope in envelopes {
@@ -2864,11 +2933,11 @@ mod tests {
                                                 log.push((next, envelope.clone()));
                                                 (next, envelope.actor.clone())
                                             };
-                                            assigned_frontier = mock_frontier(ordinal);
+                                            assigned_frontier = mock_frontier(ordinal).await;
                                             let _ = semio_hub.broadcast.send(ServerFrame::Commands { envelopes: vec![envelope], origin, frontier: assigned_frontier.clone() });
                                         }
                                         let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: assigned_frontier };
-                                        let _ = write.send(WsMessage::Binary(encode_server_frame(&ack, Lane::Command).into())).await;
+                                        let _ = write.send(WsMessage::Binary(encode_server_frame(&ack, Lane::Command).await.into())).await;
                                     }
                                     Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
                                         // 👻️ Best-effort fan-out on the uncredited preview lane — this mock
@@ -2888,7 +2957,7 @@ mod tests {
                     frame = broadcast_rx.recv() => {
                         match frame {
                             Ok(frame) => {
-                                if write.send(WsMessage::Binary(encode_server_frame(&frame, Lane::Command).into())).await.is_err() {
+                                if write.send(WsMessage::Binary(encode_server_frame(&frame, Lane::Command).await.into())).await.is_err() {
                                     break;
                                 }
                             }
@@ -2907,33 +2976,33 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new();
+            let host_a = ArtifactHost::new().await;
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
-            });
-            let mut store_a = ArtifactStore::new(demo_envelope("shared")).expect("valid shared actor A fixture");
-            store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
+            }).await;
+            let mut store_a = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor A fixture");
+            store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
 
-            let host_b = ArtifactHost::new();
+            let host_b = ArtifactHost::new().await;
             let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "B".into(),
-            });
-            let mut events_b = host_b.subscribe("shared");
-            let mut store_b = ArtifactStore::new(demo_envelope("shared")).expect("valid shared actor B fixture");
-            store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
+            }).await;
+            let mut events_b = host_b.subscribe("shared").await;
+            let mut store_b = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor B fixture");
+            store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
@@ -2941,8 +3010,8 @@ mod tests {
                 ArtifactEvent::RemoteMutations { envelopes } => assert_eq!(envelopes.len(), 1),
                 other => panic!("expected RemoteMutations on B, got {other:?}"),
             }
-            store_b.tick().expect("tick b");
-            assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
+            store_b.tick().await.expect("tick b");
+            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 7, "B converged on A's operation");
 
             host_a.close("shared");
             host_b.close("shared");
@@ -2955,40 +3024,40 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new();
+            let host_a = ArtifactHost::new().await;
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
-            });
-            let mut store_a = ArtifactStore::new(demo_envelope("catchup")).expect("valid catchup actor A fixture");
-            store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
+            }).await;
+            let mut store_a = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor A fixture");
+            store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
+                store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).await.expect("apply on a");
                 channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
 
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
-            let host_b = ArtifactHost::new();
+            let host_b = ArtifactHost::new().await;
             let channels_b =
-                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() });
-            let mut events_b = host_b.subscribe("catchup");
-            let mut store_b = ArtifactStore::new(demo_envelope("catchup")).expect("valid catchup actor B fixture");
-            store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
+                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() }).await;
+            let mut events_b = host_b.subscribe("catchup").await;
+            let mut store_b = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor B fixture");
+            store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
             if let ArtifactEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
             }
-            store_b.tick().expect("tick b");
-            assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
-            assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
+            store_b.tick().await.expect("tick b");
+            assert_eq!(store_b.envelope().await.vcs.edits.len(), 2, "B caught up on the full backlog");
+            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 4);
 
             host_a.close("catchup");
             host_b.close("catchup");
@@ -3001,26 +3070,26 @@ mod tests {
             let base_url = format!("ws://{addr}");
 
             // Observer B stays connected to witness A's last operation.
-            let host_b = ArtifactHost::new();
+            let host_b = ArtifactHost::new().await;
             let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "B".into(),
-            });
-            let mut events_b = host_b.subscribe("drain");
-            let mut store_b = ArtifactStore::new(demo_envelope("drain")).expect("valid drain actor B fixture");
-            store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
+            }).await;
+            let mut events_b = host_b.subscribe("drain").await;
+            let mut store_b = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor B fixture");
+            store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
-            let host_a = ArtifactHost::new();
+            let host_a = ArtifactHost::new().await;
             let channels_a =
-                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() });
-            let mut store_a = ArtifactStore::new(demo_envelope("drain")).expect("valid drain actor A fixture");
-            store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
+                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() }).await;
+            let mut store_a = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor A fixture");
+            store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
@@ -3028,8 +3097,8 @@ mod tests {
             if let ArtifactEvent::RemoteMutations { envelopes } = event {
                 assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
-            store_b.tick().expect("tick b");
-            assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
+            store_b.tick().await.expect("tick b");
+            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 5);
             host_b.close("drain");
         }
 
@@ -3039,15 +3108,15 @@ mod tests {
         async fn command_outcome_accepted_fires_after_hub_ack() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
-            let host = ArtifactHost::new();
+            let host = ArtifactHost::new().await;
             let channels =
-                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() });
-            let mut events = host.subscribe("outcome");
-            let mut store = ArtifactStore::new(demo_envelope("outcome")).expect("valid outcome actor fixture");
-            store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
+                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() }).await;
+            let mut events = host.subscribe("outcome").await;
+            let mut store = ArtifactStore::new(demo_envelope("outcome").await).await.expect("valid outcome actor fixture");
+            store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
             channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
@@ -3065,18 +3134,18 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new();
+            let host_a = ArtifactHost::new().await;
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "preview".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
-            });
+            }).await;
 
-            let host_b = ArtifactHost::new();
-            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() });
-            let mut events_b = host_b.subscribe("preview");
+            let host_b = ArtifactHost::new().await;
+            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() }).await;
+            let mut events_b = host_b.subscribe("preview").await;
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             channels_a.cmd_tx.send(ArtifactActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
@@ -3099,7 +3168,7 @@ mod tests {
         #[tokio::test]
         async fn fixtures_replay_matches_expected_events() {
             let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("🧫️fixtures");
-            let fixtures = load_fixtures(&fixtures_dir);
+            let fixtures = load_fixtures(&fixtures_dir).await;
             assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
             for fixture in fixtures {
                 replay_fixture(&fixture).await;
@@ -3107,19 +3176,19 @@ mod tests {
         }
 
         async fn replay_fixture(fixture: &ActorFixture) {
-            ensure_demo_codec_registered();
+            ensure_demo_codec_registered().await;
             let codec = crate::os_store::document_codec(&fixture.schema)
-                .expect("codec registry available")
+                .await.expect("codec registry available")
                 .unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = ArtifactHost::new();
+            let host = ArtifactHost::new().await;
             let channels =
-                host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
-            let mut events = host.subscribe(&fixture.document_id);
-            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).expect("valid fixture store");
-            store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
-            let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-            wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
+                host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+            let mut events = host.subscribe(&fixture.document_id).await;
+            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid fixture store");
+            store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
+            let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+            wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read(&fixture.document_id).await.expect("read").is_some() }).await;
 
             // Lockstep: apply each stimulus, then wait for its paired expected event before the next
             // (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
@@ -3128,31 +3197,25 @@ mod tests {
             for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
                 match inbound {
                     FixtureInbound::ExternalEdits { ops_text } => {
-                        let (pack, spr) = storage.read(&fixture.document_id).expect("read").expect("some");
-                        let parsed = crate::os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
-                        let new_edits: Vec<crate::os_spr::HistoryEdit> = parsed
-                            .edits
-                            .into_iter()
-                            .map(|edit| {
-                                let ops: Vec<crate::os_spr::OpPayload> = edit
-                                    .ops
-                                    .iter()
-                                    .map(|op| {
-                                        let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
-                                        let concrete = DemoMutation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
-                                        crate::os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) }
-                                    })
-                                    .collect();
-                                crate::os_spr::HistoryEdit { ops, meta: None, ..edit }
-                            })
-                            .collect();
-                        let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).expect("append fixture edits");
-                        storage.write(&fixture.document_id, &fixture.schema, &pack, &new_spr).expect("write");
+                        let (pack, spr) = storage.read(&fixture.document_id).await.expect("read").expect("some");
+                        let parsed = crate::os_spr::parse_ops_text(ops_text).await.unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
+                        let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
+                        for edit in parsed.edits {
+                            let mut ops: Vec<crate::os_spr::OpPayload> = Vec::new();
+                            for op in &edit.ops {
+                                let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
+                                let concrete = DemoMutation::parse_op(text).await.unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
+                                ops.push(crate::os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().await.expect("encode demo op")) });
+                            }
+                            new_edits.push(crate::os_spr::HistoryEdit { ops, meta: None, ..edit });
+                        }
+                        let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &new_edits).await.expect("append fixture edits");
+                        storage.write(&fixture.document_id, &fixture.schema, &pack, &new_spr).await.expect("write");
                         channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
-                        let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
-                        storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("replace write");
+                        let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
+                        storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).await.expect("replace write");
                         channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::HubFrame { .. } => {
@@ -3161,17 +3224,19 @@ mod tests {
                 }
                 let event = wait_for_event(&mut events, |event| document_event_tag(event) == expected.as_str()).await;
                 observed.push(document_event_tag(&event).to_string());
-                store.tick().expect("tick");
+                store.tick().await.expect("tick");
             }
             assert_eq!(&observed, &fixture.expected_events, "fixture {} event sequence", fixture.name);
-            let timeline_ids: Vec<String> = store.envelope().vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+            let timeline_ids: Vec<String> = store.envelope().await.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             for expected_id in &fixture.expected_edit_ids {
                 assert!(timeline_ids.contains(expected_id), "fixture {} expected edit id {expected_id} in timeline {timeline_ids:?}", fixture.name);
             }
             host.close(&fixture.document_id);
         }
 
-        async fn document_event_tag(event: &ArtifactEvent) -> &'static str {
+        // 🚫️async: E1-adjacent — pure match with no suspension point, consumed by
+        // `wait_for_event`'s sync `FnMut(&ArtifactEvent) -> bool` predicate bound — see R9.
+        fn document_event_tag(event: &ArtifactEvent) -> &'static str {
             match event {
                 ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
                 ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
@@ -3190,21 +3255,22 @@ mod tests {
     /// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
     /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
     /// storage mechanics: per-id keying, upsert-in-place, and the folder-wide index.
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_sqlite_storage_round_trips_by_document_id() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-        assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+        assert_eq!(storage.read("doc-a").await.expect("read empty"), None, "absent document reads as None");
 
-        storage.write("doc-a", "demo/v1", b"pack-a", b"spr-a").expect("write a");
-        storage.write("doc-b", "demo/v1", b"pack-b", b"spr-b").expect("write b");
-        assert_eq!(storage.read("doc-a").expect("read a").expect("some a"), (b"pack-a".to_vec(), b"spr-a".to_vec()), "documents are keyed independently");
-        assert_eq!(storage.read("doc-b").expect("read b").expect("some b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
+        storage.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("write a");
+        storage.write("doc-b", "demo/v1", b"pack-b", b"spr-b").await.expect("write b");
+        assert_eq!(storage.read("doc-a").await.expect("read a").expect("some a"), (b"pack-a".to_vec(), b"spr-a".to_vec()), "documents are keyed independently");
+        assert_eq!(storage.read("doc-b").await.expect("read b").expect("some b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
 
-        storage.write("doc-a", "demo/v1", b"pack-a2", b"spr-a2").expect("upsert a");
-        assert_eq!(storage.read("doc-a").expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "writing the same id upserts pack+spr together in place");
+        storage.write("doc-a", "demo/v1", b"pack-a2", b"spr-a2").await.expect("upsert a");
+        assert_eq!(storage.read("doc-a").await.expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "writing the same id upserts pack+spr together in place");
 
-        let mut ids = storage.document_ids().expect("document ids");
+        let mut ids = storage.document_ids().await.expect("document ids");
         ids.sort();
         assert_eq!(ids, vec!["doc-a".to_string(), "doc-b".to_string()], "folder indexes every document");
     }
@@ -3213,29 +3279,30 @@ mod tests {
     /// full write/read cycle through the ACTUAL `FolderSqliteStorage` byte storage (`store`'s own
     /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
     /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).expect("valid folder store");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply e1");
-        let post_e1 = store.snapshot().expect("post-e1");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply e2");
-        store.dispatch(ArtifactCommand::Undo).expect("undo e2");
-        assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None).await).await.expect("valid folder store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
+        let post_e1 = store.snapshot().await.expect("post-e1");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
+        assert_eq!(store.snapshot().await.expect("live"), post_e1, "precondition: live store is back at post-e1");
 
-        let files = print_document_pack(store.envelope()).expect("print document pack");
-        storage.write("doc-a", "demo/v1", &files.pack, &files.spr).expect("write");
+        let files = print_document_pack(store.envelope().await).await.expect("print document pack");
+        storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
 
-        let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
+        let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).await.unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
-        let mut reloaded = ArtifactStore::new(parsed.envelope).expect("valid reloaded history");
-        assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
+        let mut reloaded = ArtifactStore::new(parsed.envelope).await.expect("valid reloaded history");
+        assert_eq!(reloaded.snapshot().await.expect("reloaded"), post_e1);
 
-        reloaded.dispatch(ArtifactCommand::Redo).expect("redo e2 after folder reload");
-        assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
+        reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after folder reload");
+        assert_eq!(reloaded.snapshot().await.expect("post-redo"), DemoSnapshot { n: 2 });
     }
 
     /// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
@@ -3244,30 +3311,31 @@ mod tests {
     /// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
     /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
     /// `store`'s own test suite for that law, exercised correctly there).
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderTextStorage::new(dir.path().to_path_buf());
-        assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
+        let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+        assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid zero-edit text fixture");
-        let files = print_document_text(seed.envelope()).expect("print document text");
-        storage.write("demo", "demo", &files).expect("write");
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid zero-edit text fixture");
+        let files = print_document_text(seed.envelope().await).await.expect("print document text");
+        storage.write("demo", "demo", &files).await.expect("write");
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid text fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
-        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
-        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid text fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
+        let first_edit = store.envelope().await.vcs.edits.last().expect("first edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
-        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
-        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
+        let second_edit = store.envelope().await.vcs.edits.last().expect("second edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
-        let reloaded = storage.read("demo", "demo").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
+        let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).await.unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
 
-        assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
+        assert_eq!(storage.document_ids("demo").await.expect("document ids"), vec!["demo".to_string()]);
     }
 
     /// @emoji 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
@@ -3279,73 +3347,75 @@ mod tests {
     /// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
     /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
     /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_pack() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderTextStorage::new(dir.path().to_path_buf());
-        assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
+        let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+        assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid pack fixture");
-        let files = print_document_pack(seed.envelope()).expect("print document pack");
-        let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
-        storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid pack fixture");
+        let files = print_document_pack(seed.envelope().await).await.expect("print document pack");
+        let dsl_mirror = seed.envelope().await.vcs.initial_snapshot.print_dsl().await;
+        storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid pack append fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply 1");
-        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
-        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid pack append fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
+        let first_edit = store.envelope().await.vcs.edits.last().expect("first edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).expect("apply 2");
-        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
-        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
+        let second_edit = store.envelope().await.vcs.edits.last().expect("second edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
         // Text mirror is current (both edits landed via append_ops).
-        let reloaded_text = storage.read("demo", "demo").expect("read text").expect("some text");
-        let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
+        let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
+        let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).await.unwrap_or_else(|error| panic!("parse text: {error}"));
         assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
 
         // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
         // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
-        let reloaded_pack = storage.read_pack("demo", "demo").expect("read pack").expect("some pack");
-        let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
+        let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
+        let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
         assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
 
         // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
         // current with the live store.
-        let files2 = print_document_pack(store.envelope()).expect("print document pack 2");
-        let dsl_mirror2 = store.envelope().vcs.initial_snapshot.print_dsl();
-        storage.write_pack("demo", "demo", &files2, &dsl_mirror2).expect("write pack 2");
-        let reloaded_pack2 = storage.read_pack("demo", "demo").expect("read pack 2").expect("some pack 2");
-        let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+        let files2 = print_document_pack(store.envelope().await).await.expect("print document pack 2");
+        let dsl_mirror2 = store.envelope().await.vcs.initial_snapshot.print_dsl().await;
+        storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
+        let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
+        let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
         assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
 
         // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
-        let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").with_extension("")).expect("dsl mirror on disk");
-        assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
+        let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").await.with_extension("")).expect("dsl mirror on disk");
+        assert_eq!(DemoSnapshot::parse_dsl(&mirror).await.expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn blob_store_put_get_dedupes_idempotently() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
         let bytes = b"hello content-addressed world";
-        assert!(!storage.has("not-a-real-hash").expect("has on empty store"));
+        assert!(!storage.has("not-a-real-hash").await.expect("has on empty store"));
 
-        let first = storage.put(bytes, "text/plain").expect("first put");
-        let second = storage.put(bytes, "text/plain").expect("second put");
+        let first = storage.put(bytes, "text/plain").await.expect("first put");
+        let second = storage.put(bytes, "text/plain").await.expect("second put");
         assert_eq!(first, second, "putting identical bytes twice is idempotent and dedupes by hash");
         assert_eq!(first.size, bytes.len() as u64);
         assert_eq!(first.media_type, "text/plain");
 
-        assert!(storage.has(&first.hash).expect("has after put"));
-        let fetched = storage.get(&first.hash).expect("get").expect("blob present");
+        assert!(storage.has(&first.hash).await.expect("has after put"));
+        let fetched = storage.get(&first.hash).await.expect("get").expect("blob present");
         assert_eq!(fetched, bytes);
 
-        let other = storage.put(b"different content", "text/plain").expect("put other");
+        let other = storage.put(b"different content", "text/plain").await.expect("put other");
         assert_ne!(other.hash, first.hash, "different bytes hash differently");
 
-        storage.delete(&first.hash).expect("delete");
-        assert!(!storage.has(&first.hash).expect("has after delete"));
-        assert_eq!(storage.get(&first.hash).expect("get after delete"), None);
+        storage.delete(&first.hash).await.expect("delete");
+        assert!(!storage.has(&first.hash).await.expect("has after delete"));
+        assert_eq!(storage.get(&first.hash).await.expect("get after delete"), None);
     }
 }

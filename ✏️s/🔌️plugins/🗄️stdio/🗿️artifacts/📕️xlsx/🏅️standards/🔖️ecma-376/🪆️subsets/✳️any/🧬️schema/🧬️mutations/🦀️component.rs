@@ -93,25 +93,28 @@ pub enum XlsxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub async fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-async fn sheet_at<'a>(base: &'a XlsxSnapshot, name: &str) -> Option<&'a XlsxSheet> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sheet_at<'a>(base: &'a XlsxSnapshot, name: &str) -> Option<&'a XlsxSheet> {
     base.workbook.sheets.iter().find(|s| s.name == name)
 }
 
-async fn cell_value_at(base: &XlsxSnapshot, sheet_name: &str, row: u32, col: u32) -> Option<XlsxCellValue> {
-    sheet_at(base, sheet_name).await?.cells.iter().find(|c| c.row == row && c.col == col).map(|c| c.value.clone())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cell_value_at(base: &XlsxSnapshot, sheet_name: &str, row: u32, col: u32) -> Option<XlsxCellValue> {
+    sheet_at(base, sheet_name)?.cells.iter().find(|c| c.row == row && c.col == col).map(|c| c.value.clone())
 }
 //#endregion 🔖️Helpers
 
@@ -122,18 +125,18 @@ impl Mutation<XlsxSnapshot> for XlsxMutation {
     async fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             XlsxMutation::NoMutation => XlsxDiff::default(),
-            XlsxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            XlsxMutation::InsertSheet { sheet } => diff_insert_sheet(sheet.clone()).await,
-            XlsxMutation::RemoveSheet { name } => diff_remove_sheet(name).await,
-            XlsxMutation::RenameSheet { name, new_name } => match sheet_at(base, name).await {
-                Some(sheet) => diff_rename_sheet(sheet, new_name).await,
+            XlsxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            XlsxMutation::InsertSheet { sheet } => diff_insert_sheet(sheet.clone()),
+            XlsxMutation::RemoveSheet { name } => diff_remove_sheet(name),
+            XlsxMutation::RenameSheet { name, new_name } => match sheet_at(base, name) {
+                Some(sheet) => diff_rename_sheet(sheet, new_name),
                 None => XlsxDiff::default(),
             },
-            XlsxMutation::SetCell { sheet_name, row, col, value } => match sheet_at(base, sheet_name).await {
-                Some(sheet) => diff_set_cell(sheet, *row, *col, value.clone()).await,
+            XlsxMutation::SetCell { sheet_name, row, col, value } => match sheet_at(base, sheet_name) {
+                Some(sheet) => diff_set_cell(sheet, *row, *col, value.clone()),
                 None => XlsxDiff::default(),
             },
-            XlsxMutation::RemoveCell { sheet_name, row, col } => diff_remove_cell(sheet_name, *row, *col).await,
+            XlsxMutation::RemoveCell { sheet_name, row, col } => diff_remove_cell(sheet_name, *row, *col),
             XlsxMutation::InsertSharedString { value } => diff_insert_shared_string(base.workbook.shared_strings.len(), value).1,
             XlsxMutation::RemoveSharedString { index } => diff_remove_shared_string(*index),
             XlsxMutation::SetSharedString { index, value } => diff_set_shared_string(&base.workbook.shared_strings, *index, value),
@@ -145,19 +148,19 @@ impl Mutation<XlsxSnapshot> for XlsxMutation {
             XlsxMutation::NoMutation => vec![XlsxMutation::NoMutation],
             XlsxMutation::SetSnapshot { .. } => vec![XlsxMutation::SetSnapshot { snapshot: base.clone() }],
             XlsxMutation::InsertSheet { sheet } => vec![XlsxMutation::RemoveSheet { name: sheet.name.clone() }],
-            XlsxMutation::RemoveSheet { name } => match sheet_at(base, name).await {
+            XlsxMutation::RemoveSheet { name } => match sheet_at(base, name) {
                 Some(sheet) => vec![XlsxMutation::InsertSheet { sheet: sheet.clone() }],
                 None => vec![XlsxMutation::NoMutation],
             },
-            XlsxMutation::RenameSheet { name, new_name } => match sheet_at(base, name).await {
+            XlsxMutation::RenameSheet { name, new_name } => match sheet_at(base, name) {
                 Some(_) => vec![XlsxMutation::RenameSheet { name: new_name.clone(), new_name: name.clone() }],
                 None => vec![XlsxMutation::NoMutation],
             },
-            XlsxMutation::SetCell { sheet_name, row, col, .. } => match cell_value_at(base, sheet_name, *row, *col).await {
+            XlsxMutation::SetCell { sheet_name, row, col, .. } => match cell_value_at(base, sheet_name, *row, *col) {
                 Some(value) => vec![XlsxMutation::SetCell { sheet_name: sheet_name.clone(), row: *row, col: *col, value }],
                 None => vec![XlsxMutation::RemoveCell { sheet_name: sheet_name.clone(), row: *row, col: *col }],
             },
-            XlsxMutation::RemoveCell { sheet_name, row, col } => match cell_value_at(base, sheet_name, *row, *col).await {
+            XlsxMutation::RemoveCell { sheet_name, row, col } => match cell_value_at(base, sheet_name, *row, *col) {
                 Some(value) => vec![XlsxMutation::SetCell { sheet_name: sheet_name.clone(), row: *row, col: *col, value }],
                 None => vec![XlsxMutation::NoMutation],
             },
@@ -185,64 +188,75 @@ impl Mutation<XlsxSnapshot> for XlsxMutation {
 /// diff module's per-item encoders (`enc_part`/`enc_ct_entry`/`enc_owner_rels`/`enc_sheet`, all
 /// already full-value, not diff, shapes) directly; only the outer struct-of-collections wrapping is
 /// new here.
-async fn enc_content_types(ct: &OpcContentTypes) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_content_types(ct: &OpcContentTypes) -> String {
     let defaults = ct.defaults.iter().map(enc_ct_entry).collect::<Vec<_>>().join(",");
     let overrides = ct.overrides.iter().map(enc_ct_entry).collect::<Vec<_>>().join(",");
     format!("[[{defaults}],[{overrides}]]")
 }
-async fn dec_content_types(s: &str) -> Result<OpcContentTypes, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_content_types(s: &str) -> Result<OpcContentTypes, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
-    let defaults = split_top_level(strip_brackets(defaults).await?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
-    let overrides = split_top_level(strip_brackets(overrides).await?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
+    let defaults = split_top_level(strip_brackets(defaults)?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
+    let overrides = split_top_level(strip_brackets(overrides)?, ',').into_iter().map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?;
     Ok(OpcContentTypes { defaults, overrides })
 }
 /// 🗺️ Owners sorted for determinism (`HashMap` iteration order is not stable) — matches this
 /// artifact's other `HashMap`-backed encodings' expectation of a canonical wire order.
-async fn enc_relationships_map(rels: &HashMap<String, Vec<OpcRelationship>>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_relationships_map(rels: &HashMap<String, Vec<OpcRelationship>>) -> String {
     let mut owners: Vec<&String> = rels.keys().collect();
     owners.sort();
     let entries = owners.into_iter().map(|o| enc_owner_rels(&(o.clone(), rels[o].clone()))).collect::<Vec<_>>().join(",");
     format!("[{entries}]")
 }
-async fn dec_relationships_map(s: &str) -> Result<HashMap<String, Vec<OpcRelationship>>, String> {
-    let entries = split_top_level(strip_brackets(s).await?, ',').into_iter().map(dec_owner_rels).collect::<Result<Vec<_>, String>>()?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_relationships_map(s: &str) -> Result<HashMap<String, Vec<OpcRelationship>>, String> {
+    let entries = split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_owner_rels).collect::<Result<Vec<_>, String>>()?;
     Ok(entries.into_iter().collect())
 }
-async fn enc_opc_package(pkg: &OpcPackage) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_package(pkg: &OpcPackage) -> String {
     let parts = pkg.parts.iter().map(enc_part).collect::<Vec<_>>().join(",");
     format!("[[{parts}],{},{}]", enc_content_types(&pkg.content_types), enc_relationships_map(&pkg.relationships))
 }
-async fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
-    let outer = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
+    let outer = split_top_level(strip_brackets(s)?, ',');
     let [parts, ct, rels] = outer.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", outer.len())) };
-    let parts = split_top_level(strip_brackets(parts).await?, ',').into_iter().map(dec_part).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts, content_types: dec_content_types(ct).await?, relationships: dec_relationships_map(rels).await?, ..Default::default() })
+    let parts = split_top_level(strip_brackets(parts)?, ',').into_iter().map(dec_part).collect::<Result<Vec<_>, String>>()?;
+    Ok(OpcPackage { parts, content_types: dec_content_types(ct)?, relationships: dec_relationships_map(rels)?, ..Default::default() })
 }
-async fn enc_workbook(wb: &XlsxWorkbook) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_workbook(wb: &XlsxWorkbook) -> String {
     let sheets = wb.sheets.iter().map(enc_sheet).collect::<Vec<_>>().join(",");
     let strings = wb.shared_strings.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(",");
     format!("[[{sheets}],[{strings}]]")
 }
-async fn dec_workbook(s: &str) -> Result<XlsxWorkbook, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_workbook(s: &str) -> Result<XlsxWorkbook, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [sheets, strings] = parts.as_slice() else { return Err(format!("workbook: expected 2 fields, got {}", parts.len())) };
-    let sheets = split_top_level(strip_brackets(sheets).await?, ',').into_iter().map(dec_sheet).collect::<Result<Vec<_>, String>>()?;
-    let shared_strings = split_top_level(strip_brackets(strings).await?, ',').into_iter().map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let sheets = split_top_level(strip_brackets(sheets)?, ',').into_iter().map(dec_sheet).collect::<Result<Vec<_>, String>>()?;
+    let shared_strings = split_top_level(strip_brackets(strings)?, ',').into_iter().map(dec_str).collect::<Result<Vec<_>, String>>()?;
     Ok(XlsxWorkbook { sheets, shared_strings })
 }
-async fn enc_xlsx_snapshot(s: &XlsxSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_xlsx_snapshot(s: &XlsxSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_workbook(&s.workbook))
 }
-async fn dec_xlsx_snapshot(s: &str) -> Result<XlsxSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_xlsx_snapshot(s: &str) -> Result<XlsxSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, opc, workbook] = parts.as_slice() else { return Err(format!("xlsx snapshot: expected 3 fields, got {}", parts.len())) };
-    Ok(XlsxSnapshot { schema: dec_str(schema).await?, opc: dec_opc_package(opc).await?, workbook: dec_workbook(workbook).await? })
+    Ok(XlsxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, workbook: dec_workbook(workbook)? })
 }
 //#endregion 🔖️SnapshotCodec
 
 //#region 🔖️MutationCodec
-async fn print_xlsx_mutation(m: &XlsxMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_xlsx_mutation(m: &XlsxMutation) -> String {
     match m {
         XlsxMutation::NoMutation => "no-mutation".to_string(),
         XlsxMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_xlsx_snapshot(snapshot)),
@@ -256,7 +270,8 @@ async fn print_xlsx_mutation(m: &XlsxMutation) -> String {
         XlsxMutation::SetSharedString { index, value } => format!("set-shared-string index={index} value={}", enc_str(value)),
     }
 }
-async fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
     if line == "no-mutation" {
         return Ok(XlsxMutation::NoMutation);
     }
@@ -266,25 +281,25 @@ async fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
     let u32_arg = |k: &str| -> Result<u32, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(XlsxMutation::SetSnapshot { snapshot: dec_xlsx_snapshot(arg("snapshot")?).await? }),
-        "insert-sheet" => Ok(XlsxMutation::InsertSheet { sheet: dec_sheet(arg("sheet")?).await? }),
-        "remove-sheet" => Ok(XlsxMutation::RemoveSheet { name: dec_str(arg("name")?).await? }),
-        "rename-sheet" => Ok(XlsxMutation::RenameSheet { name: dec_str(arg("name")?).await?, new_name: dec_str(arg("new-name")?).await? }),
-        "set-cell" => Ok(XlsxMutation::SetCell { sheet_name: dec_str(arg("sheet-name")?).await?, row: u32_arg("row")?, col: u32_arg("col")?, value: dec_cell_value(arg("value")?).await? }),
-        "remove-cell" => Ok(XlsxMutation::RemoveCell { sheet_name: dec_str(arg("sheet-name")?).await?, row: u32_arg("row")?, col: u32_arg("col")? }),
-        "insert-shared-string" => Ok(XlsxMutation::InsertSharedString { value: dec_str(arg("value")?).await? }),
+        "set-snapshot" => Ok(XlsxMutation::SetSnapshot { snapshot: dec_xlsx_snapshot(arg("snapshot")?)? }),
+        "insert-sheet" => Ok(XlsxMutation::InsertSheet { sheet: dec_sheet(arg("sheet")?)? }),
+        "remove-sheet" => Ok(XlsxMutation::RemoveSheet { name: dec_str(arg("name")?)? }),
+        "rename-sheet" => Ok(XlsxMutation::RenameSheet { name: dec_str(arg("name")?)?, new_name: dec_str(arg("new-name")?)? }),
+        "set-cell" => Ok(XlsxMutation::SetCell { sheet_name: dec_str(arg("sheet-name")?)?, row: u32_arg("row")?, col: u32_arg("col")?, value: dec_cell_value(arg("value")?)? }),
+        "remove-cell" => Ok(XlsxMutation::RemoveCell { sheet_name: dec_str(arg("sheet-name")?)?, row: u32_arg("row")?, col: u32_arg("col")? }),
+        "insert-shared-string" => Ok(XlsxMutation::InsertSharedString { value: dec_str(arg("value")?)? }),
         "remove-shared-string" => Ok(XlsxMutation::RemoveSharedString { index: usize_arg("index")? }),
-        "set-shared-string" => Ok(XlsxMutation::SetSharedString { index: usize_arg("index")?, value: dec_str(arg("value")?).await? }),
+        "set-shared-string" => Ok(XlsxMutation::SetSharedString { index: usize_arg("index")?, value: dec_str(arg("value")?)? }),
         other => Err(format!("xlsx mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for XlsxMutation {
     async fn print_op(&self) -> String {
-        print_xlsx_mutation(self).await
+        print_xlsx_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_xlsx_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_xlsx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -300,7 +315,8 @@ impl OpText for XlsxMutation {
 /// `enc_content_types`/`enc_opc_package`/`enc_workbook`/`enc_xlsx_snapshot` text forms above.
 /// Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those text
 /// forms document.
-async fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
     for e in &ct.defaults {
         write_str_lp(out, &e.0);
@@ -312,20 +328,22 @@ async fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
         write_str_lp(out, &e.1);
     }
 }
-async fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
-    let default_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut defaults = Vec::with_capacity(default_count as usize);
     for _ in 0..default_count {
-        defaults.push((read_str_lp(reader).await?, read_str_lp(reader).await?));
+        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
     }
-    let override_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut overrides = Vec::with_capacity(override_count as usize);
     for _ in 0..override_count {
-        overrides.push((read_str_lp(reader).await?, read_str_lp(reader).await?));
+        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
     }
     Ok(OpcContentTypes { defaults, overrides })
 }
-async fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
     for p in &pkg.parts {
         enc_opc_part_bin(p, out);
@@ -343,27 +361,29 @@ async fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
-    let part_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
-        parts.push(dec_opc_part_bin(reader).await?);
+        parts.push(dec_opc_part_bin(reader)?);
     }
-    let content_types = dec_opc_content_types_bin(reader).await?;
-    let owner_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let content_types = dec_opc_content_types_bin(reader)?;
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut relationships = HashMap::with_capacity(owner_count as usize);
     for _ in 0..owner_count {
-        let owner = read_str_lp(reader).await?;
-        let rel_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let owner = read_str_lp(reader)?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut list = Vec::with_capacity(rel_count as usize);
         for _ in 0..rel_count {
-            list.push(dec_rel_bin(reader).await?);
+            list.push(dec_rel_bin(reader)?);
         }
         relationships.insert(owner, list);
     }
     Ok(OpcPackage { parts, content_types, relationships, ..Default::default() })
 }
-async fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, wb.sheets.len() as u64);
     for s in &wb.sheets {
         enc_sheet_bin(s, out);
@@ -373,28 +393,31 @@ async fn enc_workbook_bin(wb: &XlsxWorkbook, out: &mut Vec<u8>) {
         write_str_lp(out, s);
     }
 }
-async fn dec_workbook_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbook, String> {
-    let sheet_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_workbook_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbook, String> {
+    let sheet_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut sheets = Vec::with_capacity(sheet_count as usize);
     for _ in 0..sheet_count {
-        sheets.push(dec_sheet_bin(reader).await?);
+        sheets.push(dec_sheet_bin(reader)?);
     }
-    let string_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let string_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut shared_strings = Vec::with_capacity(string_count as usize);
     for _ in 0..string_count {
-        shared_strings.push(read_str_lp(reader).await?);
+        shared_strings.push(read_str_lp(reader)?);
     }
     Ok(XlsxWorkbook { sheets, shared_strings })
 }
-async fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     enc_opc_package_bin(&s.opc, out);
     enc_workbook_bin(&s.workbook, out);
 }
-async fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let opc = dec_opc_package_bin(reader).await?;
-    let workbook = dec_workbook_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let opc = dec_opc_package_bin(reader)?;
+    let workbook = dec_workbook_bin(reader)?;
     Ok(XlsxSnapshot { schema, opc, workbook })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -422,9 +445,9 @@ impl OpBinary for XlsxMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             XlsxMutation::NoMutation => {}
-            XlsxMutation::SetSnapshot { snapshot } => enc_xlsx_snapshot_bin(snapshot, &mut out).await,
-            XlsxMutation::InsertSheet { sheet } => enc_sheet_bin(sheet, &mut out).await,
-            XlsxMutation::RemoveSheet { name } => write_str_lp(&mut out, name).await,
+            XlsxMutation::SetSnapshot { snapshot } => enc_xlsx_snapshot_bin(snapshot, &mut out),
+            XlsxMutation::InsertSheet { sheet } => enc_sheet_bin(sheet, &mut out),
+            XlsxMutation::RemoveSheet { name } => write_str_lp(&mut out, name),
             XlsxMutation::RenameSheet { name, new_name } => {
                 write_str_lp(&mut out, name);
                 write_str_lp(&mut out, new_name);
@@ -440,7 +463,7 @@ impl OpBinary for XlsxMutation {
                 store::pack_rt::write_varint_u64(&mut out, *row as u64);
                 store::pack_rt::write_varint_u64(&mut out, *col as u64);
             }
-            XlsxMutation::InsertSharedString { value } => write_str_lp(&mut out, value).await,
+            XlsxMutation::InsertSharedString { value } => write_str_lp(&mut out, value),
             XlsxMutation::RemoveSharedString { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64).await,
             XlsxMutation::SetSharedString { index, value } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -458,37 +481,37 @@ impl OpBinary for XlsxMutation {
         match tag {
             0 => Ok(XlsxMutation::NoMutation),
             1 => {
-                let snapshot = dec_xlsx_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_xlsx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let sheet = dec_sheet_bin(&mut reader).await.map_err(|e| malformed("op sheet", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let sheet = dec_sheet_bin(&mut reader).map_err(|e| malformed("op sheet", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::InsertSheet { sheet })
             }
             3 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::RemoveSheet { name })
             }
             4 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let new_name = read_str_lp(&mut reader).await.map_err(|e| malformed("op new_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let new_name = read_str_lp(&mut reader).map_err(|e| malformed("op new_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::RenameSheet { name, new_name })
             }
             5 => {
-                let sheet_name = read_str_lp(&mut reader).await.map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
                 let col = reader.read_varint_u64().await.map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-                let value = dec_cell_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::SetCell { sheet_name, row, col, value })
             }
             6 => {
-                let sheet_name = read_str_lp(&mut reader).await.map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
                 let col = reader.read_varint_u64().await.map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
                 Ok(XlsxMutation::RemoveCell { sheet_name, row, col })
             }
             7 => {
-                let value = read_str_lp(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::InsertSharedString { value })
             }
             8 => {
@@ -497,7 +520,7 @@ impl OpBinary for XlsxMutation {
             }
             9 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = read_str_lp(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::SetSharedString { index, value })
             }
             other => Err(malformed("op tag", 1, format!("unknown XlsxMutation tag {other}"))),
@@ -515,7 +538,8 @@ impl OpBinary for XlsxMutation {
 /// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
 /// `sample_mutations` (the last renamed for the same convention).
 #[cfg(test)]
-pub(crate) async fn fixture() -> XlsxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn fixture() -> XlsxSnapshot {
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
@@ -534,7 +558,8 @@ pub(crate) async fn fixture() -> XlsxSnapshot {
 /// `added`+`modified`. OPC content_types/parts/relationships each get one removed, one
 /// modified, one added (all true name-keyed collections, exercised in one direction).
 #[cfg(test)]
-pub(crate) async fn sweep_a() -> XlsxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_a() -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -578,7 +603,8 @@ pub(crate) async fn sweep_a() -> XlsxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn sweep_b() -> XlsxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_b() -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -624,7 +650,8 @@ pub(crate) async fn sweep_b() -> XlsxSnapshot {
 
 /// 🧪️ The demo cases proper -- one representative `XlsxMutation` per variant.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<XlsxMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
     vec![
         XlsxMutation::NoMutation,
         XlsxMutation::SetSnapshot { snapshot: sweep_b() },
@@ -815,7 +842,8 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &XlsxDiff) -> XlsxDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &XlsxDiff) -> XlsxDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -823,7 +851,8 @@ mod tests {
         absorbed
     }
 
-    async fn cells_diff<'a>(diff: &'a XlsxDiff, sheet_name: &str) -> &'a crate::artifacts::xlsx::schema::diff::XlsxCellsDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn cells_diff<'a>(diff: &'a XlsxDiff, sheet_name: &str) -> &'a crate::artifacts::xlsx::schema::diff::XlsxCellsDiff {
         let sheets = diff.workbook.as_ref().expect("workbook diff present").sheets.as_ref().expect("sheets diff present");
         sheets.modified.iter().find(|m| m.key == sheet_name).expect("sheet modified").diff.cells.as_ref().expect("cells diff present")
     }

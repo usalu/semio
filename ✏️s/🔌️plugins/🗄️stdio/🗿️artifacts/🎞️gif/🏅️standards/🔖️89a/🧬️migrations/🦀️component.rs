@@ -18,7 +18,8 @@ use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{Gif
 /// 🔀️ 87a and 89a deliberately declare distinct `GifColorTable` types (per the recipe's "no
 /// copy-pasted shared types" rule) — this migration is the one legitimate cross-standard bridge
 /// point, converting field-for-field (identical shape: `sorted: bool`, `colors: Vec<GifRgb>`).
-async fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
     Gif89aColorTable { sorted: table.sorted, colors: table.colors.iter().map(|c| Gif89aRgb { r: c.r, g: c.g, b: c.b }).collect() }
 }
 //#endregion ColorTableConv
@@ -33,7 +34,8 @@ async fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
 /// has no looping concept, so "absent" — not "loop forever" — is the honest translation);
 /// `comments`/`app_extensions` are empty (87a has neither extension block kind, GIF89a-only
 /// features).
-pub async fn migrate_87a_to_89a(snapshot_87a: &Gif87aSnapshot) -> Gif89aSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn migrate_87a_to_89a(snapshot_87a: &Gif87aSnapshot) -> Gif89aSnapshot {
     Gif89aSnapshot {
         schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
         width: snapshot_87a.width,
@@ -48,7 +50,8 @@ pub async fn migrate_87a_to_89a(snapshot_87a: &Gif87aSnapshot) -> Gif89aSnapshot
     }
 }
 
-async fn migrate_image_to_frame(image: &GifImage) -> GifFrame {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn migrate_image_to_frame(image: &GifImage) -> GifFrame {
     GifFrame {
         left: image.left,
         top: image.top,
@@ -70,10 +73,11 @@ async fn migrate_image_to_frame(image: &GifImage) -> GifFrame {
 /// 🧳️ Pack-bytes bridge for `store::DialectMigration.migrate_pack`'s `fn(&[u8]) ->
 /// Result<Vec<u8>, String>` shape: decodes 87a pack bytes to a snapshot, migrates, re-encodes as
 /// 89a pack bytes. A bare non-capturing `fn`, coercible to the registry's `fn` pointer field.
-async fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let snapshot_87a = <Gif87aSnapshot as store::ArtifactPack>::decode_pack(pack_bytes).await.map_err(|error| error.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let snapshot_87a = <Gif87aSnapshot as store::ArtifactPack>::decode_pack(pack_bytes).map_err(|error| error.to_string())?;
     let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
-    Ok(<Gif89aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_89a).await)
+    Ok(<Gif89aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_89a))
 }
 
 /// 📝️ Wires `migrate_87a_to_89a_pack` into `store`'s dialect-migration registry (see
@@ -81,7 +85,8 @@ async fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
 /// program-init time, mirroring every other `register_*` call in this codebase's init path. Not
 /// yet called from any real init path (no dispatch/hub/WIT wiring exists this pass — see this
 /// module's own doc comment); exercised directly by this module's own test below.
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     let _ = store::register_dialect_migration(store::DialectMigration {
         from: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "87a".into(), subset: "*".into() },
         to: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() },
@@ -99,7 +104,8 @@ mod tests {
     /// 🏗️ Builds a REAL 87a snapshot by round-tripping through the actual 87a encoder/decoder
     /// (`standards::v87a::engine`), not a hand-built struct literal — so this test exercises the
     /// genuine on-disk GIF87a byte shape.
-    async fn real_87a_snapshot() -> Gif87aSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_87a_snapshot() -> Gif87aSnapshot {
         let (palette, indices, _) = crate::artifacts::gif::standards::v87a::engine::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
         let source = Gif87aSnapshot {
             schema: crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA.into(),
@@ -117,7 +123,8 @@ mod tests {
 
     /// 🎨️ A real 2x2, 4-distinct-opaque-color RGBA image — small enough to hand-inspect, varied
     /// enough to catch a migration that scrambles pixel order.
-    async fn sample_rgba_2x2() -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_rgba_2x2() -> Vec<u8> {
         vec![
             255, 0, 0, 255, // top-left: opaque red
             0, 255, 0, 255, // top-right: opaque green

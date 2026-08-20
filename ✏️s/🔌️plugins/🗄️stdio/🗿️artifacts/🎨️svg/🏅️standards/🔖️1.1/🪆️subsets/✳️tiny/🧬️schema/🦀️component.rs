@@ -133,19 +133,22 @@ pub mod derived_analysis {
 
     /// ✂️ Strips an XML namespace prefix (`xlink:href` -> `href`) for vocabulary-matching purposes
     /// only -- diagnostics still report the original, fully-qualified name.
-    async fn local_name(name: &str) -> &str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn local_name(name: &str) -> &str {
         name.rsplit(':').next().unwrap_or(name)
     }
 
-    async fn is_blocked_element(name: &str) -> bool {
-        let ln = local_name(name).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_blocked_element(name: &str) -> bool {
+        let ln = local_name(name);
         BLOCKED_ELEMENTS.contains(&ln) || ln.starts_with("fe")
     }
 
     /// 🌐️ `true` for a value that looks like a reference to an external document (a URI scheme or a
     /// scheme-relative `//host/...`), `false` for a same-document fragment (`#id`) or a bare relative
     /// path.
-    async fn is_external_href(value: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_external_href(value: &str) -> bool {
         let v = value.trim();
         !v.starts_with('#') && (v.contains("://") || v.starts_with("//"))
     }
@@ -157,28 +160,31 @@ pub mod derived_analysis {
     pub const CODE_BASE_PROFILE: &str = "stdio.svg.tiny.base-profile";
     pub const CODE_EXTERNAL_HREF: &str = "stdio.svg.tiny.external-href";
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
     /// 🌳 Recursively walks one element (and its descendants), reporting blocklisted elements,
     /// blocklisted attributes, and external `href`/`xlink:href` values.
-    async fn walk(node: &XmlNode, out: &mut Vec<Diagnostic>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn walk(node: &XmlNode, out: &mut Vec<Diagnostic>) {
         if let XmlNode::Element { name, attrs, children } = node {
-            if is_blocked_element(name).await {
-                out.push(hard(CODE_ELEMENT, format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")).await);
+            if is_blocked_element(name) {
+                out.push(hard(CODE_ELEMENT, format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));
             }
             for a in attrs {
                 let ln = local_name(&a.name);
                 if BLOCKED_ATTRS.contains(&ln) {
-                    out.push(hard(CODE_ATTRIBUTE, format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1", a.name)).await);
+                    out.push(hard(CODE_ATTRIBUTE, format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1", a.name)));
                 }
-                if ln == "href" && is_external_href(&a.value).await {
-                    out.push(soft(CODE_EXTERNAL_HREF, format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document", a.name, a.value)).await);
+                if ln == "href" && is_external_href(&a.value) {
+                    out.push(soft(CODE_EXTERNAL_HREF, format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document", a.name, a.value)));
                 }
             }
             for c in children {
@@ -187,7 +193,8 @@ pub mod derived_analysis {
         }
     }
 
-    async fn root_attrs(root: &XmlNode) -> &[XmlAttr] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn root_attrs(root: &XmlNode) -> &[XmlAttr] {
         match root {
             XmlNode::Element { attrs, .. } => attrs.as_slice(),
             _ => &[],
@@ -199,16 +206,17 @@ pub mod derived_analysis {
     /// authoritative), `SvgTinyBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub async fn check_svg_tiny_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_svg_tiny_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };
         walk(root, &mut out);
         if let XmlNode::Element { name, .. } = root {
-            let attrs = root_attrs(root).await;
+            let attrs = root_attrs(root);
             let base_profile_ok = attrs.iter().any(|a| a.name == "baseProfile" && a.value == "tiny");
             let version_ok = attrs.iter().any(|a| a.name == "version" && a.value == "1.1");
             if !base_profile_ok || !version_ok {
-                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")).await);
+                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")));
             }
         }
         out
@@ -236,7 +244,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_svg_tiny_conformance(snapshot).await;
+                let checks = check_svg_tiny_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -251,17 +259,20 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        async fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
             let mut snapshot = SvgSnapshot::default();
             snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs, children });
             snapshot
         }
 
-        async fn attr(name: &str, value: &str) -> XmlAttr {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn attr(name: &str, value: &str) -> XmlAttr {
             XmlAttr { name: name.into(), value: value.into() }
         }
 
-        async fn elem(name: &str, attrs: Vec<XmlAttr>) -> XmlNode {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn elem(name: &str, attrs: Vec<XmlAttr>) -> XmlNode {
             XmlNode::Element { name: name.into(), attrs, children: vec![] }
         }
 

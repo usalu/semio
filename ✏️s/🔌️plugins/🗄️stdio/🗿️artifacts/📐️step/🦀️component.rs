@@ -39,19 +39,21 @@ pub const STEP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.step";
 /// `"s.stdio.step"` (verified against `🪆️subsets/✳️cc1/🚪️io/🦀️component.rs`'s own `DIALECT_SELF`),
 /// matching this declaration's `kind` exactly — the ownership check in `register_all` holds.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("step", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("step", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("step").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("step")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::step::schema::step_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::step::schema::inferences::step_artifact_inference_descriptor()])
-        .await.composers(crate::artifacts::step::engine::io_registry::entries())
-        .await.subset_validators(step_subset_validators().await)
-        .await.languages(pilot_languages())
+        .schema(crate::artifacts::step::schema::step_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::step::schema::inferences::step_artifact_inference_descriptor()])
+        .composers(crate::artifacts::step::engine::io_registry::entries())
+        .subset_validators(step_subset_validators())
+        .languages(pilot_languages())
         .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -59,7 +61,8 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 🛡️ The six `ap214` conformance-class `SubsetValidator`s, combined — see `declaration()`'s own
 /// doc for why this exists as one owned slice instead of six separate `register_subset_validator`
 /// calls.
-async fn step_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn step_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     use semio_framework_plugin::subset_validator_entry_of;
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
@@ -80,7 +83,8 @@ async fn step_subset_validators() -> &'static [semio_framework_plugin::SubsetVal
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
 /// verbatim (five `LanguageSpec` rows, one per role) from `crate::artifacts::step::standards::
 /// v_ap214::engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -143,7 +147,8 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.step".into(),
         name: "Step".into(),
@@ -173,12 +178,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v_ap214::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("StepComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v_ap214::entries());
     }
 }

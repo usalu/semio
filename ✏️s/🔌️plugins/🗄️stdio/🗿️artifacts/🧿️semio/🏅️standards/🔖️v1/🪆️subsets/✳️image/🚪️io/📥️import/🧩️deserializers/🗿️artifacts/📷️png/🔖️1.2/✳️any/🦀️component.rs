@@ -27,7 +27,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
 //#region 🔖️ColorspaceMap
-async fn colorspace_from_png(c: PngColorType) -> SemioColorspace {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn colorspace_from_png(c: PngColorType) -> SemioColorspace {
     match c {
         PngColorType::Grayscale => SemioColorspace::Grayscale,
         PngColorType::Rgb => SemioColorspace::Rgb,
@@ -56,7 +57,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
-            colorspace: colorspace_from_png(from.color_type).await,
+            colorspace: colorspace_from_png(from.color_type),
             bit_depth: from.bit_depth,
             frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
             icc: None,
@@ -72,7 +73,8 @@ mod tests {
     use super::*;
     use crate::artifacts::png::schema::snapshot::PngRgb;
 
-    async fn sample_png() -> PngSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_png() -> PngSnapshot {
         PngSnapshot {
             width: 2,
             height: 1,

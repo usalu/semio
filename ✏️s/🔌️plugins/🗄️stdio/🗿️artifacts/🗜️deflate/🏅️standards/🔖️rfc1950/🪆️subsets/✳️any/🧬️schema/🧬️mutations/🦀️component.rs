@@ -41,14 +41,15 @@ pub enum DeflateMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`; the diff is the single semantics source (never
 /// apply-and-capture).
-pub async fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
-    let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
+    let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -60,10 +61,10 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
     async fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DeflateMutation::NoMutation => DeflateDiff::default(),
-            DeflateMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            DeflateMutation::SetCompressionParams { method, window_bits, level_hint } => diff_set_compression_params(*method, *window_bits, *level_hint).await,
-            DeflateMutation::SetPresetDictionary { dict_id } => diff_set_preset_dictionary(*dict_id).await,
-            DeflateMutation::SetPayload { payload } => diff_set_payload(payload.clone()).await,
+            DeflateMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            DeflateMutation::SetCompressionParams { method, window_bits, level_hint } => diff_set_compression_params(*method, *window_bits, *level_hint),
+            DeflateMutation::SetPresetDictionary { dict_id } => diff_set_preset_dictionary(*dict_id),
+            DeflateMutation::SetPayload { payload } => diff_set_payload(payload.clone()),
         }).await
     }
 
@@ -124,7 +125,8 @@ impl OpBinary for DeflateMutation {
 /// truth reused by `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<DeflateMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let snapshot =
@@ -148,7 +150,8 @@ mod tests {
     use super::*;
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    async fn base_snapshot() -> DeflateSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"op-text-binary-fixture".to_vec() }
     }
 

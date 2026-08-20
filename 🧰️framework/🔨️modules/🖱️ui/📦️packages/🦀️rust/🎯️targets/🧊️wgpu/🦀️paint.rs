@@ -53,13 +53,13 @@ const TREE_ICON_SIZE: f32 = 14.0;
 /// this call, in `Ui::frame`'s `collect_scene_slots` loop — instead of this pass drawing placeholder
 /// chrome that the host would then have to paint over. With no host (`false`), behavior is unchanged
 /// from before this parameter existed: `paint_component_scene`/`paint_image`'s own placeholder chrome.
-pub(crate) async fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
+pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     sync_interactive_state(tree, root, theme);
     paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, has_scene_host, draw);
     clear_dirty_paint(tree, root);
 }
 
-async fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
+fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
     if let Some(node) = tree.node_mut(id) {
         node.flags.set(NodeFlags::DIRTY_PAINT, false);
     }
@@ -92,11 +92,11 @@ async fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
 /// its already-existing retained `NodeId`, robust to reconcile's insertion-order quirks (a re-used
 /// matched child physically keeps its old sibling-list position — see that module's own doc comment
 /// on why key lookup, not positional indexing, is the safe way to do this).
-async fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<NodeId> {
+fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<NodeId> {
     tree.children(parent).find(|&child| tree.node(child).map(|n| &n.key) == Some(key))
 }
 
-async fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
+fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     let select_open: Option<(Vec<UiSelectItem>, f32, f32)> = tree.node(id).and_then(|node| match &node.spec.0 {
         UiNode::Select(select) if node.state.open => Some((select.items.clone(), node.layout.width, node.layout.height)),
         _ => None,
@@ -130,13 +130,13 @@ async fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
 /// (paints it), so the two can never drift apart. Mirrors `widgets::render_select_menu`'s literal
 /// geometry: the popup sits `select_h + 2.0` below the trigger, each row inset `2.0`,
 /// `theme.control_height` tall.
-async fn select_popup_row_rect(select_w: f32, select_h: f32, index: usize, theme: &Theme) -> Rect {
+fn select_popup_row_rect(select_w: f32, select_h: f32, index: usize, theme: &Theme) -> Rect {
     let item_h = theme.control_height;
     let menu_y = select_h + 2.0;
     Rect::new(2.0, menu_y + 2.0 + index as f32 * item_h, (select_w - 4.0).max(0.0), item_h)
 }
 
-async fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
+fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
     for (index, item) in items.iter().enumerate() {
         let Some(row_id) = find_child_by_key(tree, select_id, &NodeKey::Explicit(item.value.clone())) else { continue };
         let rect = select_popup_row_rect(select_w, select_h, index, theme);
@@ -153,7 +153,7 @@ async fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[U
 /// arm, keyed by `section.id`) real `LayoutBucket` geometry, cumulative down the tree exactly like
 /// `paint_tree_widget`'s own procedural walk (header height, then each item's row height including
 /// any expanded nested rows).
-async fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
+fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
     let Some(tree_node) = tree.node(tree_id).and_then(|node| match &node.spec.0 {
         UiNode::Tree(tree_node) => Some(tree_node.clone()),
         _ => None,
@@ -186,7 +186,7 @@ async fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
 /// recursion. Also keeps `NodeFlags::DRAG_SOURCE` synced with `item.draggable` (see
 /// `events::is_plain_stack_container`/`set_drag_payload` for the two consumers of that bit). Returns
 /// the total height (own row + any expanded nested rows) consumed, for the caller's own cursor.
-async fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
+fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
     if !item.presence.visible() {
         return 0.0;
     }
@@ -224,7 +224,7 @@ async fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeI
 /// outset accent ring for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
 /// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
 /// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
-async fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) {
+fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) {
     if presence.state == UiState::Disabled {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel.with_alpha(0.35));
     }
@@ -254,7 +254,7 @@ async fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, pres
     }
 }
 
-pub(crate) async fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
+pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
     let presence = node.spec.0.presence();
     if !presence.visible() {
@@ -332,14 +332,14 @@ pub(crate) async fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_
 /// in at the GPU layer; this helper just standardizes the radius/stroke args every `paint` call site
 /// passes into that existing primitive, leaving only `color` (which varies with e.g. selected state)
 /// to the caller.
-async fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
+fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
     draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
 }
 
 /// 🌀️ Shared "this node is waiting" affordance mirroring `paint_loading_border`: dashed, slower ring
 /// via `draw::DrawList::push_waiting_border` (`UI_SHADER`'s `kind == 7` branch). Callers dispatch
 /// `loading` before `waiting` so the more active state wins when both flags are set.
-async fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
+fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
     draw.push_waiting_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
 }
 
@@ -357,7 +357,7 @@ async fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, th
 /// (`onDragOver`/`onDrop` are behavioral only) — its only paint-visible effect is keeping
 /// `NodeFlags::DROP_TARGET` in sync (`sync_interactive_state`, above), consumed by
 /// `events`/cursor-derivation, not drawn here.
-async fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme: &Theme, draw: &mut DrawList) {
+fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme: &Theme, draw: &mut DrawList) {
     let activatable = stack.activate.is_some();
     if !activatable {
         return;
@@ -374,14 +374,14 @@ async fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, 
 /// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
 /// `activate`/`selected`).
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
-async fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
+fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let children: Vec<NodeId> = tree.children(id).collect();
     for child in children {
         paint_node(tree, child, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
     }
 }
 
-async fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let emphasize = node.emphasize.unwrap_or(false);
     let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
     let color = if emphasize { theme.text } else { theme.text_muted };
@@ -392,12 +392,12 @@ async fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut 
     }
 }
 
-async fn paint_separator(bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+fn paint_separator(bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let y = bounds.y + bounds.h * 0.5;
     draw.push_line(bounds.x, y, bounds.x + bounds.w, y, theme.separator, 1.0);
 }
 
-async fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     // 🚫️ `disabled:opacity-50` is the shared dimming convention this codebase's React reference
     // (`ui/js/react/index.tsx`'s form controls) uses for every disabled interactive control; ported
     // here via `Rgba::with_alpha` since `paint` has no CSS to lean on. A disabled control also can't
@@ -430,7 +430,7 @@ async fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme
 /// which is smaller (see `tree::EditState`'s own doc comment). Duplicated rather than imported
 /// across the `paint`/`events` module boundary for a one-line pure function; keep the two in sync
 /// if `EditState`'s selection convention ever changes.
-async fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
+fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
     (anchor.min(caret), anchor.max(caret))
 }
 
@@ -444,7 +444,7 @@ async fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 /// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
 /// (`theme.accent`) is this pass's own independent choice, kept consistent with `paint_input`'s own
 /// pre-existing `border_emphasized`-on-focus convention.
-async fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = flags.contains(NodeFlags::FOCUSED);
     let border = if focused { theme.border_emphasized } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, theme.input_bg);
@@ -484,7 +484,7 @@ async fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect,
 /// popup paints below the trigger with the exact geometry `select_popup_row_rect` also writes into
 /// the rows' `LayoutBucket` (see `sync_select_popup_rows`), so clicking a row actually hit-tests.
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
-async fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ `SelectTrigger`'s own `formControlFocusBorderClass` (`ui/js/react/index.tsx`) swaps its
     // border to `border-accent` on `focus-visible` — mirrored via the same border-swap convention
@@ -517,7 +517,7 @@ async fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open:
     }
 }
 
-async fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let pressed = node.presence.selected;
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ Same `formControlFocusBorderClass` border-swap as `paint_button`/`paint_select` — the icon-
@@ -538,7 +538,7 @@ async fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme
     }
 }
 
-async fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_w = node.entries.iter().map(|entry| atlas.measure_text(entry.label.as_str(), theme.font_size_small).0).fold(0.0f32, f32::max);
     let value_x = bounds.x + label_w + theme.gap_standard * 2.0;
     let row_h = theme.control_height;
@@ -549,7 +549,7 @@ async fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atl
     }
 }
 
-async fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let track_y = bounds.y + bounds.h * 0.5;
     draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], theme.separator, 2.0);
     let range = (node.max - node.min).max(f64::EPSILON);
@@ -569,7 +569,7 @@ async fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &
     }
 }
 
-async fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let seg = bounds.w / 3.0;
     let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
     let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
@@ -606,7 +606,7 @@ async fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: N
     draw_text_on(draw, atlas, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, theme.font_size_body, theme.text);
 }
 
-async fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let cx = bounds.x + bounds.w * 0.5;
     let cy = bounds.y + bounds.h * 0.5;
     let radius = bounds.w.min(bounds.h) * 0.4;
@@ -627,7 +627,7 @@ async fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut D
     draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], accent, 6.0);
 }
 
-async fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ Same border-swap-on-focus convention as `paint_button`/`paint_select`/`paint_toggle` — the
     // real `IconSelector` (`ui/js/react/index.tsx`) nests a `Select` for its mode picker, which
@@ -653,7 +653,7 @@ async fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFla
 /// yet reserve the child control's layout slot below this text (see `golden_field_known_gap`'s doc
 /// comment — a documented `flex` gap, out of scope here), so these lines are positioned relative to
 /// `bounds.y` only; they'll land correctly once that flex gap is fixed.
-async fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_size = theme.font_size_small;
     draw_text_on(draw, atlas, node.label.as_str(), bounds.x, bounds.y + label_size, label_size, theme.text_muted);
     let mut y = bounds.y + label_size;
@@ -675,7 +675,7 @@ async fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mu
 /// `paint_stack`. Collapsed state still reads `default_open` directly — no `WidgetState`-backed
 /// toggle persistence exists for `Section` yet (unlike `Select`'s popup open/closed state and
 /// `Input`'s live edit buffer, both wired by now — see `WidgetState`'s own doc comment).
-async fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let Some(label) = &node.label else { return };
     let collapsed = !node.default_open.unwrap_or(true);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
@@ -688,7 +688,7 @@ async fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas:
 /** @emoji 🌿️ Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
  * present `label` — used when a nested subtree (e.g. `Origin`) is painted directly in the native
  * retained tree rather than pre-expanded into `UiTreeItemNode.items`. */
-async fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let collapsed = !node.default_open.unwrap_or(true);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
     if let Some(icons) = icons {
@@ -697,7 +697,7 @@ async fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mu
     draw_text_on(draw, atlas, node.label.as_str(), bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
 }
 
-async fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     draw.push_scissor(bounds);
     let mut y = bounds.y;
     for section in &node.sections {
@@ -732,7 +732,7 @@ async fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
 /// retained item children — see `paint_select`'s neighboring doc comment for the same root cause), so
 /// there is nowhere to read a live per-row hover/drag flag from until that reconcile expansion lands.
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
-async fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32, tree_node: &UiTreeNode, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, is_last_at_level: &[bool]) -> f32 {
+fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32, tree_node: &UiTreeNode, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, is_last_at_level: &[bool]) -> f32 {
     if !item.presence.visible() {
         return y;
     }
@@ -811,7 +811,7 @@ async fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, dept
 /// for `paint_tree_item`'s `depth` starting at `1` for top-level items (`widgets`' `render_tree_item`
 /// starts its own `depth` at `0`), so every `widgets_depth` reference there is this function's
 /// `depth - 1`.
-async fn paint_tree_guides(draw: &mut DrawList, row_x: f32, row_y: f32, row_h: f32, depth: u32, is_last_at_level: &[bool], theme: &Theme) {
+fn paint_tree_guides(draw: &mut DrawList, row_x: f32, row_y: f32, row_h: f32, depth: u32, is_last_at_level: &[bool], theme: &Theme) {
     let hair = theme.stroke_hairline.max(1.0);
     let guide_color = theme.border_normal;
     for level in 0..depth.saturating_sub(1) {
@@ -834,7 +834,7 @@ async fn paint_tree_guides(draw: &mut DrawList, row_x: f32, row_y: f32, row_h: f
 /// `paint_node`'s `UiNode` dispatch table one level down. No per-control `NodeId` exists for an inline
 /// tree-row control yet, so it always paints at rest (`NodeFlags::empty()`) — same interactive-state
 /// caveat as the rest of this function's caller.
-async fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let flags = NodeFlags::empty();
     match control {
         UiControlNode::Button(node) => paint_button(node, bounds, flags, theme, atlas, icons, draw),
@@ -855,7 +855,7 @@ async fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atl
 /// lives in the renderer's `program_bridge`/`engine_canvas`, outside this crate's scope); paints a
 /// raster quad keyed by `src` on the chance a caller-owned `RasterTextureTable` already has that key
 /// uploaded, falling back to `alt` text when there's nothing to show yet.
-async fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     if node.src.is_empty() {
         if let Some(alt) = &node.alt {
             draw_text_on(draw, atlas, alt.as_str(), bounds.x + 4.0, bounds.y + 16.0, theme.font_size_small, theme.text_muted);
@@ -870,14 +870,14 @@ async fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mu
 /// the actual scene surface (canvas2d/world3d/node-graph/…) into this same rect right after this
 /// pass returns (see `paint_node`'s `UiNode::ComponentScene` arm), so this placeholder chrome is
 /// purely the no-host fallback — "there's something visible in that rect" rather than nothing.
-async fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let _ = &node.surface_id;
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
 }
 
 /// 🧩️ Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
 /// concern (`program_bridge`), out of scope here; label the slot with its `body_key` for now.
-async fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
     draw_text_on(draw, atlas, &node.body_key, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
 }
@@ -891,19 +891,19 @@ mod tests {
     use crate::wgpu::flex::LayoutEngine;
     use crate::wgpu::tree::EditState;
 
-    async fn action() -> ActionDescriptor {
+    fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
     }
 
-    async fn text(value: &str) -> UiNode {
+    fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    async fn stack(children: Vec<UiNode>) -> UiNode {
+    fn stack(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
     }
 
-    async fn loading_button(id: &str) -> UiNode {
+    fn loading_button(id: &str) -> UiNode {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
             icon_id: IconName::CircleDot,
@@ -915,7 +915,7 @@ mod tests {
         })
     }
 
-    async fn waiting_button(id: &str) -> UiNode {
+    fn waiting_button(id: &str) -> UiNode {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
             icon_id: IconName::CircleDot,
@@ -927,7 +927,7 @@ mod tests {
         })
     }
 
-    async fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
+    fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
         let mut tree = UiTree::new();
         tree.apply_tree(ui);
         let root = tree.root.unwrap();
@@ -939,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_text_node_emits_glyph_instances() {
+    fn painting_a_text_node_emits_glyph_instances() {
         let (mut tree, root, theme, mut atlas) = setup(&text("hi"));
         let mut draw = DrawList::default();
 
@@ -950,7 +950,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_stack_recurses_into_every_child() {
+    fn painting_a_stack_recurses_into_every_child() {
         let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(), menu: None }), text("b")]);
         let (mut tree, root, theme, mut atlas) = setup(&ui);
         let mut draw = DrawList::default();
@@ -964,7 +964,7 @@ mod tests {
     }
 
     #[test]
-    async fn paint_tree_clears_dirty_paint_but_leaves_layout_dirt_flags_untouched() {
+    fn paint_tree_clears_dirty_paint_but_leaves_layout_dirt_flags_untouched() {
         let (mut tree, root, theme, mut atlas) = setup(&text("hi"));
         assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DIRTY_PAINT));
         let mut draw = DrawList::default();
@@ -984,7 +984,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_loading_button_emits_a_loading_border_instance() {
+    fn painting_a_loading_button_emits_a_loading_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&loading_button("save"));
         let mut draw = DrawList::default();
 
@@ -995,7 +995,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_waiting_button_emits_a_waiting_border_instance() {
+    fn painting_a_waiting_button_emits_a_waiting_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_button("save"));
         let mut draw = DrawList::default();
 
@@ -1012,12 +1012,12 @@ mod tests {
     // 🩹️ One test per fidelity gap this pass closed (see `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
     // additive to the pre-existing tests above.
 
-    async fn button(id: &str, disabled: bool) -> UiNode {
+    fn button(id: &str, disabled: bool) -> UiNode {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled), menu: None })
     }
 
     #[test]
-    async fn painting_a_disabled_button_dims_its_border_alpha() {
+    fn painting_a_disabled_button_dims_its_border_alpha() {
         let (mut tree, root, theme, mut atlas) = setup(&button("btn", true));
         let mut draw = DrawList::default();
 
@@ -1027,12 +1027,12 @@ mod tests {
         assert!(dimmed, "a disabled button should paint its border at half alpha");
     }
 
-    async fn loading_section(id: &str) -> UiNode {
+    fn loading_section(id: &str) -> UiNode {
         UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")], menu: None })
     }
 
     #[test]
-    async fn painting_a_loading_section_emits_a_loading_border_instance() {
+    fn painting_a_loading_section_emits_a_loading_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&loading_section("sec"));
         let mut draw = DrawList::default();
 
@@ -1042,12 +1042,12 @@ mod tests {
         assert!(has_loading_border, "a loading section should emit a KIND_LOADING_BORDER instance");
     }
 
-    async fn waiting_section(id: &str) -> UiNode {
+    fn waiting_section(id: &str) -> UiNode {
         UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")], menu: None })
     }
 
     #[test]
-    async fn painting_a_waiting_section_emits_a_waiting_border_instance() {
+    fn painting_a_waiting_section_emits_a_waiting_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_section("sec"));
         let mut draw = DrawList::default();
 
@@ -1057,7 +1057,7 @@ mod tests {
         assert!(has_waiting_border, "a waiting section should emit a KIND_WAITING_BORDER instance");
     }
 
-    async fn loading_stack(children: Vec<UiNode>) -> UiNode {
+    fn loading_stack(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: Some("none".into()),
@@ -1073,7 +1073,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_loading_stack_emits_a_loading_border_instance() {
+    fn painting_a_loading_stack_emits_a_loading_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&loading_stack(vec![text("a")]));
         let mut draw = DrawList::default();
 
@@ -1083,7 +1083,7 @@ mod tests {
         assert!(has_loading_border, "a loading stack should emit a KIND_LOADING_BORDER instance");
     }
 
-    async fn waiting_stack(children: Vec<UiNode>) -> UiNode {
+    fn waiting_stack(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: Some("none".into()),
@@ -1099,7 +1099,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
+    fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_stack(vec![text("a")]));
         let mut draw = DrawList::default();
 
@@ -1109,7 +1109,7 @@ mod tests {
         assert!(has_waiting_border, "a waiting stack should emit a KIND_WAITING_BORDER instance");
     }
 
-    async fn loading_tree() -> UiNode {
+    fn loading_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Loading),
@@ -1119,7 +1119,7 @@ mod tests {
         })
     }
 
-    async fn waiting_tree() -> UiNode {
+    fn waiting_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Waiting),
@@ -1130,7 +1130,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_loading_tree_emits_a_loading_border_instance() {
+    fn painting_a_loading_tree_emits_a_loading_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&loading_tree());
         let mut draw = DrawList::default();
 
@@ -1141,7 +1141,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
+    fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_tree());
         let mut draw = DrawList::default();
 
@@ -1151,12 +1151,12 @@ mod tests {
         assert!(has_waiting_border, "a waiting tree should emit a KIND_WAITING_BORDER instance");
     }
 
-    async fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
+    fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
         UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })
     }
 
     #[test]
-    async fn painting_a_uniform_number_stepper_nests_a_border_around_its_center_value() {
+    fn painting_a_uniform_number_stepper_nests_a_border_around_its_center_value() {
         let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
         let mut draw = DrawList::default();
 
@@ -1171,7 +1171,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_mixed_number_stepper_shows_the_mixed_placeholder_in_muted_color() {
+    fn painting_a_mixed_number_stepper_shows_the_mixed_placeholder_in_muted_color() {
         let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, false));
         let mut draw = DrawList::default();
 
@@ -1183,12 +1183,12 @@ mod tests {
         assert!(has_muted_glyph, "a non-uniform (mixed) NumberStepper should paint its center value's glyphs in theme.text_muted (the 'Mixed' placeholder)");
     }
 
-    async fn slider(id: &str, unit: Option<&str>) -> UiNode {
+    fn slider(id: &str, unit: Option<&str>) -> UiNode {
         UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
     #[test]
-    async fn painting_a_slider_with_a_unit_emits_extra_glyphs_for_the_readout() {
+    fn painting_a_slider_with_a_unit_emits_extra_glyphs_for_the_readout() {
         let (mut plain_tree, plain_root, theme, mut plain_atlas) = setup(&slider("sl", None));
         let mut plain_draw = DrawList::default();
         paint_tree(&mut plain_tree, plain_root, &theme, &mut plain_atlas, None, false, &mut plain_draw);
@@ -1202,7 +1202,7 @@ mod tests {
         assert!(unit_total > plain_total, "a slider with a unit should paint extra glyphs for its value+unit readout");
     }
 
-    async fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
+    fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "f".into(),
             label: "Label".into(),
@@ -1216,7 +1216,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_field_with_description_required_and_error_emits_extra_glyphs() {
+    fn painting_a_field_with_description_required_and_error_emits_extra_glyphs() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&field(None, false, None));
         let mut bare_draw = DrawList::default();
         paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
@@ -1230,7 +1230,7 @@ mod tests {
         assert!(rich_total > bare_total, "description/required-marker/error should each add glyph instances beyond the bare label");
     }
 
-    async fn tree_with_item_description() -> UiNode {
+    fn tree_with_item_description() -> UiNode {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.description = Some("desc".into());
         item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
@@ -1243,7 +1243,7 @@ mod tests {
         })
     }
 
-    async fn tree_with_bare_item() -> UiNode {
+    fn tree_with_bare_item() -> UiNode {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
             presence: UiPresence::default(),
@@ -1254,7 +1254,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_tree_item_with_description_emits_more_than_a_bare_item() {
+    fn painting_a_tree_item_with_description_emits_more_than_a_bare_item() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&tree_with_bare_item());
         let mut bare_draw = DrawList::default();
         paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
@@ -1275,7 +1275,7 @@ mod tests {
     // (`paint_stack_frame` + `sync_interactive_state`'s `DROP_TARGET` sync), and Tree row real layout
     // + `DRAG_SOURCE` sync (`sync_tree_row_layout`/`sync_tree_item_layout`).
 
-    async fn select(id: &str, value: &str) -> UiNode {
+    fn select(id: &str, value: &str) -> UiNode {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
@@ -1288,7 +1288,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_highlights_the_value() {
+    fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_highlights_the_value() {
         let (mut tree, root, theme, mut atlas) = setup(&select("sel", "b"));
         let mut closed_draw = DrawList::default();
         paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut closed_draw);
@@ -1312,7 +1312,7 @@ mod tests {
     }
 
     #[test]
-    async fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout() {
+    fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout() {
         let (mut tree, root, theme, mut atlas) = setup(&select("sel", "a"));
         tree.node_mut(root).unwrap().state.open = true;
         tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
@@ -1328,12 +1328,12 @@ mod tests {
         assert!(bucket_b.y > bucket_a.y, "row \"b\" should be laid out below row \"a\"");
     }
 
-    async fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
+    fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
         UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children: vec![text("child")], menu: None })
     }
 
     #[test]
-    async fn a_stacks_drop_target_flag_tracks_its_drop_action() {
+    fn a_stacks_drop_target_flag_tracks_its_drop_action() {
         let (mut tree, root, theme, mut atlas) = setup(&drop_stack(Some(action())));
         let mut draw = DrawList::default();
         paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
@@ -1345,7 +1345,7 @@ mod tests {
         assert!(!plain_tree.node(plain_root).unwrap().flags.contains(NodeFlags::DROP_TARGET), "a Stack without a drop_action must not be flagged DROP_TARGET");
     }
 
-    async fn activatable_stack(selected: bool) -> UiNode {
+    fn activatable_stack(selected: bool) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: None,
@@ -1361,7 +1361,7 @@ mod tests {
     }
 
     #[test]
-    async fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring() {
+    fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&stack(vec![text("child")]));
         let mut bare_draw = DrawList::default();
         paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
@@ -1380,7 +1380,7 @@ mod tests {
         assert!(selected_total > card_total, "a selected activatable Stack should paint an extra ring border beyond the plain activate frame");
     }
 
-    async fn tree_with_draggable_item() -> UiNode {
+    fn tree_with_draggable_item() -> UiNode {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.draggable = Some(true);
         UiNode::Tree(UiTreeNode {
@@ -1393,7 +1393,7 @@ mod tests {
     }
 
     #[test]
-    async fn a_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag() {
+    fn a_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag() {
         let (mut tree, root, theme, mut atlas) = setup(&tree_with_draggable_item());
         let mut draw = DrawList::default();
 
@@ -1413,7 +1413,7 @@ mod tests {
     // and the `formControlFocusBorderClass`-matching focus ring ported onto every remaining
     // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
     // `NumberStepper` hover tint) that only `paint_input` had before this pass.
-    async fn input(id: &str, value: &str) -> UiNode {
+    fn input(id: &str, value: &str) -> UiNode {
         UiNode::Input(UiInputNode {
             id: id.into(),
             input_kind: "text".into(),
@@ -1430,19 +1430,19 @@ mod tests {
         })
     }
 
-    async fn focus(tree: &mut UiTree, id: NodeId) {
+    fn focus(tree: &mut UiTree, id: NodeId) {
         tree.node_mut(id).unwrap().flags.set(NodeFlags::FOCUSED, true);
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
     }
 
-    async fn has_solid_instance_colored(draw: &DrawList, color: Rgba) -> bool {
+    fn has_solid_instance_colored(draw: &DrawList, color: Rgba) -> bool {
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
             (instance.params[2] - KIND_SOLID).abs() < 0.01 && (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001 && (instance.color[3] - color.a).abs() < 0.001
         })
     }
 
     #[test]
-    async fn painting_an_unfocused_input_emits_no_caret_or_selection() {
+    fn painting_an_unfocused_input_emits_no_caret_or_selection() {
         let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
         tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello".into(), caret: 5, anchor: 0, composition: None, scroll_x: 0.0 });
         let mut draw = DrawList::default();
@@ -1454,7 +1454,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_focused_input_with_a_collapsed_selection_emits_a_caret_line_but_no_highlight() {
+    fn painting_a_focused_input_with_a_collapsed_selection_emits_a_caret_line_but_no_highlight() {
         let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
         focus(&mut tree, root);
         tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello".into(), caret: 5, anchor: 5, composition: None, scroll_x: 0.0 });
@@ -1467,7 +1467,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_focused_input_with_a_real_selection_emits_a_translucent_highlight() {
+    fn painting_a_focused_input_with_a_real_selection_emits_a_translucent_highlight() {
         let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello world"));
         focus(&mut tree, root);
         tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello world".into(), caret: 5, anchor: 0, composition: None, scroll_x: 0.0 });
@@ -1479,7 +1479,7 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declarative_value() {
+    fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declarative_value() {
         let (mut tree, root, theme, mut atlas) = setup(&input("in", "old"));
         focus(&mut tree, root);
         tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "a much longer buffer".into(), caret: 20, anchor: 20, composition: None, scroll_x: 0.0 });
@@ -1496,11 +1496,11 @@ mod tests {
         assert!(focused_total > stale_total, "a focused Input with a live EditState should paint its live (longer) buffer text, not the stale shorter declarative value");
     }
 
-    async fn toggle(id: &str) -> UiNode {
+    fn toggle(id: &str) -> UiNode {
         UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
-    async fn icon_select(id: &str) -> UiNode {
+    fn icon_select(id: &str) -> UiNode {
         UiNode::IconSelect(UiIconSelectNode { id: id.into(), value: "star".into(), uniform: true, classifier_kind: "generic".into(), on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
@@ -1508,7 +1508,7 @@ mod tests {
     /// one with `NodeFlags::FOCUSED` set on the root, should differ in at least one border instance's
     /// color (`theme.border_emphasized` replacing `theme.border_normal`) — mirrors
     /// `formControlFocusBorderClass`'s `focus-visible:border-accent` (`ui/js/react/index.tsx`).
-    async fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
+    fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
         let (mut unfocused_tree, unfocused_root, theme, mut unfocused_atlas) = setup(&make());
         let mut unfocused_draw = DrawList::default();
         paint_tree(&mut unfocused_tree, unfocused_root, &theme, &mut unfocused_atlas, None, false, &mut unfocused_draw);
@@ -1523,32 +1523,32 @@ mod tests {
     }
 
     #[test]
-    async fn painting_a_focused_button_swaps_its_border_to_border_emphasized() {
+    fn painting_a_focused_button_swaps_its_border_to_border_emphasized() {
         assert_focus_swaps_border_color(|| button("btn", false), "Button");
     }
 
     #[test]
-    async fn painting_a_focused_select_swaps_its_border_to_border_emphasized() {
+    fn painting_a_focused_select_swaps_its_border_to_border_emphasized() {
         assert_focus_swaps_border_color(|| select("sel", "a"), "Select");
     }
 
     #[test]
-    async fn painting_a_focused_toggle_swaps_its_border_to_border_emphasized() {
+    fn painting_a_focused_toggle_swaps_its_border_to_border_emphasized() {
         assert_focus_swaps_border_color(|| toggle("tog"), "Toggle");
     }
 
     #[test]
-    async fn painting_a_focused_number_stepper_swaps_its_outer_border_to_border_emphasized() {
+    fn painting_a_focused_number_stepper_swaps_its_outer_border_to_border_emphasized() {
         assert_focus_swaps_border_color(|| stepper("ns", 2.0, true), "NumberStepper");
     }
 
     #[test]
-    async fn painting_a_focused_icon_select_swaps_its_border_to_border_emphasized() {
+    fn painting_a_focused_icon_select_swaps_its_border_to_border_emphasized() {
         assert_focus_swaps_border_color(|| icon_select("ic"), "IconSelect");
     }
 
     #[test]
-    async fn painting_a_hovered_number_stepper_tints_its_outer_background() {
+    fn painting_a_hovered_number_stepper_tints_its_outer_background() {
         let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
         tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
         tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);

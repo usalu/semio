@@ -58,8 +58,8 @@ import {
   type ShellBrand,
   type ShellLocale,
   type ShellTerminology,
+  type BuiltNode,
   type StoragePort,
-  type UiNode,
   type WindowEngagement,
   type WindowMeasure,
 } from "@semio-tech/framework";
@@ -138,7 +138,7 @@ export type SpaceProgramEntry = {
   readonly workflowStepId: string;
   readonly appId: string;
   readonly label: string;
-  readonly label: readonly string[];
+  readonly breadcrumb: readonly string[];
   readonly yields: string;
 };
 
@@ -148,7 +148,7 @@ export type SpawnedAppEntry = {
   readonly instanceId: number;
   readonly appId: string;
   readonly label: string;
-  readonly label: readonly string[];
+  readonly breadcrumb: readonly string[];
 };
 
 export type SpacePanelState = {
@@ -415,17 +415,17 @@ type PluginRuntimeState = {
 /** 🪟️ Window UI/engagements/measures are keyed by window INSTANCE id, never by window kind — two
  * instances of the same kind (e.g. split top/perspective panes) must never share chrome or options. */
 type WindowUiState = {
-  readonly windowUiByWindowId: Readonly<Record<string, UiNode>>;
+  readonly windowUiByWindowId: Readonly<Record<string, BuiltNode>>;
   readonly windowEngagementsByWindowId: Readonly<Record<string, WindowEngagement>>;
   readonly windowMeasuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>;
   /** 🛠️ Mode-level tool measures, keyed by TOOL id (never a window id) — see `DocumentApp::tool_measures`. */
   readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>;
-  readonly panelUiByKey: Readonly<Record<string, UiNode>>;
+  readonly panelUiByKey: Readonly<Record<string, BuiltNode>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
 
 type SpawnedWindowState = {
-  readonly spawnedWindowUi: UiNode | null;
+  readonly spawnedWindowUi: BuiltNode | null;
   readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
   readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
 };
@@ -614,12 +614,12 @@ export type ShellAction =
   | { readonly type: "SET_PLUGIN_SUPERVISOR"; readonly pluginId: string; readonly value: PluginSupervisorState }
   | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
   | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
-  | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
-  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
+  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<BuiltNode | null> }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_ACTION_PANE_FOLDED"; readonly windowId: string; readonly value: boolean }

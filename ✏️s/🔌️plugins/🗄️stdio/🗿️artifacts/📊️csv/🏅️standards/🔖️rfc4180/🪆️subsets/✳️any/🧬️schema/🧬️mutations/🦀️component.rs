@@ -58,14 +58,15 @@ pub enum CsvMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> protocol::MutationOutcome<CsvDiff> {
-    let outcome = <CsvMutation as Mutation<CsvSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> protocol::MutationOutcome<CsvDiff> {
+    let outcome = <CsvMutation as Mutation<CsvSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -77,7 +78,7 @@ impl Mutation<CsvSnapshot> for CsvMutation {
     async fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             CsvMutation::NoMutation => CsvDiff::default(),
-            CsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            CsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             CsvMutation::SetHasHeader { has_header } => CsvDiff { has_header: Some(*has_header), records: None },
             CsvMutation::InsertRecord { index, record } => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) },
             CsvMutation::RemoveRecord { index } => CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) },
@@ -121,19 +122,22 @@ impl Mutation<CsvSnapshot> for CsvMutation {
 /// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), same convention gif89a's/svg's own hand-rolled `OpText` impls use, one
 /// match arm per variant (no `DslVariants` scaffolding available since nothing here derives it).
-async fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_csv_snapshot(s: &CsvSnapshot) -> String {
     format!("[{},{},[{}]]", enc_str(&s.schema), if s.has_header { 1 } else { 0 }, s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),)
 }
-async fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, has_header, records] = parts.as_slice() else {
         return Err(format!("csv snapshot: expected 3 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
-    Ok(CsvSnapshot { schema: dec_str(schema).await?, has_header: *has_header == "1", records })
+    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
+    Ok(CsvSnapshot { schema: dec_str(schema)?, has_header: *has_header == "1", records })
 }
 
-async fn print_csv_mutation(m: &CsvMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_csv_mutation(m: &CsvMutation) -> String {
     match m {
         CsvMutation::NoMutation => "no-mutation".to_string(),
         CsvMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_csv_snapshot(snapshot)),
@@ -143,7 +147,8 @@ async fn print_csv_mutation(m: &CsvMutation) -> String {
         CsvMutation::SetField { record_index, field_index, value, quoted } => format!("set-field record-index={record_index} field-index={field_index} value={} quoted={}", enc_str(value), if *quoted { 1 } else { 0 },),
     }
 }
-async fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
     if line == "no-mutation" {
         return Ok(CsvMutation::NoMutation);
     }
@@ -152,21 +157,21 @@ async fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("csv mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(CsvMutation::SetSnapshot { snapshot: dec_csv_snapshot(arg("snapshot")?).await? }),
+        "set-snapshot" => Ok(CsvMutation::SetSnapshot { snapshot: dec_csv_snapshot(arg("snapshot")?)? }),
         "set-has-header" => Ok(CsvMutation::SetHasHeader { has_header: arg("has-header")? == "1" }),
-        "insert-record" => Ok(CsvMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?).await? }),
+        "insert-record" => Ok(CsvMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
         "remove-record" => Ok(CsvMutation::RemoveRecord { index: usize_arg("index")? }),
-        "set-field" => Ok(CsvMutation::SetField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?).await?, quoted: arg("quoted")? == "1" }),
+        "set-field" => Ok(CsvMutation::SetField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)?, quoted: arg("quoted")? == "1" }),
         other => Err(format!("csv mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for CsvMutation {
     async fn print_op(&self) -> String {
-        print_csv_mutation(self).await
+        print_csv_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_csv_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_csv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -181,40 +186,47 @@ impl OpText for CsvMutation {
 /// `../💾️binary/📡️component.protocol.semio`'s real `repeat`/`arm` shape exactly — see that
 /// file's own doc comment for why the deeply nested `CsvSnapshot`/`CsvRecord` payload inside
 /// arms 1/3 is one honest opaque tail blob rather than individually walked.
-async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     let bytes = s.as_bytes();
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
-    let len = r.read_varint_u64().await? as usize;
-    let bytes = r.read_bytes(len).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
 }
-pub(crate) async fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
     write_bin_str(w, &f.value);
     w.write_u8(if f.quoted { 1 } else { 0 });
 }
-pub(crate) async fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
-    let value = read_bin_str(r).await?;
-    let quoted = r.read_u8().await? != 0;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
+    let value = read_bin_str(r)?;
+    let quoted = r.read_u8()? != 0;
     Ok(CsvField { value, quoted })
 }
-pub(crate) async fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
     w.write_varint_u64(rec.fields.len() as u64);
     for f in &rec.fields {
         write_bin_field(w, f);
     }
 }
-pub(crate) async fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
-    let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
     let mut fields = Vec::with_capacity(n);
     for _ in 0..n {
-        fields.push(read_bin_field(r).await?);
+        fields.push(read_bin_field(r)?);
     }
     Ok(CsvRecord { fields })
 }
-async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
     write_bin_str(w, &s.schema);
     w.write_u8(if s.has_header { 1 } else { 0 });
     w.write_varint_u64(s.records.len() as u64);
@@ -222,17 +234,19 @@ async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
         write_bin_record(w, r);
     }
 }
-async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
-    let schema = read_bin_str(r).await?;
-    let has_header = r.read_u8().await? != 0;
-    let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
+    let schema = read_bin_str(r)?;
+    let has_header = r.read_u8()? != 0;
+    let n = r.read_varint_u64()? as usize;
     let mut records = Vec::with_capacity(n);
     for _ in 0..n {
-        records.push(read_bin_record(r).await?);
+        records.push(read_bin_record(r)?);
     }
     Ok(CsvSnapshot { schema, has_header, records })
 }
-async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
 }
 
@@ -275,11 +289,11 @@ impl OpBinary for CsvMutation {
         let ordinal = r.read_u8().await.map_err(op_pack_err)?;
         let mutation = match ordinal {
             0 => CsvMutation::NoMutation,
-            1 => CsvMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).await.map_err(op_pack_err)? },
+            1 => CsvMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? },
             2 => CsvMutation::SetHasHeader { has_header: r.read_u8().await.map_err(op_pack_err)? != 0 },
             3 => {
                 let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let record = read_bin_record(&mut r).await.map_err(op_pack_err)?;
+                let record = read_bin_record(&mut r).map_err(op_pack_err)?;
                 CsvMutation::InsertRecord { index, record }
             }
             4 => CsvMutation::RemoveRecord { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },
@@ -287,7 +301,7 @@ impl OpBinary for CsvMutation {
                 let record_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
                 let field_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
                 let quoted = r.read_u8().await.map_err(op_pack_err)? != 0;
-                let value = read_bin_str(&mut r).await.map_err(op_pack_err)?;
+                let value = read_bin_str(&mut r).map_err(op_pack_err)?;
                 CsvMutation::SetField { record_index, field_index, value, quoted }
             }
             other => {
@@ -308,13 +322,16 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    async fn field(value: &str, quoted: bool) -> CsvField {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn field(value: &str, quoted: bool) -> CsvField {
         CsvField { value: value.into(), quoted }
     }
-    async fn record(fields: &[(&str, bool)]) -> CsvRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn record(fields: &[(&str, bool)]) -> CsvRecord {
         CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
     }
-    async fn base_snapshot() -> CsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] }
     }
     //#endregion 🔖️Fixtures
@@ -323,13 +340,15 @@ mod tests {
     /// 🧬️ Canonical "differs in every mutable field" snapshot A: 3 records — one that will
     /// be removed, one that will be modified in every field, one untouched (so `sweep_b`'s
     /// added record has something stable to anchor its own index against).
-    async fn sweep_a() -> CsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("gone", false), ("also-gone", true)]), record(&[("old-a", false), ("old-b", true)]), record(&[("stable", false)])] }
     }
     /// 🧬️ Sweep B: `has_header` flips, record 0 is removed, record 1 (now index 0) is
     /// modified in every field (value AND quoted), record 2 (now index 1) is untouched, and
     /// a brand-new record is added at the end.
-    async fn sweep_b() -> CsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> CsvSnapshot {
         CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("stable", false)]), record(&[("brand-new", true)])] }
     }
     //#endregion 🔖️FieldSweepFixtures

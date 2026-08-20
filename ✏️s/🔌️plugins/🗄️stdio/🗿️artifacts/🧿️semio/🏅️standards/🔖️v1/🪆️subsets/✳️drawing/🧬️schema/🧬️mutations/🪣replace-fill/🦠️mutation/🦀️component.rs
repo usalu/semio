@@ -23,10 +23,10 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Repl
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "fill", kind: "replace-fill", record: "ReplacedFill" };
 
     async fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         format!("Replace fill of style \"{}\"", self.style_name)

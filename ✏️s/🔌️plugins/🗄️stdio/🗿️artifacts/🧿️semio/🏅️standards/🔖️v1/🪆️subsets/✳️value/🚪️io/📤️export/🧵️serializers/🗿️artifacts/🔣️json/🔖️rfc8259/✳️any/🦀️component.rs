@@ -33,18 +33,20 @@ impl ArtifactSerializer for SemioValueToJson {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let nodes: HashMap<&ValueId, &SemioValue> = from.nodes.iter().map(|n| (&n.id, &n.value)).collect();
         let mut visiting: HashSet<ValueId> = HashSet::new();
-        let value = json_value_from_semio(&from.root, &nodes, &mut visiting).await?;
+        let value = json_value_from_semio(&from.root, &nodes, &mut visiting)?;
         Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Base64
 const B64_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-async fn base64_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base64_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
     for chunk in bytes.chunks(3) {
         let b0 = chunk[0];
@@ -60,13 +62,14 @@ async fn base64_encode(bytes: &[u8]) -> String {
 //#endregion 🔖️Base64
 
 //#region 🔖️Convert
-async fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<JsonValue, store::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<JsonValue, store::PackError> {
     match v {
         SemioValue::Null => Ok(JsonValue::Null),
         SemioValue::Bool { value } => Ok(JsonValue::Bool { value: *value }),
         SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => Ok(JsonValue::Number { lexeme: lexeme.clone() }),
         SemioValue::Str { value } => Ok(JsonValue::String { value: value.clone() }),
-        SemioValue::Bytes { value } => Ok(JsonValue::String { value: base64_encode(value).await }),
+        SemioValue::Bytes { value } => Ok(JsonValue::String { value: base64_encode(value) }),
         SemioValue::List { items } => {
             let items = items.iter().map(|item| json_value_from_semio(item, nodes, visiting)).collect::<Result<Vec<_>, _>>()?;
             Ok(JsonValue::Array { items })
@@ -82,7 +85,7 @@ async fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
             let target = nodes.get(id).ok_or_else(|| store::PackError::Schema(format!("value->json: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value)))?;
             let result = json_value_from_semio(target, nodes, visiting);
             visiting.remove(id);
-            result.await
+            result
         }
     }
 }

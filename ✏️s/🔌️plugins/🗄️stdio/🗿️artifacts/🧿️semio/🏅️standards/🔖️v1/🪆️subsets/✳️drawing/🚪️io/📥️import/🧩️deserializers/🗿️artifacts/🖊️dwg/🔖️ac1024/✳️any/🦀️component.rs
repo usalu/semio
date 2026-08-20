@@ -20,7 +20,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
 //#region 🔖️SegmentMap
-async fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathSegment {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) -> PathSegment {
     use crate::artifacts::dwg::DwgPathSegment;
     match *segment {
         DwgPathSegment::Move { to } => PathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
@@ -34,11 +35,12 @@ async fn dwg_segment_to_path(segment: &crate::artifacts::dwg::DwgPathSegment) ->
 //#endregion 🔖️SegmentMap
 
 //#region 🔖️EntityMap
-async fn draw_node_from_entity(geometry: &DwgGeometry) -> Option<DrawNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn draw_node_from_entity(geometry: &DwgGeometry) -> Option<DrawNode> {
     if let DwgGeometry::Text { at, content, .. } = geometry {
         return Some(DrawNode::Text { value: content.clone(), at: SemioPoint2 { x: at[0], y: at[1] }, style: None });
     }
-    dwg_geometry_to_path_segments(geometry).await.map(|segments| DrawNode::Path { segments: segments.iter().map(dwg_segment_to_path).collect(), style: None })
+    dwg_geometry_to_path_segments(geometry).map(|segments| DrawNode::Path { segments: segments.iter().map(dwg_segment_to_path).collect(), style: None })
 }
 //#endregion 🔖️EntityMap
 
@@ -52,7 +54,7 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing: DwgDrawing = from.drawing.to_native().await.map_err(store::PackError::Schema)?;
+        let drawing: DwgDrawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
         let layers = drawing
             .layers
             .iter()
@@ -77,7 +79,8 @@ mod tests {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
     use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
-    async fn sample_dwg() -> DwgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("annotations");
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] } });

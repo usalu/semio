@@ -54,7 +54,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_cv20_conformance(&snapshot).await,
+                Some(snapshot) => check_cv20_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.ifc.2x3.cv20.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -69,15 +69,17 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<Ifc2x3Cv20Validator>)
     }
 
     /// 📌️ Registers this subset's `SubsetValidator`. Called from the `2x3` standard's own
     /// `⚙️engine::register()`. The `ComposerEntry` itself is registered separately via the standard's
     /// own `composer::entries()` aggregation.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

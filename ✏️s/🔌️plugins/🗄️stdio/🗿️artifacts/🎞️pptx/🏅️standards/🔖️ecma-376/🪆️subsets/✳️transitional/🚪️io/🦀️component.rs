@@ -56,7 +56,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_transitional_conformance(&snapshot).await,
+                Some(snapshot) => check_transitional_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.pptx.transitional.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -71,7 +71,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PptxTransitionalValidator>)
     }
 
@@ -80,8 +81,9 @@ pub mod derived_composition {
     /// itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -98,14 +100,16 @@ pub mod derived_composition {
             "</p:presentation>",
         );
 
-        async fn hex_encode(bytes: &[u8]) -> String {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
         /// 🩹 Real OPC zip bytes via `opc::encode_opc` directly -- never `PptxSnapshot::encode_pack`
         /// (which round-trips through `⚙️engine::encode_pptx`'s Transitional-hardcoded
         /// `regenerate_presentation_parts` rewrite). Same technique as `✳️strict`'s composer tests.
-        async fn transitional_package_hex() -> String {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn transitional_package_hex() -> String {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");

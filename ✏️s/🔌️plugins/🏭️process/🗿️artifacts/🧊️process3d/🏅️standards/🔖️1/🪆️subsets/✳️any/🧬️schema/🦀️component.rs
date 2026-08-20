@@ -86,7 +86,7 @@ impl Default for Process3dArtifact {
 
 impl Process3dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
         crate::artifacts::process3d::Process3dSnapshot {
             workshop: self.workshop.clone(),
             stock_id: self.stock_id.clone(),
@@ -100,7 +100,7 @@ impl Process3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
             stock_id: snapshot.stock_id,
@@ -115,7 +115,7 @@ impl Process3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
         self.workshop = snapshot.workshop;
         self.stock_id = snapshot.stock_id;
         self.stock_label = snapshot.stock_label;
@@ -130,7 +130,7 @@ impl Process3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.process.process3d` — twenty handcrafted schema leaves.
-pub async fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.process.process3d",
         artifact: schema::FacetLeaves {
@@ -181,15 +181,15 @@ pub mod derived_construction {
         type Snapshot = Process3dSnapshot;
         type Mutation = Process3dMutation;
         type Diff = Process3dDiff;
-        async fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -201,7 +201,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(
+        fn absorb(
             mut self,
             diff: Self::Diff,
         ) -> protocol::MutationApplyResult<Self> {
@@ -209,7 +209,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
         }
     }
@@ -233,11 +233,11 @@ pub mod derived_analysis {
         type Parts = Process3dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.process3d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Process3dParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -282,11 +282,11 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️ExampleFixtures
 pub use crate::artifacts::process3d::dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-pub async fn default_document() -> crate::artifacts::process3d::Process3dSnapshot {
+pub fn default_document() -> crate::artifacts::process3d::Process3dSnapshot {
     crate::artifacts::process3d::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
-pub async fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
+pub fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
     crate::artifacts::process3d::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 //#endregion 🔖️ExampleFixtures
@@ -294,15 +294,15 @@ pub async fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot 
 //#region 🔖️Catalog
 /// 🧩️ Shared capability-parameter/rule builders for every built-in domain catalog below — pulled out
 /// of the four (formerly per-material-file) private copies so the identical helper exists exactly once.
-async fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
+fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
     CapabilityParameter { id: id.into(), label: label.into(), value }
 }
 
-async fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Max { quantity, parameter: parameter.into(), margin }
 }
 
-async fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Min { quantity, parameter: parameter.into(), margin }
 }
 
@@ -312,19 +312,19 @@ async fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capa
 pub struct GenericCatalog;
 
 impl MachineCatalog for GenericCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "geometry"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Geometry"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "shapes"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         crate::artifacts::process3d::generic_machines()
     }
 }
@@ -334,19 +334,19 @@ impl MachineCatalog for GenericCatalog {
 pub struct MetalCatalog;
 
 impl MachineCatalog for MetalCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "metal"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Metal"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "wrench"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "chopSaw".into(),
@@ -460,7 +460,7 @@ impl MachineCatalog for MetalCatalog {
     }
 }
 
-pub async fn metal_catalog() -> MetalCatalog {
+pub fn metal_catalog() -> MetalCatalog {
     MetalCatalog
 }
 
@@ -469,19 +469,19 @@ pub async fn metal_catalog() -> MetalCatalog {
 pub struct WoodCatalog;
 
 impl MachineCatalog for WoodCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "wood"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Wood"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "beam"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "circularSaw".into(),
@@ -609,7 +609,7 @@ impl MachineCatalog for WoodCatalog {
     }
 }
 
-pub async fn wood_catalog() -> WoodCatalog {
+pub fn wood_catalog() -> WoodCatalog {
     WoodCatalog
 }
 
@@ -618,19 +618,19 @@ pub async fn wood_catalog() -> WoodCatalog {
 pub struct RoboticCatalog;
 
 impl MachineCatalog for RoboticCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "robotic"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Robotic"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "cpu"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "sixAxisMill".into(),
@@ -738,7 +738,7 @@ impl MachineCatalog for RoboticCatalog {
     }
 }
 
-pub async fn robotic_catalog() -> RoboticCatalog {
+pub fn robotic_catalog() -> RoboticCatalog {
     RoboticCatalog
 }
 
@@ -747,19 +747,19 @@ pub async fn robotic_catalog() -> RoboticCatalog {
 pub struct ConcreteCatalog;
 
 impl MachineCatalog for ConcreteCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "concrete"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Concrete"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "slab"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "diamondSaw".into(),
@@ -863,14 +863,14 @@ impl MachineCatalog for ConcreteCatalog {
     }
 }
 
-pub async fn concrete_catalog() -> ConcreteCatalog {
+pub fn concrete_catalog() -> ConcreteCatalog {
     ConcreteCatalog
 }
 //#endregion 🔖️Catalog
 
 //#region 🔖️DocumentHelpers
 /// 🪪️ A pseudo-random step id — collision odds are astronomically low for a single-document timeline.
-pub async fn next_step_id() -> String {
+pub fn next_step_id() -> String {
     format!("step-{}", &blake3::hash(concat!(file!(), line!(), "step-{}").as_bytes()).to_hex()[..12])
 }
 
@@ -887,14 +887,14 @@ pub async fn next_step_id() -> String {
 /// two builders can no longer compute a real cursor/index from `fixture.steps` (a handle has no
 /// `.len()`); `insert_step_mutations` still emits the (now no-op) `CreateStep` for call-site source
 /// compatibility but the cursor advance is honestly skipped rather than guessed.
-pub async fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
+pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::schema::mutations::create_step;
     let _ = fixture;
     vec![Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step })]
 }
 
-pub async fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
+pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::schema::mutations::delete_step;
     let _ = fixture;

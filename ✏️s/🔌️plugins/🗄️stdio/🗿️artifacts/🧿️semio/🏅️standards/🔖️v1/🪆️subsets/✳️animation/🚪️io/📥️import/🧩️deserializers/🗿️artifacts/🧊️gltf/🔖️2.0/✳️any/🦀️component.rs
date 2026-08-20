@@ -40,8 +40,8 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
             let mut channels = Vec::with_capacity(anim.channels.len());
             for ch in &anim.channels {
                 let sampler = anim.samplers.get(ch.sampler).ok_or_else(|| store::PackError::Schema(format!("animation channel references out-of-range sampler {}", ch.sampler)))?;
-                let times = decode_accessor(document, &from.buffers, sampler.input).await.map_err(store::PackError::Schema)?;
-                let values = decode_accessor(document, &from.buffers, sampler.output).await.map_err(store::PackError::Schema)?;
+                let times = decode_accessor(document, &from.buffers, sampler.input).map_err(store::PackError::Schema)?;
+                let values = decode_accessor(document, &from.buffers, sampler.output).map_err(store::PackError::Schema)?;
                 let keyframe_count = times.count;
                 let is_cubic = matches!(sampler.interpolation, crate::artifacts::gltf::schema::snapshot::GltfInterpolation::CubicSpline);
                 let multiplier = if is_cubic { 3 } else { 1 };
@@ -105,7 +105,8 @@ mod tests {
     /// 🏗️ Builds a real, decodable glTF document: two nodes, one animation with a Linear
     /// Translation channel (2 keyframes) and a CubicSpline Weights channel (2 keyframes, arity 2)
     /// -- exercises tangent-stripping and node-name resolution in one real-world-shaped fixture.
-    async fn real_world_gltf() -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_gltf() -> GltfSnapshot {
         let mut b = GltfDocBuilder::empty();
         b.set_asset_version("2.0");
         let n0 = b.add_node(None);

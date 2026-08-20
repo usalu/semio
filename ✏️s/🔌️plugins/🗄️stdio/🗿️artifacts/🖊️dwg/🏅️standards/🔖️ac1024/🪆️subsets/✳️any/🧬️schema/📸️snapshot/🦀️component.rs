@@ -98,7 +98,8 @@ impl Default for DwgXRecordValue {
     }
 }
 
-async fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -261,13 +262,14 @@ impl dsl::DslField for DwgXRecordValue {
             },
             other => return Err(format!("unknown XRECORD value kind ordinal {other}")),
         };
-        result.validate().await?;
+        result.validate()?;
         Ok(result)
     }
 }
 
 impl DwgXRecordValue {
-    pub async fn group_code(&self) -> i16 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn group_code(&self) -> i16 {
         match self {
             Self::String { group_code, .. }
             | Self::Real { group_code, .. }
@@ -283,20 +285,21 @@ impl DwgXRecordValue {
         }
     }
 
-    pub async fn validate(&self) -> Result<(), String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate(&self) -> Result<(), String> {
         let code = self.group_code();
         let valid = match self {
-            Self::String { value, .. } => matches!(code.await, 0..=4 | 6..=9 | 100..=104 | 300..=309 | 410..=419 | 430..=439 | 470..=479 | 999 | 1000..=1002) && value.encode_utf16().count() <= usize::from(u16::MAX),
-            Self::Real { .. } => matches!(code.await, 38..=59 | 140..=149 | 460..=469 | 1040..=1042),
-            Self::Boolean { .. } => matches!(code.await, 290..=299),
-            Self::Integer8 { .. } => matches!(code.await, 280..=289),
-            Self::Integer16 { .. } => matches!(code.await, 60..=79 | 170..=179 | 270..=279 | 370..=389 | 400..=409 | 1070),
-            Self::Integer32 { .. } => matches!(code.await, 90..=99 | 420..=429 | 440..=459 | 1071),
-            Self::Integer64 { .. } => matches!(code.await, 160..=169),
-            Self::Point3d { .. } => matches!(code.await, 10..=37 | 110..=139 | 210..=269 | 1010..=1015),
-            Self::Binary { octets, .. } => matches!(code.await, 310..=319 | 1004) && octets.len() <= usize::from(u8::MAX),
-            Self::Handle { .. } => matches!(code.await, 5 | 105 | 320..=329 | 390..=399 | 1003 | 1005),
-            Self::ObjectId { .. } => matches!(code.await, 330..=369),
+            Self::String { value, .. } => matches!(code, 0..=4 | 6..=9 | 100..=104 | 300..=309 | 410..=419 | 430..=439 | 470..=479 | 999 | 1000..=1002) && value.encode_utf16().count() <= usize::from(u16::MAX),
+            Self::Real { .. } => matches!(code, 38..=59 | 140..=149 | 460..=469 | 1040..=1042),
+            Self::Boolean { .. } => matches!(code, 290..=299),
+            Self::Integer8 { .. } => matches!(code, 280..=289),
+            Self::Integer16 { .. } => matches!(code, 60..=79 | 170..=179 | 270..=279 | 370..=389 | 400..=409 | 1070),
+            Self::Integer32 { .. } => matches!(code, 90..=99 | 420..=429 | 440..=459 | 1071),
+            Self::Integer64 { .. } => matches!(code, 160..=169),
+            Self::Point3d { .. } => matches!(code, 10..=37 | 110..=139 | 210..=269 | 1010..=1015),
+            Self::Binary { octets, .. } => matches!(code, 310..=319 | 1004) && octets.len() <= usize::from(u8::MAX),
+            Self::Handle { .. } => matches!(code, 5 | 105 | 320..=329 | 390..=399 | 1003 | 1005),
+            Self::ObjectId { .. } => matches!(code, 330..=369),
         };
         valid.then_some(()).ok_or_else(|| format!("XRECORD group code {code} does not match its typed value"))
     }
@@ -320,7 +323,8 @@ pub struct DwgTableControlEntry {
     pub handle: Option<u64>,
 }
 
-async fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "has_handle", dsl::Shape::Bool), dsl::FieldSpec::new(1, "handle", dsl::Shape::UInt).optional()])
 }
 
@@ -405,7 +409,8 @@ impl Default for DwgTableControlBody {
 }
 
 impl DwgTableControlBody {
-    pub async fn entry_handles(&self) -> &[DwgTableControlEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entry_handles(&self) -> &[DwgTableControlEntry] {
         match self {
             Self::Block(value) => &value.entry_handles,
             Self::Layer(value) | Self::TextStyle(value) | Self::View(value) | Self::Ucs(value) | Self::Viewport(value) | Self::RegisteredApplication(value) => &value.entry_handles,
@@ -415,7 +420,8 @@ impl DwgTableControlBody {
     }
 }
 
-async fn table_control_body_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn table_control_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -537,7 +543,8 @@ pub enum DwgComplexColorValue {
     LayerFrozen,
 }
 
-async fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -878,7 +885,8 @@ impl Default for DwgTableRecordBody {
     }
 }
 
-async fn table_record_body_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn table_record_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -1364,7 +1372,8 @@ pub enum DwgEvaluationVariant {
     Integer32(i32),
 }
 
-async fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "kind", dsl::Shape::Enum(vec![("integer32".into(), 0)])), dsl::FieldSpec::new(1, "integer32", <i32 as dsl::DslField>::shape()).optional()])
 }
 
@@ -1423,7 +1432,8 @@ pub enum DwgEvaluationExpressionValue {
     Integer16(i16),
 }
 
-async fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -1579,7 +1589,8 @@ pub struct DwgVisualStyleProperty<T> {
     pub operation: DwgVisualStylePropertyOperation,
 }
 
-async fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "value", T::shape()), dsl::FieldSpec::new(1, "operation", <DwgVisualStylePropertyOperation as dsl::DslField>::shape())])
 }
 
@@ -2611,7 +2622,8 @@ pub enum DwgConstraintNode {
     VerticalConstraint(DwgAxisConstraint),
 }
 
-async fn dwg_constraint_node_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_constraint_node_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -2710,7 +2722,8 @@ pub struct DwgAssoc2dConstraintGroup {
     pub nodes: Vec<DwgConstraintNode>,
 }
 
-async fn dwg_entity_body_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_entity_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -2856,7 +2869,8 @@ pub enum DwgLogicalObjectBody {
     Layout(DwgLayout),
 }
 
-async fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
         dsl::RecordLayout::Inline,
@@ -3106,7 +3120,8 @@ pub struct DwgLogicalDrawing {
 }
 
 impl DwgLogicalDrawing {
-    pub async fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
         let mut objects = drawing
             .layers
             .iter()
@@ -3187,7 +3202,8 @@ impl DwgLogicalDrawing {
         Ok(Self { layers: drawing.layers.iter().map(|layer| DwgLogicalLayer { name: layer.name.clone(), color: layer.color }).collect(), objects, extmin: drawing.extmin.to_vec(), extmax: drawing.extmax.to_vec() })
     }
 
-    pub async fn entities(&self) -> Vec<DwgLogicalEntity> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entities(&self) -> Vec<DwgLogicalEntity> {
         self.objects
             .iter()
             .filter_map(|object| {
@@ -3231,38 +3247,43 @@ impl DwgLogicalDrawing {
             .collect()
     }
 
-    pub async fn to_native(&self) -> Result<dwg_engine::DwgDrawing, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_native(&self) -> Result<dwg_engine::DwgDrawing, String> {
         Ok(dwg_engine::DwgDrawing {
             layers: self.layers.iter().map(|layer| dwg_engine::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),
-            entities: self.entities().await.iter().map(DwgLogicalEntity::to_native).collect::<Result<_, _>>()?,
-            extmin: vec3(&self.extmin).await?,
-            extmax: vec3(&self.extmax).await?,
+            entities: self.entities().iter().map(DwgLogicalEntity::to_native).collect::<Result<_, _>>()?,
+            extmin: vec3(&self.extmin)?,
+            extmax: vec3(&self.extmax)?,
         })
     }
 }
 
 impl DwgLogicalEntity {
-    async fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
         let color = match self.color {
             -1 => dwg_engine::DwgColor::ByLayer,
             -2 => dwg_engine::DwgColor::ByBlock,
             value if (0..=255).contains(&value) => dwg_engine::DwgColor::Index(value as u8),
             value => return Err(format!("invalid logical DWG color {value}")),
         };
-        Ok(dwg_engine::DwgEntity { layer: self.layer, color, geometry: self.geometry.to_native().await? })
+        Ok(dwg_engine::DwgEntity { layer: self.layer, color, geometry: self.geometry.to_native()? })
     }
 }
 
-async fn vec2(values: &[f64]) -> Result<[f64; 2], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn vec2(values: &[f64]) -> Result<[f64; 2], String> {
     values.try_into().map_err(|_| format!("expected 2 values, got {}", values.len()))
 }
 
-async fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
     values.try_into().map_err(|_| format!("expected 3 values, got {}", values.len()))
 }
 
 impl DwgLogicalGeometry {
-    async fn from_native(geometry: &dwg_engine::DwgGeometry) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn from_native(geometry: &dwg_engine::DwgGeometry) -> Self {
         use dwg_engine::DwgGeometry::*;
         match geometry {
             Point { at } => Self { kind: DwgLogicalGeometryKind::Point, values: at.to_vec(), ..Default::default() },
@@ -3294,14 +3315,15 @@ impl DwgLogicalGeometry {
         }
     }
 
-    async fn to_native(&self) -> Result<dwg_engine::DwgGeometry, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn to_native(&self) -> Result<dwg_engine::DwgGeometry, String> {
         use DwgLogicalGeometryKind::*;
         Ok(match self.kind {
-            Point => dwg_engine::DwgGeometry::Point { at: vec3(&self.values).await? },
-            Line => dwg_engine::DwgGeometry::Line { start: vec3(&self.values[0..3]).await?, end: vec3(&self.values[3..6]).await? },
-            Circle => dwg_engine::DwgGeometry::Circle { center: vec3(&self.values[0..3]).await?, radius: self.values[3], normal: vec3(&self.values[4..7]).await? },
-            Arc => dwg_engine::DwgGeometry::Arc { center: vec3(&self.values[0..3]).await?, radius: self.values[3], start_angle: self.values[4], end_angle: self.values[5], normal: vec3(&self.values[6..9]).await? },
-            Ellipse => dwg_engine::DwgGeometry::Ellipse { center: vec3(&self.values[0..3]).await?, major_axis: vec3(&self.values[3..6]).await?, ratio: self.values[6], start_param: self.values[7], end_param: self.values[8], normal: vec3(&self.values[9..12]).await? },
+            Point => dwg_engine::DwgGeometry::Point { at: vec3(&self.values)? },
+            Line => dwg_engine::DwgGeometry::Line { start: vec3(&self.values[0..3])?, end: vec3(&self.values[3..6])? },
+            Circle => dwg_engine::DwgGeometry::Circle { center: vec3(&self.values[0..3])?, radius: self.values[3], normal: vec3(&self.values[4..7])? },
+            Arc => dwg_engine::DwgGeometry::Arc { center: vec3(&self.values[0..3])?, radius: self.values[3], start_angle: self.values[4], end_angle: self.values[5], normal: vec3(&self.values[6..9])? },
+            Ellipse => dwg_engine::DwgGeometry::Ellipse { center: vec3(&self.values[0..3])?, major_axis: vec3(&self.values[3..6])?, ratio: self.values[6], start_param: self.values[7], end_param: self.values[8], normal: vec3(&self.values[9..12])? },
             LwPolyline => {
                 let count = *self.indices.first().ok_or("polyline vertex count missing")? as usize;
                 let vertices = self.values[1..1 + count * 2].chunks_exact(2).map(vec2).collect::<Result<_, _>>()?;
@@ -3315,8 +3337,8 @@ impl DwgLogicalGeometry {
                 let control_points = self.values[..point_end].chunks_exact(3).map(vec3).collect::<Result<_, _>>()?;
                 dwg_engine::DwgGeometry::Spline { degree, control_points, knots: self.values[point_end..point_end + knot_count].to_vec(), weights: self.values[point_end + knot_count..].to_vec() }
             }
-            Text => dwg_engine::DwgGeometry::Text { at: vec3(&self.values[0..3]).await?, height: self.values[3], rotation: self.values[4], content: self.text.clone() },
-            Face3d => dwg_engine::DwgGeometry::Face3d { corners: [vec3(&self.values[0..3]).await?, vec3(&self.values[3..6]).await?, vec3(&self.values[6..9]).await?, vec3(&self.values[9..12]).await?] },
+            Text => dwg_engine::DwgGeometry::Text { at: vec3(&self.values[0..3])?, height: self.values[3], rotation: self.values[4], content: self.text.clone() },
+            Face3d => dwg_engine::DwgGeometry::Face3d { corners: [vec3(&self.values[0..3])?, vec3(&self.values[3..6])?, vec3(&self.values[6..9])?, vec3(&self.values[9..12])?] },
             Polyline3d => dwg_engine::DwgGeometry::Polyline3d { closed: self.closed, vertices: self.values.chunks_exact(3).map(vec3).collect::<Result<_, _>>()? },
             PolyfaceMesh => {
                 let vertex_count = self.indices[0] as usize;
@@ -3964,14 +3986,16 @@ impl Default for DwgSnapshot {
 
 impl DwgSnapshot {
     /// 🪞️ Clones the deterministic logical projection.
-    pub async fn projection(&self) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn projection(&self) -> Self {
         self.clone()
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️DwgCodec
-async fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
     if bytes.len() < 6 {
         return Err("DWG too short for AC10xx header".into());
     }
@@ -3989,28 +4013,31 @@ async fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
 /// file-header preamble shared by every AC1015+ DWG file, per LibreDWG's own
 /// `header.spec` field order (`zero_one_or_three@0x0B`, `thumbnail_address@0x0D`,
 /// `dwg_version@0x11`, `maint_version@0x12`, `codepage@0x13`). Truncated headers are rejected.
-async fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
     let maintenance_version = *bytes.get(0x12).ok_or("DWG header is too short for maintenance version")?;
     let codepage = bytes.get(0x13..0x15).ok_or("DWG header is too short for codepage")?;
     Ok((maintenance_version, u16::from_le_bytes([codepage[0], codepage[1]])))
 }
 
 /// 🗺️ Materializes section pages only while deserializing and projects their standard objects.
-async fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
-    DwgLogicalDrawing::from_native(&dwg_engine::decode_r2004_drawing(bytes).await?).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
+    DwgLogicalDrawing::from_native(&dwg_engine::decode_r2004_drawing(bytes)?)
 }
 
-pub async fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
-    let version = dwg_version_sentinel(bytes).await?;
-    let (maintenance_version, codepage) = parse_version_header_fields(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
+    let version = dwg_version_sentinel(bytes)?;
+    let (maintenance_version, codepage) = parse_version_header_fields(bytes)?;
     if version == "AC1015" {
-        let drawing = DwgLogicalDrawing::from_native(&dwg_engine::dwg_from_bytes(bytes).await?).await?;
+        let drawing = DwgLogicalDrawing::from_native(&dwg_engine::dwg_from_bytes(bytes)?)?;
         return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, drawing, ..Default::default() });
     }
-    let mut drawing = decode_drawing(bytes).await?;
-    let classes = dwg_engine::decode_r2004_classes(bytes).await?;
-    drawing.objects = dwg_engine::decode_r2004_object_identities(bytes, &classes).await?;
-    let document = dwg_engine::decode_r2004_document_sections(bytes).await?;
+    let mut drawing = decode_drawing(bytes)?;
+    let classes = dwg_engine::decode_r2004_classes(bytes)?;
+    drawing.objects = dwg_engine::decode_r2004_object_identities(bytes, &classes)?;
+    let document = dwg_engine::decode_r2004_document_sections(bytes)?;
     Ok(DwgSnapshot {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         version,
@@ -4053,15 +4080,16 @@ impl fmt::Display for DwgExportError {
 
 impl std::error::Error for DwgExportError {}
 
-async fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), DwgExportError> {
-    let version = dwg_version_sentinel(bytes).await.map_err(DwgExportError::Writer)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), DwgExportError> {
+    let version = dwg_version_sentinel(bytes).map_err(DwgExportError::Writer)?;
     if snapshot.version.len() != 6 {
         return Err(DwgExportError::InvalidVersion("AC10xx sentinel must contain six ASCII bytes".into()));
     }
     if version != snapshot.version {
         return Err(DwgExportError::HeaderMismatch(format!("version {} != {}", version, snapshot.version)));
     }
-    let (maintenance_version, codepage) = parse_version_header_fields(bytes).await.map_err(DwgExportError::Writer)?;
+    let (maintenance_version, codepage) = parse_version_header_fields(bytes).map_err(DwgExportError::Writer)?;
     if maintenance_version != snapshot.maintenance_version {
         return Err(DwgExportError::HeaderMismatch(format!("maintenance version {maintenance_version} != {}", snapshot.maintenance_version)));
     }
@@ -4072,24 +4100,26 @@ async fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<
 }
 
 /// 🔄 Updates supported typed header fields.
-pub async fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> Result<(), DwgExportError> {
-    dwg_version_sentinel(version.as_bytes()).await.map_err(DwgExportError::InvalidVersion)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> Result<(), DwgExportError> {
+    dwg_version_sentinel(version.as_bytes()).map_err(DwgExportError::InvalidVersion)?;
     snapshot.version = version.to_string();
     snapshot.maintenance_version = maintenance_version;
     snapshot.codepage = codepage;
     Ok(())
 }
 
-pub async fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if snapshot.schema != STDIO_DWG_DOCUMENT_SCHEMA {
         return Err(DwgExportError::InvalidLogical("schema identity changed".into()));
     }
     let bytes = if snapshot.version == "AC1015" {
-        dwg_engine::dwg_to_bytes(&snapshot.drawing.to_native().await.map_err(DwgExportError::InvalidLogical)?).await.map_err(DwgExportError::Writer)?
+        dwg_engine::dwg_to_bytes(&snapshot.drawing.to_native().map_err(DwgExportError::InvalidLogical)?).map_err(DwgExportError::Writer)?
     } else {
-        dwg_engine::encode_r2004_snapshot(snapshot).await.map_err(DwgExportError::Writer)?
+        dwg_engine::encode_r2004_snapshot(snapshot).map_err(DwgExportError::Writer)?
     };
-    validate_export_header(&bytes, snapshot).await?;
+    validate_export_header(&bytes, snapshot)?;
     Ok(bytes)
 }
 //#endregion 🔖️DwgCodec

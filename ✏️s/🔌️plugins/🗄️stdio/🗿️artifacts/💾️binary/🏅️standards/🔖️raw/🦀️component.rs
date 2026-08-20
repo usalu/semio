@@ -10,10 +10,11 @@ use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclar
 use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "raw"`'s complete declaration — one subset, `any`.
-pub async fn standard() -> StandardDeclaration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("raw"),
         media: MediaDeclaration { mimes: &["application/octet-stream"], extensions: &["bin"] },
-        subsets: vec![subsets::any::subset().await],
+        subsets: vec![subsets::any::subset()],
     }
 }

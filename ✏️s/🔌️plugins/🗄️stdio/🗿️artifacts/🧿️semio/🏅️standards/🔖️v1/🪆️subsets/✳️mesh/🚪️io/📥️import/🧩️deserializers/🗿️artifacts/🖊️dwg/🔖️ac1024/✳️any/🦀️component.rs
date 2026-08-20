@@ -20,7 +20,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 
 //#region 🔖️MeshBuild
-async fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3>, indices: &mut Vec<u32>) {
     match geometry {
         DwgGeometry::PolyfaceMesh { vertices, faces } => {
             let base = positions.len() as u32;
@@ -51,7 +52,8 @@ async fn append_geometry(geometry: &DwgGeometry, positions: &mut Vec<SemioPoint3
     }
 }
 
-async fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn semio_meshes_from_drawing(drawing: &DwgDrawing) -> Vec<SemioMesh> {
     let mut meshes = Vec::new();
     for (layer_index, layer) in drawing.layers.iter().enumerate() {
         let mut positions = Vec::new();
@@ -78,8 +80,8 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing = from.drawing.to_native().await.map_err(store::PackError::Schema)?;
-        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: semio_meshes_from_drawing(&drawing).await, materials: Vec::new(), textures: Vec::new() })
+        let drawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
+        Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: semio_meshes_from_drawing(&drawing), materials: Vec::new(), textures: Vec::new() })
     }
 }
 //#endregion 🔖️Deserializer
@@ -91,7 +93,8 @@ mod tests {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
     use crate::artifacts::dwg::{DwgColor, DwgEntity};
 
-    async fn sample_dwg() -> DwgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_dwg() -> DwgSnapshot {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("walls");
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] } });

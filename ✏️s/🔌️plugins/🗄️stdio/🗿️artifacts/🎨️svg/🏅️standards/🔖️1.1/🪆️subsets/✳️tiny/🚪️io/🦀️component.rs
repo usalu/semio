@@ -62,7 +62,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_svg_tiny_conformance(&snapshot).await,
+                Some(snapshot) => check_svg_tiny_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.svg.tiny.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -77,7 +77,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SvgTinyValidator>)
     }
 
@@ -86,8 +87,9 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::svg::standards::v1_1::engine::io_registry::entries()`), matching how `✳️any`'s own
     /// entry is registered.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

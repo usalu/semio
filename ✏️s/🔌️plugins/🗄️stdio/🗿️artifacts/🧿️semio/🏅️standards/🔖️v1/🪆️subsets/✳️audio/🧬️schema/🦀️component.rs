@@ -31,13 +31,16 @@ impl Default for SemioAudioArtifact {
 }
 
 impl SemioAudioArtifact {
-    pub async fn to_snapshot(&self) -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioAudioSnapshot {
         SemioAudioSnapshot { schema: self.schema.clone(), sample_rate: self.sample_rate, format: self.format, channels: self.channels.clone(), tags: self.tags.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioAudioSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioAudioSnapshot) -> Self {
         Self { schema: snapshot.schema, sample_rate: snapshot.sample_rate, format: snapshot.format, channels: snapshot.channels, tags: snapshot.tags }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioAudioSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioAudioSnapshot) {
         self.schema = snapshot.schema;
         self.sample_rate = snapshot.sample_rate;
         self.format = snapshot.format;
@@ -46,7 +49,8 @@ impl SemioAudioArtifact {
     }
 }
 
-pub async fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.audio",
         artifact: schema::FacetLeaves {
@@ -95,26 +99,31 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioAudioBuilderConstruction {
         /// 🏗️ Starts a fresh document at the given sample rate/format.
-        pub async fn new(sample_rate: u32, format: SemioAudioFormat) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(sample_rate: u32, format: SemioAudioFormat) -> Self {
             Self { snapshot: SemioAudioSnapshot { sample_rate, format, ..SemioAudioSnapshot::default() } }
         }
         /// 🏗️ Appends one channel's decoded samples, in channel order.
-        pub async fn add_channel(mut self, channel: SemioAudioChannel) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_channel(mut self, channel: SemioAudioChannel) -> Self {
             self.snapshot.channels.push(channel);
             self
         }
         /// 🏗️ Appends one metadata key/value pair.
-        pub async fn add_tag(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_tag(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.snapshot.tags.push(SemioAudioTag { key: key.into(), value: value.into() });
             self
         }
         /// 🏗️ Sets the sample rate.
-        pub async fn set_sample_rate(mut self, sample_rate: u32) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_sample_rate(mut self, sample_rate: u32) -> Self {
             self.snapshot.sample_rate = sample_rate;
             self
         }
         /// 🏗️ Sets the original-encoding sample format.
-        pub async fn set_format(mut self, format: SemioAudioFormat) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_format(mut self, format: SemioAudioFormat) -> Self {
             self.snapshot.format = format;
             self
         }
@@ -139,7 +148,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_audio_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot).await?;

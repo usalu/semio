@@ -60,19 +60,23 @@ impl DiffAlgebra<WavSnapshot> for WavDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &WavSnapshot, snapshot: &WavSnapshot) -> WavDiff {
-    WavDiff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &WavSnapshot, snapshot: &WavSnapshot) -> WavDiff {
+    WavDiff::between(base, snapshot)
 }
 /// 🧩 Builds a set-fmt diff.
-pub async fn diff_set_fmt(fmt: WavFmt) -> WavDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_fmt(fmt: WavFmt) -> WavDiff {
     WavDiff { fmt: Some(fmt), ..Default::default() }
 }
 /// 🧩 Builds a set-data diff.
-pub async fn diff_set_data(data: WavData) -> WavDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_data(data: WavData) -> WavDiff {
     WavDiff { data: Some(data), ..Default::default() }
 }
 /// 🧩 Builds a set-other-chunks diff.
-pub async fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
     WavDiff { other_chunks: Some(chunks), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -88,10 +92,12 @@ pub async fn diff_set_other_chunks(chunks: Vec<RiffChunk>) -> WavDiff {
 /// list is `[chunk1;chunk2;…]`. Worked example:
 /// `fmt=[1,1,8000,16000,2,16,[0]] data=p16:0100feff`.
 //#region 🔖️Primitives
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -99,7 +105,8 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the shared grammar contract every
 /// hand-rolled codec in this repo uses (`f6-recon-report.md` §5), kept verbatim.
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -120,18 +127,21 @@ async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -140,12 +150,14 @@ async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-async fn enc_wav_fmt(f: &WavFmt) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_wav_fmt(f: &WavFmt) -> String {
     format!("[{},{},{},{},{},{},{}]", f.audio_format, f.channels, f.sample_rate, f.byte_rate, f.block_align, f.bits_per_sample, encode_option(&f.ext, |v| hex_encode(v)))
 }
-async fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 7 {
         return Err(format!("wav fmt: expected 7 fields, got {}", parts.len()));
     }
@@ -156,11 +168,12 @@ async fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
         byte_rate: parts[3].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         block_align: parts[4].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         bits_per_sample: parts[5].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        ext: decode_option(parts[6], hex_decode).await?,
+        ext: decode_option(parts[6], hex_decode)?,
     })
 }
 
-async fn enc_wav_data(d: &WavData) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_wav_data(d: &WavData) -> String {
     match d {
         WavData::Pcm16(v) => format!("p16:{}", hex_encode(&v.iter().flat_map(|s| s.to_le_bytes()).collect::<Vec<u8>>())),
         WavData::Pcm8(v) => format!("p8:{}", hex_encode(v)),
@@ -168,9 +181,10 @@ async fn enc_wav_data(d: &WavData) -> String {
         WavData::Raw(v) => format!("raw:{}", hex_encode(v)),
     }
 }
-async fn dec_wav_data(s: &str) -> Result<WavData, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_wav_data(s: &str) -> Result<WavData, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("wav data: missing tag in {s:?}"))?;
-    let bytes = hex_decode(rest).await?;
+    let bytes = hex_decode(rest)?;
     match tag {
         "p16" => {
             if bytes.len() % 2 != 0 {
@@ -192,28 +206,33 @@ async fn dec_wav_data(s: &str) -> Result<WavData, String> {
 
 /// 🧭️ `RiffChunk.fourcc` is a 4-char printable RIFF tag (`fmt `/`data`/`LIST`/`INFO`/…) — never
 /// contains `,`/`[`/`]`/`;` in practice, so it's safe as a bare top-level token.
-async fn enc_riff_chunk(c: &RiffChunk) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_riff_chunk(c: &RiffChunk) -> String {
     format!("[{},{}]", c.fourcc, hex_encode(&c.data))
 }
-async fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 2 {
         return Err(format!("riff chunk: expected 2 fields, got {}", parts.len()));
     }
-    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1]).await? })
+    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1])? })
 }
-async fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
     format!("[{}]", chunks.iter().map(enc_riff_chunk).collect::<Vec<_>>().join(";"))
 }
-async fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
+    let inner = strip_brackets(s)?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_riff_chunk).collect()
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_wav_diff(d: &WavDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_wav_diff(d: &WavDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.fmt {
         tokens.push(format!("fmt={}", enc_wav_fmt(v)));
@@ -226,18 +245,19 @@ async fn print_wav_diff(d: &WavDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
     let mut d = WavDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("fmt=") {
-            d.fmt = Some(dec_wav_fmt(rest).await?);
+            d.fmt = Some(dec_wav_fmt(rest)?);
         } else if let Some(rest) = token.strip_prefix("data=") {
-            d.data = Some(dec_wav_data(rest).await?);
+            d.data = Some(dec_wav_data(rest)?);
         } else if let Some(rest) = token.strip_prefix("other-chunks=") {
-            d.other_chunks = Some(dec_riff_chunks(rest).await?);
+            d.other_chunks = Some(dec_riff_chunks(rest)?);
         } else {
             return Err(format!("wav diff: unknown token {token:?}"));
         }
@@ -247,10 +267,10 @@ async fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
 
 impl protocol::DiffCodec for WavDiff {
     async fn print_diff(&self) -> String {
-        print_wav_diff(self).await
+        print_wav_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_wav_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_wav_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
@@ -271,7 +291,8 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    async fn sweep_a() -> WavSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> WavSnapshot {
         WavSnapshot {
             fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None },
             data: WavData::Pcm16(vec![0, 1, -1]),
@@ -279,7 +300,8 @@ mod tests {
             ..WavSnapshot::default()
         }
     }
-    async fn sweep_b() -> WavSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> WavSnapshot {
         WavSnapshot {
             fmt: WavFmt { audio_format: 3, channels: 2, sample_rate: 48000, byte_rate: 384000, block_align: 8, bits_per_sample: 32, ext: Some(vec![0xAA, 0xBB]) },
             data: WavData::Float32(vec![0.5, -0.5]),

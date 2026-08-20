@@ -35,7 +35,8 @@ impl Default for EpwClimateSummary {
 
 /// 🌡️ Computes [`EpwClimateSummary`] via one pass over `records` — see module doc comment for the
 /// exact parse/skip/fold rule.
-pub async fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary {
     let mut parsed_temp_count = 0u32;
     let mut min = f64::INFINITY;
     let mut max = f64::NEG_INFINITY;
@@ -62,7 +63,8 @@ mod tests {
     use super::*;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
 
-    async fn record(dry_bulb_temp: &str) -> EpwRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn record(dry_bulb_temp: &str) -> EpwRecord {
         EpwRecord { dry_bulb_temp: dry_bulb_temp.into(), ..Default::default() }
     }
 

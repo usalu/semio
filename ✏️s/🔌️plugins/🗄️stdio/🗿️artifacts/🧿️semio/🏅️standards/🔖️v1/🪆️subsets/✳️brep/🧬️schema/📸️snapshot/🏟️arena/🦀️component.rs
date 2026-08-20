@@ -88,21 +88,24 @@ impl<T, Id: ArenaId> Default for Store<T, Id> {
 }
 
 impl<T, Id: ArenaId> Store<T, Id> {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new() -> Self {
         Store { slots: Vec::new(), free: Vec::new(), _marker: std::marker::PhantomData }
     }
-    pub async fn insert(&mut self, value: T) -> Id {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn insert(&mut self, value: T) -> Id {
         if let Some(index) = self.free.pop() {
             let slot = &mut self.slots[index as usize];
             slot.value = Some(value);
-            Id::from_raw(index, slot.generation).await
+            Id::from_raw(index, slot.generation)
         } else {
             let index = self.slots.len() as u32;
             self.slots.push(Slot { generation: 0, value: Some(value) });
-            Id::from_raw(index, 0).await
+            Id::from_raw(index, 0)
         }
     }
-    pub async fn get(&self, id: Id) -> Option<&T> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get(&self, id: Id) -> Option<&T> {
         let slot = self.slots.get(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
             slot.value.as_ref()
@@ -110,7 +113,8 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    pub async fn get_mut(&mut self, id: Id) -> Option<&mut T> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get_mut(&mut self, id: Id) -> Option<&mut T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
             slot.value.as_mut()
@@ -118,36 +122,43 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    pub async fn contains(&self, id: Id) -> bool {
-        self.get(id).await.is_some()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn contains(&self, id: Id) -> bool {
+        self.get(id).is_some()
     }
-    pub async fn remove(&mut self, id: Id) -> Option<T> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn remove(&mut self, id: Id) -> Option<T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation != id.raw_generation() {
             return None;
         }
         let value = slot.value.take()?;
         slot.generation = slot.generation.wrapping_add(1);
-        self.free.push(id.raw_index().await);
+        self.free.push(id.raw_index());
         Some(value)
     }
-    pub async fn len(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn len(&self) -> usize {
         self.slots.iter().filter(|s| s.value.is_some()).count()
     }
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
     /// 🗄️ Deterministic index-order iteration over live entries.
-    pub async fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
         self.slots.iter().enumerate().filter_map(|(i, slot)| slot.value.as_ref().map(|v| (Id::from_raw(i as u32, slot.generation), v)))
     }
-    pub async fn iter_mut(&mut self) -> impl Iterator<Item = (Id, &mut T)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (Id, &mut T)> {
         self.slots.iter_mut().enumerate().filter_map(|(i, slot)| {
             let gen = slot.generation;
             slot.value.as_mut().map(|v| (Id::from_raw(i as u32, gen), v))
         })
     }
-    pub async fn ids(&self) -> impl Iterator<Item = Id> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ids(&self) -> impl Iterator<Item = Id> + '_ {
         self.iter().map(|(id, _)| id)
     }
 }

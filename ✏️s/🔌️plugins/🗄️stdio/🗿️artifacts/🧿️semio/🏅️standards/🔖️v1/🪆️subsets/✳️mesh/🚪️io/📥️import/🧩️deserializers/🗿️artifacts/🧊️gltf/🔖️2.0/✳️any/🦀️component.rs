@@ -33,7 +33,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 //#region 🔖️Topology
 /// 🔺️ gltf `primitive.mode` (§5.19.4, default 4/TRIANGLES when absent) -> `SemioTopology`. Mode 2
 /// (`LINE_LOOP`) is a real, honest gap — `SemioTopology` has no closed-loop line variant.
-async fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, String> {
     match mode.unwrap_or(4) {
         0 => Ok(SemioTopology::Points),
         1 => Ok(SemioTopology::Lines),
@@ -48,7 +49,8 @@ async fn gltf_mode_to_topology(mode: Option<u64>) -> Result<SemioTopology, Strin
 //#endregion 🔖️Topology
 
 //#region 🔖️AccessorHelpers
-async fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> {
     attributes.iter().find(|(n, _)| n == name).map(|(_, idx)| *idx)
 }
 
@@ -56,7 +58,8 @@ async fn find_attr(attributes: &[(String, usize)], name: &str) -> Option<usize> 
 /// glTF 2.0 §3.9.2 normalized-integer rule; `decode_accessor` deliberately leaves this to callers
 /// (its own doc comment: "every component already widened to `f64`... regardless of source
 /// `componentType`", no normalization applied).
-async fn normalize_component(v: f64, component_type: GltfComponentType, normalized: bool) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize_component(v: f64, component_type: GltfComponentType, normalized: bool) -> f64 {
     if !normalized {
         return v;
     }
@@ -71,7 +74,8 @@ async fn normalize_component(v: f64, component_type: GltfComponentType, normaliz
 
 /// 🖼️️ Resolves one `image`'s raw bytes: embedded `bufferView` first, then a `data:` uri; an
 /// external (file/network) uri is a documented gap (see module doc comment) -> empty bytes.
-async fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image: &GltfImage) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image: &GltfImage) -> Vec<u8> {
     if let Some(bv_idx) = image.buffer_view {
         if let Some(bv) = document.buffer_views.get(bv_idx) {
             if let Some(buf) = buffers.get(bv.buffer) {
@@ -85,39 +89,40 @@ async fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image
         return Vec::new();
     }
     match &image.uri {
-        Some(uri) if uri.starts_with("data:") => decode_data_uri(uri).await.unwrap_or_default(),
+        Some(uri) if uri.starts_with("data:") => decode_data_uri(uri).unwrap_or_default(),
         _ => Vec::new(),
     }
 }
 //#endregion 🔖️AccessorHelpers
 
 //#region 🔖️PrimitiveMapping
-async fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &GltfPrimitive, id: String, material_id: Option<String>) -> Result<SemioPrimitive, String> {
-    let topology = gltf_mode_to_topology(prim.mode).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &GltfPrimitive, id: String, material_id: Option<String>) -> Result<SemioPrimitive, String> {
+    let topology = gltf_mode_to_topology(prim.mode)?;
 
-    let pos_idx = find_attr(&prim.attributes, "POSITION").await.ok_or("primitive missing mandatory POSITION attribute")?;
-    let pos_acc = decode_accessor(document, buffers, pos_idx).await?;
+    let pos_idx = find_attr(&prim.attributes, "POSITION").ok_or("primitive missing mandatory POSITION attribute")?;
+    let pos_acc = decode_accessor(document, buffers, pos_idx)?;
     let positions: Vec<SemioPoint3> = pos_acc.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect();
 
-    let normals: Vec<SemioPoint3> = match find_attr(&prim.attributes, "NORMAL").await {
-        Some(idx) => decode_accessor(document, buffers, idx).await?.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect(),
+    let normals: Vec<SemioPoint3> = match find_attr(&prim.attributes, "NORMAL") {
+        Some(idx) => decode_accessor(document, buffers, idx)?.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect(),
         None => Vec::new(),
     };
 
-    let uvs: Vec<SemioUv> = match find_attr(&prim.attributes, "TEXCOORD_0").await {
-        Some(idx) => decode_accessor(document, buffers, idx).await?.components.chunks(2).map(|c| SemioUv { u: c[0], v: c[1] }).collect(),
+    let uvs: Vec<SemioUv> = match find_attr(&prim.attributes, "TEXCOORD_0") {
+        Some(idx) => decode_accessor(document, buffers, idx)?.components.chunks(2).map(|c| SemioUv { u: c[0], v: c[1] }).collect(),
         None => Vec::new(),
     };
 
-    let colors: Vec<SemioRgba> = match find_attr(&prim.attributes, "COLOR_0").await {
+    let colors: Vec<SemioRgba> = match find_attr(&prim.attributes, "COLOR_0") {
         Some(idx) => {
-            let acc = decode_accessor(document, buffers, idx).await?;
+            let acc = decode_accessor(document, buffers, idx)?;
             let nc = acc.accessor_type.components();
             if nc != 3 && nc != 4 {
                 return Err(format!("COLOR_0 accessor must be VEC3 or VEC4, got {nc}-component"));
             }
             acc.components
-                .chunks(nc.await)
+                .chunks(nc)
                 .map(|c| SemioRgba {
                     r: normalize_component(c[0], acc.component_type, acc.normalized) as f32,
                     g: normalize_component(c[1], acc.component_type, acc.normalized) as f32,
@@ -130,7 +135,7 @@ async fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &G
     };
 
     let indices: Vec<u32> = match prim.indices {
-        Some(idx) => decode_accessor(document, buffers, idx).await?.components.iter().map(|&v| v.round() as u32).collect(),
+        Some(idx) => decode_accessor(document, buffers, idx)?.components.iter().map(|&v| v.round() as u32).collect(),
         None => Vec::new(),
     };
 
@@ -172,7 +177,7 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
             let mut primitives = Vec::with_capacity(gmesh.primitives.len());
             for (pi, prim) in gmesh.primitives.iter().enumerate() {
                 let material_id = prim.material.map(|idx| format!("mat-{idx}"));
-                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id).await.map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
+                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id).map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
                 primitives.push(sp);
             }
             meshes.push(SemioMesh { id: mesh_id, primitives });
@@ -192,7 +197,8 @@ mod tests {
 
     /// 🏗️ A real-shaped 2-triangle quad (shared POSITION/NORMAL/TEXCOORD_0/COLOR_0/indices) with
     /// one PBR material and one embedded (data-uri) texture — exercises every mapped field.
-    async fn sample_gltf() -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_gltf() -> GltfSnapshot {
         let positions: [f32; 12] = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0];
         let normals: [f32; 12] = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
         let uvs: [f32; 8] = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];

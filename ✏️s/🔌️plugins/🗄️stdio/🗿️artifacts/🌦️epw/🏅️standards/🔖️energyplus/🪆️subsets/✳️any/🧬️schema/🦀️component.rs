@@ -44,7 +44,8 @@ impl Default for EpwArtifact {
 }
 
 impl EpwArtifact {
-    pub async fn to_snapshot(&self) -> EpwSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> EpwSnapshot {
         EpwSnapshot {
             schema: self.schema.clone(),
             location: self.location.clone(),
@@ -58,7 +59,8 @@ impl EpwArtifact {
             records: self.records.clone(),
         }
     }
-    pub async fn from_snapshot(snapshot: EpwSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: EpwSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             location: snapshot.location,
@@ -72,7 +74,8 @@ impl EpwArtifact {
             records: snapshot.records,
         }
     }
-    pub async fn set_snapshot(&mut self, snapshot: EpwSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: EpwSnapshot) {
         self.schema = snapshot.schema;
         self.location = snapshot.location;
         self.design_conditions = snapshot.design_conditions;
@@ -86,7 +89,8 @@ impl EpwArtifact {
     }
 }
 
-pub async fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn epw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.epw",
         artifact: schema::FacetLeaves {
@@ -149,7 +153,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_epw_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <EpwDiff as protocol::MutationDiff<EpwSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -183,7 +187,7 @@ pub mod derived_analysis {
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if io::sniff_real_bytes(bytes).await {
+                    if io::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_EPW_DOCUMENT_SCHEMA.as_bytes();
@@ -194,7 +198,7 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    if io::sniff_real_bytes(text.as_bytes()).await || text.contains(STDIO_EPW_DOCUMENT_SCHEMA) {
+                    if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_EPW_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

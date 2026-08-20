@@ -20,7 +20,8 @@ pub struct GltfDeleteSceneDiff {
     pub deleted_scene: GltfScene,
     pub default_scene_after: Option<usize>,
 }
-async fn remap_default(scene: Option<usize>, index: usize) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn remap_default(scene: Option<usize>, index: usize) -> Option<usize> {
     match scene {
         None => None,
         Some(scene) if scene == index => None,
@@ -28,14 +29,16 @@ async fn remap_default(scene: Option<usize>, index: usize) -> Option<usize> {
         Some(scene) => Some(scene),
     }
 }
-async fn paths(before: Option<usize>, after: Option<usize>, index: usize) -> Vec<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn paths(before: Option<usize>, after: Option<usize>, index: usize) -> Vec<String> {
     let mut paths = vec![format!("document/scenes/{}", index)];
     if before != after {
         paths.push("document/scene".into());
     }
     paths
 }
-pub async fn validate(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if diff.id != ID || diff.version != 1 || diff.phase != GltfDeleteSceneDiffPhase::Diff {
         return Err(reject("gltf.mutation.invalid-diff-envelope", "diff", "canonical identity or phase does not match"));
     }
@@ -56,7 +59,8 @@ pub async fn validate(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result
     }
     Ok(())
 }
-pub async fn apply(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     validate(diff, base)?;
     let mut next = base.clone();
     scenes_op(&mut next, GltfTopLevelFamily::Scenes, diff.index, None, None)?;
@@ -65,10 +69,12 @@ pub async fn apply(diff: &GltfDeleteSceneDiff, base: &GltfSnapshot) -> Result<Gl
     }
     Ok(next)
 }
-pub async fn encode(diff: &GltfDeleteSceneDiff) -> Result<Vec<u8>, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode(diff: &GltfDeleteSceneDiff) -> Result<Vec<u8>, GltfTopLevelMutationRejection> {
     serde_json::to_vec(diff).map_err(|error| reject("gltf.mutation.encode-failed", "diff", error.to_string()))
 }
-pub async fn derive(base: &GltfSnapshot, index: usize) -> Result<GltfDeleteSceneDiff, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn derive(base: &GltfSnapshot, index: usize) -> Result<GltfDeleteSceneDiff, GltfTopLevelMutationRejection> {
     if index >= base.document.scenes.len() {
         return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "index must address a scene"));
     }

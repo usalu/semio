@@ -17,17 +17,20 @@ use serde::{Deserialize, Serialize};
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
 /// `inverse` all need it) — see `🧬️schema-design.md` §Absorb and the top-level plan's "Absorb"
 /// section for the derivation. `excluded_sorted` must be sorted ascending.
-async fn count_le(sorted: &[usize], x: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
 /// 🔁️ Rank (0-indexed) of `pos` among non-negative integers NOT in `excluded_sorted` — `pos`
 /// itself must not be in `excluded_sorted`.
-async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
 /// 🔁️ Inverse of [`rank_excluding`]: the `rank`-th (0-indexed) non-negative integer not in
 /// `excluded_sorted`. Converges because `excluded_sorted` is finite.
-async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -39,8 +42,9 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
 }
 /// 🧭️ One-shot base→after index transport for a SINGLE diff's own `removed`/`added` index sets
 /// (used by `inverse`, where there is only one diff to transport through).
-async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
 
@@ -52,7 +56,8 @@ async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_s
 /// "patch into added"). Canonical correctness verified against the plan's 3 mandated cases in this
 /// module's tests. See `🧬️schema-design.md` §Absorb.
 #[allow(clippy::too_many_arguments)]
-async fn absorb_indexed_collection<T: Clone, D: Clone>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -82,8 +87,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
-            merged_removed_base.push(base_index.await);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
         }
     }
     merged_removed_base.sort_unstable();
@@ -105,11 +110,11 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -138,7 +143,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items (to
 /// recover values for re-inserting removed entries and to compute per-item inverses for modified
 /// entries). `diff_inverse` inverts one item's per-field diff against that item's base value.
-async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -149,7 +155,7 @@ async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modif
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index.await, diff_inverse(d, orig)));
+            inv_modified.push((after_index, diff_inverse(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -196,11 +202,13 @@ pub struct GifImageDiff {
 }
 
 impl GifImageDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.left.is_none() && self.top.is_none() && self.width.is_none() && self.height.is_none() && self.interlace.is_none() && self.lct.is_none() && self.indices.is_none()
     }
 
-    pub async fn between(base: &GifImage, other: &GifImage) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &GifImage, other: &GifImage) -> Self {
         Self {
             left: (base.left != other.left).then_some(other.left),
             top: (base.top != other.top).then_some(other.top),
@@ -212,7 +220,8 @@ impl GifImageDiff {
         }
     }
 
-    pub async fn apply(&self, base: &GifImage) -> GifImage {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &GifImage) -> GifImage {
         let mut next = base.clone();
         if let Some(v) = self.left {
             next.left = v;
@@ -238,7 +247,8 @@ impl GifImageDiff {
         next
     }
 
-    pub async fn inverse(&self, base: &GifImage) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &GifImage) -> Self {
         Self {
             left: self.left.map(|_| base.left),
             top: self.top.map(|_| base.top),
@@ -250,7 +260,8 @@ impl GifImageDiff {
         }
     }
 
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.left.is_some() {
             self.left = other.left;
         }
@@ -304,16 +315,18 @@ pub struct GifImagesDiff {
 }
 
 impl GifImagesDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub async fn between(base: &[GifImage], other: &[GifImage]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[GifImage], other: &[GifImage]) -> Self {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
-            let d = GifImageDiff::between(&base[i], &other[i]).await;
-            if !d.is_empty().await {
+            let d = GifImageDiff::between(&base[i], &other[i]);
+            if !d.is_empty() {
                 modified.push(GifImageModified { index: i, diff: d });
             }
         }
@@ -322,7 +335,8 @@ impl GifImagesDiff {
         Self { removed, modified, added }
     }
 
-    pub async fn apply(&self, base: &[GifImage]) -> Vec<GifImage> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[GifImage]) -> Vec<GifImage> {
         let mut next: Vec<Option<GifImage>> = base.iter().cloned().map(Some).collect();
         let mut removed_sorted = self.removed.clone();
         removed_sorted.sort_unstable();
@@ -330,7 +344,7 @@ impl GifImagesDiff {
         for m in &self.modified {
             if let Some(Some(item)) = next.get(m.index).map(|o| o.as_ref().map(|i| m.diff.apply(i))) {
                 if let Some(slot) = next.get_mut(m.index) {
-                    *slot = Some(item.await);
+                    *slot = Some(item);
                 }
             }
         }
@@ -349,7 +363,8 @@ impl GifImagesDiff {
         out
     }
 
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.diff)).collect(),
@@ -359,15 +374,16 @@ impl GifImagesDiff {
             other.added.into_iter().map(|a| (a.index, a.image)).collect(),
             |d, o| d.absorb(o),
             |d, item| d.apply(item),
-        ).await;
+        );
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, diff)| GifImageModified { index, diff }).collect();
         self.added = added.into_iter().map(|(index, image)| GifImageAdded { index, image }).collect();
     }
 
-    async fn inverse(&self, base_images: &[GifImage]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base_images: &[GifImage]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.image.clone())).collect::<Vec<_>>(), base_images, |d, item| d.inverse(item)).await;
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.image.clone())).collect::<Vec<_>>(), base_images, |d, item| d.inverse(item));
         Self { removed, modified: modified.into_iter().map(|(index, diff)| GifImageModified { index, diff }).collect(), added: added.into_iter().map(|(index, image)| GifImageAdded { index, image }).collect() }
     }
 }
@@ -401,15 +417,16 @@ pub struct GifDiff {
 }
 
 impl GifDiff {
-    pub async fn is_empty_diff(&self) -> bool {
-        self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().map(GifImagesDiff::is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
+        self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().map(GifImagesDiff::is_empty).unwrap_or(true)
     }
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
     async fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
         if let Some(images) = &self.images {
-            validate_gif_images(base.images.len(), images).await?;
+            validate_gif_images(base.images.len(), images)?;
         }
         let mut next = base.clone();
         if let Some(v) = self.width {
@@ -428,7 +445,7 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             next.pixel_aspect_ratio = v;
         }
         if let Some(images_diff) = &self.images {
-            next.images = images_diff.apply(&next.images).await;
+            next.images = images_diff.apply(&next.images);
         }
         Ok(next)
     }
@@ -450,31 +467,32 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             self.pixel_aspect_ratio = other.pixel_aspect_ratio;
         }
         match (&mut self.images, other.images) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
     }
 }
 
-async fn validate_gif_images(base_len: usize, diff: &GifImagesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_gif_images(base_len: usize, diff: &GifImagesDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF image removal is missing or duplicated").await.at(["images", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF image removal is missing or duplicated").at(["images", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF image modification is missing, duplicated, or removed").await.at(["images", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF image modification is missing, duplicated, or removed").at(["images", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF image addition index is invalid or duplicated").await.at(["images", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF image addition index is invalid or duplicated").at(["images", "added"]));
         }
     }
     Ok(())
@@ -493,25 +511,26 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
     }
 
     async fn between(base: &GifSnapshot, other: &GifSnapshot) -> Self {
-        let images_diff = GifImagesDiff::between(&base.images, &other.images).await;
+        let images_diff = GifImagesDiff::between(&base.images, &other.images);
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
             gct: (base.gct != other.gct).then_some(other.gct.clone()),
             background_color_index: (base.background_color_index != other.background_color_index).then_some(other.background_color_index),
             pixel_aspect_ratio: (base.pixel_aspect_ratio != other.pixel_aspect_ratio).then_some(other.pixel_aspect_ratio),
-            images: (!images_diff.is_empty().await).then_some(images_diff),
+            images: (!images_diff.is_empty()).then_some(images_diff),
         }
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
-    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
+    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot)
 }
 
 /// 🧪️ P2-FG2: representative `GifDiff` cases for `diff_grammar_conformance_law`/
@@ -520,7 +539,8 @@ pub async fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> Gi
 /// tri-state (both `Some(Some(_))` and `Some(None)`), and the `images` collection triple's
 /// `removed`/`modified`/`added` all at once (mirrors png's own `demo_diff_cases()`).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<GifDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
     let img = |seed: u8, w: u32, h: u32| GifImage { left: 0, top: 0, width: w, height: h, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0u8; (w * h) as usize] };
     let a = GifSnapshot { width: 4, height: 4, gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }), images: vec![img(1, 2, 2), img(2, 2, 2)], ..GifSnapshot::default() };
     let mut ib0 = img(1, 2, 2);
@@ -554,28 +574,34 @@ pub(crate) async fn demo_diff_cases() -> Vec<GifDiff> {
 /// fields print as single-letter `tag:value` pairs (`L`/`T`/`W`/`H`/`I`/`C`/`X`) inside its own
 /// `[...]` — no `D`/`S`/`P`/`U`/`Q` tags (87a has no GCE-derived fields at all).
 //#region 🔖️Primitives
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn parse_u8(s: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -596,18 +622,21 @@ async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -616,38 +645,45 @@ async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-async fn enc_rgb(c: &GifRgb) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rgb(c: &GifRgb) -> String {
     format!("[{},{},{}]", c.r, c.g, c.b)
 }
-async fn dec_rgb(s: &str) -> Result<GifRgb, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rgb(s: &str) -> Result<GifRgb, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
-    Ok(GifRgb { r: parse_u8(r).await?, g: parse_u8(g).await?, b: parse_u8(b).await? })
+    Ok(GifRgb { r: parse_u8(r)?, g: parse_u8(g)?, b: parse_u8(b)? })
 }
-async fn enc_color_table(t: &GifColorTable) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_color_table(t: &GifColorTable) -> String {
     let colors = t.colors.iter().map(enc_rgb).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", if t.sorted { 1 } else { 0 }, colors)
 }
-async fn dec_color_table(s: &str) -> Result<GifColorTable, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_color_table(s: &str) -> Result<GifColorTable, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [sorted, colors] = parts.as_slice() else { return Err(format!("color table: expected 2 fields, got {}", parts.len())) };
-    let colors = split_top_level(strip_brackets(colors).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rgb).collect::<Result<Vec<_>, String>>()?;
+    let colors = split_top_level(strip_brackets(colors)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rgb).collect::<Result<Vec<_>, String>>()?;
     Ok(GifColorTable { sorted: *sorted == "1", colors })
 }
-async fn enc_image(f: &GifImage) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_image(f: &GifImage) -> String {
     format!("[{},{},{},{},{},{},{}]", f.left, f.top, f.width, f.height, if f.interlace { 1 } else { 0 }, encode_option(&f.lct, enc_color_table), hex_encode(&f.indices),)
 }
-async fn dec_image(s: &str) -> Result<GifImage, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_image(s: &str) -> Result<GifImage, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [left, top, width, height, interlace, lct, indices] = parts.as_slice() else {
         return Err(format!("image: expected 7 fields, got {}", parts.len()));
     };
-    Ok(GifImage { left: parse_u32(left).await?, top: parse_u32(top).await?, width: parse_u32(width).await?, height: parse_u32(height).await?, interlace: *interlace == "1", lct: decode_option(lct, dec_color_table).await?, indices: hex_decode(indices).await? })
+    Ok(GifImage { left: parse_u32(left)?, top: parse_u32(top)?, width: parse_u32(width)?, height: parse_u32(height)?, interlace: *interlace == "1", lct: decode_option(lct, dec_color_table)?, indices: hex_decode(indices)? })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_image_diff(d: &GifImageDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_image_diff(d: &GifImageDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = d.left {
         parts.push(format!("L:{v}"));
@@ -672,8 +708,9 @@ async fn enc_image_diff(d: &GifImageDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_image_diff(s: &str) -> Result<GifImageDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_image_diff(s: &str) -> Result<GifImageDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = GifImageDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -681,13 +718,13 @@ async fn dec_image_diff(s: &str) -> Result<GifImageDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("image diff: bad entry {entry:?}"))?;
         match tag {
-            "L" => d.left = Some(parse_u32(val).await?),
-            "T" => d.top = Some(parse_u32(val).await?),
-            "W" => d.width = Some(parse_u32(val).await?),
-            "H" => d.height = Some(parse_u32(val).await?),
+            "L" => d.left = Some(parse_u32(val)?),
+            "T" => d.top = Some(parse_u32(val)?),
+            "W" => d.width = Some(parse_u32(val)?),
+            "H" => d.height = Some(parse_u32(val)?),
             "I" => d.interlace = Some(val == "1"),
-            "C" => d.lct = Some(decode_option(val, dec_color_table).await?),
-            "X" => d.indices = Some(hex_decode(val).await?),
+            "C" => d.lct = Some(decode_option(val, dec_color_table)?),
+            "X" => d.indices = Some(hex_decode(val)?),
             other => return Err(format!("image diff: unknown tag {other:?}")),
         }
     }
@@ -696,16 +733,18 @@ async fn dec_image_diff(s: &str) -> Result<GifImageDiff, String> {
 
 /// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser —
 /// identical shape to gif89a's `enc_collection_triple`/`dec_collection_triple`.
-async fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
-async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -719,11 +758,13 @@ async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, St
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
-async fn enc_images_diff(d: &GifImagesDiff) -> String {
-    enc_collection_triple("images", &d.removed, &d.modified.iter().map(|m| (m.index, enc_image_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_image(&a.image))).collect::<Vec<_>>()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_images_diff(d: &GifImagesDiff) -> String {
+    enc_collection_triple("images", &d.removed, &d.modified.iter().map(|m| (m.index, enc_image_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_image(&a.image))).collect::<Vec<_>>())
 }
-async fn dec_images_diff(body: &str) -> Result<GifImagesDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_images_diff(body: &str) -> Result<GifImagesDiff, String> {
+    let (removed, modified, added) = dec_collection_triple(body)?;
     Ok(GifImagesDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(GifImageModified { index, diff: dec_image_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -739,32 +780,39 @@ async fn dec_images_diff(body: &str) -> Result<GifImagesDiff, String> {
 /// uses, `📷️png/…/🔺️diff/🦀️component.rs`'s `RealBinaryPrimitives`/`RealBinaryDiffFrame`
 /// regions — `dsl`/`store`/`protocol` all alias the same kernel crate root, reachable with no
 /// `use` needed beyond the absolute path).
-async fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
     w.write_u8(c.r);
     w.write_u8(c.g);
     w.write_u8(c.b);
 }
-async fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackError> {
-    Ok(GifRgb { r: r.read_u8().await?, g: r.read_u8().await?, b: r.read_u8().await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackError> {
+    Ok(GifRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
-async fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
     w.write_u8(if t.sorted { 1 } else { 0 });
     write_bin_vec(w, &t.colors, write_bin_rgb);
 }
-async fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackError> {
-    let sorted = r.read_u8().await? != 0;
-    let colors = read_bin_vec(r, read_bin_rgb).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackError> {
+    let sorted = r.read_u8()? != 0;
+    let colors = read_bin_vec(r, read_bin_rgb)?;
     Ok(GifColorTable { sorted, colors })
 }
-async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
-    let len = r.read_varint_u64().await? as usize;
-    Ok(r.read_bytes(len).await?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
 }
-async fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
     w.write_u32_le(f.left);
     w.write_u32_le(f.top);
     w.write_u32_le(f.width);
@@ -773,34 +821,39 @@ async fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
     write_bin_option(w, &f.lct, write_bin_color_table);
     write_bin_blob(w, &f.indices);
 }
-async fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GifImage, dsl::PackError> {
-    Ok(GifImage { left: r.read_u32_le().await?, top: r.read_u32_le().await?, width: r.read_u32_le().await?, height: r.read_u32_le().await?, interlace: r.read_u8().await? != 0, lct: read_bin_option(r, read_bin_color_table).await?, indices: read_bin_blob(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GifImage, dsl::PackError> {
+    Ok(GifImage { left: r.read_u32_le()?, top: r.read_u32_le()?, width: r.read_u32_le()?, height: r.read_u32_le()?, interlace: r.read_u8()? != 0, lct: read_bin_option(r, read_bin_color_table)?, indices: read_bin_blob(r)? })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
-async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(val) => {
             w.write_u8(1);
             write_value(w, val);
         }
     }
 }
-async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "gif87a binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
     }
 }
-async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
-    let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
         out.push(read_item(r)?);
@@ -812,25 +865,28 @@ async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(
 /// chaining two `if`-guarded conditional fields at the protocol-description level (`Cond::eval`
 /// errors on a field that was itself only conditionally decoded); the Rust codec itself has no
 /// such limitation, but keeps the same 3-way-flag SHAPE for parity with the protocol file.
-async fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
-        Some(None) => w.write_u8(1).await,
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
         Some(Some(val)) => {
             w.write_u8(2);
             write_value(w, val);
         }
     }
 }
-async fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
         other => Err(dsl::PackError::Malformed { what: "gif87a diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
-async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gif87a diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -842,7 +898,8 @@ async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 /// isn't further protocol-walkable — see that file's own doc comment); the Rust codec here IS
 /// genuinely, fully structured (real varint counts, real per-item recursive encoding), never
 /// text-as-bytes.
-async fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
     write_bin_option(w, &d.left, |w, v| w.write_u32_le(*v));
     write_bin_option(w, &d.top, |w, v| w.write_u32_le(*v));
     write_bin_option(w, &d.width, |w, v| w.write_u32_le(*v));
@@ -851,19 +908,21 @@ async fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
     write_bin_tri_flag(w, &d.lct, write_bin_color_table);
     write_bin_option(w, &d.indices, |w, v| write_bin_blob(w, v));
 }
-async fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifImageDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifImageDiff, dsl::PackError> {
     Ok(GifImageDiff {
-        left: read_bin_option(r, |r| r.read_u32_le()).await?,
-        top: read_bin_option(r, |r| r.read_u32_le()).await?,
-        width: read_bin_option(r, |r| r.read_u32_le()).await?,
-        height: read_bin_option(r, |r| r.read_u32_le()).await?,
-        interlace: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
-        lct: read_bin_tri_flag(r, read_bin_color_table).await?,
-        indices: read_bin_option(r, read_bin_blob).await?,
+        left: read_bin_option(r, |r| r.read_u32_le())?,
+        top: read_bin_option(r, |r| r.read_u32_le())?,
+        width: read_bin_option(r, |r| r.read_u32_le())?,
+        height: read_bin_option(r, |r| r.read_u32_le())?,
+        interlace: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        lct: read_bin_tri_flag(r, read_bin_color_table)?,
+        indices: read_bin_option(r, read_bin_blob)?,
     })
 }
-async fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
+    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| {
         w.write_varint_u64(m.index as u64);
@@ -873,27 +932,29 @@ async fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_image(w, &a.image);
     });
-    w.into_bytes().await
+    w.into_bytes()
 }
-async fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
+    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let diff = read_bin_image_diff(r)?;
         Ok(GifImageModified { index, diff })
-    }).await?;
+    })?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let image = read_bin_image(r)?;
         Ok(GifImageAdded { index, image })
-    }).await?;
+    })?;
     Ok(GifImagesDiff { removed, modified, added })
 }
 //#endregion 🔖️RealBinaryDiffFrame
 
 //#region 🔖️TopLevel
-async fn print_gif_diff(d: &GifDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_gif_diff(d: &GifDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.width {
         tokens.push(format!("width={v}"));
@@ -911,28 +972,29 @@ async fn print_gif_diff(d: &GifDiff) -> String {
         tokens.push(format!("par={v}"));
     }
     if let Some(v) = &d.images {
-        tokens.push(enc_images_diff(v).await);
+        tokens.push(enc_images_diff(v));
     }
     tokens.join(" ")
 }
-async fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
     let mut d = GifDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("width=") {
-            d.width = Some(parse_u32(rest).await?);
+            d.width = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("height=") {
-            d.height = Some(parse_u32(rest).await?);
+            d.height = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("gct=") {
-            d.gct = Some(decode_option(rest, dec_color_table).await?);
+            d.gct = Some(decode_option(rest, dec_color_table)?);
         } else if let Some(rest) = token.strip_prefix("bg=") {
-            d.background_color_index = Some(parse_u8(rest).await?);
+            d.background_color_index = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("par=") {
-            d.pixel_aspect_ratio = Some(parse_u8(rest).await?);
+            d.pixel_aspect_ratio = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("images{") {
-            d.images = Some(dec_images_diff(rest.strip_suffix('}').ok_or_else(|| "images: missing closing brace".to_string())?).await?);
+            d.images = Some(dec_images_diff(rest.strip_suffix('}').ok_or_else(|| "images: missing closing brace".to_string())?)?);
         } else {
             return Err(format!("gif diff: unknown token {token:?}"));
         }
@@ -942,10 +1004,10 @@ async fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
 
 impl DiffCodec for GifDiff {
     async fn print_diff(&self) -> String {
-        print_gif_diff(self).await
+        print_gif_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_gif_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_gif_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut
@@ -958,9 +1020,9 @@ impl DiffCodec for GifDiff {
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
-            let mut inner = dsl::ByteWriter::new();
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
             write_bin_color_table(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.await.into_bytes()));
+            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
         write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
         write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
@@ -968,18 +1030,18 @@ impl DiffCodec for GifDiff {
         Ok(w.into_bytes().await)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes);
-        let width = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
-        let height = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
+        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let gct = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&blob);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
             read_bin_color_table(&mut inner)
         })
-        .await.map_err(diff_pack_err)?;
-        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).await.map_err(diff_pack_err)?;
-        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).await.map_err(diff_pack_err)?;
-        let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
+        .map_err(diff_pack_err)?;
+        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
         Ok(GifDiff { width, height, gct, background_color_index, pixel_aspect_ratio, images })
     }
 }
@@ -993,7 +1055,8 @@ mod tests {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
     use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
 
-    async fn img(seed: u8, w: u32, h: u32) -> GifImage {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn img(seed: u8, w: u32, h: u32) -> GifImage {
         GifImage { left: 0, top: 0, width: w, height: h, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0u8; (w * h) as usize] }
     }
 

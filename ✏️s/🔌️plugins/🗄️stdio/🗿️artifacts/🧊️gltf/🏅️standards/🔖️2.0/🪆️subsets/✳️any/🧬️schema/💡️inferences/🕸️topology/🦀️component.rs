@@ -31,16 +31,16 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
     type Output = GltfTopologyIndicators;
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output { holes: holes::infer(context).await, handles: handles::infer(context).await, boundary_loops: boundary_loops::infer(context).await, euler_characteristic: euler_characteristic::infer(context).await, genus: genus::infer(context).await }
+        Self::Output { holes: holes::infer(context), handles: handles::infer(context), boundary_loops: boundary_loops::infer(context), euler_characteristic: euler_characteristic::infer(context), genus: genus::infer(context) }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            holes: holes::unavailable_measure(diagnostic_ids).await,
-            handles: handles::unavailable_measure(diagnostic_ids).await,
-            boundary_loops: boundary_loops::unavailable_measure(diagnostic_ids).await,
-            euler_characteristic: euler_characteristic::unavailable_measure(diagnostic_ids).await,
-            genus: genus::unavailable_measure(diagnostic_ids).await,
+            holes: holes::unavailable_measure(diagnostic_ids),
+            handles: handles::unavailable_measure(diagnostic_ids),
+            boundary_loops: boundary_loops::unavailable_measure(diagnostic_ids),
+            euler_characteristic: euler_characteristic::unavailable_measure(diagnostic_ids),
+            genus: genus::unavailable_measure(diagnostic_ids),
         }
     }
 }
@@ -70,7 +70,8 @@ mod canonical_vectors {
         vectors: Vec<Vector>,
     }
 
-    async fn assert_unsigned(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<u64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<u64>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_unsigned(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<u64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<u64>) {
         let contract: Contract = serde_json::from_str(source).unwrap();
         for vector in contract.vectors {
             let result = if vector.context.valid {
@@ -85,7 +86,8 @@ mod canonical_vectors {
         }
     }
 
-    async fn assert_signed(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<i64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<i64>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_signed(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<i64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<i64>) {
         let contract: Contract = serde_json::from_str(source).unwrap();
         for vector in contract.vectors {
             let result = if vector.context.valid {

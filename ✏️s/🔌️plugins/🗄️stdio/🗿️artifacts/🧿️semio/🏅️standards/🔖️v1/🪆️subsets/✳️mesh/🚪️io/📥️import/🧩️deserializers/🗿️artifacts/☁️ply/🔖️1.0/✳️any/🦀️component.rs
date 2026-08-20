@@ -30,18 +30,21 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 
 //#region 🔖️ValueHelpers
-async fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
     properties.iter().position(|p| p.name() == name)
 }
 
-async fn scalar_kind_of(properties: &[PlyProperty], idx: usize) -> Option<PlyScalarType> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scalar_kind_of(properties: &[PlyProperty], idx: usize) -> Option<PlyScalarType> {
     match &properties[idx] {
         PlyProperty::Scalar { kind, .. } => Some(*kind),
         PlyProperty::List { .. } => None,
     }
 }
 
-async fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
     match v {
         PlyValue::Char(x) => Ok(*x as f64),
         PlyValue::UChar(x) => Ok(*x as f64),
@@ -57,7 +60,8 @@ async fn value_as_f64(v: &PlyValue) -> Result<f64, String> {
 
 /// 🎨️ Range-normalizes an integer color channel to `[0,1]`; float/double channels pass through
 /// (already-normalized, the near-universal real-world convention).
-async fn normalize_color_channel(v: f64, kind: PlyScalarType) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize_color_channel(v: f64, kind: PlyScalarType) -> f64 {
     match kind {
         PlyScalarType::Char => (v / 127.0).max(-1.0),
         PlyScalarType::UChar => v / 255.0,
@@ -79,9 +83,9 @@ impl ArtifactDeserializer for SemioMeshFromPly {
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let vertex_el = from.elements.iter().find(|e| e.name == "vertex").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: file has no 'vertex' element".to_string()))?;
 
-        let x_idx = property_index(&vertex_el.properties, "x").await.ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'x' property".to_string()))?;
-        let y_idx = property_index(&vertex_el.properties, "y").await.ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'y' property".to_string()))?;
-        let z_idx = property_index(&vertex_el.properties, "z").await.ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'z' property".to_string()))?;
+        let x_idx = property_index(&vertex_el.properties, "x").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'x' property".to_string()))?;
+        let y_idx = property_index(&vertex_el.properties, "y").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'y' property".to_string()))?;
+        let z_idx = property_index(&vertex_el.properties, "z").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'z' property".to_string()))?;
 
         let normal_idx = ["nx", "ny", "nz"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>();
         let color_idx: Option<Vec<usize>> = ["red", "green", "blue"].iter().map(|n| property_index(&vertex_el.properties, n)).collect();
@@ -89,7 +93,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
         let uv_idx = ["u", "v"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>().or_else(|| ["s", "t"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>());
 
         let read =
-            |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> { semio_framework_plugin::resolve_ready(value_as_f64(&vertex_el.rows[row_idx].values[prop_idx])).map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}"))) };
+            |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> { value_as_f64(&vertex_el.rows[row_idx].values[prop_idx]).map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}"))) };
 
         let mut positions = Vec::with_capacity(vertex_el.rows.len());
         let mut normals = Vec::new();
@@ -101,9 +105,9 @@ impl ArtifactDeserializer for SemioMeshFromPly {
                 normals.push(SemioPoint3 { x: read(i, ns[0])?, y: read(i, ns[1])?, z: read(i, ns[2])? });
             }
             if let Some(cs) = &color_idx {
-                let kind = scalar_kind_of(&vertex_el.properties, cs[0]).await.unwrap_or(PlyScalarType::Float);
-                let a = match alpha_idx.await {
-                    Some(ai) => normalize_color_channel(read(i, ai)?, scalar_kind_of(&vertex_el.properties, ai).await.unwrap_or(PlyScalarType::Float)) as f32,
+                let kind = scalar_kind_of(&vertex_el.properties, cs[0]).unwrap_or(PlyScalarType::Float);
+                let a = match alpha_idx {
+                    Some(ai) => normalize_color_channel(read(i, ai)?, scalar_kind_of(&vertex_el.properties, ai).unwrap_or(PlyScalarType::Float)) as f32,
                     None => 1.0,
                 };
                 colors.push(SemioRgba { r: normalize_color_channel(read(i, cs[0])?, kind) as f32, g: normalize_color_channel(read(i, cs[1])?, kind) as f32, b: normalize_color_channel(read(i, cs[2])?, kind) as f32, a });
@@ -118,7 +122,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
             None => (SemioTopology::Points, Vec::new()),
             Some(face_el) => {
                 let list_idx = property_index(&face_el.properties, "vertex_indices")
-                    .await.or_else(|| property_index(&face_el.properties, "vertex_index"))
+                    .or_else(|| property_index(&face_el.properties, "vertex_index"))
                     .ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'face' element has no 'vertex_indices'/'vertex_index' list property".to_string()))?;
                 let mut indices = Vec::new();
                 for (ri, row) in face_el.rows.iter().enumerate() {
@@ -129,7 +133,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
                     if list.len() < 3 {
                         return Err(store::PackError::Schema(format!("SemioMeshFromPly: face row {ri} has {} indices, need at least 3", list.len())));
                     }
-                    let face_indices: Vec<u32> = list.iter().map(|v| semio_framework_plugin::resolve_ready(value_as_f64(v)).map(|f| f as u32)).collect::<Result<_, _>>().map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: face row {ri}: {e}")))?;
+                    let face_indices: Vec<u32> = list.iter().map(|v| value_as_f64(v).map(|f| f as u32)).collect::<Result<_, _>>().map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: face row {ri}: {e}")))?;
                     for i in 1..face_indices.len() - 1 {
                         indices.push(face_indices[0]);
                         indices.push(face_indices[i]);
@@ -151,7 +155,8 @@ mod tests {
     use super::*;
     use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
 
-    async fn sample_ply() -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_ply() -> PlySnapshot {
         let vertex = PlyElement {
             name: "vertex".into(),
             count: 4,

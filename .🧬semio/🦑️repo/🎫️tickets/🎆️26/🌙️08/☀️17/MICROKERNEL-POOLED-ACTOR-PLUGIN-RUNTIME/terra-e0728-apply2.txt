@@ -1,0 +1,4 @@
+[pass 1] errors=14349 e0728-await=2572 out-of-scope=0
+  removed 2572
+[pass 2] errors=12077 e0728-await=0 out-of-scope=0
+  fixpoint reached

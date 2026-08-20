@@ -28,7 +28,7 @@ pub struct DeflateInference {
 
 impl protocol::Inference<DeflateSnapshot> for DeflateInference {
     async fn infer(snapshot: &DeflateSnapshot) -> Self {
-        Self { window: compute_deflate_window(snapshot).await }
+        Self { window: compute_deflate_window(snapshot) }
     }
 }
 
@@ -68,7 +68,8 @@ impl ArtifactInferrer for crate::artifacts::deflate::standards::v_rfc1950::subse
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.deflate.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `deflate_artifact_schema_descriptor`'s registration.
-pub async fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.deflate.inference",
         inference: schema::FacetLeaves {

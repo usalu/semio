@@ -57,18 +57,20 @@ pub const EPW_TABLE_COLUMNS: [&str; 35] = [
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::epw::create_epw_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Weather Records", "Wetterdatensätze"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Weather Records", "Wetterdatensätze"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// ✏️ Real `EpwSnapshot -> UiNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
-pub async fn render(document: &EpwSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &EpwSnapshot) -> UiNode {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
-    let rows = document.records.iter().map(|record| semio_framework_plugin::resolve_ready(record.fields()).iter().map(|field| field.to_string()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows }).await
+    let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

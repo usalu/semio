@@ -557,6 +557,13 @@ enum ScriptedOutcome {
     Turn(TurnResult),
     Job(JobStep),
     Fault(String),
+    /// 🛑️ terra-shard-lane piece 2: distinct from `Fault(String)` (which always becomes
+    /// `TurnFault::Trapped`) — this scripts the SPECIFIC `TurnFault::DeadlineExceeded` variant a
+    /// real `WasmtimeRuntime::execute_turn` raises when an epoch deadline armed from
+    /// `budget.deadline_ms` is hit, so shard-level tests can prove `ShardLoop::pump_primed`
+    /// converts it into a graceful `ShardOutcome::Turn{status: MoreWork}` instead of a
+    /// `ShardOutcome::Fault` — see `📓️terra-shard-lane-report.md`.
+    DeadlineExceeded,
 }
 
 #[derive(Default)]
@@ -626,10 +633,17 @@ impl MockGuestRuntime {
         self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Fault(message.into()));
     }
 
+    /// 🛑️ terra-shard-lane piece 2: schedules `TurnFault::DeadlineExceeded` specifically — see
+    /// `ScriptedOutcome::DeadlineExceeded`'s own doc for why this is not just `script_fault` with a
+    /// fixed message.
+    pub async fn script_deadline_exceeded(&self, actor: RuntimeActorId) {
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::DeadlineExceeded);
+    }
+
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
+        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -660,6 +674,7 @@ impl GuestRuntime for MockGuestRuntime {
             Some(ScriptedOutcome::Turn(result)) => Ok(result),
             Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
     }
@@ -683,6 +698,7 @@ impl GuestRuntime for MockGuestRuntime {
             Some(ScriptedOutcome::Job(step)) => Ok(step),
             Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
     }
@@ -1207,6 +1223,26 @@ impl GuestRuntime for WasmtimeRuntime {
             // report.md`'s `## blocked-on` — tracked there, not silently dropped).
             ui_patches: Vec::new(),
             effects,
+            // 👥️ M2 render-plane presence (sol's ruling, 26/08/20): `presence-update.update` is a
+            // pack-encoded `ui_contract::PresenceUpdate`, NOT the replication `PresencePeer` the
+            // record originally declared — the consumer of a turn result is the renderer, which
+            // needs `(surface, node_key)` addressing and a TTL, while the collaboration roster keeps
+            // its own channel (`ephemeral_snapshot` out, `AppCommand::Presence`/`adopt_presence`
+            // in). Symmetric with the guest's `kernel_presence_update_to_wit`.
+            //
+            // A malformed entry is SKIPPED rather than failing the turn, matching `AppCommand::
+            // Presence`'s own roster-decode convention: presence is best-effort and TTL-scoped, so
+            // one bad update must not cost the actor an otherwise valid turn's patches and effects.
+            presence: {
+                let mut updates = Vec::with_capacity(wit_turn_result.presence.len());
+                for entry in wit_turn_result.presence {
+                    let Ok(value) = store::pack_rt::decode_wire_value(&entry.update).await else { continue };
+                    if let Ok(update) = dsl::from_dsl_value::<semio_framework::kernel::PresenceUpdate>(value) {
+                        updates.push(update);
+                    }
+                }
+                updates
+            },
             next_wake: wit_turn_result.next_wake,
             status: wit_turn_status_to_kernel(wit_turn_result.status).await,
             fuel_used: wit_turn_result.fuel_used,
@@ -2357,7 +2393,7 @@ async fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -
     }
     let mut coordinates = Vec::with_capacity(hops.len());
     for hop in hops {
-        coordinates.push(hop.into.to_coordinate().await);
+        coordinates.push(hop.into.to_coordinate());
     }
     let joined = coordinates.join(",");
     (std::cmp::Reverse(min_fidelity.unwrap_or(0)), hops.len(), joined)
@@ -2405,7 +2441,7 @@ async fn walk_io_routes(
 async fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
     let max_hops = max_hops.min(3);
     if max_hops == 0 {
-        return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate().await, into.to_coordinate().await)));
+        return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
     }
     let mut candidates: Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>> = Vec::new();
     let mut path: Vec<semio_framework::io_schema::IoEntryDescriptor> = Vec::new();
@@ -2413,7 +2449,7 @@ async fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &sem
     visited.insert(from.clone());
     walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
     if candidates.is_empty() {
-        return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate().await, into.to_coordinate().await)));
+        return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
     }
     // 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
     // the sync `sort_by` comparator rather than called from inside it.
@@ -2597,8 +2633,8 @@ impl IoRouter {
     /// cycle-free route `from -> into` over the merged `io_entries` graph — the WIT `io-routes`
     /// host import. JSON `io_schema::IoRoute` bytes.
     pub async fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
-        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).await.map_err(PluginHostError::Plugin)?;
-        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).await.map_err(PluginHostError::Plugin)?;
+        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
+        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let route = resolve_io_route(&state.io_entries, &from, &into, 3).await?;
         drop(state);
@@ -2615,16 +2651,16 @@ impl IoRouter {
     /// resolved route of up to 3 hops; the guard is an up-front scan, not a per-hop check, so a
     /// route is either run in full or not run at all — no partial execution on a refusal.
     pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).await.map_err(PluginHostError::Plugin)?;
-        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).await.map_err(PluginHostError::Plugin)?;
+        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
+        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
         let hops = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3).await?;
             if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id).await {
                 return Err(PluginHostError::Plugin(format!(
                     "io-run refused: hop {} -> {} is owned by the calling plugin `{calling_plugin_id}` itself — executing it would re-enter that plugin's own in-flight, non-reentrant store lock",
-                    reentrant_hop.0.to_coordinate().await,
-                    reentrant_hop.1.to_coordinate().await
+                    reentrant_hop.0.to_coordinate(),
+                    reentrant_hop.1.to_coordinate()
                 )));
             }
             let mut hops = Vec::with_capacity(route.hops.len());
@@ -2632,8 +2668,8 @@ impl IoRouter {
                 let key: IoEntryKey = (hop.from.clone(), hop.into.clone());
                 // 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
                 // the `ok_or_else` sync closures below.
-                let from_coord = hop.from.to_coordinate().await;
-                let into_coord = hop.into.to_coordinate().await;
+                let from_coord = hop.from.to_coordinate();
+                let into_coord = hop.into.to_coordinate();
                 let owner = state
                     .io_entries
                     .get(&key)
@@ -2678,8 +2714,8 @@ impl IoRouter {
                 let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
                 state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns a carrier io entry but its runtime is not registered with the router")))?
             };
-            let carrier_coord = carrier.to_coordinate().await;
-            let into_coord = into.to_coordinate().await;
+            let carrier_coord = carrier.to_coordinate();
+            let into_coord = into.to_coordinate();
             let rank = runtime.io_sniff(&carrier_coord, &into_coord, &payload_bytes).await?;
             let confidence = rank_to_io_confidence(rank).await;
             if confidence != semio_framework::io_schema::Confidence::None {
@@ -2691,7 +2727,7 @@ impl IoRouter {
         let mut decorated = Vec::with_capacity(found.len());
         for (dialect, confidence) in found {
             let rank = confidence.rank().await;
-            let coord = dialect.to_coordinate().await;
+            let coord = dialect.to_coordinate();
             decorated.push((rank, coord, dialect, confidence));
         }
         decorated.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
@@ -4372,7 +4408,7 @@ impl AppRouter {
                     return Err(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.contribution-not-permitted"),
-                        format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate().await),
+                        format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate()),
                     ));
                 }
             }
@@ -4454,7 +4490,7 @@ impl AppRouter {
                     gaps.push(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.missing-owner-surface"),
-                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate().await, role.as_str().await),
+                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate(), role.as_str().await),
                     ));
                 }
             }
@@ -4696,7 +4732,7 @@ impl OpeningResolver {
         Err(semio_framework::Fault::new(
             semio_framework::FaultOrigin::Framework,
             semio_framework::FaultCode::new("surface.unknown-dialect"),
-            format!("no {} surface registered for `{}`", role.as_str().await, dialect.to_coordinate().await),
+            format!("no {} surface registered for `{}`", role.as_str().await, dialect.to_coordinate()),
         ))
     }
 }
@@ -5065,7 +5101,7 @@ mod tests {
         assert_eq!(plugins, 2, "both plugin instance handles must be registered with the shared router");
 
         let start_payload = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("start".to_string())).expect("encode start payload");
-        let result_bytes = router.run_io("norm", &binary_raw.to_coordinate().await, &gif_89a.to_coordinate().await, start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
+        let result_bytes = router.run_io("norm", &binary_raw.to_coordinate(), &gif_89a.to_coordinate(), start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
         let decoded: semio_framework::io_schema::IoPayload = serde_json::from_slice(&result_bytes).expect("decode final run_io result");
         assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
     }

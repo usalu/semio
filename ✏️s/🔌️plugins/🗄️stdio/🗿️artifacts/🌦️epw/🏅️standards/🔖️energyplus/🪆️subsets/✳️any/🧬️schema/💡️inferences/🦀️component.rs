@@ -26,7 +26,7 @@ pub struct EpwInference {
 
 impl protocol::Inference<EpwSnapshot> for EpwInference {
     async fn infer(snapshot: &EpwSnapshot) -> Self {
-        Self { climate: compute_epw_climate_summary(snapshot).await }
+        Self { climate: compute_epw_climate_summary(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::epw::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `epw_artifact_schema_descriptor`'s registration.
-pub async fn epw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn epw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.epw.inference",
         inference: schema::FacetLeaves {

@@ -44,7 +44,8 @@ pub struct SemioColumnEntropy {
 /// `Int`/`Float`/`Bool`/`Str` are each counted by their own printed identity. `Bytes`/`List`/`Map`/
 /// `Ref` have no stable scalar identity and are excluded, exactly as non-numeric cells are excluded
 /// from `📊moments`.
-async fn cell_symbol(cell: &SemioValue) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cell_symbol(cell: &SemioValue) -> Option<String> {
     match cell {
         SemioValue::Null => None,
         SemioValue::Bool { value } => Some(value.to_string()),
@@ -59,7 +60,8 @@ async fn cell_symbol(cell: &SemioValue) -> Option<String> {
 /// order so the resulting `Vec<u64>` — and therefore `dep_input`'s serialized bytes — is deterministic
 /// across processes, never dependent on `HashMap` iteration order (a hard requirement: `DepHash`
 /// caching is only sound if `dep_input` is a deterministic function of the snapshot).
-async fn column_symbol_counts(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn column_symbol_counts(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<u64> {
     let Some(idx) = snapshot.columns.iter().position(|c| c.name == column_name) else {
         return Vec::new();
     };
@@ -98,10 +100,10 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
     }
 
     async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let counts = column_symbol_counts(snapshot, key).await;
+        let counts = column_symbol_counts(snapshot, key);
         let count = counts.iter().sum::<u64>() as u32;
         let distinct = counts.len() as u32;
-        let bits = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Bits).await.map(|est| est.value).unwrap_or(0.0);
+        let bits = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Bits).map(|est| est.value).unwrap_or(0.0);
         SemioColumnEntropy { count, distinct, bits }
     }
 }
@@ -114,7 +116,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn two_column_snapshot() -> SemioTableSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![SemioTableColumn { name: "coin".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "always_a".into(), kind: SemioTableCellKind::Str }],

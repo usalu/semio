@@ -30,7 +30,8 @@ pub enum JsonIJsonIJsonEditorCommand {
 }
 
 /// 🧭️ `main::encode_path_id`'s inverse — `""` decodes to the empty (root) path.
-async fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_path_id(node_id: &str) -> Result<JsonPath, String> {
     if node_id.is_empty() {
         return Ok(Vec::new());
     }
@@ -118,13 +119,13 @@ impl ArtifactEditor for JsonIJsonEditor {
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let JsonIJsonIJsonEditorCommand::SetNode { node_id, value } = command;
-        let Ok(path) = decode_path_id(node_id).await else { return Ok(Emit::default()) };
+        let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
         Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar { path, value: JsonValue::String { value: value.clone() } }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -132,14 +133,15 @@ impl ArtifactEditor for JsonIJsonEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_json_i_json_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_json_i_json_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(JSON_I_JSON_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "json"])
-        .await.icon_id("list-tree")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::JSON_I_JSON_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "stdio", "json"])
+        .icon_id("list-tree")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::JSON_I_JSON_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

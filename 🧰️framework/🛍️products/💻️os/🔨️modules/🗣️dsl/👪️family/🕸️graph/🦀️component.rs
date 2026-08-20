@@ -38,9 +38,9 @@ impl ChainValue {
 /// equals the next edge's `from`) into one `ChainValue`, returning how many edges it consumed.
 /// Returns `None` if `edges` doesn't even start such a run (the caller should print `edges[0]` as
 /// a standalone statement instead and retry `contract` on the remainder).
-pub async fn contract(edges: &[EdgeValue]) -> Option<(ChainValue, usize)> {
+pub fn contract(edges: &[EdgeValue]) -> Option<(ChainValue, usize)> {
     let first_link = edges.first()?.link.as_ref()?;
-    if !first_link.label.is_empty().await {
+    if !first_link.label.is_empty() {
         return None;
     }
     let directed = first_link.directed;
@@ -48,7 +48,7 @@ pub async fn contract(edges: &[EdgeValue]) -> Option<(ChainValue, usize)> {
     let mut consumed = 1;
     for edge in &edges[1..] {
         let Some(link) = &edge.link else { break };
-        if link.directed != directed || !link.label.is_empty().await || edge.from != *nodes.last().unwrap() {
+        if link.directed != directed || !link.label.is_empty() || edge.from != *nodes.last().unwrap() {
             break;
         }
         nodes.push(link.to.clone());
@@ -89,7 +89,7 @@ pub async fn print_chain(chain: &ChainValue) -> String {
 /// want to keep single edges unchained should check `chain.nodes.len() > 2` before using this).
 pub async fn parse_chain_text(text: &str) -> Result<ChainValue, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let mut pos = 0usize;
     let mut nodes = Vec::new();
     let mut directed: Option<bool> = None;
@@ -199,7 +199,7 @@ mod tests {
     async fn contract_reassembles_a_maximal_anonymous_run() {
         let chain = parse_chain_text("a->b->c->d").await.expect("parse_chain_text");
         let edges = chain.expand().await;
-        let (contracted, consumed) = contract(&edges).await.expect("contract");
+        let (contracted, consumed) = contract(&edges).expect("contract");
         assert_eq!(consumed, edges.len());
         assert_eq!(contracted, chain);
     }
@@ -213,7 +213,7 @@ mod tests {
     async fn contract_returns_none_when_the_run_never_reaches_two_edges() {
         let mut edges = ChainValue { nodes: vec![node("a").await, node("b").await, node("c").await], directed: true }.expand().await;
         edges[1].link.as_mut().unwrap().label = EdgeLabel { id: Some("e1".to_string()), kind: None };
-        assert_eq!(contract(&edges).await, None);
+        assert_eq!(contract(&edges), None);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -222,7 +222,7 @@ mod tests {
             EdgeValue { from: node("a").await, link: Some(EdgeLink { directed: true, label: EdgeLabel::default(), to: node("b").await }) },
             EdgeValue { from: node("x").await, link: Some(EdgeLink { directed: true, label: EdgeLabel::default(), to: node("y").await }) },
         ];
-        assert_eq!(contract(&edges).await, None);
+        assert_eq!(contract(&edges), None);
     }
 
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser
@@ -231,7 +231,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-graph.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-graph.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-graph.grammar must parse");
         assert_eq!(grammar.id, "family-graph");
         assert!(grammar.productions.len() > 6, "family-graph should expose edge/chain/label vocabulary");
     }

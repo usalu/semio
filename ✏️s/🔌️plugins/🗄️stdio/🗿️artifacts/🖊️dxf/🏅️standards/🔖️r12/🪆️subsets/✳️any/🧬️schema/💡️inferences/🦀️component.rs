@@ -26,7 +26,7 @@ pub struct DxfInference {
 
 impl protocol::Inference<DxfSnapshot> for DxfInference {
     async fn infer(snapshot: &DxfSnapshot) -> Self {
-        Self { bounds: compute_dxf_bounds(snapshot).await }
+        Self { bounds: compute_dxf_bounds(snapshot) }
     }
 }
 
@@ -66,7 +66,8 @@ impl ArtifactInferrer for crate::artifacts::dxf::standards::v_r12::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dxf.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dxf_artifact_schema_descriptor`'s registration.
-pub async fn dxf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dxf_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dxf.inference",
         inference: schema::FacetLeaves {

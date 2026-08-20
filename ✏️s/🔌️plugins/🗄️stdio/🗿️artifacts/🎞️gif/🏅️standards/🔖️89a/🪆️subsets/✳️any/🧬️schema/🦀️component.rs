@@ -44,7 +44,8 @@ impl Default for GifArtifact {
 }
 
 impl GifArtifact {
-    pub async fn to_snapshot(&self) -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> GifSnapshot {
         GifSnapshot {
             schema: self.schema.clone(),
             width: self.width,
@@ -58,7 +59,8 @@ impl GifArtifact {
             app_extensions: self.app_extensions.clone(),
         }
     }
-    pub async fn from_snapshot(snapshot: GifSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             width: snapshot.width,
@@ -72,7 +74,8 @@ impl GifArtifact {
             app_extensions: snapshot.app_extensions,
         }
     }
-    pub async fn set_snapshot(&mut self, snapshot: GifSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -86,7 +89,8 @@ impl GifArtifact {
     }
 }
 
-pub async fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gif_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.gif.89a",
         artifact: schema::FacetLeaves {
@@ -136,41 +140,49 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl GifBuilderConstruction {
         /// 🏗️ Starts a fresh 89a document at the given logical screen size.
-        pub async fn new(width: u32, height: u32) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(width: u32, height: u32) -> Self {
             Self { snapshot: GifSnapshot { width, height, ..GifSnapshot::default() }, diagnostics: Vec::new() }
         }
         /// 🏗️ Appends one animation frame, in order.
-        pub async fn add_frame(mut self, frame: GifFrame) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_frame(mut self, frame: GifFrame) -> Self {
             self.snapshot.frames.push(frame);
             self
         }
         /// 🏗️ Sets the NETSCAPE2.0 loop count (`None` = no loop extension, plays once).
-        pub async fn set_loop_count(mut self, loop_count: Option<u16>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_loop_count(mut self, loop_count: Option<u16>) -> Self {
             self.snapshot.loop_count = loop_count;
             self
         }
         /// 🏗️ Sets the Global Color Table.
-        pub async fn set_global_color_table(mut self, gct: Option<GifColorTable>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_global_color_table(mut self, gct: Option<GifColorTable>) -> Self {
             self.snapshot.gct = gct;
             self
         }
         /// 🏗️ Sets the logical screen's background color index.
-        pub async fn set_background_color_index(mut self, index: u8) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_background_color_index(mut self, index: u8) -> Self {
             self.snapshot.background_color_index = index;
             self
         }
         /// 🏗️ Sets the logical screen's pixel aspect ratio byte.
-        pub async fn set_pixel_aspect_ratio(mut self, ratio: u8) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_pixel_aspect_ratio(mut self, ratio: u8) -> Self {
             self.snapshot.pixel_aspect_ratio = ratio;
             self
         }
         /// 🏗️ Appends one comment extension.
-        pub async fn add_comment(mut self, text: String) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_comment(mut self, text: String) -> Self {
             self.snapshot.comments.push(text);
             self
         }
         /// 🏗️ Appends one non-NETSCAPE application extension verbatim.
-        pub async fn add_app_extension(mut self, extension: GifAppExtension) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_app_extension(mut self, extension: GifAppExtension) -> Self {
             self.snapshot.app_extensions.push(extension);
             self
         }
@@ -195,7 +207,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -236,7 +248,7 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF89a").await
+            crate::artifacts::gif::standards::v87a::engine::sniff_magic(source, b"GIF89a")
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
@@ -292,7 +304,8 @@ semio_framework_plugin::derive_artifact_facets!(
 // own local override explicitly calls BOTH `standards::v87a::engine::register()` AND
 // `standards::v89a::engine::register()` — untouched) + `io_registry` all moved to `../🚪️io`;
 // tests moved beside what they now test.
-pub async fn empty_gif_snapshot() -> GifSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_gif_snapshot() -> GifSnapshot {
     GifSnapshot::default()
 }
 
@@ -302,7 +315,8 @@ pub async fn empty_gif_snapshot() -> GifSnapshot {
 /// (`crate::artifacts::gif::examples::dancing::decoded_snapshot()`, 54 frames, 800×800,
 /// per-frame LCTs, NETSCAPE2.0 loop) decoded via the real 89a codec, for byte-real
 /// conformance — not a synthetic stand-in.
-pub async fn demo_gif_snapshot() -> GifSnapshot {
-    crate::artifacts::gif::examples::dancing::decoded_snapshot().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_gif_snapshot() -> GifSnapshot {
+    crate::artifacts::gif::examples::dancing::decoded_snapshot()
 }
 //#endregion 🔖️DocumentHelpers

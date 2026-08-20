@@ -23,7 +23,8 @@ pub struct SvgDimensions {
 
 /// 🔢️ Strips a trailing CSS length unit (`px`/`%`/`pt`/...) and parses the leading numeric run —
 /// SVG 1.1 §7.10's `<length>` grammar allows either a bare number or a number+unit pair.
-async fn parse_length(s: &str) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_length(s: &str) -> Option<f64> {
     let trimmed = s.trim();
     let end = trimmed.find(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')).unwrap_or(trimmed.len());
     if end == 0 {
@@ -34,11 +35,12 @@ async fn parse_length(s: &str) -> Option<f64> {
 
 /// 📐️ Computes [`SvgDimensions`] from a snapshot's root element — pure, total (never panics),
 /// `SvgDimensions::default()` for a document with no root or a non-`<svg>` root.
-pub async fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
     let Some(root @ XmlNode::Element { .. }) = &snapshot.doc.root else {
         return SvgDimensions::default();
     };
-    let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root).await else {
+    let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root) else {
         return SvgDimensions::default();
     };
     let (view_box_width, view_box_height) = view_box.map(|vb| (vb.width, vb.height)).unwrap_or((0.0, 0.0));
@@ -54,7 +56,8 @@ mod tests {
     use super::*;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
 
-    async fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn svg_snapshot(attrs: Vec<XmlAttr>) -> SvgSnapshot {
         SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs, children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 

@@ -17,7 +17,8 @@ pub struct PdfOutline {
 }
 
 impl PdfOutline {
-    pub async fn compute(snapshot: &PdfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &PdfSnapshot) -> Self {
         Self { page_count: 1, word_count: snapshot.page.text.split_whitespace().count() as u32, char_count: snapshot.page.text.chars().count() as u32 }
     }
 }

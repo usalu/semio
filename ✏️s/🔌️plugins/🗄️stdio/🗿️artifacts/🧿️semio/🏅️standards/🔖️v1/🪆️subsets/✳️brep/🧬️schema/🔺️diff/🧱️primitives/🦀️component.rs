@@ -38,46 +38,54 @@ pub struct Wire {
 
 // #region 🔖️Helpers
 
-async fn placeholder_face() -> FaceId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn placeholder_face() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
-async fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
-    if value <= Tol::DEFAULT.value().await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
+    if value <= Tol::DEFAULT.value() {
         Err(KernelError::InvalidInput(format!("{name} must be positive, got {value}")))
     } else {
         Ok(())
     }
 }
 
-pub(crate) async fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
-    let outer = make_loop(body, placeholder_face().await, members);
-    let face = add_face(body, surface_id, Some(outer.await), vec![], flipped, tol, rec);
-    body.loops.get_mut(outer.await).await.unwrap().face = face.await;
-    face.await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+    let outer = make_loop(body, placeholder_face(), members);
+    let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
+    body.loops.get_mut(outer).unwrap().face = face;
+    face
 }
 
-pub(crate) async fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
-    make_edge(body, curve.await, (0.0, 1.0), va, vb, tol, rec).await
+    make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
 
-async fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    let frame = Frame3::from_normal(center, normal).await.expect("circle frame");
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn circle_edge(body: &mut Body, center: Pnt3, normal: Vec3, radius: f64, vertex: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+    let frame = Frame3::from_normal(center, normal).expect("circle frame");
     let curve = body.curves3.insert(Curve3::Circle { frame, radius });
-    make_edge(body, curve.await, (0.0, TAU), vertex, vertex, tol, rec).await
+    make_edge(body, curve, (0.0, TAU), vertex, vertex, tol, rec)
 }
 
-pub(crate) async fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
-    Surface::Plane { frame: Frame3::from_normal(origin, normal).await.expect("plane frame") }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
+    Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
 }
 
-pub(crate) async fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
     let shell = add_shell(body, faces, rec);
-    add_solid(body, shell.await, vec![], rec).await
+    add_solid(body, shell, vec![], rec)
 }
 
-async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
     if points.len() < 3 {
         return None;
     }
@@ -89,7 +97,7 @@ async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
         n.y += (p.z - q.z) * (p.x + q.x);
         n.z += (p.x - q.x) * (p.y + q.y);
     }
-    n.normalized().await
+    n.normalized()
 }
 
 // #endregion 🔖️Helpers
@@ -99,44 +107,46 @@ async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
 /// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpDelta`]
 /// is observable after this call returns, instead of being discarded at the function boundary.
-pub async fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("box width", w).await?;
-    require_positive("box depth", d).await?;
-    require_positive("box height", h).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("box width", w)?;
+    require_positive("box depth", d)?;
+    require_positive("box height", h)?;
     let tol = Tol::DEFAULT;
     let corners = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(w, 0.0, 0.0), Pnt3::new(w, d, 0.0), Pnt3::new(0.0, d, 0.0), Pnt3::new(0.0, 0.0, h), Pnt3::new(w, 0.0, h), Pnt3::new(w, d, h), Pnt3::new(0.0, d, h)];
     let v: Vec<VertexId> = corners.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
-    let eb0 = line_edge(body, corners[0].await, corners[1].await, v[0], v[1], tol, rec);
-    let eb1 = line_edge(body, corners[1].await, corners[2].await, v[1], v[2], tol, rec);
-    let eb2 = line_edge(body, corners[2].await, corners[3].await, v[2], v[3], tol, rec);
-    let eb3 = line_edge(body, corners[3].await, corners[0].await, v[3], v[0], tol, rec);
-    let et0 = line_edge(body, corners[4].await, corners[5].await, v[4], v[5], tol, rec);
-    let et1 = line_edge(body, corners[5].await, corners[6].await, v[5], v[6], tol, rec);
-    let et2 = line_edge(body, corners[6].await, corners[7].await, v[6], v[7], tol, rec);
-    let et3 = line_edge(body, corners[7].await, corners[4].await, v[7], v[4], tol, rec);
-    let ev0 = line_edge(body, corners[0].await, corners[4].await, v[0], v[4], tol, rec);
-    let ev1 = line_edge(body, corners[1].await, corners[5].await, v[1], v[5], tol, rec);
-    let ev2 = line_edge(body, corners[2].await, corners[6].await, v[2], v[6], tol, rec);
-    let ev3 = line_edge(body, corners[3].await, corners[7].await, v[3], v[7], tol, rec);
+    let eb0 = line_edge(body, corners[0], corners[1], v[0], v[1], tol, rec);
+    let eb1 = line_edge(body, corners[1], corners[2], v[1], v[2], tol, rec);
+    let eb2 = line_edge(body, corners[2], corners[3], v[2], v[3], tol, rec);
+    let eb3 = line_edge(body, corners[3], corners[0], v[3], v[0], tol, rec);
+    let et0 = line_edge(body, corners[4], corners[5], v[4], v[5], tol, rec);
+    let et1 = line_edge(body, corners[5], corners[6], v[5], v[6], tol, rec);
+    let et2 = line_edge(body, corners[6], corners[7], v[6], v[7], tol, rec);
+    let et3 = line_edge(body, corners[7], corners[4], v[7], v[4], tol, rec);
+    let ev0 = line_edge(body, corners[0], corners[4], v[0], v[4], tol, rec);
+    let ev1 = line_edge(body, corners[1], corners[5], v[1], v[5], tol, rec);
+    let ev2 = line_edge(body, corners[2], corners[6], v[2], v[6], tol, rec);
+    let ev3 = line_edge(body, corners[3], corners[7], v[3], v[7], tol, rec);
 
-    let s_bottom = body.surfaces.insert(plane_at(corners[0].await, -Vec3::Z).await);
-    let s_top = body.surfaces.insert(plane_at(corners[4].await, Vec3::Z).await);
-    let s_front = body.surfaces.insert(plane_at(corners[0].await, -Vec3::Y).await);
-    let s_back = body.surfaces.insert(plane_at(corners[3].await, Vec3::Y).await);
-    let s_left = body.surfaces.insert(plane_at(corners[0].await, -Vec3::X).await);
-    let s_right = body.surfaces.insert(plane_at(corners[1].await, Vec3::X).await);
-    let bottom = attach_face(body, s_bottom.await, &[(eb0.await, false), (eb3.await, false), (eb2.await, false), (eb1.await, false)], false, tol, rec);
-    let top = attach_face(body, s_top.await, &[(et0.await, true), (et1.await, true), (et2.await, true), (et3.await, true)], false, tol, rec);
-    let front = attach_face(body, s_front.await, &[(eb0.await, true), (ev1.await, true), (et0.await, false), (ev0.await, false)], false, tol, rec);
-    let back = attach_face(body, s_back.await, &[(eb2.await, true), (ev3.await, true), (et2.await, false), (ev2.await, false)], false, tol, rec);
-    let left = attach_face(body, s_left.await, &[(eb3.await, true), (ev0.await, true), (et3.await, false), (ev3.await, false)], false, tol, rec);
-    let right = attach_face(body, s_right.await, &[(eb1.await, true), (ev2.await, true), (et1.await, false), (ev1.await, false)], false, tol, rec);
-    Ok(finish_solid(body, vec![bottom.await, top.await, front.await, back.await, left.await, right.await], rec).await)
+    let s_bottom = body.surfaces.insert(plane_at(corners[0], -Vec3::Z));
+    let s_top = body.surfaces.insert(plane_at(corners[4], Vec3::Z));
+    let s_front = body.surfaces.insert(plane_at(corners[0], -Vec3::Y));
+    let s_back = body.surfaces.insert(plane_at(corners[3], Vec3::Y));
+    let s_left = body.surfaces.insert(plane_at(corners[0], -Vec3::X));
+    let s_right = body.surfaces.insert(plane_at(corners[1], Vec3::X));
+    let bottom = attach_face(body, s_bottom, &[(eb0, false), (eb3, false), (eb2, false), (eb1, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(et0, true), (et1, true), (et2, true), (et3, true)], false, tol, rec);
+    let front = attach_face(body, s_front, &[(eb0, true), (ev1, true), (et0, false), (ev0, false)], false, tol, rec);
+    let back = attach_face(body, s_back, &[(eb2, true), (ev3, true), (et2, false), (ev2, false)], false, tol, rec);
+    let left = attach_face(body, s_left, &[(eb3, true), (ev0, true), (et3, false), (ev3, false)], false, tol, rec);
+    let right = attach_face(body, s_right, &[(eb1, true), (ev2, true), (et1, false), (ev1, false)], false, tol, rec);
+    Ok(finish_solid(body, vec![bottom, top, front, back, left, right], rec))
 }
 
 /// 🧱 Sphere centered at the origin as two hemispherical faces sharing an `segments`-gon equator.
-pub async fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("sphere radius", radius).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("sphere radius", radius)?;
     if segments < 4 {
         return Err(KernelError::InvalidInput(format!("sphere needs at least 4 segments, got {segments}")));
     }
@@ -150,26 +160,27 @@ pub async fn make_sphere(body: &mut Body, radius: f64, segments: usize, rec: &mu
         let theta = TAU * i as f64 / segments as f64;
         let p = Pnt3::new(radius * theta.cos(), radius * theta.sin(), 0.0);
         positions.push(p);
-        verts.push(make_vertex(body, p.await, tol, rec));
+        verts.push(make_vertex(body, p, tol, rec));
     }
     let mut edges = Vec::with_capacity(segments);
     for i in 0..segments {
         let j = (i + 1) % segments;
-        edges.push(line_edge(body, positions[i].await, positions[j].await, verts[i].await, verts[j].await, tol, rec));
+        edges.push(line_edge(body, positions[i], positions[j], verts[i], verts[j], tol, rec));
     }
     let north_members: Vec<(EdgeId, bool)> = edges.iter().map(|&e| (e, true)).collect();
     let south_members: Vec<(EdgeId, bool)> = edges.iter().rev().map(|&e| (e, false)).collect();
-    let north = attach_face(body, surface_n.await, &north_members, false, tol, rec);
-    let south = attach_face(body, surface_s.await, &south_members, true, tol, rec);
-    Ok(finish_solid(body, vec![north.await, south.await], rec).await)
+    let north = attach_face(body, surface_n, &north_members, false, tol, rec);
+    let south = attach_face(body, surface_s, &south_members, true, tol, rec);
+    Ok(finish_solid(body, vec![north, south], rec))
 }
 
 /// 🧱 Cylinder along +Z from `z=0` to `z=height` with analytic lateral surface and planar caps.
 ///
 /// `segments` is retained for tessellation hints and must be ≥ 3; topology uses a single seam.
-pub async fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("cylinder radius", radius).await?;
-    require_positive("cylinder height", height).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("cylinder radius", radius)?;
+    require_positive("cylinder height", height)?;
     if segments < 3 {
         return Err(KernelError::InvalidInput(format!("cylinder needs at least 3 segments, got {segments}")));
     }
@@ -177,53 +188,55 @@ pub async fn make_cylinder(body: &mut Body, radius: f64, height: f64, segments: 
     let tol = Tol::DEFAULT;
     let bot_pt = Pnt3::new(radius, 0.0, 0.0);
     let top_pt = Pnt3::new(radius, 0.0, height);
-    let v_bot = make_vertex(body, bot_pt.await, tol, rec);
-    let v_top = make_vertex(body, top_pt.await, tol, rec);
-    let e_bot = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0).await, Vec3::Z, radius, v_bot.await, tol, rec);
-    let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height).await, Vec3::Z, radius, v_top.await, tol, rec);
-    let e_seam = line_edge(body, bot_pt.await, top_pt.await, v_bot.await, v_top.await, tol, rec);
+    let v_bot = make_vertex(body, bot_pt, tol, rec);
+    let v_top = make_vertex(body, top_pt, tol, rec);
+    let e_bot = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_bot, tol, rec);
+    let e_top = circle_edge(body, Pnt3::new(0.0, 0.0, height), Vec3::Z, radius, v_top, tol, rec);
+    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
     let cyl = body.surfaces.insert(Surface::Cylinder { frame: Frame3::WORLD, radius });
-    let lateral = attach_face(body, cyl.await, &[(e_bot.await, true), (e_seam.await, true), (e_top.await, false), (e_seam.await, false)], false, tol, rec);
-    let s_bottom = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0).await, -Vec3::Z).await);
-    let s_top = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, height).await, Vec3::Z).await);
-    let bottom = attach_face(body, s_bottom.await, &[(e_bot.await, false)], false, tol, rec);
-    let top = attach_face(body, s_top.await, &[(e_top.await, true)], false, tol, rec);
-    Ok(finish_solid(body, vec![lateral.await, bottom.await, top.await], rec).await)
+    let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
+    let s_bottom = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
+    let s_top = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, height), Vec3::Z));
+    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
+    Ok(finish_solid(body, vec![lateral, bottom, top], rec))
 }
 
 /// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`.
 ///
 /// `segments` is a tessellation hint (≥ 3); topology uses a single generator seam.
-pub async fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("cone radius", radius).await?;
-    require_positive("cone height", height).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_cone(body: &mut Body, radius: f64, height: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("cone radius", radius)?;
+    require_positive("cone height", height)?;
     if segments < 3 {
         return Err(KernelError::InvalidInput(format!("cone needs at least 3 segments, got {segments}")));
     }
     let _ = segments;
     let tol = Tol::DEFAULT;
     let half_angle = radius.atan2(height);
-    if half_angle <= Tol::DEFAULT.value().await || half_angle >= FRAC_PI_2 {
+    if half_angle <= Tol::DEFAULT.value() || half_angle >= FRAC_PI_2 {
         return Err(KernelError::InvalidInput(format!("cone half-angle out of range: {half_angle}")));
     }
     let apex = Pnt3::new(0.0, 0.0, height);
     let base_pt = Pnt3::new(radius, 0.0, 0.0);
-    let v_apex = make_vertex(body, apex.await, tol, rec);
-    let v_base = make_vertex(body, base_pt.await, tol, rec);
-    let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0).await, Vec3::Z, radius, v_base.await, tol, rec);
-    let e_seam = line_edge(body, base_pt.await, apex.await, v_base.await, v_apex.await, tol, rec);
-    let cone_frame = Frame3 { origin: apex.await, x: Vec3::X, y: Vec3::Y, z: -Vec3::Z };
+    let v_apex = make_vertex(body, apex, tol, rec);
+    let v_base = make_vertex(body, base_pt, tol, rec);
+    let e_circle = circle_edge(body, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, v_base, tol, rec);
+    let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
+    let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: Vec3::Y, z: -Vec3::Z };
     let cone_surf = body.surfaces.insert(Surface::Cone { frame: cone_frame, half_angle });
-    let lateral = attach_face(body, cone_surf.await, &[(e_circle.await, true), (e_seam.await, true), (e_seam.await, false)], false, tol, rec);
-    let s_base = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0).await, -Vec3::Z).await);
-    let base = attach_face(body, s_base.await, &[(e_circle.await, false)], false, tol, rec);
-    Ok(finish_solid(body, vec![lateral.await, base.await], rec).await)
+    let lateral = attach_face(body, cone_surf, &[(e_circle, true), (e_seam, true), (e_seam, false)], false, tol, rec);
+    let s_base = body.surfaces.insert(plane_at(Pnt3::new(0.0, 0.0, 0.0), -Vec3::Z));
+    let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, rec);
+    Ok(finish_solid(body, vec![lateral, base], rec))
 }
 
 /// 🧱 Torus in the XY plane as one toroidal face with the fundamental-polygon seam wire (genus 1).
-pub async fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("torus major radius", major).await?;
-    require_positive("torus minor radius", minor).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("torus major radius", major)?;
+    require_positive("torus minor radius", minor)?;
     if minor >= major {
         return Err(KernelError::InvalidInput(format!("torus minor radius ({minor}) must be less than major radius ({major})")));
     }
@@ -244,7 +257,7 @@ pub async fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize
             let r = major + minor * cv;
             let p = Pnt3::new(r * cu, r * su, minor * sv);
             positions.push(p);
-            verts.push(make_vertex(body, p.await, tol, rec));
+            verts.push(make_vertex(body, p, tol, rec));
         }
     }
 
@@ -261,11 +274,11 @@ pub async fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize
                 for (ia, ib) in [(tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0])] {
                     let key = (ia.min(ib), ia.max(ib));
                     let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
-                        let edge = body.edges.get(existing).await.unwrap();
-                        (existing, edge.v0 == verts[ia].await)
+                        let edge = body.edges.get(existing).unwrap();
+                        (existing, edge.v0 == verts[ia])
                     } else {
-                        let eid = line_edge(body, positions[ia].await, positions[ib].await, verts[ia].await, verts[ib].await, tol, rec);
-                        edge_map.insert(key, eid.await);
+                        let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, rec);
+                        edge_map.insert(key, eid);
                         (eid, true)
                     };
                     members.push((eid, forward));
@@ -283,16 +296,17 @@ pub async fn make_torus(body: &mut Body, major: f64, minor: f64, segments: usize
                     }
                     normal = -normal;
                 }
-                let surface = body.surfaces.insert(plane_at(pa.await, normal).await);
-                faces.push(attach_face(body, surface.await, &members, false, tol, rec));
+                let surface = body.surfaces.insert(plane_at(pa, normal));
+                faces.push(attach_face(body, surface, &members, false, tol, rec));
             }
         }
     }
-    Ok(finish_solid(body, faces, rec).await)
+    Ok(finish_solid(body, faces, rec))
 }
 
 /// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used when convex-hull boolean fails.
-pub async fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if triangles.is_empty() {
         return Err(KernelError::InvalidInput("triangle soup is empty".into()));
     }
@@ -309,7 +323,7 @@ pub async fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], 
             }
             key_to_idx.insert(key, positions.len());
             positions.push(p);
-            verts.push(make_vertex(body, p, tol, rec).await);
+            verts.push(make_vertex(body, p, tol, rec));
         }
     }
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
@@ -324,25 +338,26 @@ pub async fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], 
         for (ia, ib) in [(idxs[0], idxs[1]), (idxs[1], idxs[2]), (idxs[2], idxs[0])] {
             let key = (ia.min(ib), ia.max(ib));
             let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
-                let edge = body.edges.get(existing).await.unwrap();
+                let edge = body.edges.get(existing).unwrap();
                 (existing, edge.v0 == verts[ia])
             } else {
                 let eid = line_edge(body, positions[ia], positions[ib], verts[ia], verts[ib], tol, rec);
-                edge_map.insert(key, eid.await);
+                edge_map.insert(key, eid);
                 (eid, true)
             };
             members.push((eid, forward));
         }
-        let normal = (tri[1] - tri[0]).cross(tri[2] - tri[0]).await.normalized().await.unwrap_or(Vec3::Z);
-        let surface = body.surfaces.insert(plane_at(tri[0], normal).await);
-        faces.push(attach_face(body, surface.await, &members, false, tol, rec));
+        let normal = (tri[1] - tri[0]).cross(tri[2] - tri[0]).normalized().unwrap_or(Vec3::Z);
+        let surface = body.surfaces.insert(plane_at(tri[0], normal));
+        faces.push(attach_face(body, surface, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, rec).await)
+    Ok(finish_solid(body, faces, rec))
 }
 
 /// 🧱 Convex hull of a point cloud as a closed solid of planar triangles (Quickhull).
-pub async fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let hull = convex_hull_3d(points).await.ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    let hull = convex_hull_3d(points).ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
     let tol = Tol::DEFAULT;
     let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
     let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
@@ -353,12 +368,12 @@ pub async fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpReco
         for (ia, ib) in pairs {
             let key = (ia.min(ib), ia.max(ib));
             let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
-                let edge = body.edges.get(existing).await.unwrap();
+                let edge = body.edges.get(existing).unwrap();
                 let forward = edge.v0 == vertex_ids[ia];
                 (existing, forward)
             } else {
                 let eid = line_edge(body, hull.vertices[ia], hull.vertices[ib], vertex_ids[ia], vertex_ids[ib], tol, rec);
-                edge_map.insert(key, eid.await);
+                edge_map.insert(key, eid);
                 (eid, true)
             };
             members.push((eid, forward));
@@ -366,11 +381,11 @@ pub async fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpReco
         let pa = hull.vertices[a];
         let pb = hull.vertices[b];
         let pc = hull.vertices[c];
-        let normal = (pb - pa).cross(pc - pa).await.normalized().await.unwrap_or(Vec3::Z);
-        let surface = body.surfaces.insert(plane_at(pa, normal).await);
-        faces.push(attach_face(body, surface.await, &members, false, tol, rec));
+        let normal = (pb - pa).cross(pc - pa).normalized().unwrap_or(Vec3::Z);
+        let surface = body.surfaces.insert(plane_at(pa, normal));
+        faces.push(attach_face(body, surface, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, rec).await)
+    Ok(finish_solid(body, faces, rec))
 }
 
 // #endregion 🔖️Solids
@@ -378,7 +393,8 @@ pub async fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpReco
 // #region 🔖️WiresFaces
 
 /// 🧱 Open or closed polyline wire through `points` (closed requires ≥ 3 points).
-pub async fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
     if points.len() < 2 {
         return Err(KernelError::InvalidInput("polyline needs at least 2 points".into()));
     }
@@ -398,15 +414,17 @@ pub async fn make_polyline_wire(body: &mut Body, points: &[Pnt3], closed: bool, 
 }
 
 /// 🧱 Axis-aligned rectangle wire in the XY plane from the origin to `(width, height)`.
-pub async fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
-    require_positive("rectangle width", width).await?;
-    require_positive("rectangle height", height).await?;
-    make_polyline_wire(body, &[Pnt3::new(0.0, 0.0, 0.0).await, Pnt3::new(width, 0.0, 0.0).await, Pnt3::new(width, height, 0.0).await, Pnt3::new(0.0, height, 0.0).await], true, rec).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_rectangle_wire(body: &mut Body, width: f64, height: f64, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+    require_positive("rectangle width", width)?;
+    require_positive("rectangle height", height)?;
+    make_polyline_wire(body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(width, 0.0, 0.0), Pnt3::new(width, height, 0.0), Pnt3::new(0.0, height, 0.0)], true, rec)
 }
 
 /// 🧱 Regular `sides`-gon wire of given `radius` in the XY plane, centered at the origin.
-pub async fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
-    require_positive("polygon radius", radius).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usize, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+    require_positive("polygon radius", radius)?;
     if sides < 3 {
         return Err(KernelError::InvalidInput(format!("polygon needs at least 3 sides, got {sides}")));
     }
@@ -416,29 +434,31 @@ pub async fn make_regular_polygon_wire(body: &mut Body, radius: f64, sides: usiz
             Pnt3::new(radius * a.cos(), radius * a.sin(), 0.0)
         })
         .collect();
-    make_polyline_wire(body, &points, true, rec).await
+    make_polyline_wire(body, &points, true, rec)
 }
 
 /// 🧱 Planar face from a closed point loop (Newell normal); points must be non-collinear.
-pub async fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if points.len() < 3 {
         return Err(KernelError::InvalidInput("planar face needs at least 3 points".into()));
     }
-    let normal = newell_normal(points).await.ok_or_else(|| KernelError::InvalidInput("points are collinear".into()))?;
-    let wire = make_polyline_wire(body, points, true, rec).await?;
-    make_planar_face_from_wire(body, &wire, points[0], normal, rec).await
+    let normal = newell_normal(points).ok_or_else(|| KernelError::InvalidInput("points are collinear".into()))?;
+    let wire = make_polyline_wire(body, points, true, rec)?;
+    make_planar_face_from_wire(body, &wire, points[0], normal, rec)
 }
 
 /// 🧱 Planar face whose outer loop is an existing closed [`Wire`].
-pub async fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     if !wire.closed {
         return Err(KernelError::InvalidInput("planar face requires a closed wire".into()));
     }
     if wire.members.is_empty() {
         return Err(KernelError::InvalidInput("planar face wire is empty".into()));
     }
-    let surface = body.surfaces.insert(plane_at(origin, normal).await);
-    Ok(attach_face(body, surface.await, &wire.members, false, Tol::DEFAULT, rec).await)
+    let surface = body.surfaces.insert(plane_at(origin, normal));
+    Ok(attach_face(body, surface, &wire.members, false, Tol::DEFAULT, rec))
 }
 
 // #endregion 🔖️WiresFaces
@@ -458,15 +478,18 @@ struct ConvexHull {
     faces: Vec<[usize; 3]>,
 }
 
-async fn face_normal(pts: &[Pnt3], a: usize, b: usize, c: usize) -> Vec3 {
-    (pts[b] - pts[a]).cross(pts[c] - pts[a]).await.normalized().await.unwrap_or(Vec3::Z)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_normal(pts: &[Pnt3], a: usize, b: usize, c: usize) -> Vec3 {
+    (pts[b] - pts[a]).cross(pts[c] - pts[a]).normalized().unwrap_or(Vec3::Z)
 }
 
-async fn signed_distance(face: &HullFace, p: Pnt3) -> f64 {
-    face.normal.dot(p.to_vec().await) + face.d
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn signed_distance(face: &HullFace, p: Pnt3) -> f64 {
+    face.normal.dot(p.to_vec()) + face.d
 }
 
-async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     let mut i0 = 0usize;
     for (i, p) in pts.iter().enumerate() {
         if p.x < pts[i0].x {
@@ -481,7 +504,7 @@ async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
         }
         let dist = p.distance(pts[i0]);
         if dist > best {
-            best = dist.await;
+            best = dist;
             i1 = Some(i);
         }
     }
@@ -493,9 +516,9 @@ async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
         if i == i0 || i == i1 {
             continue;
         }
-        let area = edge.cross(*p - pts[i0]).await.norm();
+        let area = edge.cross(*p - pts[i0]).norm();
         if area > best {
-            best = area.await;
+            best = area;
             i2 = Some(i);
         }
     }
@@ -503,14 +526,14 @@ async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     if best <= 1e-12 {
         return None;
     }
-    let n = face_normal(pts, i0, i1, i2).await;
+    let n = face_normal(pts, i0, i1, i2);
     let mut i3 = None;
     best = 0.0;
     for (i, p) in pts.iter().enumerate() {
         if i == i0 || i == i1 || i == i2 {
             continue;
         }
-        let dist = n.dot(*p - pts[i0]).await.abs();
+        let dist = n.dot(*p - pts[i0]).abs();
         if dist > best {
             best = dist;
             i3 = Some(i);
@@ -523,7 +546,8 @@ async fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     Some([i0, i1, i2, i3])
 }
 
-async fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
     if points.len() < 4 {
         return None;
     }
@@ -537,17 +561,17 @@ async fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
     if pts.len() < 4 {
         return None;
     }
-    let tet = find_initial_tetrahedron(&pts).await?;
+    let tet = find_initial_tetrahedron(&pts)?;
     let mut faces: Vec<HullFace> = Vec::new();
     let tet_faces = [[tet[0], tet[1], tet[2]], [tet[0], tet[2], tet[3]], [tet[0], tet[3], tet[1]], [tet[1], tet[3], tet[2]]];
     for &[a, b, c] in &tet_faces {
-        let normal = face_normal(&pts, a, b, c).await;
-        let d = -normal.dot(pts[a].to_vec().await).await;
+        let normal = face_normal(&pts, a, b, c);
+        let d = -normal.dot(pts[a].to_vec());
         faces.push(HullFace { verts: [a, b, c], normal, d, alive: true });
     }
     let centroid = Pnt3::new((pts[tet[0]].x + pts[tet[1]].x + pts[tet[2]].x + pts[tet[3]].x) / 4.0, (pts[tet[0]].y + pts[tet[1]].y + pts[tet[2]].y + pts[tet[3]].y) / 4.0, (pts[tet[0]].z + pts[tet[1]].z + pts[tet[2]].z + pts[tet[3]].z) / 4.0);
     for face in &mut faces {
-        if signed_distance(face, centroid.await) > 0.0 {
+        if signed_distance(face, centroid) > 0.0 {
             face.normal = -face.normal;
             face.d = -face.d;
             face.verts.swap(1, 2);
@@ -584,10 +608,10 @@ async fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
         for edge in horizon {
             let a = edge[0];
             let b = edge[1];
-            let normal = face_normal(&pts, a, b, pi).await;
-            let d = -normal.dot(pts[a].to_vec().await).await;
+            let normal = face_normal(&pts, a, b, pi);
+            let d = -normal.dot(pts[a].to_vec());
             let mut face = HullFace { verts: [a, b, pi], normal, d, alive: true };
-            if signed_distance(&face, centroid.await) > 0.0 {
+            if signed_distance(&face, centroid) > 0.0 {
                 face.normal = -face.normal;
                 face.d = -face.d;
                 face.verts.swap(1, 2);
@@ -610,7 +634,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 
-    async fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
         let faces = body.solid_faces(solid);
         let mut edge_ids = std::collections::HashSet::new();
         let mut vertex_ids = std::collections::HashSet::new();
@@ -626,7 +651,8 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
-    async fn assert_rings_ok(body: &Body) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_rings_ok(body: &Body) {
         let issues = validate_body(body);
         let ring_issues: Vec<_> = issues.iter().filter(|i| matches!(i.code, "empty-loop" | "broken-ring" | "loop-not-closed" | "next-prev-mismatch")).collect();
         assert!(ring_issues.is_empty(), "ring integrity failed: {ring_issues:?}");

@@ -915,11 +915,22 @@ interface reactor {
     checkpoint-ready,
     faulted(list<u8>),
   }
-  /// 👥️ One collaborator's presence, as of this turn — `wit-flip` (26/08/20): pack-encoded
-  /// `📡️replication/📡️wire::PresencePeer`, reusing that crate's own `encode-presence-peer` wire
-  /// format rather than re-declaring the peer/cursor/selection shape a second time in WIT.
+  /// 👥️ One RENDER-PLANE presence signal produced by this turn — pack-encoded
+  /// `contract-presence::PresenceUpdate`: addressed by `(surface, node-key)`, TTL-scoped, and
+  /// carrying the emitter's own selection/hover plus any peer marks it derived.
+  ///
+  /// 🚦️ Ruling (sol, 26/08/20, unified program): this is deliberately NOT the replication
+  /// `PresencePeer` roster shape it originally declared. The consumer of a turn result is the
+  /// RENDERER, which needs presence keyed to the node it must decorate and expiring on its own
+  /// clock; the collaboration ROSTER already has a dedicated channel in both directions
+  /// (`ephemeral-snapshot` outbound, `app-command::presence` -> `adopt-presence` inbound), and
+  /// shipping the whole roster on every turn would duplicate a plane that already works.
+  ///
+  /// ⛔️ Presence NEVER enters the document and never bumps a `revision`. A hover that produced a
+  /// document revision would defeat the entire revisioned-patch protocol, so a turn whose only
+  /// change is presence emits `presence` and an EMPTY `ui-patches`.
   record presence-update {
-    peer: pack,
+    update: pack,
   }
   record turn-result {
     ui-patches: list<ui-patch>,

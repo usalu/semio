@@ -57,7 +57,8 @@ use crate::artifacts::ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
 //#region 🔖️ScalarWire
 /// 📏 Byte width of a PLY scalar type.
-async fn scalar_type_size(kind: PlyScalarType) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scalar_type_size(kind: PlyScalarType) -> usize {
     match kind {
         PlyScalarType::Char | PlyScalarType::UChar => 1,
         PlyScalarType::Short | PlyScalarType::UShort => 2,
@@ -67,7 +68,8 @@ async fn scalar_type_size(kind: PlyScalarType) -> usize {
 }
 
 /// 🔤 Parses both long (`float`) and short (`float32`) PLY type spellings.
-async fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
     match ty {
         "char" | "int8" => Ok(PlyScalarType::Char),
         "uchar" | "uint8" => Ok(PlyScalarType::UChar),
@@ -82,7 +84,8 @@ async fn parse_scalar_type(ty: &str) -> Result<PlyScalarType, String> {
 }
 
 /// 🏷️ Canonical (long-form) wire spelling used on encode.
-async fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
     match kind {
         PlyScalarType::Char => "char",
         PlyScalarType::UChar => "uchar",
@@ -97,7 +100,8 @@ async fn scalar_type_wire_name(kind: PlyScalarType) -> &'static str {
 
 /// 🔢 Builds a `PlyValue` of the given scalar `kind` holding `n` (used to write a list's
 /// element count in its declared `count_kind` width).
-async fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
     match kind {
         PlyScalarType::Char => PlyValue::Char(n as i8),
         PlyScalarType::UChar => PlyValue::UChar(n as u8),
@@ -111,7 +115,8 @@ async fn count_as_value(kind: PlyScalarType, n: usize) -> PlyValue {
 }
 
 /// 🔢 Reads a scalar-typed value back out as an integer (for a decoded list-count cell).
-async fn value_as_usize(v: &PlyValue) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn value_as_usize(v: &PlyValue) -> usize {
     (match v {
         PlyValue::Char(x) => *x as i64,
         PlyValue::UChar(x) => *x as i64,
@@ -130,7 +135,8 @@ async fn value_as_usize(v: &PlyValue) -> usize {
 //#region 🔖️HeaderParse
 /// ✂️ Splits raw bytes into `(header_text, body)` at the line following `end_header`. The
 /// header itself is always ASCII text per spec, even for binary-format files.
-async fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_header(data: &[u8]) -> Result<(String, &[u8]), String> {
     let marker = b"end_header";
     let idx = data.windows(marker.len()).position(|w| w == marker).ok_or("ply: missing end_header")?;
     let after_marker = idx + marker.len();
@@ -155,7 +161,8 @@ struct PlyHeader {
 }
 
 /// 🧩 Parses the `ply` / `format` / `comment` / `element` / `property` header grammar.
-async fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
     let mut lines = text.lines();
     let first = lines.next().ok_or("ply: empty header")?.trim();
     if first != "ply" {
@@ -196,12 +203,12 @@ async fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
             let mut parts = rest.split_whitespace();
             let first_tok = parts.next().ok_or("ply: empty property declaration")?;
             if first_tok == "list" {
-                let count_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing count type")?).await?;
-                let value_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing value type")?).await?;
+                let count_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing count type")?)?;
+                let value_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing value type")?)?;
                 let name = parts.next().ok_or("ply: list property missing name")?.to_string();
                 el.properties.push(PlyProperty::List { name, count_kind, value_kind });
             } else {
-                let kind = parse_scalar_type(first_tok).await?;
+                let kind = parse_scalar_type(first_tok)?;
                 let name = parts.next().ok_or("ply: property missing name")?.to_string();
                 el.properties.push(PlyProperty::Scalar { name, kind });
             }
@@ -214,7 +221,8 @@ async fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
 
 //#region 🔖️BinaryScalarIo
 /// 📥 Reads one scalar of `kind` at `data[*pos..]`, advancing `*pos` by its width.
-async fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big: bool) -> Result<PlyValue, String> {
     let size = scalar_type_size(kind);
     if *pos + size > data.len() {
         return Err("ply: truncated binary body".into());
@@ -235,7 +243,8 @@ async fn read_scalar_bin(kind: PlyScalarType, data: &[u8], pos: &mut usize, big:
 }
 
 /// 📤 Writes one scalar value in the requested endianness.
-async fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
     match v {
         PlyValue::Char(x) => out.push(*x as u8),
         PlyValue::UChar(x) => out.push(*x),
@@ -251,7 +260,8 @@ async fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
 //#endregion 🔖️BinaryScalarIo
 
 //#region 🔖️AsciiScalarIo
-async fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, String> {
     let bad = |e: std::num::ParseIntError| format!("ply: bad scalar value '{tok}': {e}");
     let bad_f = |e: std::num::ParseFloatError| format!("ply: bad scalar value '{tok}': {e}");
     Ok(match kind {
@@ -266,7 +276,8 @@ async fn parse_scalar_ascii(kind: PlyScalarType, tok: &str) -> Result<PlyValue, 
     })
 }
 
-async fn format_scalar_ascii(v: &PlyValue) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn format_scalar_ascii(v: &PlyValue) -> String {
     match v {
         PlyValue::Char(x) => x.to_string(),
         PlyValue::UChar(x) => x.to_string(),
@@ -284,7 +295,8 @@ async fn format_scalar_ascii(v: &PlyValue) -> String {
 //#region 🔖️BodyDecode
 /// 📚 Decodes an `ascii`-format body against the parsed header's element/property declarations,
 /// producing fully typed rows for EVERY element (not just `vertex`/`face`).
-async fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<PlyElement>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<PlyElement>, String> {
     let mut tokens = body.split_whitespace();
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
@@ -295,15 +307,15 @@ async fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result
                 match prop {
                     PlyProperty::Scalar { kind, .. } => {
                         let tok = tokens.next().ok_or("ply: unexpected eof in ascii body")?;
-                        values.push(parse_scalar_ascii(*kind, tok).await?);
+                        values.push(parse_scalar_ascii(*kind, tok)?);
                     }
                     PlyProperty::List { count_kind, value_kind, .. } => {
                         let n_tok = tokens.next().ok_or("ply: unexpected eof reading list count")?;
-                        let n = value_as_usize(&parse_scalar_ascii(*count_kind, n_tok).await?);
-                        let mut items = Vec::with_capacity(n.await);
-                        for _ in 0..n.await {
+                        let n = value_as_usize(&parse_scalar_ascii(*count_kind, n_tok)?);
+                        let mut items = Vec::with_capacity(n);
+                        for _ in 0..n {
                             let vt = tokens.next().ok_or("ply: unexpected eof reading list value")?;
-                            items.push(parse_scalar_ascii(*value_kind, vt).await?);
+                            items.push(parse_scalar_ascii(*value_kind, vt)?);
                         }
                         values.push(PlyValue::List(items));
                     }
@@ -318,7 +330,8 @@ async fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result
 
 /// 📚 Binary counterpart of `decode_body_ascii` — same element/property walk, reading each
 /// declared scalar/list at its real byte width (endianness-aware) instead of tokenizing text.
-async fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) -> Result<Vec<PlyElement>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) -> Result<Vec<PlyElement>, String> {
     let mut pos = 0usize;
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
@@ -327,12 +340,12 @@ async fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bo
             let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {
                 match prop {
-                    PlyProperty::Scalar { kind, .. } => values.push(read_scalar_bin(*kind, body, &mut pos, big).await?),
+                    PlyProperty::Scalar { kind, .. } => values.push(read_scalar_bin(*kind, body, &mut pos, big)?),
                     PlyProperty::List { count_kind, value_kind, .. } => {
-                        let n = value_as_usize(&read_scalar_bin(*count_kind, body, &mut pos, big).await?);
-                        let mut items = Vec::with_capacity(n.await);
-                        for _ in 0..n.await {
-                            items.push(read_scalar_bin(*value_kind, body, &mut pos, big).await?);
+                        let n = value_as_usize(&read_scalar_bin(*count_kind, body, &mut pos, big)?);
+                        let mut items = Vec::with_capacity(n);
+                        for _ in 0..n {
+                            items.push(read_scalar_bin(*value_kind, body, &mut pos, big)?);
                         }
                         values.push(PlyValue::List(items));
                     }
@@ -348,7 +361,8 @@ async fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bo
 
 /// 🏗️ Builds the header text for `format`, walking every element's real name/count and every
 /// property's real declaration — generic, not canonicalized to a fixed vertex/face layout.
-async fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElement]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElement]) -> String {
     let fmt_line = match format {
         PlyFormat::Ascii => "format ascii 1.0\n",
         PlyFormat::BinaryLittleEndian => "format binary_little_endian 1.0\n",
@@ -378,8 +392,9 @@ async fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElem
 /// 🏗️ Encodes `snap` in the given wire `format` (ascii / binary LE / binary BE). Comments ARE
 /// re-emitted into the header on encode (as real `comment <text>\n` lines, matching
 /// `parse_header_text`'s decode side).
-pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
-    let mut out = header_text(format, &snap.comments, &snap.elements).await.into_bytes();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
+    let mut out = header_text(format, &snap.comments, &snap.elements).into_bytes();
     match format {
         PlyFormat::Ascii => {
             for el in &snap.elements {
@@ -388,7 +403,7 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
                     for (i, prop) in el.properties.iter().enumerate() {
                         let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
                         match prop {
-                            PlyProperty::Scalar { .. } => parts.push(format_scalar_ascii(v).await),
+                            PlyProperty::Scalar { .. } => parts.push(format_scalar_ascii(v)),
                             PlyProperty::List { .. } => match v {
                                 PlyValue::List(items) => {
                                     parts.push(items.len().to_string());
@@ -410,7 +425,7 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
                     for (i, prop) in el.properties.iter().enumerate() {
                         let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
                         match prop {
-                            PlyProperty::Scalar { .. } => push_scalar_bin(&mut out, v, big).await,
+                            PlyProperty::Scalar { .. } => push_scalar_bin(&mut out, v, big),
                             PlyProperty::List { count_kind, .. } => match v {
                                 PlyValue::List(items) => {
                                     push_scalar_bin(&mut out, &count_as_value(*count_kind, items.len()), big);
@@ -430,21 +445,23 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
 }
 
 /// 🏗️ Canonical encode — ascii wire format, matches the DSL/pack default.
-pub async fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
-    encode_ply_with_format(snap, PlyFormat::Ascii).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
+    encode_ply_with_format(snap, PlyFormat::Ascii)
 }
 
 /// 🔍 Decodes any of the three wire formats, dispatching on the header's own `format` line.
-pub async fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
-    let (header_str, body) = split_header(data).await?;
-    let header = parse_header_text(&header_str).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
+    let (header_str, body) = split_header(data)?;
+    let header = parse_header_text(&header_str)?;
     let elements = match header.format {
         PlyFormat::Ascii => {
             let body_text = std::str::from_utf8(body).map_err(|e| format!("ply: ascii body not utf8: {e}"))?;
-            decode_body_ascii(body_text, &header.elements).await?
+            decode_body_ascii(body_text, &header.elements)?
         }
-        PlyFormat::BinaryLittleEndian => decode_body_binary(body, &header.elements, false).await?,
-        PlyFormat::BinaryBigEndian => decode_body_binary(body, &header.elements, true).await?,
+        PlyFormat::BinaryLittleEndian => decode_body_binary(body, &header.elements, false)?,
+        PlyFormat::BinaryBigEndian => decode_body_binary(body, &header.elements, true)?,
     };
     Ok(PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: header.format, comments: header.comments, elements })
 }
@@ -507,7 +524,8 @@ mod tests {
     /// 🔺 A tetrahedron expressed as real `vertex`/`face` elements: 4 vertices, 4 triangular
     /// faces (via a `list uchar int vertex_indices` property) — small enough to hand-check,
     /// non-trivial enough (mixed-sign coords, several list-shaped faces) to catch layout bugs.
-    async fn tetrahedron() -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn tetrahedron() -> PlySnapshot {
         let vertex_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         let face_props = vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }];
         let vertex_rows: Vec<PlyRow> = [(0.0f32, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)].into_iter().map(|(x, y, z)| PlyRow { values: vec![PlyValue::Float(x), PlyValue::Float(y), PlyValue::Float(z)] }).collect();
@@ -594,7 +612,8 @@ mod tests {
     //#endregion
 
     //#region 🔖️LawFixtures
-    async fn law_base() -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn law_base() -> PlySnapshot {
         tetrahedron()
     }
     //#endregion
@@ -811,7 +830,8 @@ mod tests {
 
     //#region 🔖️FieldSweep
     /// 6️⃣ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field.
-    async fn sweep_a() -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> PlySnapshot {
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::Ascii,
@@ -833,7 +853,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> PlySnapshot {
         PlySnapshot {
             schema: STDIO_PLY_DOCUMENT_SCHEMA.into(),
             format: PlyFormat::BinaryLittleEndian,

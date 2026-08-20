@@ -78,7 +78,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     async fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
-            SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioImageMutation::SetDimensions { width, height } => SemioImageDiff { width: (base.width != *width).then_some(*width), height: (base.height != *height).then_some(*height), ..Default::default() },
             SemioImageMutation::SetColorspace { colorspace } => SemioImageDiff { colorspace: (base.colorspace != *colorspace).then_some(*colorspace), ..Default::default() },
             SemioImageMutation::SetBitDepth { bit_depth } => SemioImageDiff { bit_depth: (base.bit_depth != *bit_depth).then_some(*bit_depth), ..Default::default() },
@@ -143,9 +143,10 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
-pub async fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
-    let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
+    let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -158,46 +159,53 @@ pub async fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutat
 /// then comma-separated positional fields (bracket-depth-aware, reusing the shared
 /// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. `SetSnapshot`'s whole
 /// snapshot — never confuses the top-level split).
-async fn enc_snapshot(s: &SemioImageSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_snapshot(s: &SemioImageSnapshot) -> String {
     let frames = s.frames.iter().map(enc_frame).collect::<Vec<_>>().join(",");
     let metadata = s.metadata.iter().map(enc_metadata_entry).collect::<Vec<_>>().join(",");
     format!("[{},{},{},{},{},[{}],[{}]]", s.width, s.height, enc_colorspace(s.colorspace), s.bit_depth, encode_option(&s.icc, |b| b.iter().map(|x| format!("{x:02x}")).collect::<String>()), frames, metadata,)
 }
-async fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [width, height, colorspace, bit_depth, icc, frames, metadata] = parts.as_slice() else {
         return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
     };
-    let frames = split_top_level(strip_brackets(frames).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
-    let metadata = split_top_level(strip_brackets(metadata).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
+    let frames = split_top_level(strip_brackets(frames)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
+    let metadata = split_top_level(strip_brackets(metadata)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioImageSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
         width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        colorspace: dec_colorspace(colorspace).await?,
+        colorspace: dec_colorspace(colorspace)?,
         bit_depth: bit_depth.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect()).await?,
+        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect())?,
         frames,
         metadata,
     })
 }
-async fn enc_bytes(b: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_bytes(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
-async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_str(s: &str) -> String {
     s.bytes().map(|b| format!("{b:02x}")).collect()
 }
-async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(dec_bytes(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(dec_bytes(s)?).map_err(|e| e.to_string())
 }
 
-async fn print_image_mutation(m: &SemioImageMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_image_mutation(m: &SemioImageMutation) -> String {
     match m {
         SemioImageMutation::NoMutation => "no".to_string(),
         SemioImageMutation::SetSnapshot { snapshot } => format!("setSnapshot:{}", enc_snapshot(snapshot)),
@@ -215,56 +223,57 @@ async fn print_image_mutation(m: &SemioImageMutation) -> String {
     }
 }
 
-async fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
     if line == "no" {
         return Ok(SemioImageMutation::NoMutation);
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
     match tag {
-        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: dec_snapshot(rest).await? }),
+        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
         "setDimensions" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [w, h] = parts.as_slice() else { return Err(format!("setDimensions: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::SetDimensions { width: w.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, height: h.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
-        "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: dec_colorspace(rest).await? }),
+        "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: dec_colorspace(rest)? }),
         "setBitDepth" => Ok(SemioImageMutation::SetBitDepth { bit_depth: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        "setIcc" => Ok(SemioImageMutation::SetIcc { icc: decode_option(rest, dec_bytes).await? }),
+        "setIcc" => Ok(SemioImageMutation::SetIcc { icc: decode_option(rest, dec_bytes)? }),
         "insertFrame" => {
             let (idx, frame) = rest.split_once(',').ok_or_else(|| "insertFrame: missing comma".to_string())?;
-            Ok(SemioImageMutation::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame).await? })
+            Ok(SemioImageMutation::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame)? })
         }
         "removeFrame" => Ok(SemioImageMutation::RemoveFrame { index: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
         "moveFrame" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [from, to] = parts.as_slice() else { return Err(format!("moveFrame: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::MoveFrame { from: from.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, to: to.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
         "setFrameDelay" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [idx, delay] = parts.as_slice() else { return Err(format!("setFrameDelay: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::SetFrameDelay { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, delay_ms: delay.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
         "setFramePixels" => {
             let (idx, rgba) = rest.split_once(',').ok_or_else(|| "setFramePixels: missing comma".to_string())?;
-            Ok(SemioImageMutation::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba).await? })
+            Ok(SemioImageMutation::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba)? })
         }
         "setMetadataEntry" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [key, value] = parts.as_slice() else { return Err(format!("setMetadataEntry: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetMetadataEntry { key: dec_str(key).await?, value: dec_str(value).await? })
+            Ok(SemioImageMutation::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)? })
         }
-        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: dec_str(rest).await? }),
+        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: dec_str(rest)? }),
         other => Err(format!("mutation: unknown tag {other:?}")),
     }
 }
 
 impl OpText for SemioImageMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_image_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_image_mutation(self).await
+        print_image_mutation(self)
     }
 }
 
@@ -273,7 +282,8 @@ impl OpText for SemioImageMutation {
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
 /// `🎹️composer/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 13] = ["no", "setSnapshot", "setDimensions", "setColorspace", "setBitDepth", "setIcc", "insertFrame", "removeFrame", "moveFrame", "setFrameDelay", "setFramePixels", "setMetadataEntry", "removeMetadataEntry"];
-async fn variant_ordinal(m: &SemioImageMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioImageMutation) -> u8 {
     match m {
         SemioImageMutation::NoMutation => 0,
         SemioImageMutation::SetSnapshot { .. } => 1,
@@ -293,8 +303,9 @@ async fn variant_ordinal(m: &SemioImageMutation) -> u8 {
 /// ✂️ Just the argument tail of `print_image_mutation` (empty for `no`) — the binary frame's `tag`
 /// byte already carries the keyword, so the text keyword itself (and its `:` separator) is
 /// redundant in the binary payload.
-async fn print_image_mutation_args(m: &SemioImageMutation) -> String {
-    match print_image_mutation(m).await.split_once(':') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_image_mutation_args(m: &SemioImageMutation) -> String {
+    match print_image_mutation(m).split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -308,8 +319,8 @@ async fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 impl protocol::OpBinary for SemioImageMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_image_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_image_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -334,11 +345,14 @@ impl protocol::OpBinary for SemioImageMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioImageMutation> {
-    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
-    async fn fixture() -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 4,
             height: 4,
@@ -379,11 +393,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::{MutationDiff, OpBinary, OpText};
 
-    async fn frame(seed: u8, len: usize) -> SemioImageFrame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }
     }
 
-    async fn fixture() -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 4,
             height: 4,
@@ -399,7 +415,8 @@ mod tests {
     /// 🌱 Reuses `demo_mutation_cases()` (single source of truth, also feeds
     /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`) rather
     /// than an independent copy.
-    async fn sample_mutations() -> Vec<SemioImageMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_mutations() -> Vec<SemioImageMutation> {
         demo_mutation_cases()
     }
 

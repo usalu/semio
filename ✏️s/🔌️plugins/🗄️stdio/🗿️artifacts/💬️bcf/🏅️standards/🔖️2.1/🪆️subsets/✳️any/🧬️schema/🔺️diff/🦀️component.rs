@@ -47,7 +47,8 @@ pub struct NamedModified<K, D> {
     pub diff: D,
 }
 
-async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -80,7 +81,8 @@ where
     }
 }
 
-async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -96,7 +98,8 @@ where
     }
 }
 
-async fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -104,35 +107,36 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at(["removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
         }
         if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at(["removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
         }
     }
     let mut added_keys = Vec::new();
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || added_keys.contains(&key) || diff.removed.contains(&key) || diff.modified.iter().any(|modified| modified.key == key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").await.at(["added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").at(["added"]));
         }
         added_keys.push(key);
     }
     Ok(())
 }
 
-async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -156,7 +160,8 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
-async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -301,25 +306,28 @@ pub struct BcfPartDiff {
 /// 🧭️ Lowers a per-topic leaf diff into a full `BcfDiff` (mirrors svg's `diff_at_path` /
 /// docx's `wrap_body_diff`, specialized to this artifact's fixed two-level guid nesting instead of
 /// a generic path — bcf's tree never grows deeper than topic -> {comment,viewpoint}).
-pub async fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
     BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![NamedModified { key: guid.to_string(), diff }], added: Vec::new() }), parts: None }
 }
 
 /// 🧭️ Lowers a per-comment leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
-pub async fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
+    wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 
 /// 🧭️ Lowers a per-viewpoint leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
-pub async fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
+    wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
 }
 //#endregion 🔖️WrapHelpers
 
 //#region 🔖️Apply
 impl MutationDiff<BcfSnapshot> for BcfDiff {
     async fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
-        validate_bcf_diff(self, base).await?;
+        validate_bcf_diff(self, base)?;
         let mut next = base.clone();
         if let Some(v) = &self.version {
             next.version = v.clone();
@@ -340,42 +348,45 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         self.topics = match (self.topics.take(), other.topics) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |t| t.guid.clone(), absorb_topic_diff, apply_topic).await),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |t| t.guid.clone(), absorb_topic_diff, apply_topic)),
         };
         self.parts = match (self.parts.take(), other.parts) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |p| p.name.clone(), absorb_part_diff, apply_part).await),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |p| p.name.clone(), absorb_part_diff, apply_part)),
         };
     }
 }
 
-async fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
     if let Some(topics) = &diff.topics {
-        validate_named(&base.topics, topics, |topic| topic.guid.clone()).await?;
+        validate_named(&base.topics, topics, |topic| topic.guid.clone())?;
         for modified in &topics.modified {
             if let Some(topic) = base.topics.iter().find(|topic| topic.guid == modified.key) {
-                validate_topic_diff(topic, &modified.diff).await?;
+                validate_topic_diff(topic, &modified.diff)?;
             }
         }
     }
     if let Some(parts) = &diff.parts {
-        validate_named(&base.parts, parts, |part| part.name.clone()).await?;
+        validate_named(&base.parts, parts, |part| part.name.clone())?;
     }
     Ok(())
 }
 
-async fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
     if let Some(comments) = &diff.comments {
-        validate_named(&base.comments, comments, |comment| comment.guid.clone()).await?;
+        validate_named(&base.comments, comments, |comment| comment.guid.clone())?;
     }
     if let Some(viewpoints) = &diff.viewpoints {
-        validate_named(&base.viewpoints, viewpoints, |viewpoint| viewpoint.guid.clone()).await?;
+        validate_named(&base.viewpoints, viewpoints, |viewpoint| viewpoint.guid.clone())?;
     }
     Ok(())
 }
 
-async fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
     if let Some(v) = &diff.title {
         topic.title = v.clone();
     }
@@ -405,7 +416,8 @@ async fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
     }
 }
 
-async fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
     if let Some(v) = &diff.date {
         comment.date = v.clone();
     }
@@ -420,7 +432,8 @@ async fn apply_comment(comment: &mut BcfComment, diff: &BcfCommentDiff) {
     }
 }
 
-async fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
     if let Some(v) = &diff.camera {
         vp.camera = v.clone();
     }
@@ -432,7 +445,8 @@ async fn apply_viewpoint(vp: &mut BcfViewpoint, diff: &BcfViewpointDiff) {
     }
 }
 
-async fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
     if let Some(v) = &diff.data {
         part.data = v.clone();
     }
@@ -452,8 +466,8 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
     async fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
         BcfDiff {
             version: if base.version != other.version { Some(other.version.clone()) } else { None },
-            topics: between_named(&base.topics, &other.topics, |t| t.guid.clone(), between_topic).await,
-            parts: between_named(&base.parts, &other.parts, |p| p.name.clone(), between_part).await,
+            topics: between_named(&base.topics, &other.topics, |t| t.guid.clone(), between_topic),
+            parts: between_named(&base.parts, &other.parts, |p| p.name.clone(), between_part),
         }
     }
 
@@ -462,7 +476,8 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
     }
 }
 
-async fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
     BcfTopicDiff {
         title: diff.title.as_ref().map(|_| base.title.clone()),
         description: diff.description.as_ref().map(|_| base.description.clone()),
@@ -476,7 +491,8 @@ async fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
     }
 }
 
-async fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfCommentDiff {
     BcfCommentDiff {
         date: diff.date.as_ref().map(|_| base.date.clone()),
         author: diff.author.as_ref().map(|_| base.author.clone()),
@@ -485,15 +501,18 @@ async fn inverse_comment(base: &BcfComment, diff: &BcfCommentDiff) -> BcfComment
     }
 }
 
-async fn inverse_viewpoint(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpointDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_viewpoint(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpointDiff {
     BcfViewpointDiff { camera: diff.camera.as_ref().map(|_| base.camera.clone()), components: diff.components.as_ref().map(|_| base.components.clone()), snapshot: diff.snapshot.as_ref().map(|_| base.snapshot.clone()) }
 }
 
-async fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_part(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfPartDiff {
     BcfPartDiff { data: diff.data.as_ref().map(|_| base.data.clone()) }
 }
 
-async fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
     let title = if base.title != other.title { Some(other.title.clone()) } else { None };
     let description = if base.description != other.description { Some(other.description.clone()) } else { None };
     let status = if base.status != other.status { Some(other.status.clone()) } else { None };
@@ -501,8 +520,8 @@ async fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff
     let labels = if base.labels != other.labels { Some(other.labels.clone()) } else { None };
     let creation_date = if base.creation_date != other.creation_date { Some(other.creation_date.clone()) } else { None };
     let creation_author = if base.creation_author != other.creation_author { Some(other.creation_author.clone()) } else { None };
-    let comments = between_named(&base.comments, &other.comments, |c| c.guid.clone(), between_comment).await;
-    let viewpoints = between_named(&base.viewpoints, &other.viewpoints, |v| v.guid.clone(), between_viewpoint).await;
+    let comments = between_named(&base.comments, &other.comments, |c| c.guid.clone(), between_comment);
+    let viewpoints = between_named(&base.viewpoints, &other.viewpoints, |v| v.guid.clone(), between_viewpoint);
     if title.is_none() && description.is_none() && status.is_none() && priority.is_none() && labels.is_none() && creation_date.is_none() && creation_author.is_none() && comments.is_none() && viewpoints.is_none() {
         None
     } else {
@@ -510,7 +529,8 @@ async fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff
     }
 }
 
-async fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCommentDiff> {
     let date = if base.date != other.date { Some(other.date.clone()) } else { None };
     let author = if base.author != other.author { Some(other.author.clone()) } else { None };
     let text = if base.text != other.text { Some(other.text.clone()) } else { None };
@@ -522,7 +542,8 @@ async fn between_comment(base: &BcfComment, other: &BcfComment) -> Option<BcfCom
     }
 }
 
-async fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfViewpointDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<BcfViewpointDiff> {
     let camera = if base.camera != other.camera { Some(other.camera.clone()) } else { None };
     let components = if base.components != other.components { Some(other.components.clone()) } else { None };
     let snapshot = if base.snapshot != other.snapshot { Some(other.snapshot.clone()) } else { None };
@@ -533,7 +554,8 @@ async fn between_viewpoint(base: &BcfViewpoint, other: &BcfViewpoint) -> Option<
     }
 }
 
-async fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDiff> {
     if base.data != other.data {
         Some(BcfPartDiff { data: Some(other.data.clone()) })
     } else {
@@ -541,7 +563,8 @@ async fn between_part(base: &BcfRawPart, other: &BcfRawPart) -> Option<BcfPartDi
     }
 }
 
-async fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     if b.title.is_some() {
         a.title = b.title;
     }
@@ -566,17 +589,18 @@ async fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff
     a.comments = match (a.comments.take(), b.comments) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |c| c.guid.clone(), absorb_comment_diff, apply_comment).await),
+        (Some(x), Some(y)) => Some(absorb_named(x, y, |c| c.guid.clone(), absorb_comment_diff, apply_comment)),
     };
     a.viewpoints = match (a.viewpoints.take(), b.viewpoints) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |v| v.guid.clone(), absorb_viewpoint_diff, apply_viewpoint).await),
+        (Some(x), Some(y)) => Some(absorb_named(x, y, |v| v.guid.clone(), absorb_viewpoint_diff, apply_viewpoint)),
     };
     a
 }
 
-async fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCommentDiff {
     if b.date.is_some() {
         a.date = b.date;
     }
@@ -592,7 +616,8 @@ async fn absorb_comment_diff(mut a: BcfCommentDiff, b: BcfCommentDiff) -> BcfCom
     a
 }
 
-async fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> BcfViewpointDiff {
     if b.camera.is_some() {
         a.camera = b.camera;
     }
@@ -605,7 +630,8 @@ async fn absorb_viewpoint_diff(mut a: BcfViewpointDiff, b: BcfViewpointDiff) -> 
     a
 }
 
-async fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -616,8 +642,9 @@ async fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<BcfSnapshot>` full-replace slot -- this IS `BcfDiff::between`.
-pub async fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
-    BcfDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
+    BcfDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
 
@@ -634,32 +661,40 @@ pub async fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDif
 /// codec is written generically once and instantiated per collection, rather than copy-pasted
 /// per collection the way svg's non-generic `SvgChildrenDiff`/`SvgAttributesDiff` needed).
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_bytes(b: &[u8]) -> String {
-    hex_encode(b).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bytes(b: &[u8]) -> String {
+    hex_encode(b)
 }
-pub(crate) async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
-    hex_decode(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+    hex_decode(s)
 }
-async fn parse_f64(s: &str) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -680,18 +715,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -700,11 +738,13 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// 📋️ Bracketed comma-joined list -- the un-keyed sibling of `NamedTripleDiff`'s codec below, for
 /// plain `Vec<T>` fields (`labels`, `exceptions`, `selection`, `coloring`, ...) that are
 /// whole-value replaced rather than key-diffed.
-pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -714,17 +754,19 @@ pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>
 /// list; `modified` entries are `key:diff` (colon-separated, unambiguous because every key here is
 /// hex-encoded and hex never contains `:`). Written once, generically, and instantiated per
 /// collection (`topics`/`comments`/`viewpoints`/`parts`) below.
-pub(crate) async fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = triple.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = triple.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(s, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+    let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -732,25 +774,28 @@ pub(crate) async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> R
             Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️NamedTripleCodec
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_point3(p: &BcfPoint3) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point3(p: &BcfPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
-pub(crate) async fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok(BcfPoint3 { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await? })
+    Ok(BcfPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
 }
 
 /// 📷 `P[view_point,direction,up_vector,field_of_view]` (Perspective) / `O[...,view_to_world_scale]`
 /// (Orthogonal) -- single-letter tag prefix, the `xs:choice` made concrete (same convention as
 /// `enc_xml_node`'s `E`/`T`/`D`/`M`/`P` tags in svg's hand-rolled codec).
-pub(crate) async fn enc_camera(c: &BcfCamera) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_camera(c: &BcfCamera) -> String {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             format!("P[{},{},{},{}]", enc_point3(view_point), enc_point3(direction), enc_point3(up_vector), field_of_view)
@@ -760,64 +805,76 @@ pub(crate) async fn enc_camera(c: &BcfCamera) -> String {
         }
     }
 }
-pub(crate) async fn dec_camera(s: &str) -> Result<BcfCamera, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_camera(s: &str) -> Result<BcfCamera, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
-    let parts = split_top_level(inner, ',').await;
+    let inner = strip_brackets(rest)?;
+    let parts = split_top_level(inner, ',');
     let [view_point, direction, up_vector, last] = parts.as_slice() else { return Err(format!("camera: expected 4 fields, got {}", parts.len())) };
     match tag {
-        "P" => Ok(BcfCamera::Perspective { view_point: dec_point3(view_point).await?, direction: dec_point3(direction).await?, up_vector: dec_point3(up_vector).await?, field_of_view: parse_f64(last).await? }),
-        "O" => Ok(BcfCamera::Orthogonal { view_point: dec_point3(view_point).await?, direction: dec_point3(direction).await?, up_vector: dec_point3(up_vector).await?, view_to_world_scale: parse_f64(last).await? }),
+        "P" => Ok(BcfCamera::Perspective { view_point: dec_point3(view_point)?, direction: dec_point3(direction)?, up_vector: dec_point3(up_vector)?, field_of_view: parse_f64(last)? }),
+        "O" => Ok(BcfCamera::Orthogonal { view_point: dec_point3(view_point)?, direction: dec_point3(direction)?, up_vector: dec_point3(up_vector)?, view_to_world_scale: parse_f64(last)? }),
         other => Err(format!("camera: unknown tag {other:?}")),
     }
 }
 
-pub(crate) async fn enc_visibility(v: &BcfVisibility) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_visibility(v: &BcfVisibility) -> String {
     format!("[{},{}]", if v.default_visibility { "1" } else { "0" }, enc_list(&v.exceptions, |s: &String| enc_str(s)))
 }
-pub(crate) async fn dec_visibility(s: &str) -> Result<BcfVisibility, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_visibility(s: &str) -> Result<BcfVisibility, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [default_visibility, exceptions] = parts.as_slice() else { return Err(format!("visibility: expected 2 fields, got {}", parts.len())) };
-    Ok(BcfVisibility { default_visibility: *default_visibility == "1", exceptions: dec_list(exceptions, dec_str).await? })
+    Ok(BcfVisibility { default_visibility: *default_visibility == "1", exceptions: dec_list(exceptions, dec_str)? })
 }
 
-pub(crate) async fn enc_coloring(c: &BcfColoring) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_coloring(c: &BcfColoring) -> String {
     format!("[{},{}]", enc_str(&c.color), enc_list(&c.components, |s: &String| enc_str(s)))
 }
-pub(crate) async fn dec_coloring(s: &str) -> Result<BcfColoring, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_coloring(s: &str) -> Result<BcfColoring, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [color, components] = parts.as_slice() else { return Err(format!("coloring: expected 2 fields, got {}", parts.len())) };
-    Ok(BcfColoring { color: dec_str(color).await?, components: dec_list(components, dec_str).await? })
+    Ok(BcfColoring { color: dec_str(color)?, components: dec_list(components, dec_str)? })
 }
 
-pub(crate) async fn enc_components(c: &BcfComponents) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_components(c: &BcfComponents) -> String {
     format!("[{},{},{}]", enc_list(&c.selection, |s: &String| enc_str(s)), enc_visibility(&c.visibility), enc_list(&c.coloring, enc_coloring))
 }
-pub(crate) async fn dec_components(s: &str) -> Result<BcfComponents, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_components(s: &str) -> Result<BcfComponents, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [selection, visibility, coloring] = parts.as_slice() else { return Err(format!("components: expected 3 fields, got {}", parts.len())) };
-    Ok(BcfComponents { selection: dec_list(selection, dec_str).await?, visibility: dec_visibility(visibility).await?, coloring: dec_list(coloring, dec_coloring).await? })
+    Ok(BcfComponents { selection: dec_list(selection, dec_str)?, visibility: dec_visibility(visibility)?, coloring: dec_list(coloring, dec_coloring)? })
 }
 
-pub(crate) async fn enc_comment(c: &BcfComment) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_comment(c: &BcfComment) -> String {
     format!("[{},{},{},{},{}]", enc_str(&c.guid), enc_str(&c.date), enc_str(&c.author), enc_str(&c.text), encode_option(&c.viewpoint_ref, |v: &String| enc_str(v)),)
 }
-pub(crate) async fn dec_comment(s: &str) -> Result<BcfComment, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_comment(s: &str) -> Result<BcfComment, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment: expected 5 fields, got {}", parts.len())) };
-    Ok(BcfComment { guid: dec_str(guid).await?, date: dec_str(date).await?, author: dec_str(author).await?, text: dec_str(text).await?, viewpoint_ref: decode_option(viewpoint_ref, dec_str).await? })
+    Ok(BcfComment { guid: dec_str(guid)?, date: dec_str(date)?, author: dec_str(author)?, text: dec_str(text)?, viewpoint_ref: decode_option(viewpoint_ref, dec_str)? })
 }
 
-pub(crate) async fn enc_viewpoint(v: &BcfViewpoint) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_viewpoint(v: &BcfViewpoint) -> String {
     format!("[{},{},{},{}]", enc_str(&v.guid), encode_option(&v.camera, enc_camera), encode_option(&v.components, enc_components), encode_option(&v.snapshot, |b: &Vec<u8>| enc_bytes(b)),)
 }
-pub(crate) async fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint: expected 4 fields, got {}", parts.len())) };
-    Ok(BcfViewpoint { guid: dec_str(guid).await?, camera: decode_option(camera, dec_camera).await?, components: decode_option(components, dec_components).await?, snapshot: decode_option(snapshot, dec_bytes).await? })
+    Ok(BcfViewpoint { guid: dec_str(guid)?, camera: decode_option(camera, dec_camera)?, components: decode_option(components, dec_components)?, snapshot: decode_option(snapshot, dec_bytes)? })
 }
 
-pub(crate) async fn enc_topic(t: &BcfTopic) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_topic(t: &BcfTopic) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&t.guid),
@@ -832,37 +889,41 @@ pub(crate) async fn enc_topic(t: &BcfTopic) -> String {
         enc_list(&t.viewpoints, enc_viewpoint),
     )
 }
-pub(crate) async fn dec_topic(s: &str) -> Result<BcfTopic, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints] = parts.as_slice() else {
         return Err(format!("topic: expected 10 fields, got {}", parts.len()));
     };
     Ok(BcfTopic {
-        guid: dec_str(guid).await?,
-        title: dec_str(title).await?,
-        description: dec_str(description).await?,
-        status: dec_str(status).await?,
-        priority: dec_str(priority).await?,
-        labels: dec_list(labels, dec_str).await?,
-        creation_date: dec_str(creation_date).await?,
-        creation_author: dec_str(creation_author).await?,
-        comments: dec_list(comments, dec_comment).await?,
-        viewpoints: dec_list(viewpoints, dec_viewpoint).await?,
+        guid: dec_str(guid)?,
+        title: dec_str(title)?,
+        description: dec_str(description)?,
+        status: dec_str(status)?,
+        priority: dec_str(priority)?,
+        labels: dec_list(labels, dec_str)?,
+        creation_date: dec_str(creation_date)?,
+        creation_author: dec_str(creation_author)?,
+        comments: dec_list(comments, dec_comment)?,
+        viewpoints: dec_list(viewpoints, dec_viewpoint)?,
     })
 }
 
-pub(crate) async fn enc_part(p: &BcfRawPart) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part(p: &BcfRawPart) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_bytes(&p.data))
 }
-pub(crate) async fn dec_part(s: &str) -> Result<BcfRawPart, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part(s: &str) -> Result<BcfRawPart, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, data] = parts.as_slice() else { return Err(format!("part: expected 2 fields, got {}", parts.len())) };
-    Ok(BcfRawPart { name: dec_str(name).await?, data: dec_bytes(data).await? })
+    Ok(BcfRawPart { name: dec_str(name)?, data: dec_bytes(data)? })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-pub(crate) async fn enc_comment_diff(d: &BcfCommentDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_comment_diff(d: &BcfCommentDiff) -> String {
     format!(
         "[{},{},{},{}]",
         encode_option(&d.date, |v: &String| enc_str(v)),
@@ -871,13 +932,15 @@ pub(crate) async fn enc_comment_diff(d: &BcfCommentDiff) -> String {
         encode_option(&d.viewpoint_ref, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
     )
 }
-pub(crate) async fn dec_comment_diff(s: &str) -> Result<BcfCommentDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_comment_diff(s: &str) -> Result<BcfCommentDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment diff: expected 4 fields, got {}", parts.len())) };
-    Ok(BcfCommentDiff { date: decode_option(date, dec_str).await?, author: decode_option(author, dec_str).await?, text: decode_option(text, dec_str).await?, viewpoint_ref: decode_option(viewpoint_ref, |s| decode_option(s, dec_str)).await? })
+    Ok(BcfCommentDiff { date: decode_option(date, dec_str)?, author: decode_option(author, dec_str)?, text: decode_option(text, dec_str)?, viewpoint_ref: decode_option(viewpoint_ref, |s| decode_option(s, dec_str))? })
 }
 
-pub(crate) async fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
     format!(
         "[{},{},{}]",
         encode_option(&d.camera, |inner: &Option<BcfCamera>| encode_option(inner, enc_camera)),
@@ -885,21 +948,25 @@ pub(crate) async fn enc_viewpoint_diff(d: &BcfViewpointDiff) -> String {
         encode_option(&d.snapshot, |inner: &Option<Vec<u8>>| encode_option(inner, |b: &Vec<u8>| enc_bytes(b))),
     )
 }
-pub(crate) async fn dec_viewpoint_diff(s: &str) -> Result<BcfViewpointDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_viewpoint_diff(s: &str) -> Result<BcfViewpointDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint diff: expected 3 fields, got {}", parts.len())) };
-    Ok(BcfViewpointDiff { camera: decode_option(camera, |s| decode_option(s, dec_camera)).await?, components: decode_option(components, |s| decode_option(s, dec_components)).await?, snapshot: decode_option(snapshot, |s| decode_option(s, dec_bytes)).await? })
+    Ok(BcfViewpointDiff { camera: decode_option(camera, |s| decode_option(s, dec_camera))?, components: decode_option(components, |s| decode_option(s, dec_components))?, snapshot: decode_option(snapshot, |s| decode_option(s, dec_bytes))? })
 }
 
-pub(crate) async fn enc_part_diff(d: &BcfPartDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part_diff(d: &BcfPartDiff) -> String {
     format!("[{}]", encode_option(&d.data, |b: &Vec<u8>| enc_bytes(b)))
 }
-pub(crate) async fn dec_part_diff(s: &str) -> Result<BcfPartDiff, String> {
-    let inner = strip_brackets(s).await?;
-    Ok(BcfPartDiff { data: decode_option(inner, dec_bytes).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part_diff(s: &str) -> Result<BcfPartDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(BcfPartDiff { data: decode_option(inner, dec_bytes)? })
 }
 
-pub(crate) async fn enc_topic_diff(d: &BcfTopicDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_topic_diff(d: &BcfTopicDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{}]",
         encode_option(&d.title, |v: &String| enc_str(v)),
@@ -913,21 +980,22 @@ pub(crate) async fn enc_topic_diff(d: &BcfTopicDiff) -> String {
         encode_option(&d.viewpoints, |v: &BcfViewpointsDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_viewpoint_diff, enc_viewpoint)),
     )
 }
-pub(crate) async fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints] = parts.as_slice() else {
         return Err(format!("topic diff: expected 9 fields, got {}", parts.len()));
     };
     Ok(BcfTopicDiff {
-        title: decode_option(title, dec_str).await?,
-        description: decode_option(description, dec_str).await?,
-        status: decode_option(status, dec_str).await?,
-        priority: decode_option(priority, dec_str).await?,
-        labels: decode_option(labels, |s| dec_list(s, dec_str)).await?,
-        creation_date: decode_option(creation_date, dec_str).await?,
-        creation_author: decode_option(creation_author, dec_str).await?,
-        comments: decode_option(comments, |s| dec_named_triple(s, dec_str, dec_comment_diff, dec_comment)).await?,
-        viewpoints: decode_option(viewpoints, |s| dec_named_triple(s, dec_str, dec_viewpoint_diff, dec_viewpoint)).await?,
+        title: decode_option(title, dec_str)?,
+        description: decode_option(description, dec_str)?,
+        status: decode_option(status, dec_str)?,
+        priority: decode_option(priority, dec_str)?,
+        labels: decode_option(labels, |s| dec_list(s, dec_str))?,
+        creation_date: decode_option(creation_date, dec_str)?,
+        creation_author: decode_option(creation_author, dec_str)?,
+        comments: decode_option(comments, |s| dec_named_triple(s, dec_str, dec_comment_diff, dec_comment))?,
+        viewpoints: decode_option(viewpoints, |s| dec_named_triple(s, dec_str, dec_viewpoint_diff, dec_viewpoint))?,
     })
 }
 //#endregion 🔖️DiffValueCodecs
@@ -943,28 +1011,34 @@ pub(crate) async fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
 /// `GenericTripleBinaryCodecs`/`DiffValueBinaryCodecs` regions establish; duplicated here (not
 /// imported) per this repo's per-artifact hand-roll convention.
 //#region 🔖️BinaryPrimitives
-pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
     out.push(if opt.is_some() { 1 } else { 0 });
     if let Some(v) = opt {
         write_str_lp(out, v);
     }
 }
-async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    Ok(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+    Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -972,20 +1046,23 @@ async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<Strin
 /// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️ValueCodecs`'s text
 /// forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
 /// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
-pub(crate) async fn enc_point3_bin(p: &BcfPoint3, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point3_bin(p: &BcfPoint3, out: &mut Vec<u8>) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
 }
-pub(crate) async fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPoint3, String> {
-    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPoint3, String> {
+    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
     Ok(BcfPoint3 { x, y, z })
 }
 
 /// 🌳️ `0`=Perspective / `1`=Orthogonal -- binary twin of `enc_camera`/`dec_camera`'s `P`/`O` tags.
-pub(crate) async fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             out.push(0);
@@ -1003,50 +1080,58 @@ pub(crate) async fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
-        0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader).await?, direction: dec_point3_bin(reader).await?, up_vector: dec_point3_bin(reader).await?, field_of_view: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
-        1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader).await?, direction: dec_point3_bin(reader).await?, up_vector: dec_point3_bin(reader).await?, view_to_world_scale: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())? }),
         other => Err(format!("camera binary: unknown tag {other}")),
     }
 }
 
-async fn enc_str_list_bin(items: &[String], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_str_list_bin(items: &[String], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for s in items {
         write_str_lp(out, s);
     }
 }
-async fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(read_str_lp(reader).await?);
+        out.push(read_str_lp(reader)?);
     }
     Ok(out)
 }
 
-pub(crate) async fn enc_visibility_bin(v: &BcfVisibility, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_visibility_bin(v: &BcfVisibility, out: &mut Vec<u8>) {
     out.push(v.default_visibility as u8);
     enc_str_list_bin(&v.exceptions, out);
 }
-pub(crate) async fn dec_visibility_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfVisibility, String> {
-    let default_visibility = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let exceptions = dec_str_list_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_visibility_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfVisibility, String> {
+    let default_visibility = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let exceptions = dec_str_list_bin(reader)?;
     Ok(BcfVisibility { default_visibility, exceptions })
 }
 
-pub(crate) async fn enc_coloring_bin(c: &BcfColoring, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_coloring_bin(c: &BcfColoring, out: &mut Vec<u8>) {
     write_str_lp(out, &c.color);
     enc_str_list_bin(&c.components, out);
 }
-pub(crate) async fn dec_coloring_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfColoring, String> {
-    let color = read_str_lp(reader).await?;
-    let components = dec_str_list_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_coloring_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfColoring, String> {
+    let color = read_str_lp(reader)?;
+    let components = dec_str_list_bin(reader)?;
     Ok(BcfColoring { color, components })
 }
 
-pub(crate) async fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
     enc_str_list_bin(&c.selection, out);
     enc_visibility_bin(&c.visibility, out);
     store::pack_rt::write_varint_u64(out, c.coloring.len() as u64);
@@ -1054,34 +1139,38 @@ pub(crate) async fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
         enc_coloring_bin(entry, out);
     }
 }
-pub(crate) async fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
-    let selection = dec_str_list_bin(reader).await?;
-    let visibility = dec_visibility_bin(reader).await?;
-    let coloring_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
+    let selection = dec_str_list_bin(reader)?;
+    let visibility = dec_visibility_bin(reader)?;
+    let coloring_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut coloring = Vec::with_capacity(coloring_count as usize);
     for _ in 0..coloring_count {
-        coloring.push(dec_coloring_bin(reader).await?);
+        coloring.push(dec_coloring_bin(reader)?);
     }
     Ok(BcfComponents { selection, visibility, coloring })
 }
 
-pub(crate) async fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
     write_str_lp(out, &c.guid);
     write_str_lp(out, &c.date);
     write_str_lp(out, &c.author);
     write_str_lp(out, &c.text);
     write_opt_str(out, &c.viewpoint_ref);
 }
-pub(crate) async fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
-    let guid = read_str_lp(reader).await?;
-    let date = read_str_lp(reader).await?;
-    let author = read_str_lp(reader).await?;
-    let text = read_str_lp(reader).await?;
-    let viewpoint_ref = read_opt_str(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
+    let guid = read_str_lp(reader)?;
+    let date = read_str_lp(reader)?;
+    let author = read_str_lp(reader)?;
+    let text = read_str_lp(reader)?;
+    let viewpoint_ref = read_opt_str(reader)?;
     Ok(BcfComment { guid, date, author, text, viewpoint_ref })
 }
 
-pub(crate) async fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
     write_str_lp(out, &v.guid);
     out.push(if v.camera.is_some() { 1 } else { 0 });
     if let Some(camera) = &v.camera {
@@ -1096,15 +1185,17 @@ pub(crate) async fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
         write_bytes_lp(out, snapshot);
     }
 }
-pub(crate) async fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
-    let guid = read_str_lp(reader).await?;
-    let camera = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader).await?) } else { None };
-    let components = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader).await?) } else { None };
-    let snapshot = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
+    let guid = read_str_lp(reader)?;
+    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None };
+    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None };
+    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(BcfViewpoint { guid, camera, components, snapshot })
 }
 
-pub(crate) async fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
     write_str_lp(out, &t.guid);
     write_str_lp(out, &t.title);
     write_str_lp(out, &t.description);
@@ -1122,41 +1213,45 @@ pub(crate) async fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
         enc_viewpoint_bin(v, out);
     }
 }
-pub(crate) async fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
-    let guid = read_str_lp(reader).await?;
-    let title = read_str_lp(reader).await?;
-    let description = read_str_lp(reader).await?;
-    let status = read_str_lp(reader).await?;
-    let priority = read_str_lp(reader).await?;
-    let labels = dec_str_list_bin(reader).await?;
-    let creation_date = read_str_lp(reader).await?;
-    let creation_author = read_str_lp(reader).await?;
-    let comment_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
+    let guid = read_str_lp(reader)?;
+    let title = read_str_lp(reader)?;
+    let description = read_str_lp(reader)?;
+    let status = read_str_lp(reader)?;
+    let priority = read_str_lp(reader)?;
+    let labels = dec_str_list_bin(reader)?;
+    let creation_date = read_str_lp(reader)?;
+    let creation_author = read_str_lp(reader)?;
+    let comment_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut comments = Vec::with_capacity(comment_count as usize);
     for _ in 0..comment_count {
-        comments.push(dec_comment_bin(reader).await?);
+        comments.push(dec_comment_bin(reader)?);
     }
-    let viewpoint_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let viewpoint_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut viewpoints = Vec::with_capacity(viewpoint_count as usize);
     for _ in 0..viewpoint_count {
-        viewpoints.push(dec_viewpoint_bin(reader).await?);
+        viewpoints.push(dec_viewpoint_bin(reader)?);
     }
     Ok(BcfTopic { guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
 }
 
-pub(crate) async fn enc_part_bin(p: &BcfRawPart, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part_bin(p: &BcfRawPart, out: &mut Vec<u8>) {
     write_str_lp(out, &p.name);
     write_bytes_lp(out, &p.data);
 }
-pub(crate) async fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawPart, String> {
-    let name = read_str_lp(reader).await?;
-    let data = read_bytes_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawPart, String> {
+    let name = read_str_lp(reader)?;
+    let data = read_bytes_lp(reader)?;
     Ok(BcfRawPart { name, data })
 }
 
 /// 🌱 Full (non-diff) `BcfSnapshot` binary codec -- only `SetSnapshot`'s whole-payload encoding
 /// needs this, mirroring `enc_bcf_snapshot`'s text form above.
-pub(crate) async fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     write_str_lp(out, &s.version);
     store::pack_rt::write_varint_u64(out, s.topics.len() as u64);
@@ -1168,18 +1263,19 @@ pub(crate) async fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
         enc_part_bin(p, out);
     }
 }
-pub(crate) async fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let version = read_str_lp(reader).await?;
-    let topic_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let version = read_str_lp(reader)?;
+    let topic_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut topics = Vec::with_capacity(topic_count as usize);
     for _ in 0..topic_count {
-        topics.push(dec_topic_bin(reader).await?);
+        topics.push(dec_topic_bin(reader)?);
     }
-    let part_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
-        parts.push(dec_part_bin(reader).await?);
+        parts.push(dec_part_bin(reader)?);
     }
     Ok(BcfSnapshot { schema, version, topics, parts })
 }
@@ -1188,7 +1284,8 @@ pub(crate) async fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> 
 //#region 🔖️GenericNamedTripleBinaryCodecs
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-async fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, triple.removed.len() as u64);
     for k in &triple.removed {
         enc_k(k, out);
@@ -1203,25 +1300,26 @@ async fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k:
         enc_t(t, out);
     }
 }
-async fn dec_named_triple_bin<K, D, T>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_named_triple_bin<K, D, T>(
     reader: &mut store::ByteReader<'_>,
     dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -1231,7 +1329,8 @@ async fn dec_named_triple_bin<K, D, T>(
 //#endregion 🔖️GenericNamedTripleBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-pub(crate) async fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.date);
     write_opt_str(out, &d.author);
     write_opt_str(out, &d.text);
@@ -1240,15 +1339,17 @@ pub(crate) async fn enc_comment_diff_bin(d: &BcfCommentDiff, out: &mut Vec<u8>) 
         write_opt_str(out, inner);
     }
 }
-pub(crate) async fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentDiff, String> {
-    let date = read_opt_str(reader).await?;
-    let author = read_opt_str(reader).await?;
-    let text = read_opt_str(reader).await?;
-    let viewpoint_ref = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_opt_str(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentDiff, String> {
+    let date = read_opt_str(reader)?;
+    let author = read_opt_str(reader)?;
+    let text = read_opt_str(reader)?;
+    let viewpoint_ref = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_opt_str(reader)?) } else { None };
     Ok(BcfCommentDiff { date, author, text, viewpoint_ref })
 }
 
-pub(crate) async fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
     out.push(if d.camera.is_some() { 1 } else { 0 });
     if let Some(inner) = &d.camera {
         out.push(if inner.is_some() { 1 } else { 0 });
@@ -1271,39 +1372,47 @@ pub(crate) async fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u
         }
     }
 }
-pub(crate) async fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
-    let camera = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader).await?) } else { None }) } else { None };
-    let components = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader).await?) } else { None }) } else { None };
-    let snapshot = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None }) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
+    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None }) } else { None };
+    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None }) } else { None };
+    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None }) } else { None };
     Ok(BcfViewpointDiff { camera, components, snapshot })
 }
 
-pub(crate) async fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
     out.push(if d.data.is_some() { 1 } else { 0 });
     if let Some(v) = &d.data {
         write_bytes_lp(out, v);
     }
 }
-pub(crate) async fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
-    let data = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
+    let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(BcfPartDiff { data })
 }
 
-async fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out)
 }
-async fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_comment_diff_bin, dec_comment_bin).await
-}
-
-async fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out).await
-}
-async fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_viewpoint_diff_bin, dec_viewpoint_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_comment_diff_bin, dec_comment_bin)
 }
 
-pub(crate) async fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_viewpoint_diff_bin, dec_viewpoint_bin)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
     write_opt_str(out, &d.title);
     write_opt_str(out, &d.description);
     write_opt_str(out, &d.status);
@@ -1323,37 +1432,43 @@ pub(crate) async fn enc_topic_diff_bin(d: &BcfTopicDiff, out: &mut Vec<u8>) {
         enc_viewpoints_diff_bin(v, out);
     }
 }
-pub(crate) async fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicDiff, String> {
-    let title = read_opt_str(reader).await?;
-    let description = read_opt_str(reader).await?;
-    let status = read_opt_str(reader).await?;
-    let priority = read_opt_str(reader).await?;
-    let labels = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_str_list_bin(reader).await?) } else { None };
-    let creation_date = read_opt_str(reader).await?;
-    let creation_author = read_opt_str(reader).await?;
-    let comments = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_comments_diff_bin(reader).await?) } else { None };
-    let viewpoints = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_viewpoints_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicDiff, String> {
+    let title = read_opt_str(reader)?;
+    let description = read_opt_str(reader)?;
+    let status = read_opt_str(reader)?;
+    let priority = read_opt_str(reader)?;
+    let labels = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_str_list_bin(reader)?) } else { None };
+    let creation_date = read_opt_str(reader)?;
+    let creation_author = read_opt_str(reader)?;
+    let comments = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_comments_diff_bin(reader)?) } else { None };
+    let viewpoints = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_viewpoints_diff_bin(reader)?) } else { None };
     Ok(BcfTopicDiff { title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
 }
 
-pub(crate) async fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out)
 }
-pub(crate) async fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_topic_diff_bin, dec_topic_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_topic_diff_bin, dec_topic_bin)
 }
 
-pub(crate) async fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out)
 }
-pub(crate) async fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_part_diff_bin, dec_part_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_part_diff_bin, dec_part_bin)
 }
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-async fn print_bcf_diff(d: &BcfDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_bcf_diff(d: &BcfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.version {
         tokens.push(format!("version={}", enc_str(v)));
@@ -1366,18 +1481,19 @@ async fn print_bcf_diff(d: &BcfDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
     let mut d = BcfDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("version=") {
-            d.version = Some(dec_str(rest).await?);
+            d.version = Some(dec_str(rest)?);
         } else if let Some(rest) = token.strip_prefix("topics=") {
-            d.topics = Some(dec_named_triple(rest, dec_str, dec_topic_diff, dec_topic).await?);
+            d.topics = Some(dec_named_triple(rest, dec_str, dec_topic_diff, dec_topic)?);
         } else if let Some(rest) = token.strip_prefix("parts=") {
-            d.parts = Some(dec_named_triple(rest, dec_str, dec_part_diff, dec_part).await?);
+            d.parts = Some(dec_named_triple(rest, dec_str, dec_part_diff, dec_part)?);
         } else {
             return Err(format!("bcf diff: unknown token {token:?}"));
         }
@@ -1387,10 +1503,10 @@ async fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
 
 impl protocol::DiffCodec for BcfDiff {
     async fn print_diff(&self) -> String {
-        print_bcf_diff(self).await
+        print_bcf_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_bcf_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_bcf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [version][topics][parts]`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1427,9 +1543,9 @@ impl protocol::DiffCodec for BcfDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let version = if flags & 0b001 != 0 { Some(read_str_lp(&mut reader).await.map_err(|e| malformed("diff version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let topics = if flags & 0b010 != 0 { Some(dec_topics_diff_bin(&mut reader).await.map_err(|e| malformed("diff topics", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let parts = if flags & 0b100 != 0 { Some(dec_parts_diff_bin(&mut reader).await.map_err(|e| malformed("diff parts", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let version = if flags & 0b001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let topics = if flags & 0b010 != 0 { Some(dec_topics_diff_bin(&mut reader).map_err(|e| malformed("diff topics", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let parts = if flags & 0b100 != 0 { Some(dec_parts_diff_bin(&mut reader).map_err(|e| malformed("diff parts", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(BcfDiff { version, topics, parts })
     }
 }
@@ -1445,7 +1561,8 @@ impl protocol::DiffCodec for BcfDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `snapshot_a()`/`snapshot_b()` establishes.
 #[cfg(test)]
-pub(crate) async fn demo_snapshot_a() -> BcfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),
@@ -1495,7 +1612,8 @@ pub(crate) async fn demo_snapshot_a() -> BcfSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_snapshot_b() -> BcfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.2".into(),
@@ -1543,7 +1661,8 @@ pub(crate) async fn demo_snapshot_b() -> BcfSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<BcfDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();
     vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)]

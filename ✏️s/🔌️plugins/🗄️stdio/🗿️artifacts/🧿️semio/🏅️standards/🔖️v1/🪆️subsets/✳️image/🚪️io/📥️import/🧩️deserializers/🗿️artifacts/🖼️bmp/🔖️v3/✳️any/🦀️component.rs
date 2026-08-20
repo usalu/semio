@@ -22,7 +22,8 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
-async fn colorspace_from_bpp(bpp: u16) -> SemioColorspace {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn colorspace_from_bpp(bpp: u16) -> SemioColorspace {
     match bpp {
         0..=8 => SemioColorspace::Indexed,
         24 => SemioColorspace::Rgb,
@@ -55,7 +56,7 @@ impl ArtifactDeserializer for SemioImageFromBmp {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
-            colorspace: colorspace_from_bpp(from.bits_per_pixel).await,
+            colorspace: colorspace_from_bpp(from.bits_per_pixel),
             bit_depth: from.bits_per_pixel.min(u8::MAX as u16) as u8,
             frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
             icc: None,
@@ -70,7 +71,8 @@ impl ArtifactDeserializer for SemioImageFromBmp {
 mod tests {
     use super::*;
 
-    async fn sample_bmp() -> BmpSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_bmp() -> BmpSnapshot {
         BmpSnapshot { width: 2, height: 1, bits_per_pixel: 24, row_order: BmpRowOrder::BottomUp, x_pixels_per_meter: 2835, y_pixels_per_meter: 2835, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], ..BmpSnapshot::default() }
     }
 

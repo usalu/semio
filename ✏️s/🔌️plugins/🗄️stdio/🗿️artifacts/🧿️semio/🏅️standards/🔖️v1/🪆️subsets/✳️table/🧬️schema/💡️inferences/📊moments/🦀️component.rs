@@ -41,7 +41,8 @@ pub struct SemioColumnMoments {
 /// their `lexeme`; any other cell kind (including a stray `Str`/`Bool`/`Null` in a nominally
 /// numeric column — this format enforces no runtime kind check, per `📐shape`'s own doc comment) is
 /// skipped rather than treated as zero, so a mixed column's moments stay honest about `count`.
-async fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
     match cell {
         SemioValue::Int { lexeme } => lexeme.parse::<f64>().ok(),
         SemioValue::Float { lexeme } => lexeme.parse::<f64>().ok(),
@@ -49,7 +50,8 @@ async fn numeric_cell_value(cell: &SemioValue) -> Option<f64> {
     }
 }
 
-async fn column_values(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn column_values(snapshot: &SemioTableSnapshot, column_name: &str) -> Vec<f64> {
     let Some(idx) = snapshot.columns.iter().position(|c| c.name == column_name) else {
         return Vec::new();
     };
@@ -82,11 +84,11 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     }
 
     async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let values = column_values(snapshot, key).await;
+        let values = column_values(snapshot, key);
         let count = values.len() as u32;
-        let mean = statistics_internals::mean(&values).await.unwrap_or(0.0);
-        let variance = statistics_internals::variance(&values).await.unwrap_or(0.0);
-        let std_dev = statistics_internals::std_dev(&values).await.unwrap_or(0.0);
+        let mean = statistics_internals::mean(&values).unwrap_or(0.0);
+        let variance = statistics_internals::variance(&values).unwrap_or(0.0);
+        let std_dev = statistics_internals::std_dev(&values).unwrap_or(0.0);
         SemioColumnMoments { count, mean, variance, std_dev }
     }
 }
@@ -99,7 +101,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn two_numeric_column_snapshot() -> SemioTableSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_numeric_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "count".into(), kind: SemioTableCellKind::Int }, SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }],

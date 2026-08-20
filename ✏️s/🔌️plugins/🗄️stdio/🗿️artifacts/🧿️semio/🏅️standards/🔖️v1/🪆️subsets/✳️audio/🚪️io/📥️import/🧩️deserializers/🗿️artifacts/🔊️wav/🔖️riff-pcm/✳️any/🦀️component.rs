@@ -62,7 +62,8 @@ mod tests {
     use super::*;
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt;
 
-    async fn real_world_wav() -> WavSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_wav() -> WavSnapshot {
         WavSnapshot {
             schema: "stdio.wav".into(),
             fmt: WavFmt { audio_format: 1, channels: 2, sample_rate: 44_100, byte_rate: 176_400, block_align: 4, bits_per_sample: 16, ext: None },

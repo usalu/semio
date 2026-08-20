@@ -35,67 +35,72 @@ impl ArtifactSerializer for SemioValueToCsv {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let nodes: HashMap<&ValueId, &SemioValue> = from.nodes.iter().map(|n| (&n.id, &n.value)).collect();
         let mut visiting: HashSet<ValueId> = HashSet::new();
-        csv_from_semio(&from.root, &nodes, &mut visiting).await
+        csv_from_semio(&from.root, &nodes, &mut visiting)
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Convert
-async fn err(msg: impl Into<String>) -> store::PackError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn err(msg: impl Into<String>) -> store::PackError {
     store::PackError::Schema(msg.into())
 }
 
-async fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<SemioValue, store::PackError> {
     match v {
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
-                return Err(err(format!("value->csv: reference cycle detected at id {:?}", id.value)).await);
+                return Err(err(format!("value->csv: reference cycle detected at id {:?}", id.value)));
             }
             let target = *nodes.get(id).ok_or_else(|| err(format!("value->csv: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value)))?;
             let result = resolve(target, nodes, visiting);
             visiting.remove(id);
-            result.await
+            result
         }
         other => Ok(other.clone()),
     }
 }
 
-async fn scalar_to_field(v: &SemioValue) -> Result<CsvField, store::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scalar_to_field(v: &SemioValue) -> Result<CsvField, store::PackError> {
     match v {
         SemioValue::Str { value } => Ok(CsvField { value: value.clone(), quoted: false }),
         SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => Ok(CsvField { value: lexeme.clone(), quoted: false }),
         SemioValue::Bool { value } => Ok(CsvField { value: if *value { "true" } else { "false" }.into(), quoted: false }),
         SemioValue::Null => Ok(CsvField { value: String::new(), quoted: false }),
-        other => Err(err(format!("value->csv: cell value must be a scalar (Str/Int/Float/Bool/Null), got {other:?}")).await),
+        other => Err(err(format!("value->csv: cell value must be a scalar (Str/Int/Float/Bool/Null), got {other:?}"))),
     }
 }
 
-pub async fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<CsvSnapshot, store::PackError> {
-    let resolved_root = resolve(root, nodes, visiting).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<CsvSnapshot, store::PackError> {
+    let resolved_root = resolve(root, nodes, visiting)?;
     let items = match resolved_root {
         SemioValue::List { items } => items,
-        other => return Err(err(format!("value->csv: root must be a List of rows, got {other:?}")).await),
+        other => return Err(err(format!("value->csv: root must be a List of rows, got {other:?}"))),
     };
     if items.is_empty() {
         return Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() });
     }
 
-    let first = resolve(&items[0], nodes, visiting).await?;
+    let first = resolve(&items[0], nodes, visiting)?;
     match first {
         SemioValue::Map { entries: first_entries } => {
             let header: Vec<String> = first_entries.iter().map(|e| e.key.clone()).collect();
             let mut records = vec![CsvRecord { fields: header.iter().map(|h| CsvField { value: h.clone(), quoted: false }).collect() }];
             for item in &items {
-                let resolved = resolve(item, nodes, visiting).await?;
+                let resolved = resolve(item, nodes, visiting)?;
                 let entries = match resolved {
                     SemioValue::Map { entries } => entries,
-                    other => return Err(err(format!("value->csv: every row must be a Map since the first row was, got {other:?}")).await),
+                    other => return Err(err(format!("value->csv: every row must be a Map since the first row was, got {other:?}"))),
                 };
                 let keys: Vec<String> = entries.iter().map(|e| e.key.clone()).collect();
                 if keys != header {
-                    return Err(err(format!("value->csv: row key set/order {keys:?} does not match the first row's {header:?} — RFC 4180 has exactly one column set per file")).await);
+                    return Err(err(format!("value->csv: row key set/order {keys:?} does not match the first row's {header:?} — RFC 4180 has exactly one column set per file")));
                 }
                 let fields = entries.iter().map(|e| scalar_to_field(&resolve(&e.value, nodes, visiting)?)).collect::<Result<Vec<_>, store::PackError>>()?;
                 records.push(CsvRecord { fields });
@@ -105,17 +110,17 @@ pub async fn csv_from_semio(root: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
         SemioValue::List { .. } => {
             let mut records = Vec::new();
             for item in &items {
-                let resolved = resolve(item, nodes, visiting).await?;
+                let resolved = resolve(item, nodes, visiting)?;
                 let row_items = match resolved {
                     SemioValue::List { items } => items,
-                    other => return Err(err(format!("value->csv: every row must be a List since the first row was, got {other:?}")).await),
+                    other => return Err(err(format!("value->csv: every row must be a List since the first row was, got {other:?}"))),
                 };
                 let fields = row_items.iter().map(|v| scalar_to_field(&resolve(v, nodes, visiting)?)).collect::<Result<Vec<_>, store::PackError>>()?;
                 records.push(CsvRecord { fields });
             }
             Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records })
         }
-        other => Err(err(format!("value->csv: each row must be a Map or List, got {other:?}")).await),
+        other => Err(err(format!("value->csv: each row must be a Map or List, got {other:?}"))),
     }
 }
 //#endregion 🔖️Convert
@@ -127,11 +132,13 @@ mod tests {
     use crate::artifacts::csv::schema::snapshot::CsvField as CsvFieldT;
     use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
 
-    async fn field(s: &str) -> CsvFieldT {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn field(s: &str) -> CsvFieldT {
         CsvFieldT { value: s.into(), quoted: false }
     }
 
-    async fn round_trip(snapshot: &CsvSnapshot) -> CsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(snapshot: &CsvSnapshot) -> CsvSnapshot {
         let value = semio_value_from_csv(snapshot);
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();

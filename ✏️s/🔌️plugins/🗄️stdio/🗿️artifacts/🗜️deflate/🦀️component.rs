@@ -35,19 +35,21 @@ pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
 /// call is not dropped — it survives on the plugin root's `.setup(...)`, repointed at this new
 /// location by the dissolution.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("deflate", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("deflate", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("deflate").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("deflate")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
-        .await.composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
-        .await.languages(pilot_languages().await)
-        .await.document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
+        .schema(crate::artifacts::deflate::schema::deflate_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::deflate::schema::inferences::deflate_artifact_inference_descriptor()])
+        .composers(crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -57,7 +59,8 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// `crate::artifacts::deflate::engine::register_pilot_languages`'s own
 /// `dsl::register_language(...)` call bodies — same ids, same grammar/protocol paths, same
 /// `passthrough_hooks` calls.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -120,7 +123,8 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.deflate".into(),
         name: "Deflate".into(),
@@ -150,12 +154,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v_rfc1950::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DeflateComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v_rfc1950::entries());
     }
 }

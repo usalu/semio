@@ -47,42 +47,48 @@ impl Default for IfcValue {
 }
 
 impl IfcValue {
-    pub async fn as_reference(&self) -> Option<u64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_reference(&self) -> Option<u64> {
         if let IfcValue::Reference(id) = self {
             Some(*id)
         } else {
             None
         }
     }
-    pub async fn as_str(&self) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_str(&self) -> Option<&str> {
         if let IfcValue::String(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub async fn as_enum(&self) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_enum(&self) -> Option<&str> {
         if let IfcValue::Enum(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub async fn as_real(&self) -> Option<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_real(&self) -> Option<f64> {
         match self {
             IfcValue::Real(r) => Some(*r),
             IfcValue::Integer(i) => Some(*i as f64),
             _ => None,
         }
     }
-    pub async fn as_aggregate(&self) -> Option<&[IfcValue]> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_aggregate(&self) -> Option<&[IfcValue]> {
         if let IfcValue::Aggregate(items) = self {
             Some(items.as_slice())
         } else {
             None
         }
     }
-    pub async fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
         if let IfcValue::TypedValue(name, items) = self {
             Some((name.as_str(), items.as_slice()))
         } else {
@@ -164,13 +170,14 @@ impl Default for IfcSnapshot {
 
 //#region 🔖️Part21Conversion
 /// 🔁️ `Part21Value` -> `IfcValue`, structurally 1:1 (own enum, recursive).
-async fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
     match v {
         Part21Value::Ref(id) => IfcValue::Reference(*id),
         Part21Value::Str(s) => IfcValue::String(s.clone()),
         Part21Value::Enum(s) => IfcValue::Enum(s.clone()),
         Part21Value::Int(i) => IfcValue::Integer(*i),
-        Part21Value::Real(r) => IfcValue::Real(r.to_f64().await.unwrap_or_default()),
+        Part21Value::Real(r) => IfcValue::Real(r.to_f64().unwrap_or_default()),
         Part21Value::List(items) => IfcValue::Aggregate(items.iter().map(ifc_value_from_part21).collect()),
         Part21Value::Typed(name, items) => IfcValue::TypedValue(name.clone(), items.iter().map(ifc_value_from_part21).collect()),
         Part21Value::Unset => IfcValue::Unset,
@@ -179,7 +186,8 @@ async fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
 }
 
 /// 🔁️ `IfcValue` -> `Part21Value`, the exact inverse of [`ifc_value_from_part21`].
-async fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
     match v {
         IfcValue::Reference(id) => Part21Value::Ref(*id),
         IfcValue::String(s) => Part21Value::Str(s.clone()),
@@ -193,18 +201,21 @@ async fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
     }
 }
 
-async fn ifc_header_from_part21(h: &Part21Header) -> IfcHeader {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ifc_header_from_part21(h: &Part21Header) -> IfcHeader {
     IfcHeader { file_description: h.file_description.iter().map(ifc_value_from_part21).collect(), file_name: h.file_name.iter().map(ifc_value_from_part21).collect(), file_schema: h.file_schema.iter().map(ifc_value_from_part21).collect() }
 }
 
-async fn part21_header_from_ifc(h: &IfcHeader) -> Part21Header {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part21_header_from_ifc(h: &IfcHeader) -> Part21Header {
     Part21Header { file_description: h.file_description.iter().map(part21_value_from_ifc).collect(), file_name: h.file_name.iter().map(part21_value_from_ifc).collect(), file_schema: h.file_schema.iter().map(part21_value_from_ifc).collect() }
 }
 
 /// 🔁️ One `Part21Instance` -> `IfcEntity`: the first `(name, args)` pair becomes the entity's
 /// primary `name`/`args`, any further pairs (real IFC4 COMPLEX instances, e.g.
 /// `IfcQuantityArea`+`IfcPhysicalSimpleQuantity`) are retained verbatim in `complex`.
-async fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
     let mut pairs = inst.entities.iter();
     let (name, args) = match pairs.next() {
         Some((name, args)) => (name.clone(), args.iter().map(ifc_value_from_part21).collect()),
@@ -215,7 +226,8 @@ async fn ifc_entity_from_instance(inst: &Part21Instance) -> IfcEntity {
 }
 
 /// 🔁️ Exact inverse of [`ifc_entity_from_instance`].
-async fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
     let mut entities = vec![(e.name.clone(), e.args.iter().map(part21_value_from_ifc).collect())];
     for c in &e.complex {
         entities.push((c.name.clone(), c.args.iter().map(part21_value_from_ifc).collect()));
@@ -226,13 +238,15 @@ async fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
 /// 📤️ Builds the shared generic Part-21 graph from `snapshot` — used at the parse/write boundary
 /// (codecs below) and by the derived spatial analyzer (`engine::spatial::analyze_spatial`), which
 /// still walks the generic graph shape for its relationship-graph traversal.
-pub async fn to_part21_document(snapshot: &IfcSnapshot) -> Part21Document {
-    Part21Document { header: part21_header_from_ifc(&snapshot.header).await, instances: snapshot.entities.iter().map(instance_from_ifc_entity).collect() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn to_part21_document(snapshot: &IfcSnapshot) -> Part21Document {
+    Part21Document { header: part21_header_from_ifc(&snapshot.header), instances: snapshot.entities.iter().map(instance_from_ifc_entity).collect() }
 }
 
 /// 📥️ Builds an `IfcSnapshot` from a parsed generic Part-21 graph.
-pub async fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> IfcSnapshot {
-    IfcSnapshot { schema: schema.into(), header: ifc_header_from_part21(&doc.header).await, entities: doc.instances.iter().map(ifc_entity_from_instance).collect() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> IfcSnapshot {
+    IfcSnapshot { schema: schema.into(), header: ifc_header_from_part21(&doc.header), entities: doc.instances.iter().map(ifc_entity_from_instance).collect() }
 }
 //#endregion 🔖️Part21Conversion
 
@@ -248,8 +262,8 @@ impl store::ArtifactDsl for IfcSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let document = parse_part21(body).await.map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document).await)
+        let document = parse_part21(body).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
+        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
     }
     async fn print_dsl(&self) -> String {
         let body = write_part21(&to_part21_document(self));
@@ -261,7 +275,7 @@ impl store::ArtifactDsl for IfcSnapshot {
 impl store::ArtifactPack for IfcSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_part21(&to_part21_document(self)).await.into_bytes();
+        let raw = write_part21(&to_part21_document(self)).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -272,8 +286,8 @@ impl store::ArtifactPack for IfcSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let document = parse_part21(&text).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document).await)
+        let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
     }
 }
 //#endregion 🔖️Part21Codec

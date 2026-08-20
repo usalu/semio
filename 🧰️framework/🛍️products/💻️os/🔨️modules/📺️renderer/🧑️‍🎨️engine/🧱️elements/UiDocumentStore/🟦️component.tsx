@@ -26,6 +26,7 @@ import {
   type MenuRef,
   type PatchRejection,
   type QuotaKind,
+  type StyleSpec,
   type SurfaceId,
   type UiContractViolation,
   type UiDocumentLimits,
@@ -331,7 +332,7 @@ function applyOp(draft: { root: UiNodeId | null; nodes: Map<UiNodeId, UiNodeReco
     case "setMenu": {
       const record = mutate(op.id);
       if ("type" in record && record.type === "unknownNode") return record;
-      draft.nodes.set(op.id, { ...(record as UiNodeRecord), menu: op.menu ?? undefined });
+      draft.nodes.set(op.id, { ...(record as UiNodeRecord), menu: op.menu });
       return null;
     }
     case "remove": {
@@ -388,7 +389,7 @@ export class UiDocumentStore {
   private readonly nodeListeners = new Map<UiNodeId, Set<Listener>>();
   private readonly rootListeners = new Set<Listener>();
   private readonly revisionListeners = new Set<Listener>();
-  private seq = 0;
+  private seq = 0n;
 
   constructor(surface: SurfaceId, limits: UiDocumentLimits = DEFAULT_UI_DOCUMENT_LIMITS) {
     this.state = emptyUiDocumentState(surface);
@@ -474,7 +475,7 @@ export class UiDocumentStore {
    * misapplying it against geometry the user never actually saw. Replaces the old per-control
    * `dispatch(controllerId, action, args)` plumbing: one helper, called once per user gesture. */
   buildIntent(record: UiNodeRecord, binding: ActionBinding, input?: UiValue): UiIntent {
-    this.seq += 1;
+    this.seq += 1n;
     return {
       surface: this.state.surface,
       revision: this.state.revision,
@@ -482,8 +483,8 @@ export class UiDocumentStore {
       nodeKey: record.key,
       trigger: binding.trigger,
       action: binding.action,
-      args: binding.args ?? undefined,
-      input: input ?? undefined,
+      args: binding.args,
+      input: input ?? null,
       seq: this.seq,
     };
   }
@@ -525,25 +526,40 @@ export function useUiDocumentRevision(store: UiDocumentStore): UiRevision {
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
 
+  const TEST_STYLE: StyleSpec = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
+  const TEST_ACCESSIBILITY: AccessibilitySpec = { label: null, description: null, live: "off", shortcut: null, hidden: false };
+
+  // 🐛 `{ type: "separator" }` alone does NOT satisfy `Component` here — `SeparatorProps` is
+  // `Record<string, never>` (a genuinely empty Rust struct), and TypeScript's structural check on an
+  // object LITERAL treats that index signature as applying to every key of the intersection,
+  // including the discriminant itself (`Property 'type' is incompatible with index signature: Type
+  // '"separator"' is not assignable to type 'never'`) — reproduced standalone, not this file's bug,
+  // and not fixable by loosening a type. A minimal `container` literal has real fields and sidesteps
+  // it; see the packet report for the finding (applies to any bare `{ type: "separator" }` literal
+  // asserted directly against `Component`, repo-wide).
   function leaf(id: number, key: string): UiNodeRecord {
     return {
       id,
       key,
-      component: { type: "separator" },
+      component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
       layout: { kind: "leaf", width: "hug", height: "hug" },
-      style: {},
+      style: TEST_STYLE,
       activity: "idle",
-      accessibility: {},
+      disabled: false,
+      transition: null,
+      accessibility: TEST_ACCESSIBILITY,
+      bindings: [],
+      menu: null,
       children: [],
     };
   }
 
   function container(id: number, key: string, children: readonly number[]): UiNodeRecord {
-    return { ...leaf(id, key), component: { type: "container" }, children: [...children] };
+    return { ...leaf(id, key), component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, children: [...children] };
   }
 
   function snapshot(root: number, nodes: readonly UiNodeRecord[]): UiSnapshot {
-    return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0 };
+    return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0n };
   }
 
   describe("UiDocumentStore transactions", () => {
@@ -557,13 +573,13 @@ if (import.meta.vitest) {
         ops: [
           { type: "upsert", ...leaf(2, "b") },
           { type: "setChildren", id: 0, children: [1, 2] },
-          { type: "setComponent", id: 1, component: { type: "text", value: "hi" } },
+          { type: "setComponent", id: 1, component: { type: "text", value: "hi", emphasize: null, dataAttributes: null } },
         ],
       });
       expect(result.ok).toBe(true);
       expect(store.getState().revision).toBe(1);
       expect(store.getNodeSnapshot(0)?.children).toEqual([1, 2]);
-      expect(store.getNodeSnapshot(1)?.component).toEqual({ type: "text", value: "hi" });
+      expect(store.getNodeSnapshot(1)?.component).toEqual({ type: "text", value: "hi", emphasize: null, dataAttributes: null });
       expect(store.getNodeSnapshot(2)).toBeDefined();
     });
 
@@ -591,7 +607,7 @@ if (import.meta.vitest) {
     it("rejects an unknown node target", () => {
       const store = new UiDocumentStore("s");
       store.loadSnapshot(snapshot(0, [leaf(0, "root")]));
-      const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 99, component: { type: "text", value: "x" } }] });
+      const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 99, component: { type: "text", value: "x", emphasize: null, dataAttributes: null } }] });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.rejection).toEqual({ type: "unknownNode", id: 99 });
     });
@@ -599,7 +615,7 @@ if (import.meta.vitest) {
     it("rejects an oversized patch by op count", () => {
       const store = new UiDocumentStore("s", { ...DEFAULT_UI_DOCUMENT_LIMITS, maxPatchOps: 1 });
       store.loadSnapshot(snapshot(0, [leaf(0, "root")]));
-      const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setLayout", id: 0, layout: { kind: "leaf", width: "fill", height: "hug" } }, { type: "setStyle", id: 0, style: {} }] });
+      const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setLayout", id: 0, layout: { kind: "leaf", width: "fill", height: "hug" } }, { type: "setStyle", id: 0, style: TEST_STYLE }] });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.rejection).toEqual({ type: "quotaExceeded", quota: "patchOps", actual: 2, max: 1 });
     });
@@ -624,7 +640,7 @@ if (import.meta.vitest) {
       store.subscribeNode(1)(onA);
       store.subscribeNode(2)(onB);
       store.subscribeNode(0)(onRoot);
-      store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 1, component: { type: "text", value: "changed" } }] });
+      store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 1, component: { type: "text", value: "changed", emphasize: null, dataAttributes: null } }] });
       expect(onA).toHaveBeenCalledTimes(1);
       expect(onB).toHaveBeenCalledTimes(0);
       expect(onRoot).toHaveBeenCalledTimes(0);
@@ -646,7 +662,7 @@ if (import.meta.vitest) {
       const button: UiNodeRecord = {
         ...leaf(0, "btn"),
         component: { type: "button", icon: "save", label: "Save" },
-        bindings: [{ trigger: "activate", action: { scope: "app", name: "save", version: 1 } }],
+        bindings: [{ trigger: "activate", action: { scope: "app", name: "save", version: 1 }, args: null, capability: null }],
       };
       store.loadSnapshot(snapshot(0, [button]));
       const first = emitIntent(store, button, "activate");
@@ -654,7 +670,7 @@ if (import.meta.vitest) {
       expect(first?.revision).toBe(0);
       expect(first?.nodeKey).toBe("btn");
       expect(first?.action).toEqual({ scope: "app", name: "save", version: 1 });
-      expect(second!.seq).toBe(first!.seq + 1);
+      expect(second!.seq).toBe(first!.seq + 1n);
     });
 
     it("returns undefined when the node has no binding for that trigger", () => {

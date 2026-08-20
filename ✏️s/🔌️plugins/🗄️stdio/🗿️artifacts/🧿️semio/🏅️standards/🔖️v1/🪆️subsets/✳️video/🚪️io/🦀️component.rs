@@ -69,7 +69,8 @@ pub mod derived_composition {
     /// 🧮️ Runs this subset's real referential-invariant checks against an already-decoded snapshot —
     /// shared by the registered `SubsetValidator` (wire-payload recheck) and this file's own unit
     /// tests (which exercise it directly against hand-built snapshots).
-    pub async fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<dsl::Diagnostic> {
         let mut out = Vec::new();
         for (stream_index, stream) in snapshot.streams.iter().enumerate() {
             if stream.rate.den == 0 {
@@ -106,14 +107,15 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_semio_video_invariants(&snapshot).await,
+                Some(snapshot) => check_semio_video_invariants(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_video.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioVideoValidator: payload did not decode as a SemioVideoSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioVideoValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -122,21 +124,23 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec (`"s.stdio.semio.video"` — the
     /// repo-wide-unique id `policyDocumentCodecDuplicateIds` checks statically), and SubsetValidator.
     /// Called from this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioVideoSnapshot, crate::artifacts::semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(
             crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(bridge_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(bridge_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor());
     }
 
     /// 🌉️ video↔mp4 / video↔avi bridge entries (W4) -- forward (writes video, reads the format) +
@@ -144,7 +148,8 @@ pub mod derived_composition {
     /// architecture note. Leaked to `'static` once, matching every other stdio composer's
     /// `OnceLock<Vec<ComposerEntry>>` entries-table convention (e.g. mp4/isobmff's own subset
     /// composer).
-    async fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioVideoFromMp4>(), serializer_entry_of::<SemioVideoToMp4>(), deserializer_entry_of::<SemioVideoFromAvi>(), serializer_entry_of::<SemioVideoToAvi>()]).as_slice()
     }
@@ -156,7 +161,8 @@ pub mod derived_composition {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream};
 
-        async fn clean_snapshot() -> SemioVideoSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn clean_snapshot() -> SemioVideoSnapshot {
             SemioVideoSnapshot {
                 schema: crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
                 streams: vec![SemioVideoStream {

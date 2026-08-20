@@ -150,7 +150,8 @@ pub struct XmlChildAdded {
 /// bare `&[usize]` here so this module never needs to depend on the mutations module) into a full
 /// `XmlDiff` by nesting it through `XmlChildModified` entries from the root down to that depth.
 /// `path == []` addresses the root itself, so `leaf` becomes `XmlDiff.root` directly.
-pub async fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
     let mut node_diff = leaf;
     for &index in path.iter().rev() {
         node_diff = XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: vec![XmlChildModified { index, diff: node_diff }], added: Vec::new() }) });
@@ -163,7 +164,7 @@ pub async fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 impl MutationDiff<XmlSnapshot> for XmlDiff {
     async fn apply(&self, base: &XmlSnapshot) -> MutationApplyResult<XmlSnapshot> {
         if let Some(root) = &self.root {
-            validate_xml_node(base.doc.root.as_ref(), root).await?;
+            validate_xml_node(base.doc.root.as_ref(), root)?;
         }
         let mut next = base.clone();
         if let Some(prolog) = &self.prolog {
@@ -176,7 +177,7 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
             next.doc.doctype = doctype.clone();
         }
         if let Some(node_diff) = &self.root {
-            next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff).await;
+            next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
         Ok(next)
     }
@@ -194,50 +195,52 @@ impl MutationDiff<XmlSnapshot> for XmlDiff {
         self.root = match (self.root.take(), other.root) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
         };
     }
 }
 
-async fn validate_xml_node(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_xml_node(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> MutationApplyResult<()> {
     match diff {
         XmlNodeDiff::Replace { .. } => Ok(()),
         XmlNodeDiff::Text { .. } => match current {
             Some(XmlNode::Text { .. }) => Ok(()),
-            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node").await),
-            None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root").await),
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node")),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root")),
         },
         XmlNodeDiff::Element(element) => match current {
             Some(XmlNode::Element { attrs, children, .. }) => {
                 if let Some(attributes) = &element.attributes {
-                    validate_xml_attrs(attrs, attributes).await?;
+                    validate_xml_attrs(attrs, attributes)?;
                 }
                 if let Some(children_diff) = &element.children {
-                    validate_xml_children(children, children_diff).await?;
+                    validate_xml_children(children, children_diff)?;
                 }
                 Ok(())
             }
-            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "element diff targets a non-element node").await),
-            None => Err(MutationApplyError::new("mutation.apply.missing-target", "element diff targets a missing root").await),
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "element diff targets a non-element node")),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "element diff targets a missing root")),
         },
     }
 }
 
-async fn validate_xml_attrs(base: &[XmlAttr], diff: &XmlAttributesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_xml_attrs(base: &[XmlAttr], diff: &XmlAttributesDiff) -> MutationApplyResult<()> {
     for (position, name) in diff.removed.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == *name) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist"));
         }
         if diff.removed[..position].contains(name) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute removal target is repeated"));
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == modified.name) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute modification target does not exist"));
         }
         if diff.removed.contains(&modified.name) || diff.modified[..position].iter().any(|candidate| candidate.name == modified.name) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "attribute modification target conflicts or repeats").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "attribute modification target conflicts or repeats"));
         }
     }
     let final_len = base.len() - diff.removed.len() + diff.added.len();
@@ -248,53 +251,56 @@ async fn validate_xml_attrs(base: &[XmlAttr], diff: &XmlAttributesDiff) -> Mutat
             || diff.removed.contains(&added.name)
             || diff.modified.iter().any(|candidate| candidate.name == added.name)
         {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting"));
         }
     }
     Ok(())
 }
 
-async fn validate_xml_children(base: &[XmlNode], diff: &XmlChildrenDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_xml_children(base: &[XmlNode], diff: &XmlChildrenDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "child removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child removal target does not exist"));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child removal target is repeated"));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "child modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child modification target does not exist"));
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "child modification targets a removed node").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "child modification targets a removed node"));
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated"));
         }
-        validate_xml_node(Some(&base[entry.index]), &entry.diff).await.map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+        validate_xml_node(Some(&base[entry.index]), &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
     let final_len = base.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated"));
         }
     }
     Ok(())
 }
 
-async fn apply_root_diff(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> Option<XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_root_diff(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> Option<XmlNode> {
     match diff {
         XmlNodeDiff::Replace { node } => node.clone(),
         _ => current.map(|n| apply_node_diff(n, diff)),
     }
 }
 
-async fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
     match diff {
         XmlNodeDiff::Replace { node: replacement } => replacement.clone().unwrap_or_else(|| node.clone()),
         XmlNodeDiff::Text { text } => match node {
@@ -305,11 +311,11 @@ async fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
             XmlNode::Element { name, attrs, children } => XmlNode::Element {
                 name: element_diff.name.clone().unwrap_or_else(|| name.clone()),
                 attrs: match &element_diff.attributes {
-                    Some(attrs_diff) => apply_attrs_diff(attrs, attrs_diff).await,
+                    Some(attrs_diff) => apply_attrs_diff(attrs, attrs_diff),
                     None => attrs.clone(),
                 },
                 children: match &element_diff.children {
-                    Some(children_diff) => Box::pin(apply_children_diff(children, children_diff)).await,
+                    Some(children_diff) => Box::pin(apply_children_diff(children, children_diff)),
                     None => children.clone(),
                 },
             },
@@ -318,7 +324,8 @@ async fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
     }
 }
 
-async fn apply_attrs_diff(attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> Vec<XmlAttr> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_attrs_diff(attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> Vec<XmlAttr> {
     let mut out: Vec<XmlAttr> = attrs
         .iter()
         .filter(|a| !diff.removed.contains(&a.name))
@@ -336,12 +343,13 @@ async fn apply_attrs_diff(attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> Vec<Xm
     out
 }
 
-async fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlNode> {
     let mut slots: Vec<Option<XmlNode>> = children.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
             let patched = apply_node_diff(node, &m.diff);
-            slots[m.index] = Some(Box::pin(patched).await);
+            slots[m.index] = Some(Box::pin(patched));
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -379,7 +387,7 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
             prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
-            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()).await,
+            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
         }
     }
 
@@ -388,7 +396,8 @@ impl DiffAlgebra<XmlSnapshot> for XmlDiff {
     }
 }
 
-async fn inverse_node_diff(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> XmlNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_node_diff(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> XmlNodeDiff {
     match diff {
         XmlNodeDiff::Replace { .. } => XmlNodeDiff::Replace { node: current.cloned() },
         XmlNodeDiff::Text { .. } => match current {
@@ -408,7 +417,8 @@ async fn inverse_node_diff(current: Option<&XmlNode>, diff: &XmlNodeDiff) -> Xml
     }
 }
 
-async fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> XmlAttributesDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &XmlAttributesDiff) -> XmlAttributesDiff {
     let removed: Vec<String> = diff.added.iter().map(|a| a.name.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -427,13 +437,14 @@ async fn inverse_attrs_diff(base_attrs: &[XmlAttr], diff: &XmlAttributesDiff) ->
     XmlAttributesDiff { removed, modified, added }
 }
 
-async fn inverse_children_diff(base_children: &[XmlNode], diff: &XmlChildrenDiff) -> XmlChildrenDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_children_diff(base_children: &[XmlNode], diff: &XmlChildrenDiff) -> XmlChildrenDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_children.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(XmlChildModified { index: next_index.await, diff: inverse_node_diff(Some(original), &m.diff).await });
+            modified.push(XmlChildModified { index: next_index, diff: inverse_node_diff(Some(original), &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -446,16 +457,18 @@ async fn inverse_children_diff(base_children: &[XmlNode], diff: &XmlChildrenDiff
     XmlChildrenDiff { removed, modified, added }
 }
 
-async fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option<XmlNodeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option<XmlNodeDiff> {
     match (base, other) {
         (None, None) => None,
         (None, Some(n)) => Some(XmlNodeDiff::Replace { node: Some(n.clone()) }),
         (Some(_), None) => Some(XmlNodeDiff::Replace { node: None }),
-        (Some(b), Some(o)) => between_node(b, o).await,
+        (Some(b), Some(o)) => between_node(b, o),
     }
 }
 
-async fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
     if base == other {
         return None;
     }
@@ -463,8 +476,8 @@ async fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
         (XmlNode::Text { .. }, XmlNode::Text { text: ot }) => Some(XmlNodeDiff::Text { text: Some(ot.clone()) }),
         (XmlNode::Element { name: bn, attrs: ba, children: bc }, XmlNode::Element { name: on, attrs: oa, children: oc }) => {
             let name = if bn != on { Some(on.clone()) } else { None };
-            let attributes = between_attrs(ba, oa).await;
-            let children = Box::pin(between_children(bc, oc)).await;
+            let attributes = between_attrs(ba, oa);
+            let children = Box::pin(between_children(bc, oc));
             if name.is_none() && attributes.is_none() && children.is_none() {
                 None
             } else {
@@ -475,7 +488,8 @@ async fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
     }
 }
 
-async fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<XmlAttributesDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<XmlAttributesDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for b in base {
@@ -502,12 +516,13 @@ async fn between_attrs(base: &[XmlAttr], other: &[XmlAttr]) -> Option<XmlAttribu
 /// collections: pairwise-compare `0..min(base.len(), other.len())` as `modified`, the base tail
 /// as `removed`, the other tail as `added`. Not an LCS-based diff (no move/reorder detection) --
 /// deliberately simple, matching every other stdio artifact's `between` for index-keyed children.
-async fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<XmlChildrenDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<XmlChildrenDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = Box::pin(between_node(&base[i], &other[i])).await {
+            if let Some(d) = Box::pin(between_node(&base[i], &other[i])) {
                 modified.push(XmlChildModified { index: i, diff: d });
             }
         }
@@ -528,7 +543,8 @@ async fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<XmlChil
 /// removed/added to the position it ends up at once `d1` has been applied -- used both to
 /// translate `d2`'s references into `d1`'s vocabulary and, in `inverse_children_diff` above, to
 /// translate a `modified` entry's base index into its position in the post-apply state.
-async fn transform_index(idx: usize, removed: &[usize], added: &[XmlChildAdded]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_index(idx: usize, removed: &[usize], added: &[XmlChildAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -556,7 +572,8 @@ enum ChildOrigin {
 /// the SMALLEST synthetic length that avoids clamping any referenced position -- untouched
 /// synthetic base slots beyond what either diff references are pure placeholders whose exact
 /// identity never gets read.
-async fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[XmlChildAdded]) -> Vec<ChildOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[XmlChildAdded]) -> Vec<ChildOrigin> {
     let mut mid: Vec<ChildOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ChildOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -567,31 +584,33 @@ async fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[XmlCh
     mid
 }
 
-async fn absorb_node_diff(a: XmlNodeDiff, b: XmlNodeDiff) -> XmlNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_node_diff(a: XmlNodeDiff, b: XmlNodeDiff) -> XmlNodeDiff {
     match (a, b) {
         (_, XmlNodeDiff::Replace { node: Some(n) }) => XmlNodeDiff::Replace { node: Some(n) },
-        (XmlNodeDiff::Replace { node: Some(n) }, b) => XmlNodeDiff::Replace { node: Some(apply_node_diff(&n, &b).await) },
+        (XmlNodeDiff::Replace { node: Some(n) }, b) => XmlNodeDiff::Replace { node: Some(apply_node_diff(&n, &b)) },
         (_, XmlNodeDiff::Replace { node: None }) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Replace { node: None }, _) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Text { text: ta }, XmlNodeDiff::Text { text: tb }) => XmlNodeDiff::Text { text: tb.or(ta) },
-        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(Box::pin(absorb_element_diff(ea, eb)).await),
+        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(Box::pin(absorb_element_diff(ea, eb))),
         (_, b) => b,
     }
 }
 
-async fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
     a.attributes = match (a.attributes.take(), b.attributes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, bd).await),
+        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, bd)),
     };
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(Box::pin(absorb_children_diff(ad, bd)).await),
+        (Some(ad), Some(bd)) => Some(Box::pin(absorb_children_diff(ad, bd))),
     };
     a
 }
@@ -600,7 +619,8 @@ async fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlEle
 /// position) is the stable identity; only `added.index` needs any position bookkeeping at all,
 /// approximated (not fully index-transported like children) since attribute order carries no
 /// spec-mandated meaning, only round-trip fidelity.
-async fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: XmlAttributesDiff) -> XmlAttributesDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: XmlAttributesDiff) -> XmlAttributesDiff {
     let a_added_names: std::collections::HashSet<String> = a.added.iter().map(|x| x.name.clone()).collect();
     let mut removed = a.removed.clone();
     let mut annihilated: Vec<String> = Vec::new();
@@ -640,7 +660,8 @@ async fn absorb_attrs_diff(mut a: XmlAttributesDiff, b: XmlAttributesDiff) -> Xm
     XmlAttributesDiff { removed, modified, added }
 }
 
-async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlChildrenDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlChildrenDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -653,7 +674,7 @@ async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlCh
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -681,7 +702,7 @@ async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlCh
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = Box::pin(absorb_node_diff(existing.diff.clone(), m2.diff.clone())).await,
+                    Some(existing) => existing.diff = Box::pin(absorb_node_diff(existing.diff.clone(), m2.diff.clone())),
                     None => modified.push(XmlChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -690,7 +711,7 @@ async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlCh
                     continue;
                 }
                 if let Some(add) = working_added.get_mut(*k) {
-                    add.item = apply_node_diff(&add.item, &m2.diff).await;
+                    add.item = apply_node_diff(&add.item, &m2.diff);
                 }
             }
             None => {}
@@ -703,7 +724,7 @@ async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlCh
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(XmlChildAdded { index: final_index.await, item: add.item });
+        added.push(XmlChildAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -717,8 +738,9 @@ async fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlCh
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<XmlSnapshot>` full-replace slot -- this IS `XmlDiff::between`.
-pub async fn diff_set_snapshot(base: &XmlSnapshot, next: &XmlSnapshot) -> XmlDiff {
-    XmlDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &XmlSnapshot, next: &XmlSnapshot) -> XmlDiff {
+    XmlDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
 
@@ -731,42 +753,52 @@ pub async fn diff_set_snapshot(base: &XmlSnapshot, next: &XmlSnapshot) -> XmlDif
 /// marked `pub(crate)` in THIS file so `📰xml`'s own `🧬️mutations/component.rs` can reuse them for
 /// its hand-rolled `OpText`/`OpBinary` (same intra-artifact reuse pattern svg uses).
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_prolog(prolog: &Vec<XmlNode>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_prolog(prolog: &Vec<XmlNode>) -> String {
     format!("[{}]", prolog.iter().map(enc_xml_node).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().map(dec_xml_node).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_xml_node).collect()
 }
-pub(crate) async fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, prolog.len() as u64);
     for node in prolog {
         enc_xml_node_bin(node, out);
     }
 }
-pub(crate) async fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
     (0..count).map(|_| dec_xml_node_bin(reader)).collect()
 }
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -787,18 +819,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -810,41 +845,50 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// upgraded `OpBinary`/`DiffCodec` frames below (and, via re-export, `../🧬️mutations/🦀️component.rs`'s
 /// own upgraded `OpBinary`) -- reuses `store::pack_rt::write_varint_u64`/`store::ByteReader` rather
 /// than reinventing varint encode/decode, same shape json's own `write_str_lp`/`read_str_lp` uses.
-pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
 
 //#region 🔖️XmlValueCodecs
-async fn enc_attr(a: &XmlAttr) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_attr(a: &XmlAttr) -> String {
     format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
 }
-async fn dec_attr(s: &str) -> Result<XmlAttr, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
-    Ok(XmlAttr { name: dec_str(name).await?, value: dec_str(value).await? })
+    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
 }
-pub(crate) async fn enc_declaration(d: &XmlDeclaration) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
     format!("[{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),)
 }
-pub(crate) async fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, encoding, standalone] = parts.as_slice() else { return Err(format!("declaration: expected 3 fields, got {}", parts.len())) };
-    Ok(XmlDeclaration { version: dec_str(version).await?, encoding: decode_option(encoding, dec_str).await?, standalone: decode_option(standalone, |v| Ok(v == "1")).await? })
+    Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))? })
 }
-pub(crate) async fn enc_doctype(doctype: &XmlDoctype) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
     let external = encode_option(&doctype.external_id, |external| match external {
         XmlExternalId::System { system_id } => format!("S[{}]", enc_str(system_id)),
         XmlExternalId::Public { public_id, system_id } => {
@@ -861,35 +905,37 @@ pub(crate) async fn enc_doctype(doctype: &XmlDoctype) -> String {
         .join(",");
     format!("[{},{},[{}]]", enc_str(&doctype.name), external, declarations)
 }
-pub(crate) async fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, external, declarations] = parts.as_slice() else {
         return Err(format!("doctype: expected 3 fields, got {}", parts.len()));
     };
     let external_id = decode_option(external, |value| {
         let (tag, rest) = value.split_at(1);
-        let fields = semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(rest)?, ','));
+        let fields = split_top_level(strip_brackets(rest)?, ',');
         match (tag, fields.as_slice()) {
             ("S", [system_id]) => Ok(XmlExternalId::System { system_id: dec_str(system_id)? }),
             ("P", [public_id, system_id]) => Ok(XmlExternalId::Public { public_id: dec_str(public_id)?, system_id: dec_str(system_id)? }),
             _ => Err(format!("doctype external id: bad shape {value:?}")),
         }
-    }).await?;
-    let declarations = split_top_level(strip_brackets(declarations).await?, ',')
+    })?;
+    let declarations = split_top_level(strip_brackets(declarations)?, ',')
         .into_iter()
         .filter(|value| !value.is_empty())
         .map(|value| {
             let (tag, rest) = value.split_at(1);
             let fields = split_top_level(strip_brackets(rest)?, ',');
-            match (tag, semio_framework_plugin::resolve_ready(fields.await.as_slice())) {
+            match (tag, fields.as_slice()) {
                 ("E", [parameter, name, value]) => Ok(XmlDtdDeclaration::Entity { parameter: *parameter == "1", name: dec_str(name)?, value: dec_str(value)? }),
                 _ => Err(format!("doctype declaration: bad shape {value:?}")),
             }
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlDoctype { name: dec_str(name).await?, external_id, declarations })
+    Ok(XmlDoctype { name: dec_str(name)?, external_id, declarations })
 }
-pub(crate) async fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
     write_str_lp(out, &doctype.name);
     match &doctype.external_id {
         None => out.push(0),
@@ -915,19 +961,20 @@ pub(crate) async fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
-    let name = read_str_lp(reader).await?;
-    let external_id = match reader.read_u8().await.map_err(|error| error.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
+    let name = read_str_lp(reader)?;
+    let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
         0 => None,
-        1 => Some(XmlExternalId::System { system_id: read_str_lp(reader).await? }),
-        2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader).await?, system_id: read_str_lp(reader).await? }),
+        1 => Some(XmlExternalId::System { system_id: read_str_lp(reader)? }),
+        2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader)?, system_id: read_str_lp(reader)? }),
         tag => return Err(format!("unknown XML external id tag {tag}")),
     };
-    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
     let mut declarations = Vec::with_capacity(count);
     for _ in 0..count {
-        match reader.read_u8().await.map_err(|error| error.to_string())? {
-            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().await.map_err(|error| error.to_string())? != 0, name: read_str_lp(reader).await?, value: read_str_lp(reader).await? }),
+        match reader.read_u8().map_err(|error| error.to_string())? {
+            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().map_err(|error| error.to_string())? != 0, name: read_str_lp(reader)?, value: read_str_lp(reader)? }),
             tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
         }
     }
@@ -936,7 +983,8 @@ pub(crate) async fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Resul
 /// 🌳 Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]` (comment)
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
 /// hex payload since hex never starts with an uppercase letter.
-pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
     match n {
         XmlNode::Element { name, attrs, children } => {
             let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
@@ -949,24 +997,25 @@ pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
         XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
     }
 }
-pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "E" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
-            let attrs = split_top_level(strip_brackets(attrs).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
-            let children = split_top_level(strip_brackets(children).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
-            Ok(XmlNode::Element { name: dec_str(name).await?, attrs, children })
+            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
+            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
         }
-        "T" => Ok(XmlNode::Text { text: dec_str(inner).await? }),
-        "D" => Ok(XmlNode::CData { text: dec_str(inner).await? }),
-        "M" => Ok(XmlNode::Comment { text: dec_str(inner).await? }),
+        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
+        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
+        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
         "P" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
-            Ok(XmlNode::ProcessingInstruction { target: dec_str(target).await?, data: dec_str(data).await? })
+            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
         }
         other => Err(format!("xml node: unknown tag {other:?}")),
     }
@@ -983,16 +1032,19 @@ pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
 /// sibling `../🧬️mutations/🦀️component.rs` (same artifact, different facet module) can reuse these
 /// rather than duplicating them a second time, matching this file's own existing text-codec reuse
 /// convention.
-pub(crate) async fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.name);
     write_str_lp(out, &a.value);
 }
-pub(crate) async fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
-    let name = read_str_lp(reader).await?;
-    let value = read_str_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
+    let name = read_str_lp(reader)?;
+    let value = read_str_lp(reader)?;
     Ok(XmlAttr { name, value })
 }
-pub(crate) async fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
     write_str_lp(out, &d.version);
     out.push(if d.encoding.is_some() { 1 } else { 0 });
     if let Some(encoding) = &d.encoding {
@@ -1003,13 +1055,15 @@ pub(crate) async fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
         out.push(if standalone { 1 } else { 0 });
     }
 }
-pub(crate) async fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
-    let version = read_str_lp(reader).await?;
-    let encoding = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let standalone = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
+    let version = read_str_lp(reader)?;
+    let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     Ok(XmlDeclaration { version, encoding, standalone })
 }
-pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
     match node {
         XmlNode::Element { name, attrs, children } => {
             out.push(0);
@@ -1042,29 +1096,30 @@ pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = read_str_lp(reader).await?;
-            let attr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let name = read_str_lp(reader)?;
+            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut attrs = Vec::with_capacity(attr_count as usize);
             for _ in 0..attr_count {
-                attrs.push(dec_attr_bin(reader).await?);
+                attrs.push(dec_attr_bin(reader)?);
             }
-            let child_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(Box::pin(dec_xml_node_bin(reader)).await?);
+                children.push(Box::pin(dec_xml_node_bin(reader))?);
             }
             Ok(XmlNode::Element { name, attrs, children })
         }
-        1 => Ok(XmlNode::Text { text: read_str_lp(reader).await? }),
-        2 => Ok(XmlNode::CData { text: read_str_lp(reader).await? }),
-        3 => Ok(XmlNode::Comment { text: read_str_lp(reader).await? }),
+        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
+        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
+        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
         4 => {
-            let target = read_str_lp(reader).await?;
-            let data = read_str_lp(reader).await?;
+            let target = read_str_lp(reader)?;
+            let data = read_str_lp(reader)?;
             Ok(XmlNode::ProcessingInstruction { target, data })
         }
         other => Err(format!("xml node binary: unknown tag {other}")),
@@ -1074,17 +1129,19 @@ pub(crate) async fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Resu
 //#endregion 🔖️XmlValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_attrs_diff(d: &XmlAttributesDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_attrs_diff(d: &XmlAttributesDiff) -> String {
     let removed = d.removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.name), enc_str(&m.value))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.name), enc_str(&a.value))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1092,7 +1149,7 @@ async fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
             Ok(XmlAttrModified { name: dec_str(name)?, value: dec_str(value)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1107,7 +1164,8 @@ async fn dec_attrs_diff(body: &str) -> Result<XmlAttributesDiff, String> {
 /// 🌳 Recursive: `XmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text, `R`=Replace) since,
 /// unlike `XmlNode`, it appears standalone (not always inside a bracketed container) at the `root=`
 /// top-level token position.
-async fn enc_node_diff(d: &XmlNodeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_diff(d: &XmlNodeDiff) -> String {
     match d {
         XmlNodeDiff::Element(e) => format!(
             "E[{},{},{}]",
@@ -1125,41 +1183,44 @@ async fn enc_node_diff(d: &XmlNodeDiff) -> String {
         XmlNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, |v| enc_xml_node(v))),
     }
 }
-async fn dec_node_diff(s: &str) -> Result<XmlNodeDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_diff(s: &str) -> Result<XmlNodeDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "E" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [name, attributes, children] = parts.as_slice() else { return Err(format!("node diff element: expected 3 fields, got {}", parts.len())) };
-            let attributes = match split_top_level(strip_brackets(attributes).await?, ',').await.as_slice() {
+            let attributes = match split_top_level(strip_brackets(attributes)?, ',').as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_attrs_diff(&rest.join(",")).await?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_attrs_diff(&rest.join(","))?),
                 other => return Err(format!("node diff element attrs: bad shape {other:?}")),
             };
-            let children = match split_top_level(strip_brackets(children).await?, ',').await.as_slice() {
+            let children = match split_top_level(strip_brackets(children)?, ',').as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_children_diff(&rest.join(",")).await?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_children_diff(&rest.join(","))?),
                 other => return Err(format!("node diff element children: bad shape {other:?}")),
             };
-            Ok(XmlNodeDiff::Element(XmlElementDiff { name: decode_option(name, dec_str).await?, attributes, children }))
+            Ok(XmlNodeDiff::Element(XmlElementDiff { name: decode_option(name, dec_str)?, attributes, children }))
         }
-        "T" => Ok(XmlNodeDiff::Text { text: decode_option(inner, dec_str).await? }),
-        "R" => Ok(XmlNodeDiff::Replace { node: decode_option(inner, dec_xml_node).await? }),
+        "T" => Ok(XmlNodeDiff::Text { text: decode_option(inner, dec_str)? }),
+        "R" => Ok(XmlNodeDiff::Replace { node: decode_option(inner, dec_xml_node)? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
-async fn enc_children_diff(d: &XmlChildrenDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_children_diff(d: &XmlChildrenDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_node_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_xml_node(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("children diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1167,7 +1228,7 @@ async fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
             Ok(XmlChildModified { index: parse_usize(idx)?, diff: dec_node_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1185,7 +1246,8 @@ async fn dec_children_diff(body: &str) -> Result<XmlChildrenDiff, String> {
 /// collection triples encode as three varint-counted, recursively-encoded lists (removed/modified/
 /// added) -- genuinely structured binary, backing the upgraded `DiffCodec::encode_diff`/
 /// `decode_diff` below.
-async fn enc_node_diff_bin(diff: &XmlNodeDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_diff_bin(diff: &XmlNodeDiff, out: &mut Vec<u8>) {
     match diff {
         XmlNodeDiff::Element(e) => {
             out.push(0);
@@ -1218,28 +1280,30 @@ async fn enc_node_diff_bin(diff: &XmlNodeDiff, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodeDiff, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodeDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-            let attributes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader).await?) } else { None };
-            let children = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader)).await?) } else { None };
+            let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let attributes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
+            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader))?) } else { None };
             Ok(XmlNodeDiff::Element(XmlElementDiff { name, attributes, children }))
         }
         1 => {
-            let text = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+            let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
             Ok(XmlNodeDiff::Text { text })
         }
         2 => {
-            let node = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader).await?) } else { None };
+            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
             Ok(XmlNodeDiff::Replace { node })
         }
         other => Err(format!("xml node diff binary: unknown tag {other}")),
     }
 }
 
-async fn enc_attrs_diff_bin(diff: &XmlAttributesDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_attrs_diff_bin(diff: &XmlAttributesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for name in &diff.removed {
         write_str_lp(out, name);
@@ -1256,31 +1320,33 @@ async fn enc_attrs_diff_bin(diff: &XmlAttributesDiff, out: &mut Vec<u8>) {
         write_str_lp(out, &entry.value);
     }
 }
-async fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttributesDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttributesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(read_str_lp(reader).await?);
+        removed.push(read_str_lp(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let name = read_str_lp(reader).await?;
-        let value = read_str_lp(reader).await?;
+        let name = read_str_lp(reader)?;
+        let value = read_str_lp(reader)?;
         modified.push(XmlAttrModified { name, value });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let name = read_str_lp(reader).await?;
-        let value = read_str_lp(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let name = read_str_lp(reader)?;
+        let value = read_str_lp(reader)?;
         added.push(XmlAttrAdded { index, name, value });
     }
     Ok(XmlAttributesDiff { removed, modified, added })
 }
 
-async fn enc_children_diff_bin(diff: &XmlChildrenDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_children_diff_bin(diff: &XmlChildrenDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for index in &diff.removed {
         store::pack_rt::write_varint_u64(out, *index as u64);
@@ -1296,24 +1362,25 @@ async fn enc_children_diff_bin(diff: &XmlChildrenDiff, out: &mut Vec<u8>) {
         enc_xml_node_bin(&entry.item, out);
     }
 }
-async fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlChildrenDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlChildrenDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let diff = Box::pin(dec_node_diff_bin(reader)).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = Box::pin(dec_node_diff_bin(reader))?;
         modified.push(XmlChildModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let item = dec_xml_node_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_xml_node_bin(reader)?;
         added.push(XmlChildAdded { index, item });
     }
     Ok(XmlChildrenDiff { removed, modified, added })
@@ -1322,7 +1389,8 @@ async fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_xml_diff(d: &XmlDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_xml_diff(d: &XmlDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.prolog {
         tokens.push(format!("prolog={}", enc_prolog(v)));
@@ -1338,20 +1406,21 @@ async fn print_xml_diff(d: &XmlDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
     let mut d = XmlDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("prolog=") {
-            d.prolog = Some(dec_prolog(rest).await?);
+            d.prolog = Some(dec_prolog(rest)?);
         } else if let Some(rest) = token.strip_prefix("declaration=") {
-            d.declaration = Some(decode_option(rest, dec_declaration).await?);
+            d.declaration = Some(decode_option(rest, dec_declaration)?);
         } else if let Some(rest) = token.strip_prefix("doctype=") {
-            d.doctype = Some(decode_option(rest, dec_doctype).await?);
+            d.doctype = Some(decode_option(rest, dec_doctype)?);
         } else if let Some(rest) = token.strip_prefix("root=") {
-            d.root = Some(dec_node_diff(rest).await?);
+            d.root = Some(dec_node_diff(rest)?);
         } else {
             return Err(format!("xml diff: unknown token {token:?}"));
         }
@@ -1361,10 +1430,10 @@ async fn parse_xml_diff(line: &str) -> Result<XmlDiff, String> {
 
 impl protocol::DiffCodec for XmlDiff {
     async fn print_diff(&self) -> String {
-        print_xml_diff(self).await
+        print_xml_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_xml_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_xml_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | [declaration][doctype][root]`),
     /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
@@ -1414,18 +1483,18 @@ impl protocol::DiffCodec for XmlDiff {
         let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let declaration = if flags & 0b001 != 0 {
             let has = reader.read_u8().await.map_err(|e| malformed("diff declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).await.map_err(|e| malformed("diff declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
+            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None
         };
         let doctype = if flags & 0b010 != 0 {
             let has = reader.read_u8().await.map_err(|e| malformed("diff doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).await.map_err(|e| malformed("diff doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
+            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None
         };
-        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).await.map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).await.map_err(|e| malformed("diff prolog", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(XmlDiff { prolog, declaration, doctype, root })
     }
 }
@@ -1439,13 +1508,16 @@ impl protocol::DiffCodec for XmlDiff {
 /// below AND by `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<XmlDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
     use crate::artifacts::xml::schema::snapshot::XmlDocument;
 
-    async fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn elem(name: &str, attrs: Vec<(&str, &str)>, children: Vec<XmlNode>) -> XmlNode {
         XmlNode::Element { name: name.to_string(), attrs: attrs.into_iter().map(|(n, v)| XmlAttr { name: n.to_string(), value: v.to_string() }).collect(), children }
     }
-    async fn snapshot(doc: XmlDocument) -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(doc: XmlDocument) -> XmlSnapshot {
         XmlSnapshot { doc, ..Default::default() }
     }
 

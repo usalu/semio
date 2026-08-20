@@ -3,6 +3,7 @@ use crate::artifacts::bcf::BcfSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &BcfSnapshot, mutation: &BcfMutation) -> Vec<BcfMutation> {
-    <BcfMutation as Mutation<BcfSnapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &BcfSnapshot, mutation: &BcfMutation) -> Vec<BcfMutation> {
+    <BcfMutation as Mutation<BcfSnapshot>>::inverse(mutation, base)
 }

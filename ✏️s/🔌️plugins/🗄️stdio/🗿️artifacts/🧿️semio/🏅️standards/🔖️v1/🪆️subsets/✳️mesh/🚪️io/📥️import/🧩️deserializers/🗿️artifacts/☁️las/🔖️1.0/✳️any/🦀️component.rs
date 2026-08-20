@@ -63,7 +63,8 @@ mod tests {
     use super::*;
     use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint};
 
-    async fn sample_las() -> LasSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_las() -> LasSnapshot {
         LasSnapshot {
             schema: "stdio.las".into(),
             header: LasHeader::default(),

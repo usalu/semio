@@ -86,7 +86,7 @@ impl GpuContext {
         Ok(gpu)
     }
 
-    async fn ensure_depth(&mut self) {
+    fn ensure_depth(&mut self) {
         let depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("ui_depth"),
             size: wgpu::Extent3d { width: self.width.max(1), height: self.height.max(1), depth_or_array_layers: 1 },
@@ -102,7 +102,7 @@ impl GpuContext {
         self.depth_view = Some(depth_view);
     }
 
-    pub async fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
+    pub fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
         self.dpr = dpr;
         let width = (css_width * dpr).max(1.0) as u32;
         let height = (css_height * dpr).max(1.0) as u32;
@@ -118,23 +118,23 @@ impl GpuContext {
         self.ensure_depth();
     }
 
-    async fn ensure_scene_color(&mut self) {
+    fn ensure_scene_color(&mut self) {
         SceneColorTarget::ensure(&self.device, &mut self.scene_color, self.width, self.height, self.color_target_format);
     }
 
-    pub async fn mesh_store_mut(&mut self) -> &mut MeshGpuTable {
+    pub fn mesh_store_mut(&mut self) -> &mut MeshGpuTable {
         &mut self.mesh_store
     }
 
-    pub async fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
+    pub fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
         self.mesh_store.ensure_mesh(&self.device, key, version, positions, normals, indices);
     }
 
-    pub async fn evict_mesh(&mut self, key: &str) {
+    pub fn evict_mesh(&mut self, key: &str) {
         self.mesh_store.evict_mesh(key);
     }
 
-    pub async fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>, time_seconds: f32) -> Result<(), String> {
+    pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>, time_seconds: f32) -> Result<(), String> {
         self.ensure_scene_color();
         let scene = self.scene_color.as_ref().expect("scene_color");
         let frame = self.surface.get_current_texture().map_err(|err| format!("frame: {err:?}"))?;
@@ -150,15 +150,15 @@ impl GpuContext {
         Ok(())
     }
 
-    pub async fn upload_font_atlas(&self, atlas: &FontAtlas) {
+    pub fn upload_font_atlas(&self, atlas: &FontAtlas) {
         self.pipelines.upload_glyph_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 
-    pub async fn upload_icon_atlas(&self, atlas: &crate::wgpu::draw::IconAtlas) {
+    pub fn upload_icon_atlas(&self, atlas: &crate::wgpu::draw::IconAtlas) {
         self.pipelines.upload_icon_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 
-    pub async fn ensure_raster_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+    pub fn ensure_raster_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
         self.raster_store.ensure_raster(
             &self.device,
             &self.queue,
@@ -174,37 +174,37 @@ impl GpuContext {
         );
     }
 
-    pub async fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
         self.ensure_raster_texture(key, pixels, width, height);
     }
 
-    pub async fn device(&self) -> &wgpu::Device {
+    pub fn device(&self) -> &wgpu::Device {
         &self.device
     }
 
-    pub async fn queue(&self) -> &wgpu::Queue {
+    pub fn queue(&self) -> &wgpu::Queue {
         &self.queue
     }
 
-    pub async fn dpr(&self) -> f32 {
+    pub fn dpr(&self) -> f32 {
         self.dpr
     }
 
-    pub async fn register_engine_texture(&mut self, key: &str, texture: wgpu::Texture, view: &wgpu::TextureView, width: u32, height: u32) {
+    pub fn register_engine_texture(&mut self, key: &str, texture: wgpu::Texture, view: &wgpu::TextureView, width: u32, height: u32) {
         self.raster_store.replace_gpu_bind_group(&self.device, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), key, view, texture, width, height);
     }
 
-    pub async fn width(&self) -> u32 {
+    pub fn width(&self) -> u32 {
         self.width
     }
 
-    pub async fn height(&self) -> u32 {
+    pub fn height(&self) -> u32 {
         self.height
     }
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
-pub async fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
+pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
 
@@ -218,7 +218,7 @@ pub async fn schedule_frame(window: &winit::window::Window, callback: impl FnMut
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "wasi")))]
-pub async fn schedule_frame(window: &winit::window::Window, _callback: impl FnMut() + 'static) {
+pub fn schedule_frame(window: &winit::window::Window, _callback: impl FnMut() + 'static) {
     window.request_redraw();
 }
 // #endregion gpu

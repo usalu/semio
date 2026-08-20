@@ -1,7 +1,7 @@
 // #region 🧊️MeshWindowKit
 /// <reference types="vitest/importMeta" />
 /** @emoji 🧊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `MeshWindowKit` (`framework.window.mesh`). */
-import type { UiComponentSceneNode, UiNode, World3dScene } from "@semio-tech/framework";
+import type { UiComponentSceneNode, World3dScene } from "@semio-tech/framework";
 
 /** 🆔️ Frozen kind id — twin of Rust `MeshWindowKit::KIND_ID`. */
 export const MESH_WINDOW_KIND_ID = "framework.window.mesh";
@@ -15,7 +15,7 @@ export type MeshView = {
 };
 
 /** 🧊️ Twin of Rust `MeshWindowKit::render` — builds a `world-3d` component scene from `view`. */
-export function renderMesh(view: MeshView): UiNode {
+export function renderMesh(view: MeshView): UiComponentSceneNode {
   const scene: World3dScene = { cameraJson: view.cameraJson, meshesJson: view.meshesJson, instancesJson: view.instancesJson, selectionJson: view.selectionJson };
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: MESH_WINDOW_KIND_ID, controllerId: MESH_WINDOW_KIND_ID, componentKind: "world-3d", world3d: scene };
   return node;

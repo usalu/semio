@@ -8,7 +8,8 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 pub const ID: &str = "metabolism";
 
 /// 🗣️ Localized picker label.
-pub async fn label() -> LocalizedLabel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Metabolism", "Metabolismus")
 }
 
@@ -22,19 +23,22 @@ pub const BASE_GLB_BYTES: &[u8] = include_bytes!("🖼️assets/🧊️base.glb"
 /// 🧬️ Decodes [`BASE_GLB_BYTES`] via the real upgraded `.glb` container codec -- this is the
 /// canonical real snapshot every other consumer of this example (and the fixture tests) works
 /// against, never a hand-authored stand-in.
-pub async fn decoded_snapshot() -> crate::artifacts::gltf::GltfSnapshot {
-    crate::artifacts::gltf::engine::decode_glb(BASE_GLB_BYTES).await.unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decoded_snapshot() -> crate::artifacts::gltf::GltfSnapshot {
+    crate::artifacts::gltf::engine::decode_glb(BASE_GLB_BYTES).unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
 }
 
 /// 📄️ Full-fidelity JSON serialization of the real decoded snapshot (document + resolved buffer
 /// bytes + source form) -- registered verbatim on the manifest, not a trimmed/synthetic stand-in.
-async fn document_json() -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn document_json() -> String {
     serde_json::to_string(&decoded_snapshot()).expect("serialize example")
 }
 
 /// 📚️ Canonical example source for `App::example_source`.
-pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), document_json(), ICON).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), document_json(), ICON)
 }
 
 #[cfg(test)]

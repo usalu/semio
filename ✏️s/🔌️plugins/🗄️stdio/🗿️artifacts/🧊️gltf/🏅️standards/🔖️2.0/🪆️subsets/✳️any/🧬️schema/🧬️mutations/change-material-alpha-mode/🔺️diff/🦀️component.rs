@@ -12,10 +12,12 @@ pub struct GltfChangeMaterialAlphaModeDiff {
     pub touched_paths: Vec<String>,
 }
 impl GltfChangeMaterialAlphaModeDiff {
-    pub async fn expected_touched_paths(&self) -> Vec<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn expected_touched_paths(&self) -> Vec<String> {
         vec![format!("document/materials/{}/alphaMode", self.material)]
     }
-    pub async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
         if self.touched_paths != self.expected_touched_paths() {
             return Err(GltfChangeMaterialAlphaModeRejection { code: "gltf.mutation.invalid-touched-paths".into(), path: "diff/touchedPaths".into(), detail: "touched paths must equal the concrete material alpha-mode path".into() });
         }
@@ -31,8 +33,9 @@ impl GltfChangeMaterialAlphaModeDiff {
         Ok(())
     }
 }
-pub async fn derive(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeDiff, GltfChangeMaterialAlphaModeRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn derive(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeDiff, GltfChangeMaterialAlphaModeRejection> {
+    validate(payload, base)?;
     let touched_paths = vec![format!("document/materials/{}/alphaMode", payload.material)];
     Ok(GltfChangeMaterialAlphaModeDiff { material: payload.material, expected_alpha_mode: base.document.materials[payload.material].alpha_mode, alpha_mode: payload.alpha_mode, touched_paths })
 }

@@ -56,7 +56,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_e_conformance(&snapshot).await,
+                Some(snapshot) => check_e_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.pdf.e.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -71,12 +71,14 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfEValidator>)
     }
 
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 

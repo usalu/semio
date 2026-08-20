@@ -23,40 +23,47 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 // #region 🔖️Helpers
 
-async fn placeholder_face() -> FaceId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn placeholder_face() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
-async fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
-    if value <= Tol::DEFAULT.value().await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
+    if value <= Tol::DEFAULT.value() {
         Err(KernelError::InvalidInput(format!("{name} must be positive, got {value}")))
     } else {
         Ok(())
     }
 }
 
-async fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
-    Surface::Plane { frame: Frame3::from_normal(origin, normal).await.expect("plane frame") }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
+    Surface::Plane { frame: Frame3::from_normal(origin, normal).expect("plane frame") }
 }
 
-async fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
-    let outer = make_loop(body, placeholder_face().await, members);
-    let face = add_face(body, surface_id, Some(outer.await), vec![], flipped, tol, rec);
-    body.loops.get_mut(outer.await).await.unwrap().face = face.await;
-    face.await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn attach_face(body: &mut Body, surface_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+    let outer = make_loop(body, placeholder_face(), members);
+    let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
+    body.loops.get_mut(outer).unwrap().face = face;
+    face
 }
 
-async fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
-    make_edge(body, curve.await, (0.0, 1.0), va, vb, tol, rec).await
+    make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
 
-async fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
     let shell = add_shell(body, faces, rec);
-    add_solid(body, shell.await, vec![], rec).await
+    add_solid(body, shell, vec![], rec)
 }
 
-async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
     if points.len() < 3 {
         return None;
     }
@@ -68,22 +75,23 @@ async fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
         n.y += (p.z - q.z) * (p.x + q.x);
         n.z += (p.x - q.x) * (p.y + q.y);
     }
-    n.normalized().await
+    n.normalized()
 }
 
 /// ➡️ Ordered outer-loop vertex positions of a face (polyline samples for circular edges).
-async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
-    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
     let outer = face_data.outer.ok_or_else(|| KernelError::InvalidInput("face has no outer loop".into()))?;
-    let coedges = body.loop_coedges(outer).await;
+    let coedges = body.loop_coedges(outer);
     if coedges.is_empty() {
         return Err(KernelError::InvalidInput("face outer loop is empty".into()));
     }
     let mut points = Vec::new();
     for cid in coedges {
-        let coedge = body.coedges.get(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-        let edge = body.edges.get(coedge.edge).await.ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
-        let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
+        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
+        let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
         match curve {
             Curve3::Circle { frame, radius } => {
                 let segments = 16usize.max(3);
@@ -96,8 +104,8 @@ async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, Kern
                 }
             }
             _ => {
-                let (start, _) = body.coedge_endpoints(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
-                let p = body.vertices.get(start).await.ok_or_else(|| KernelError::MissingEntity(format!("vertex {start:?}")))?.position;
+                let (start, _) = body.coedge_endpoints(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
+                let p = body.vertices.get(start).ok_or_else(|| KernelError::MissingEntity(format!("vertex {start:?}")))?.position;
                 points.push(p);
             }
         }
@@ -109,13 +117,14 @@ async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, Kern
 }
 
 /// ➡️ Prism solid from a closed polygon extruded by `offset` (bottom + top + planar sides).
-async fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let n = bottom.len();
     if n < 3 {
         return Err(KernelError::InvalidInput("prism needs ≥3 bottom points".into()));
     }
     let top: Vec<Pnt3> = bottom.iter().map(|&p| p + offset).collect();
-    let bottom_normal = newell_normal(bottom).await.ok_or_else(|| KernelError::InvalidInput("bottom polygon is degenerate".into()))?;
+    let bottom_normal = newell_normal(bottom).ok_or_else(|| KernelError::InvalidInput("bottom polygon is degenerate".into()))?;
     let outward_bottom = if bottom_normal.dot(offset) > 0.0 { -bottom_normal } else { bottom_normal };
     let outward_top = -outward_bottom;
 
@@ -133,12 +142,12 @@ async fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &
         e_vert.push(line_edge(body, bottom[i], top[i], v_bot[i], v_top[i], tol, rec));
     }
 
-    let s_bottom = body.surfaces.insert(plane_at(bottom[0], outward_bottom).await);
-    let s_top = body.surfaces.insert(plane_at(top[0], outward_top).await);
+    let s_bottom = body.surfaces.insert(plane_at(bottom[0], outward_bottom));
+    let s_top = body.surfaces.insert(plane_at(top[0], outward_top));
     let bottom_members: Vec<(EdgeId, bool)> = e_bot.iter().rev().map(|&e| (e, false)).collect();
     let top_members: Vec<(EdgeId, bool)> = e_top.iter().map(|&e| (e, true)).collect();
-    let bottom_face = attach_face(body, s_bottom.await, &bottom_members, false, tol, rec);
-    let top_face = attach_face(body, s_top.await, &top_members, false, tol, rec);
+    let bottom_face = attach_face(body, s_bottom, &bottom_members, false, tol, rec);
+    let top_face = attach_face(body, s_top, &top_members, false, tol, rec);
 
     let mut faces = vec![bottom_face, top_face];
     for i in 0..n {
@@ -146,46 +155,47 @@ async fn solid_from_prism(body: &mut Body, bottom: &[Pnt3], offset: Vec3, rec: &
         let p0 = bottom[i];
         let p1 = bottom[j];
         let edge_dir = p1 - p0;
-        let side_n = edge_dir.cross(offset).await.normalized().await.unwrap_or_else(|| if outward_bottom.dot(Vec3::Z).abs() < 0.9 { Vec3::Z } else { Vec3::X });
+        let side_n = edge_dir.cross(offset).normalized().unwrap_or_else(|| if outward_bottom.dot(Vec3::Z).abs() < 0.9 { Vec3::Z } else { Vec3::X });
         let side_n = if side_n.dot(outward_bottom.cross(edge_dir).normalized().unwrap_or(side_n)) < 0.0 { -side_n } else { side_n };
         // Prefer outward relative to polygon centroid.
         let centroid = {
             let mut c = Vec3::ZERO;
             for p in bottom {
-                c = c + p.to_vec().await;
+                c = c + p.to_vec();
             }
-            Pnt3::from_array((c * (1.0 / n as f64)).to_array().await)
+            Pnt3::from_array((c * (1.0 / n as f64)).to_array())
         };
         let mid = Pnt3::new((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5, (p0.z + p1.z) * 0.5);
         let side_n = if (mid - centroid).dot(side_n) < 0.0 { -side_n } else { side_n };
-        let s_side = body.surfaces.insert(plane_at(p0, side_n).await);
+        let s_side = body.surfaces.insert(plane_at(p0, side_n));
         let members = [(e_bot[i], true), (e_vert[j], true), (e_top[i], false), (e_vert[i], false)];
-        faces.push(attach_face(body, s_side.await, &members, false, tol, rec));
+        faces.push(attach_face(body, s_side, &members, false, tol, rec));
     }
-    Ok(finish_solid(body, faces, rec).await)
+    Ok(finish_solid(body, faces, rec))
 }
 
 /// ➡️ Cylinder solid when extruding a single closed circular edge along its plane normal.
-async fn try_extrude_circle_cylinder(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
-    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn try_extrude_circle_cylinder(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
     let Some(outer) = face_data.outer else {
         return Ok(None);
     };
-    let coedges = body.loop_coedges(outer).await;
+    let coedges = body.loop_coedges(outer);
     if coedges.len() != 1 {
         return Ok(None);
     }
-    let coedge = body.coedges.get(coedges[0]).await.unwrap();
-    let edge = body.edges.get(coedge.edge).await.unwrap();
-    let Some(Curve3::Circle { frame, radius }) = body.curves3.get(edge.curve).await.cloned() else {
+    let coedge = body.coedges.get(coedges[0]).unwrap();
+    let edge = body.edges.get(coedge.edge).unwrap();
+    let Some(Curve3::Circle { frame, radius }) = body.curves3.get(edge.curve).cloned() else {
         return Ok(None);
     };
-    let dir = direction.normalized().await.ok_or_else(|| KernelError::InvalidInput("extrude direction is zero".into()))?;
-    if dir.cross(frame.z).await.norm() > 1e-6 {
+    let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero".into()))?;
+    if dir.cross(frame.z).norm() > 1e-6 {
         return Ok(None);
     }
     let height = if dir.dot(frame.z) >= 0.0 { distance } else { -distance };
-    if height.abs() <= Tol::DEFAULT.value().await {
+    if height.abs() <= Tol::DEFAULT.value() {
         return Err(KernelError::InvalidInput("extrude distance is zero".into()));
     }
     let abs_h = height.abs();
@@ -193,27 +203,27 @@ async fn try_extrude_circle_cylinder(body: &mut Body, face: FaceId, direction: V
     let tol = Tol::DEFAULT;
     let bot_center = frame.origin;
     let top_center = bot_center + frame.z * (abs_h * z_sign);
-    let bot_pt = frame.to_world(Pnt3::new(radius, 0.0, 0.0).await);
+    let bot_pt = frame.to_world(Pnt3::new(radius, 0.0, 0.0));
     let top_pt = bot_pt + frame.z * (abs_h * z_sign);
-    let v_bot = make_vertex(body, bot_pt.await, tol, rec);
+    let v_bot = make_vertex(body, bot_pt, tol, rec);
     let v_top = make_vertex(body, top_pt, tol, rec);
     let e_bot = {
         let curve = body.curves3.insert(Curve3::Circle { frame: Frame3 { origin: bot_center, x: frame.x, y: frame.y, z: frame.z }, radius });
-        make_edge(body, curve.await, (0.0, TAU), v_bot.await, v_bot.await, tol, rec)
+        make_edge(body, curve, (0.0, TAU), v_bot, v_bot, tol, rec)
     };
     let e_top = {
         let curve = body.curves3.insert(Curve3::Circle { frame: Frame3 { origin: top_center, x: frame.x, y: frame.y, z: frame.z }, radius });
-        make_edge(body, curve.await, (0.0, TAU), v_top.await, v_top.await, tol, rec)
+        make_edge(body, curve, (0.0, TAU), v_top, v_top, tol, rec)
     };
-    let e_seam = line_edge(body, bot_pt.await, top_pt, v_bot.await, v_top.await, tol, rec);
+    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
     let cyl_frame = Frame3 { origin: if z_sign >= 0.0 { bot_center } else { top_center }, x: frame.x, y: frame.y, z: if z_sign >= 0.0 { frame.z } else { -frame.z } };
     let cyl = body.surfaces.insert(Surface::Cylinder { frame: cyl_frame, radius });
-    let lateral = attach_face(body, cyl.await, &[(e_bot.await, true), (e_seam.await, true), (e_top.await, false), (e_seam.await, false)], false, tol, rec);
-    let s_bottom = body.surfaces.insert(plane_at(bot_center, -frame.z * z_sign).await);
-    let s_top = body.surfaces.insert(plane_at(top_center, frame.z * z_sign).await);
-    let bottom = attach_face(body, s_bottom.await, &[(e_bot.await, false)], false, tol, rec);
-    let top = attach_face(body, s_top.await, &[(e_top.await, true)], false, tol, rec);
-    Ok(Some(finish_solid(body, vec![lateral.await, bottom.await, top.await], rec).await))
+    let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
+    let s_bottom = body.surfaces.insert(plane_at(bot_center, -frame.z * z_sign));
+    let s_top = body.surfaces.insert(plane_at(top_center, frame.z * z_sign));
+    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
+    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
+    Ok(Some(finish_solid(body, vec![lateral, bottom, top], rec)))
 }
 
 // #endregion 🔖️Helpers
@@ -224,24 +234,26 @@ async fn try_extrude_circle_cylinder(body: &mut Body, face: FaceId, direction: V
 ///
 /// Planar polygonal faces yield an axis-aligned-style prism of planar faces. A single closed
 /// circular outer edge extruded along the circle axis becomes an analytic cylinder solid.
-pub async fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("extrude distance", distance.abs()).await?;
-    let dir = direction.normalized().await.ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("extrude distance", distance.abs())?;
+    let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
     let offset = dir * distance;
-    if let Some(solid) = try_extrude_circle_cylinder(body, face, dir, distance, rec).await? {
+    if let Some(solid) = try_extrude_circle_cylinder(body, face, dir, distance, rec)? {
         return Ok(solid);
     }
-    let polygon = face_outer_polygon(body, face).await?;
-    solid_from_prism(body, &polygon, offset, rec).await
+    let polygon = face_outer_polygon(body, face)?;
+    solid_from_prism(body, &polygon, offset, rec)
 }
 
 /// ➡️ Revolves a planar face about an axis by sampling section polygons into a solid.
-pub async fn revolve_face(body: &mut Body, face: FaceId, axis_origin: Pnt3, axis_direction: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let axis = axis_direction.normalized().await.ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn revolve_face(body: &mut Body, face: FaceId, axis_origin: Pnt3, axis_direction: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    let axis = axis_direction.normalized().ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
     if !angle.is_finite() || angle.abs() <= 1e-12 {
         return Err(KernelError::InvalidInput("revolve angle must be non-zero".into()));
     }
-    let profile = face_outer_polygon(body, face).await?;
+    let profile = face_outer_polygon(body, face)?;
     let steps = ((angle.abs() / std::f64::consts::FRAC_PI_4).ceil() as usize).clamp(8, 64);
     let mut sections = Vec::with_capacity(steps + 1);
     for i in 0..=steps {
@@ -250,25 +262,27 @@ pub async fn revolve_face(body: &mut Body, face: FaceId, axis_origin: Pnt3, axis
         let section: Vec<Pnt3> = profile.iter().map(|&p| rotate_around_axis(p, axis_origin, axis, a)).collect();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections, rec).await
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Lofts profile faces into a solid by connecting successive outer polygons.
-pub async fn loft_profiles(body: &mut Body, profiles: &[FaceId], _smooth: bool, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], _smooth: bool, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if profiles.len() < 2 {
         return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
     }
     let mut sections = Vec::with_capacity(profiles.len());
     for &face in profiles {
-        sections.push(face_outer_polygon(body, face).await?);
+        sections.push(face_outer_polygon(body, face)?);
     }
-    solid_from_lofted_sections(body, &sections, rec).await
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Sweeps a profile face along a wire path.
-pub async fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let polygon = face_outer_polygon(body, profile).await?;
-    let samples = sample_wire_points(body, path, 16).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    let polygon = face_outer_polygon(body, profile)?;
+    let samples = sample_wire_points(body, path, 16)?;
     if samples.len() < 2 {
         return Err(KernelError::InvalidInput("sweep path needs at least two samples".into()));
     }
@@ -276,9 +290,9 @@ pub async fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec
     let mut sections = Vec::with_capacity(samples.len());
     for i in 0..samples.len() {
         let tangent = if i + 1 < samples.len() { samples[i + 1] - samples[i] } else { samples[i] - samples[i - 1] };
-        let xdir = tangent.normalized().await.unwrap_or(Vec3::X);
-        let zdir = xdir.cross(Vec3::Z).await.normalized().await.unwrap_or_else(|| semio_framework_plugin::resolve_ready(xdir.cross(Vec3::Y).normalized()).unwrap_or(Vec3::Y));
-        let ydir = zdir.cross(xdir).await.normalized().await.unwrap_or(Vec3::Z);
+        let xdir = tangent.normalized().unwrap_or(Vec3::X);
+        let zdir = xdir.cross(Vec3::Z).normalized().unwrap_or_else(|| xdir.cross(Vec3::Y).normalized().unwrap_or(Vec3::Y));
+        let ydir = zdir.cross(xdir).normalized().unwrap_or(Vec3::Z);
         let section = polygon
             .iter()
             .map(|&p| {
@@ -288,22 +302,24 @@ pub async fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec
             .collect::<Vec<_>>();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections, rec).await
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
 /// ➡️ Pipes a profile along a path (guide currently ignored — constant scale).
-pub async fn pipe(body: &mut Body, profile: FaceId, path: &Wire, _guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    sweep_along_path(body, profile, path, rec).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, _guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    sweep_along_path(body, profile, path, rec)
 }
 
 /// ➡️ Helical sweep of a profile about an axis.
-pub async fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("helical radius", radius).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_positive("helical radius", radius)?;
     if !turns.is_finite() || turns.abs() <= 1e-12 {
         return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
     }
-    let axis = axis_dir.normalized().await.ok_or_else(|| KernelError::InvalidInput("helical axis is zero-length".into()))?;
-    let polygon = face_outer_polygon(body, profile).await?;
+    let axis = axis_dir.normalized().ok_or_else(|| KernelError::InvalidInput("helical axis is zero-length".into()))?;
+    let polygon = face_outer_polygon(body, profile)?;
     let steps = ((turns.abs() * 16.0).ceil() as usize).clamp(16, 128);
     let mut sections = Vec::with_capacity(steps + 1);
     let start = polygon[0];
@@ -315,8 +331,8 @@ pub async fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, 
         let center = axis_origin + axis * along;
         // Place profile in a frame along the helix.
         let offset = (radial - axis_origin) - axis * (radial - axis_origin).dot(axis);
-        let xdir = if offset.norm() > 1e-9 { offset.normalized().unwrap() } else { axis.cross(Vec3::X).await.normalized().await.unwrap_or(Vec3::Y) };
-        let ydir = axis.cross(xdir).await.normalized().await.unwrap_or(Vec3::Z);
+        let xdir = if offset.norm() > 1e-9 { offset.normalized().unwrap() } else { axis.cross(Vec3::X).normalized().unwrap_or(Vec3::Y) };
+        let ydir = axis.cross(xdir).normalized().unwrap_or(Vec3::Z);
         let section = polygon
             .iter()
             .map(|&p| {
@@ -326,38 +342,41 @@ pub async fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, 
             .collect::<Vec<_>>();
         sections.push(section);
     }
-    solid_from_lofted_sections(body, &sections, rec).await
+    solid_from_lofted_sections(body, &sections, rec)
 }
 
-async fn rotate_around_axis(point: Pnt3, origin: Pnt3, axis: Vec3, angle: f64) -> Pnt3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rotate_around_axis(point: Pnt3, origin: Pnt3, axis: Vec3, angle: f64) -> Pnt3 {
     let v = point - origin;
     let cos = angle.cos();
     let sin = angle.sin();
-    let parallel = axis * v.dot(axis).await;
+    let parallel = axis * v.dot(axis);
     let lateral = v - parallel;
     let rotated = lateral * cos + axis.cross(lateral) * sin + parallel;
     origin + rotated
 }
 
-async fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Result<Vec<Pnt3>, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Result<Vec<Pnt3>, KernelError> {
     let mut points = Vec::new();
     for (edge_id, forward) in &wire.members {
-        let edge = body.edges.get(*edge_id).await.ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
-        let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
+        let edge = body.edges.get(*edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
         let (a, b) = edge.range;
         for i in 0..samples_per_edge {
             let t = if samples_per_edge <= 1 { 0.0 } else { i as f64 / (samples_per_edge as f64 - 1.0) };
             let u = if *forward { a + (b - a) * t } else { b + (a - b) * t };
             let p = curve_point(curve, u);
             if points.last().map(|q: &Pnt3| (*q - p).norm() > 1e-9).unwrap_or(true) {
-                points.push(p.await);
+                points.push(p);
             }
         }
     }
     Ok(points)
 }
 
-async fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     match curve {
         Curve3::Line { origin, dir } => *origin + *dir * u,
@@ -371,11 +390,12 @@ async fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
             let s = u.sin();
             frame.origin + frame.x * (*major_radius * c) + frame.y * (*minor_radius * s)
         }
-        Curve3::Nurbs { .. } => Pnt3::new(0.0, 0.0, 0.0).await,
+        Curve3::Nurbs { .. } => Pnt3::new(0.0, 0.0, 0.0),
     }
 }
 
-async fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if sections.len() < 2 {
         return Err(KernelError::InvalidInput("loft/sweep needs at least two sections".into()));
     }
@@ -406,7 +426,7 @@ async fn solid_from_lofted_sections(body: &mut Body, sections: &[Vec<Pnt3>], rec
         triangles.push([bottom[0], bottom[i], bottom[i + 1]]);
         triangles.push([top[0], top[i + 1], top[i]]);
     }
-    crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::solid_from_triangle_soup(body, &triangles, rec).await
+    crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::solid_from_triangle_soup(body, &triangles, rec)
 }
 
 // #endregion 🔖️Api
@@ -418,7 +438,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
 
-    async fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
         let faces = body.solid_faces(solid);
         let mut edge_ids = std::collections::HashSet::new();
         let mut vertex_ids = std::collections::HashSet::new();

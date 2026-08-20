@@ -23,7 +23,7 @@ pub struct PngInference {
 
 impl protocol::Inference<PngSnapshot> for PngInference {
     async fn infer(snapshot: &PngSnapshot) -> Self {
-        Self { dimensions: compute_png_dimensions(snapshot).await }
+        Self { dimensions: compute_png_dimensions(snapshot) }
     }
 }
 
@@ -63,7 +63,8 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::png::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.png.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `png_artifact_schema_descriptor`'s registration.
-pub async fn png_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn png_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.png.inference",
         inference: schema::FacetLeaves {

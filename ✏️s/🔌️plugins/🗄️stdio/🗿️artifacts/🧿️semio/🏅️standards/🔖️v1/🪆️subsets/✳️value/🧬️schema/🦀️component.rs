@@ -24,20 +24,24 @@ impl Default for SemioValueArtifact {
 }
 
 impl SemioValueArtifact {
-    pub async fn to_snapshot(&self) -> SemioValueSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: self.schema.clone(), root: self.root.clone(), nodes: self.nodes.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
         Self { schema: snapshot.schema, root: snapshot.root, nodes: snapshot.nodes }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
         self.schema = snapshot.schema;
         self.root = snapshot.root;
         self.nodes = snapshot.nodes;
     }
 }
 
-pub async fn semio_value_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_value_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.value",
         artifact: schema::FacetLeaves {
@@ -100,7 +104,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_value_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioValueTreeDiff as protocol::MutationDiff<SemioValueSnapshot>>::apply(&diff, &self.snapshot).await?;

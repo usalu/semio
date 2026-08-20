@@ -3,6 +3,6 @@
 /**
  * 📦️ An opaque, pack-encoded payload. The contract never parses it — `doc_schema` on the owning
  * [`SurfaceProps`] names the version-specific shape (e.g. `"world3d@1"`) that some other layer (the
- * product's own scene crate) knows how to decode.
+ * `🎬️scene` crate) knows how to decode.
  */
 export type SurfaceDoc = { bytes: Array<number>, };

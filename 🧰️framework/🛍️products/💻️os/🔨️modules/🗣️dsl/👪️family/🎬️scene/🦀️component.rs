@@ -7,7 +7,7 @@ use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 /// @emoji 📐️ Parses `id@x y [z]` layer placement literals.
 pub async fn parse_layer_anchor_text(text: &str) -> Result<(String, f64, f64, Option<f64>), TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let id = tokens.first().ok_or_else(|| TextError::new("expected layer id", crate::os_dsl::TextSpan::at(1, 1)))?;
     if id.kind != TokenKind::Ident {
         return Err(TextError::new("expected layer id", id.span.clone()));
@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-scene.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-scene.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-scene.grammar must parse");
         assert_eq!(grammar.id, "family-scene");
         assert!(grammar.productions.len() > 4, "family-scene should expose a real shared vocabulary");
     }

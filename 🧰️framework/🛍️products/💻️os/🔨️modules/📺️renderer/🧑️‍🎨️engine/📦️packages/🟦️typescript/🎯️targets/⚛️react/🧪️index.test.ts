@@ -326,7 +326,7 @@ function buildContractSnapshot(root: ContractNodeSpec): UiSnapshot {
     return id;
   };
   const rootId = walk(root);
-  return { surface: "test", revision: 0, root: rootId, nodes, layoutEpoch: 0 } as UiSnapshot;
+  return { surface: "test", revision: 0, root: rootId, nodes, layoutEpoch: 0n } as UiSnapshot;
 }
 
 /** 🌳️ Renders `root` (and its nested `children`) through the real `UiDocumentStore`/`interpretUiNode`
@@ -1251,7 +1251,7 @@ describe("framework plugin runtime", () => {
       menu: null,
       children: [],
     });
-    const snapshot = (revision: number, value: string): UiSnapshot => ({ surface: "s", revision, root: 0, nodes: [leaf(0, value)], layoutEpoch: 0 }) as UiSnapshot;
+    const snapshot = (revision: number, value: string): UiSnapshot => ({ surface: "s", revision, root: 0, nodes: [leaf(0, value)], layoutEpoch: 0n }) as UiSnapshot;
 
     it("a root Replace on a fresh surface (no previous body) is applied", () => {
       const result = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });

@@ -29,7 +29,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: 
 //#region 🔖️UniformPresence
 /// 🧭️ PLY's single `vertex` element needs one shared column set; a real, honest mismatch (some
 /// primitives populate an attribute, others don't) is a hard error, never a silent zero-fill.
-async fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, bool), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, bool), String> {
     let mut normals: Option<bool> = None;
     let mut uvs: Option<bool> = None;
     let mut colors: Option<bool> = None;
@@ -48,7 +49,8 @@ async fn check_uniform_presence(meshes: &[SemioMesh]) -> Result<(bool, bool, boo
     Ok((normals.unwrap_or(false), uvs.unwrap_or(false), colors.unwrap_or(false)))
 }
 
-async fn clamp_u8(v: f32) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn clamp_u8(v: f32) -> u8 {
     (v * 255.0).round().clamp(0.0, 255.0) as u8
 }
 //#endregion 🔖️UniformPresence
@@ -62,7 +64,7 @@ impl ArtifactSerializer for SemioMeshToPly {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).await.map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
+        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
 
         let mut properties = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         if has_normals {
@@ -103,10 +105,10 @@ impl ArtifactSerializer for SemioMeshToPly {
                     }
                     if has_colors {
                         let c = prim.colors.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing color at index {i}", prim.id)))?;
-                        values.push(PlyValue::UChar(clamp_u8(c.r).await));
-                        values.push(PlyValue::UChar(clamp_u8(c.g).await));
-                        values.push(PlyValue::UChar(clamp_u8(c.b).await));
-                        values.push(PlyValue::UChar(clamp_u8(c.a).await));
+                        values.push(PlyValue::UChar(clamp_u8(c.r)));
+                        values.push(PlyValue::UChar(clamp_u8(c.g)));
+                        values.push(PlyValue::UChar(clamp_u8(c.b)));
+                        values.push(PlyValue::UChar(clamp_u8(c.a)));
                     }
                     if has_uvs {
                         let uv = prim.uvs.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing uv at index {i}", prim.id)))?;
@@ -156,7 +158,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioPrimitive;
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn sample_semio_mesh() -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {

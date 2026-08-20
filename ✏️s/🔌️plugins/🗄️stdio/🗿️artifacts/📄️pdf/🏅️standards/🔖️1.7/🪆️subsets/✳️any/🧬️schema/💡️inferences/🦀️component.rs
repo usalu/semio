@@ -24,7 +24,7 @@ pub struct Pdf17Inference {
 
 impl protocol::Inference<PdfSnapshot> for Pdf17Inference {
     async fn infer(snapshot: &PdfSnapshot) -> Self {
-        Self { outline: Pdf17Outline::compute(snapshot).await }
+        Self { outline: Pdf17Outline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_7::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pdf.1.7.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `pdf_artifact_schema_descriptor`'s registration.
-pub async fn pdf17_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pdf17_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pdf.1.7.inference",
         inference: schema::FacetLeaves {

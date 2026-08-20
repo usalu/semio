@@ -242,7 +242,8 @@ pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDes
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.genus.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.genus.v1:geometry-v2", encode: genus::encode_result },
 ];
 
-pub async fn gltf_inference_leaf_service_descriptor(id: &str) -> Option<&'static GltfInferenceLeafServiceDescriptor> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gltf_inference_leaf_service_descriptor(id: &str) -> Option<&'static GltfInferenceLeafServiceDescriptor> {
     GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS.iter().find(|descriptor| descriptor.id == id)
 }
 
@@ -316,7 +317,8 @@ pub const GLTF_INFERENCE_FIELDS: &[protocol::InferenceFieldSpec] = &[
     protocol::InferenceFieldSpec { id: "s.stdio.gltf.inference.genus.v1", reads: GLTF_GEOMETRY_READS },
 ];
 
-pub async fn invalidated_gltf_inference_fields(touched: Option<&protocol::TouchedPaths>) -> Vec<&'static str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn invalidated_gltf_inference_fields(touched: Option<&protocol::TouchedPaths>) -> Vec<&'static str> {
     GLTF_INFERENCE_FIELDS.iter().filter(|field| touched.is_none_or(|paths| paths.intersects_any(field.reads))).map(|field| field.id).collect()
 }
 //#endregion 🧭️LeafDag
@@ -328,7 +330,7 @@ pub use super::dag_assembly::compute_gltf_inference;
 //#region 🧠️InferenceContract
 impl protocol::Inference<GltfSnapshot> for GltfInference {
     async fn infer(snapshot: &GltfSnapshot) -> Self {
-        Self { geometry: compute_gltf_inference(snapshot).await }
+        Self { geometry: compute_gltf_inference(snapshot) }
     }
 }
 
@@ -355,7 +357,8 @@ impl ArtifactInferrer for crate::artifacts::gltf::standards::v2_0::subsets::any:
     type Inference = GltfInference;
 }
 
-pub async fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDescriptor> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInferenceDescriptor> {
     vec![
         schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.overall-size.v1",

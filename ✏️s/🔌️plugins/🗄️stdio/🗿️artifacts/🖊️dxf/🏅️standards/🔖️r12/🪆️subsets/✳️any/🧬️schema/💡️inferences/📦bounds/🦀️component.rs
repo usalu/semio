@@ -33,7 +33,8 @@ impl Default for DxfBounds {
     }
 }
 
-async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -46,14 +47,16 @@ async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64
     }
 }
 
-async fn expand_sphere(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, center: [f64; 3], radius: f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_sphere(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, center: [f64; 3], radius: f64) {
     let lo = [center[0] - radius, center[1] - radius, center[2] - radius];
     let hi = [center[0] + radius, center[1] + radius, center[2] + radius];
     expand(min, max, seen, lo);
     expand(min, max, seen, hi);
 }
 
-async fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity: &DxfEntity) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity: &DxfEntity) {
     match entity {
         DxfEntity::Line { start, end, .. } => {
             expand(min, max, seen, *start);
@@ -67,20 +70,21 @@ async fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, 
                 expand(min, max, seen, [v.x, v.y, v.z]);
             }
         }
-        DxfEntity::Text { position, .. } => expand(min, max, seen, *position).await,
+        DxfEntity::Text { position, .. } => expand(min, max, seen, *position),
         DxfEntity::Solid { points, .. } => {
             for p in points {
                 expand(min, max, seen, *p);
             }
         }
-        DxfEntity::Insert { position, .. } => expand(min, max, seen, *position).await,
+        DxfEntity::Insert { position, .. } => expand(min, max, seen, *position),
         DxfEntity::Other { .. } => {}
     }
 }
 
 /// 📦️ Computes [`DxfBounds`] over every top-level `entities` record plus every block's own
 /// nested `entities` — see module doc comment for the per-variant bounding rule.
-pub async fn compute_dxf_bounds(snapshot: &DxfSnapshot) -> DxfBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_dxf_bounds(snapshot: &DxfSnapshot) -> DxfBounds {
     let mut min = [0.0, 0.0, 0.0];
     let mut max = [0.0, 0.0, 0.0];
     let mut seen = false;

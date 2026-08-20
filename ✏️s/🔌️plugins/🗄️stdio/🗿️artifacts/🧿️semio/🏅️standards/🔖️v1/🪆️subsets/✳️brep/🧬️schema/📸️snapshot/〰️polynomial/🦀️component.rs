@@ -16,12 +16,14 @@ pub struct Poly {
 }
 
 impl Poly {
-    pub async fn new(coeffs: Vec<f64>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(coeffs: Vec<f64>) -> Self {
         Poly { coeffs }
     }
     /// ∿ Degree of the polynomial after trimming trailing (highest-order) exact zeros; a
     /// constant zero polynomial has degree `0`.
-    pub async fn degree(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn degree(&self) -> usize {
         let mut d = self.coeffs.len().saturating_sub(1);
         while d > 0 && self.coeffs[d] == 0.0 {
             d -= 1;
@@ -29,12 +31,14 @@ impl Poly {
         d
     }
     /// ∿ Horner evaluation.
-    pub async fn eval(&self, x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, x: f64) -> f64 {
         self.coeffs.iter().rev().fold(0.0, |acc, &c| acc * x + c)
     }
     /// ∿ Simultaneous Horner evaluation of the polynomial and its derivative (one pass, no
     /// separate `derivative()` allocation on the hot Newton-iteration path).
-    pub async fn eval_with_derivative(&self, x: f64) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval_with_derivative(&self, x: f64) -> (f64, f64) {
         let mut value = 0.0;
         let mut deriv = 0.0;
         for &c in self.coeffs.iter().rev() {
@@ -43,11 +47,12 @@ impl Poly {
         }
         (value, deriv)
     }
-    pub async fn derivative(&self) -> Poly {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn derivative(&self) -> Poly {
         if self.coeffs.len() <= 1 {
-            return Poly::new(vec![0.0]).await;
+            return Poly::new(vec![0.0]);
         }
-        Poly::new(self.coeffs.iter().enumerate().skip(1).map(|(i, &c)| c * i as f64).collect()).await
+        Poly::new(self.coeffs.iter().enumerate().skip(1).map(|(i, &c)| c * i as f64).collect())
     }
 }
 
@@ -57,7 +62,8 @@ impl Poly {
 
 /// ∿ Real roots of `a·x² + b·x + c`, using the cancellation-safe form (`q = -½(b + sign(b)·√Δ)`,
 /// roots `q/a` and `c/q`) rather than the naive quadratic formula.
-pub async fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
     if a == 0.0 {
         return if b == 0.0 { vec![] } else { vec![-c / b] };
     }
@@ -78,9 +84,10 @@ pub async fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
 
 /// ∿ Real roots of `a·x³ + b·x² + c·x + d` (`a ≠ 0`) via the depressed-cubic trigonometric method
 /// for three real roots and Cardano's formula otherwise.
-pub async fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
     if a == 0.0 {
-        return solve_quadratic(b, c, d).await;
+        return solve_quadratic(b, c, d);
     }
     let (b, c, d) = (b / a, c / a, d / a);
     let shift = b / 3.0;
@@ -111,7 +118,8 @@ pub async fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
     roots
 }
 
-async fn cbrt(x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cbrt(x: f64) -> f64 {
     x.signum() * x.abs().powf(1.0 / 3.0)
 }
 
@@ -129,14 +137,17 @@ pub struct Bernstein {
 }
 
 impl Bernstein {
-    pub async fn new(coeffs: Vec<f64>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(coeffs: Vec<f64>) -> Self {
         Bernstein { coeffs }
     }
-    pub async fn degree(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn degree(&self) -> usize {
         self.coeffs.len().saturating_sub(1)
     }
     /// ∿ De Casteljau evaluation at `t` (need not lie in `[0, 1]`; the polynomial extends).
-    pub async fn eval(&self, t: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, t: f64) -> f64 {
         let mut work = self.coeffs.clone();
         let n = work.len();
         for level in 1..n {
@@ -148,7 +159,8 @@ impl Bernstein {
     }
     /// ∿ De Casteljau subdivision at `t`: returns the control points of the restriction to
     /// `[0, t]` and to `[t, 1]`, each reparameterized back onto `[0, 1]`.
-    pub async fn subdivide(&self, t: f64) -> (Bernstein, Bernstein) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn subdivide(&self, t: f64) -> (Bernstein, Bernstein) {
         let n = self.coeffs.len();
         let mut table = vec![self.coeffs.clone()];
         for level in 1..n {
@@ -158,42 +170,46 @@ impl Bernstein {
         }
         let left: Vec<f64> = (0..n).map(|i| table[i][0]).collect();
         let right: Vec<f64> = (0..n).map(|i| table[n - 1 - i][i]).collect();
-        (Bernstein::new(left).await, Bernstein::new(right).await)
+        (Bernstein::new(left), Bernstein::new(right))
     }
     /// ∿ Converts to monomial (power) basis via repeated finite differences of the control net:
     /// `coeff[k] = C(n,k) · Δ^k b_0`.
-    pub async fn to_monomial(&self) -> Poly {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_monomial(&self) -> Poly {
         let n = self.degree();
         let mut diffs = self.coeffs.clone();
         let mut monomial = vec![0.0; n + 1];
         monomial[0] = diffs[0];
         #[allow(clippy::needless_range_loop)]
-        for k in 1..=n.await {
+        for k in 1..=n {
             for i in 0..diffs.len() - 1 {
                 diffs[i] = diffs[i + 1] - diffs[i];
             }
             diffs.truncate(diffs.len() - 1);
-            monomial[k] = binomial(n.await, k) * diffs[0];
+            monomial[k] = binomial(n, k) * diffs[0];
         }
-        Poly::new(monomial).await
+        Poly::new(monomial)
     }
     /// ∿ Converts a monomial polynomial to Bernstein form on `[0, 1]` (inverse of [`Self::to_monomial`]).
-    pub async fn from_monomial(p: &Poly) -> Bernstein {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_monomial(p: &Poly) -> Bernstein {
         let n = p.degree();
-        let coeffs = (0..=n.await).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
-        Bernstein::new(coeffs).await
+        let coeffs = (0..=n).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
+        Bernstein::new(coeffs)
     }
     /// ∿ Descartes' rule of signs applied to the control polygon: the number of sign changes in
     /// `coeffs` (ignoring exact zeros) is an upper bound on, and has the same parity as, the
     /// number of real roots in `(0, 1)`. `0` sign changes certifies *no* root; `1` certifies
     /// *exactly one*.
-    pub async fn sign_variations(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sign_variations(&self) -> usize {
         let nonzero: Vec<f64> = self.coeffs.iter().copied().filter(|c| *c != 0.0).collect();
         nonzero.windows(2).filter(|w| w[0].signum() != w[1].signum()).count()
     }
 }
 
-async fn binomial(n: usize, k: usize) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn binomial(n: usize, k: usize) -> f64 {
     if k > n {
         return 0.0;
     }
@@ -211,13 +227,15 @@ async fn binomial(n: usize, k: usize) -> f64 {
 /// inputs — see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error`] for how callers should react if isolation is incomplete
 /// (the kernel's "never wrong, fail loud" invariant: a caller hitting `max_depth` should treat
 /// the sub-interval as unresolved rather than guess).
-pub async fn isolate_roots(b: &Bernstein, max_depth: u32) -> Vec<(f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn isolate_roots(b: &Bernstein, max_depth: u32) -> Vec<(f64, f64)> {
     let mut intervals = Vec::new();
     isolate_recursive(b, 0.0, 1.0, max_depth, &mut intervals);
     intervals
 }
 
-async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mut Vec<(f64, f64)>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mut Vec<(f64, f64)>) {
     let variations = b.sign_variations();
     if variations == 0 {
         return;
@@ -227,7 +245,7 @@ async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mu
         return;
     }
     let mid = 0.5;
-    let (left, right) = b.subdivide(mid).await;
+    let (left, right) = b.subdivide(mid);
     let mid_param = lo + (hi - lo) * mid;
     isolate_recursive(&left, lo, mid_param, depth - 1, out);
     isolate_recursive(&right, mid_param, hi, depth - 1, out);
@@ -239,9 +257,10 @@ async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mu
 
 /// ∿ Safeguarded Newton (bisection fallback whenever a Newton step would leave the bracket or
 /// fails to shrink it) — guaranteed to converge given a valid sign-changing bracket `[lo, hi]`.
-pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters: u32) -> f64 {
-    let mut f_lo = p.eval(lo).await;
-    let f_hi = p.eval(hi).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters: u32) -> f64 {
+    let mut f_lo = p.eval(lo);
+    let f_hi = p.eval(hi);
     if f_lo == 0.0 {
         return lo;
     }
@@ -251,7 +270,7 @@ pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters
     debug_assert!(f_lo.signum() != f_hi.signum(), "refine_root requires a sign-changing bracket");
     let mut x = 0.5 * (lo + hi);
     for _ in 0..max_iters {
-        let (fx, dfx) = p.eval_with_derivative(x).await;
+        let (fx, dfx) = p.eval_with_derivative(x);
         if fx.abs() <= tol {
             return x;
         }
@@ -416,7 +435,8 @@ mod tests {
 
         /// 🔮️ Brute-force oracle: dense sampling + bisection finds every sign-change interval,
         /// independent of the Bernstein/Descartes machinery under test.
-        async fn bisection_oracle(p: &Poly, samples: usize) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn bisection_oracle(p: &Poly, samples: usize) -> Vec<f64> {
             let mut roots = Vec::new();
             let xs: Vec<f64> = (0..=samples).map(|i| i as f64 / samples as f64).collect();
             for w in xs.windows(2) {

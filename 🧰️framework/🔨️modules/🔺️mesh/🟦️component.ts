@@ -3,7 +3,7 @@
 /** @emoji 🔺️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
 import type { IconName } from "@semio-tech/assets";
 import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🟦️ui-axes.ts";
-import type { ActionDescriptor } from "../🛂️manifest/🟦️component.ts";
+import type { ActionDescriptor, PluginContextMenuRequest } from "../🛂️manifest/🟦️component.ts";
 
 //#region ComponentSceneProtocol
 /** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */

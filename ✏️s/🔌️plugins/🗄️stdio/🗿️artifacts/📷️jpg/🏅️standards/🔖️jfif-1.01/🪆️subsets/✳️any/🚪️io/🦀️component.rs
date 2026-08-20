@@ -91,7 +91,8 @@ const ZIGZAG_TO_NATURAL: [usize; 64] = [
 //#region Idct
 /// 📐 Separable 1D IDCT-8 (ITU T.81 A.3.3), applied row-then-column for the
 /// 2D block transform — O(N^2) per axis instead of the O(N^4) direct sum.
-async fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
     for x in 0..8 {
         let mut sum = 0f64;
@@ -105,7 +106,8 @@ async fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
 }
 
 /// 📐 Separable 1D forward DCT-8 — mirror of `idct_1d`, used by the encoder.
-async fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
     for u in 0..8 {
         let cu = if u == 0 { std::f64::consts::FRAC_1_SQRT_2 } else { 1.0 };
@@ -118,7 +120,8 @@ async fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
     out
 }
 
-async fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut tmp = [0f64; 64];
     for r in 0..8 {
         let mut row = [0f64; 8];
@@ -139,7 +142,8 @@ async fn idct_8x8(block: &[f64; 64]) -> [f64; 64] {
     out
 }
 
-async fn fdct_8x8(block: &[f64; 64]) -> [f64; 64] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fdct_8x8(block: &[f64; 64]) -> [f64; 64] {
     let mut tmp = [0f64; 64];
     for c in 0..8 {
         let mut col = [0f64; 8];
@@ -175,7 +179,8 @@ struct HuffTable {
 /// order, incrementing within a length and left-shifting on length change —
 /// same "canonical" spirit as deflate's Huffman but JPEG's table layout
 /// (flat bits[16] counts + values[]) is its own format, not reused from deflate.
-async fn build_huffman(bits: &[u8; 16], values: &[u8]) -> Result<HuffTable, JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_huffman(bits: &[u8; 16], values: &[u8]) -> Result<HuffTable, JpgError> {
     let mut sizes: Vec<u8> = Vec::new();
     for (l, &count) in bits.iter().enumerate() {
         for _ in 0..count {
@@ -218,10 +223,12 @@ struct BitWriter {
     nbits: u32,
 }
 impl BitWriter {
-    async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new() -> Self {
         Self { bytes: Vec::new(), acc: 0, nbits: 0 }
     }
-    async fn put_bits(&mut self, value: u16, len: u8) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn put_bits(&mut self, value: u16, len: u8) {
         if len == 0 {
             return;
         }
@@ -236,7 +243,8 @@ impl BitWriter {
             }
         }
     }
-    async fn flush(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn flush(&mut self) {
         if self.nbits > 0 {
             let pad = 8 - self.nbits;
             let byte = ((self.acc << pad) & 0xFF) as u8;
@@ -261,10 +269,12 @@ struct BitReader<'a> {
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
-    async fn new(data: &'a [u8], pos: usize) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(data: &'a [u8], pos: usize) -> Self {
         Self { data, pos, acc: 0, nbits: 0 }
     }
-    async fn next_byte(&mut self) -> Option<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next_byte(&mut self) -> Option<u8> {
         if self.pos >= self.data.len() {
             return None;
         }
@@ -280,9 +290,10 @@ impl<'a> BitReader<'a> {
         self.pos += 1;
         Some(b)
     }
-    async fn read_bit(&mut self) -> Result<u8, JpgError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bit(&mut self) -> Result<u8, JpgError> {
         if self.nbits == 0 {
-            match self.next_byte().await {
+            match self.next_byte() {
                 Some(b) => {
                     self.acc = b as u32;
                     self.nbits = 8;
@@ -293,17 +304,19 @@ impl<'a> BitReader<'a> {
         self.nbits -= 1;
         Ok(((self.acc >> self.nbits) & 1) as u8)
     }
-    async fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
         let mut v = 0u16;
         for _ in 0..n {
-            v = (v << 1) | self.read_bit().await? as u16;
+            v = (v << 1) | self.read_bit()? as u16;
         }
         Ok(v)
     }
-    async fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
         for len in 1..=table.max_len {
-            code = (code << 1) | self.read_bit().await? as u16;
+            code = (code << 1) | self.read_bit()? as u16;
             if let Some(v) = table.decode.get(&(len, code)) {
                 return Ok(*v);
             }
@@ -312,7 +325,8 @@ impl<'a> BitReader<'a> {
     }
     /// 🔁 Byte-align and consume one `RSTn` marker at a restart boundary;
     /// also resets the DC predictors (caller's responsibility) per T.81 F.2.2.5.
-    async fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
         self.nbits = 0;
         self.acc = 0;
         if self.pos + 1 < self.data.len() && self.data[self.pos] == 0xFF && (0xD0..=0xD7).contains(&self.data[self.pos + 1]) {
@@ -326,7 +340,8 @@ impl<'a> BitReader<'a> {
 
 /// ➕ Sign-extends a JPEG-encoded magnitude/sign pair (T.81 F.12): values
 /// below `2^(size-1)` are negative, encoded as `value - (2^size - 1)`.
-async fn extend_sign(value: u16, size: u8) -> i32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn extend_sign(value: u16, size: u8) -> i32 {
     if size == 0 {
         return 0;
     }
@@ -339,7 +354,8 @@ async fn extend_sign(value: u16, size: u8) -> i32 {
     }
 }
 
-async fn size_of(mut v: i32) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn size_of(mut v: i32) -> u8 {
     if v < 0 {
         v = -v;
     }
@@ -357,7 +373,8 @@ async fn size_of(mut v: i32) -> u8 {
 /// difference from the running per-component predictor, AC via run-length +
 /// size Huffman symbols with ZRL (0xF0) for 16-zero runs and EOB (0x00) once
 /// the remainder is all zero.
-async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<(), JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<(), JpgError> {
     let diff = coeffs[0] - *dc_pred;
     *dc_pred = coeffs[0];
     let sz = size_of(diff);
@@ -365,7 +382,7 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
     bw.put_bits(code, len);
     if sz > 0 {
         let bits = if diff < 0 { (diff - 1) as u16 & ((1u16 << sz) - 1) } else { diff as u16 };
-        bw.put_bits(bits, sz.await);
+        bw.put_bits(bits, sz);
     }
     let mut run = 0u8;
     for &v in coeffs.iter().skip(1) {
@@ -383,7 +400,7 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
         let (len, code) = *ac_table.encode.get(&rs).ok_or_else(|| JpgError::Malformed("ac symbol not in table".into()))?;
         bw.put_bits(code, len);
         let bits = if v < 0 { (v - 1) as u16 & ((1u16 << sz) - 1) } else { v as u16 };
-        bw.put_bits(bits, sz.await);
+        bw.put_bits(bits, sz);
         run = 0;
     }
     if run > 0 {
@@ -394,15 +411,16 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
 }
 
 /// 🧱 Decodes one 8x8 block into zigzag-order quantized coefficients.
-async fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
     let mut out = [0i32; 64];
-    let sz = br.decode_symbol(dc_table).await?;
-    let bits = if sz > 0 { br.read_bits(sz).await? } else { 0 };
+    let sz = br.decode_symbol(dc_table)?;
+    let bits = if sz > 0 { br.read_bits(sz)? } else { 0 };
     *dc_pred += extend_sign(bits, sz);
     out[0] = *dc_pred;
     let mut z = 1usize;
     while z < 64 {
-        let rs = br.decode_symbol(ac_table).await?;
+        let rs = br.decode_symbol(ac_table)?;
         let run = rs >> 4;
         let sz = rs & 0x0F;
         if sz == 0 {
@@ -416,8 +434,8 @@ async fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &Huff
         if z >= 64 {
             return Err(JpgError::Malformed("ac coefficient run overruns block".into()));
         }
-        let bits = br.read_bits(sz).await?;
-        out[z] = extend_sign(bits, sz).await;
+        let bits = br.read_bits(sz)?;
+        out[z] = extend_sign(bits, sz);
         z += 1;
     }
     Ok(out)
@@ -437,7 +455,8 @@ const STD_CHROMA_Q: [i32; 64] = [
 ];
 
 /// 📈 IJG-standard quality→scale mapping applied to the Annex K base tables.
-async fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
     let quality = quality.clamp(1, 100);
     let scale = if quality < 50 { 5000 / quality } else { 200 - quality * 2 };
     let mut out = [0i32; 64];
@@ -450,7 +469,8 @@ async fn scale_quality(base: &[i32; 64], quality: i32) -> [i32; 64] {
 /// 🔀 Reindexes a natural-order table into zigzag order — DQT stores entries
 /// in the same scan order the entropy coder emits, so `table[z]` lines up
 /// directly with a zigzag-order coefficient at position `z`.
-async fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
     let mut out = [0i32; 64];
     for z in 0..64 {
         out[z] = natural[ZIGZAG_TO_NATURAL[z]];
@@ -466,15 +486,18 @@ async fn quant_zigzag(natural: &[i32; 64]) -> [i32; 64] {
 /// doesn't depend on matching the spec's tables byte-for-byte, only on
 /// internal consistency between what's written and what's parsed.
 const DC_LUMA_BITS: [u8; 16] = [0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
-async fn dc_luma_values() -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dc_luma_values() -> Vec<u8> {
     (0..=11).collect()
 }
 const DC_CHROMA_BITS: [u8; 16] = [0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
-async fn dc_chroma_values() -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dc_chroma_values() -> Vec<u8> {
     (0..=11).collect()
 }
 const AC_LUMA_BITS: [u8; 16] = [0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d];
-async fn ac_luma_values() -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ac_luma_values() -> Vec<u8> {
     vec![
         0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
         0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
@@ -484,7 +507,8 @@ async fn ac_luma_values() -> Vec<u8> {
     ]
 }
 const AC_CHROMA_BITS: [u8; 16] = [0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77];
-async fn ac_chroma_values() -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ac_chroma_values() -> Vec<u8> {
     vec![
         0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
         0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
@@ -497,7 +521,8 @@ async fn ac_chroma_values() -> Vec<u8> {
 
 //#region ColorConvert
 /// 🎨 ITU-R BT.601 RGB→YCbCr.
-async fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
     let (r, g, b) = (r as f64, g as f64, b as f64);
     let y = 0.299 * r + 0.587 * g + 0.114 * b;
     let cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128.0;
@@ -505,7 +530,8 @@ async fn rgb_to_ycbcr(r: u8, g: u8, b: u8) -> (f64, f64, f64) {
     (y, cb, cr)
 }
 /// 🎨 ITU-R BT.601 YCbCr→RGB, clamped to `0..=255`.
-async fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
     let (cb, cr) = (cb - 128.0, cr - 128.0);
     let r = y + 1.402 * cr;
     let g = y - 0.344136 * cb - 0.714136 * cr;
@@ -517,7 +543,8 @@ async fn ycbcr_to_rgb(y: f64, cb: f64, cr: f64) -> (u8, u8, u8) {
 //#region Encode
 /// 🧩 Downsamples a full-res plane by box-averaging `fx`×`fy` pixel blocks —
 /// used to build the (subsampled) chroma planes at 4:2:0/4:2:2 from 4:4:4 source.
-async fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (Vec<f64>, usize, usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (Vec<f64>, usize, usize) {
     let dw = sw / fx;
     let dh = sh / fy;
     let mut out = vec![0f64; dw * dh];
@@ -537,7 +564,8 @@ async fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize)
 
 /// 🏷️ Builds a real `APP0`/`JFIF\0` segment (ITU-T T.871 §) from `snap.jfif_*`, including an
 /// embedded thumbnail when present.
-async fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     let thumb = snap.jfif_thumbnail.as_ref();
     let (tw, th, tdata): (u8, u8, &[u8]) = match thumb {
         Some(t) => (t.width, t.height, &t.rgb_data),
@@ -548,7 +576,7 @@ async fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     out.extend_from_slice(b"JFIF\0");
     out.push(snap.jfif_version.0);
     out.push(snap.jfif_version.1);
-    out.push(snap.jfif_density_units.to_u8().await);
+    out.push(snap.jfif_density_units.to_u8());
     out.push((snap.jfif_x_density >> 8) as u8);
     out.push((snap.jfif_x_density & 0xFF) as u8);
     out.push((snap.jfif_y_density >> 8) as u8);
@@ -570,7 +598,8 @@ async fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
 /// RETENTION of a decoded file's actual tables, not necessarily what a subsequent re-encode
 /// emits) — `restart_interval` is retained but this encoder never emits `DRI`/restart markers
 /// (documented deviation, `## deviations`).
-pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     if snap.width == 0 || snap.height == 0 {
         return Err(JpgError::Malformed("empty image".into()));
     }
@@ -599,14 +628,14 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
         for x in 0..pw {
             let sx = x.min(width as usize - 1);
             let idx = (sy * width as usize + sx) * 4;
-            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]).await;
+            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]);
             yfull[y * pw + x] = yy;
             cbfull[y * pw + x] = cb;
             crfull[y * pw + x] = cr;
         }
     }
-    let (cbplane, cpw, _cph) = box_downsample(&cbfull, pw, ph, hmax, vmax).await;
-    let (crplane, _, _) = box_downsample(&crfull, pw, ph, hmax, vmax).await;
+    let (cbplane, cpw, _cph) = box_downsample(&cbfull, pw, ph, hmax, vmax);
+    let (crplane, _, _) = box_downsample(&crfull, pw, ph, hmax, vmax);
 
     let comps: [JpgFrameComponent; 3] = [
         JpgFrameComponent { id: 1, h_sampling: hmax as u8, v_sampling: vmax as u8, quant_table_id: 0 },
@@ -615,12 +644,12 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     ];
     let frame = JpgFrameHeader { precision: 8, width, height, components: comps.to_vec() };
 
-    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality)).await;
-    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality)).await;
-    let dc_luma = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).await?;
-    let ac_luma = build_huffman(&AC_LUMA_BITS, &ac_luma_values()).await?;
-    let dc_chroma = build_huffman(&DC_CHROMA_BITS, &dc_chroma_values()).await?;
-    let ac_chroma = build_huffman(&AC_CHROMA_BITS, &ac_chroma_values()).await?;
+    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality));
+    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality));
+    let dc_luma = build_huffman(&DC_LUMA_BITS, &dc_luma_values())?;
+    let ac_luma = build_huffman(&AC_LUMA_BITS, &ac_luma_values())?;
+    let dc_chroma = build_huffman(&DC_CHROMA_BITS, &dc_chroma_values())?;
+    let ac_chroma = build_huffman(&AC_CHROMA_BITS, &ac_chroma_values())?;
 
     let mut out = Vec::new();
     out.extend_from_slice(&[0xFF, 0xD8]); // SOI
@@ -678,7 +707,7 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     sos.push(0);
     out.extend_from_slice(&sos);
 
-    let mut bw = BitWriter::new().await;
+    let mut bw = BitWriter::new();
     let mut dc_pred = [0i32; 3];
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
@@ -698,7 +727,7 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                     for z in 0..64 {
                         zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / luma_q[z] as f64).round() as i32;
                     }
-                    encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma).await?;
+                    encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma)?;
                 }
             }
             // Cb, Cr: one block per MCU (already half-res)
@@ -716,17 +745,18 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                 for z in 0..64 {
                     zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / chroma_q[z] as f64).round() as i32;
                 }
-                encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma).await?;
+                encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma)?;
             }
         }
     }
-    bw.flush().await;
+    bw.flush();
     out.extend_from_slice(&bw.bytes);
     out.extend_from_slice(&[0xFF, 0xD9]); // EOI
     Ok(out)
 }
 
-async fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values: &[u8]) {
     out.push(0xFF);
     out.push(0xC4);
     let len = 2 + 1 + 16 + values.len();
@@ -744,12 +774,13 @@ async fn write_dht(out: &mut Vec<u8>, class: u8, id: u8, bits: &[u8; 16], values
 /// x/y density + thumbnail dims + optional embedded RGB thumbnail). `None` if the identifier
 /// doesn't match — a non-JFIF APP0 (e.g. a bare Exif/other APP0) is retained verbatim in
 /// `other_segments` instead by the caller.
-async fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u16, Option<JfifThumbnail>)> {
     if seg.len() < 14 || &seg[0..5] != b"JFIF\0" {
         return None;
     }
     let version = (seg[5], seg[6]);
-    let units = JfifDensityUnits::from_u8(seg[7]).await.ok()?;
+    let units = JfifDensityUnits::from_u8(seg[7]).ok()?;
     let x_density = ((seg[8] as u16) << 8) | seg[9] as u16;
     let y_density = ((seg[10] as u16) << 8) | seg[11] as u16;
     let tw = seg[12];
@@ -763,7 +794,8 @@ type JfifVersion = (u8, u8);
 /// 📥 Decodes baseline sequential JPEG (SOF0 only) into an RGBA raster.
 /// Any other SOFn marker (progressive/extended/lossless/arithmetic) is a
 /// typed `JpgError::Unsupported` naming the exact variant — never decoded.
-pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     if data.len() < 4 || data[0] != 0xFF || data[1] != 0xD8 {
         return Err(JpgError::Malformed("missing SOI".into()));
     }
@@ -798,8 +830,8 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             0xD8 => continue, // stray SOI, tolerate
             0xD9 => return Err(JpgError::Malformed("EOI before SOS".into())),
             0xC0 => {
-                let len = read_u16(data, i).await?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
                 if seg.len() < 6 {
                     return Err(JpgError::Malformed("SOF0 segment too short".into()));
                 }
@@ -836,7 +868,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 return Err(JpgError::Unsupported(name.into()));
             }
             0xDB => {
-                let len = read_u16(data, i).await?;
+                let len = read_u16(data, i)?;
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
@@ -870,7 +902,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 i += len;
             }
             0xC4 => {
-                let len = read_u16(data, i).await?;
+                let len = read_u16(data, i)?;
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
@@ -884,10 +916,10 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     bits.copy_from_slice(&data[p..p + 16]);
                     p += 16;
                     let count: usize = bits.iter().map(|&b| b as usize).sum();
-                    let values = slice_at(data, p, count).await?.to_vec();
+                    let values = slice_at(data, p, count)?.to_vec();
                     p += count;
-                    let table = build_huffman(&bits, &values).await?;
-                    let huffman_class = JpgHuffmanClass::from_u8(class).await.map_err(JpgError::Malformed)?;
+                    let table = build_huffman(&bits, &values)?;
+                    let huffman_class = JpgHuffmanClass::from_u8(class).map_err(JpgError::Malformed)?;
                     if class == 0 {
                         dc_tables.insert(id, table);
                     } else {
@@ -910,16 +942,16 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 return Err(JpgError::Unsupported("arithmetic coding conditioning (DAC present)".into()));
             }
             0xDD => {
-                let len = read_u16(data, i).await?;
-                let seg = slice_at(data, i + 2, 2).await?;
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, 2)?;
                 restart_interval_raw = ((seg[0] as u16) << 8) | seg[1] as u16;
                 restart_interval = Some(restart_interval_raw);
                 i += len;
             }
             0xDA => {
                 let frame = frame.clone().ok_or_else(|| JpgError::Malformed("SOS before SOF0".into()))?;
-                let len = read_u16(data, i).await?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
                 let mut scan_tabs: Vec<(u8, u8)> = Vec::with_capacity(ns);
                 for k in 0..ns {
@@ -933,7 +965,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
                 }
                 i += len;
-                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw).await?;
+                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw)?;
                 let (width, height) = (frame.width as u32, frame.height as u32);
                 // 🏅️ sof_marker/arithmetic: real data the decode loop above already computed
                 // transiently (the SOF0 marker byte, the DAC rejection above) — persisted here so
@@ -964,9 +996,9 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 });
             }
             0xE0 => {
-                let len = read_u16(data, i).await?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
-                match parse_jfif_app0(seg).await {
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                match parse_jfif_app0(seg) {
                     Some((version, units, xd, yd, thumb)) => {
                         jfif_version = version;
                         jfif_density_units = units;
@@ -979,8 +1011,8 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 i += len;
             }
             0xE1..=0xEF | 0xFE => {
-                let len = read_u16(data, i).await?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
+                let len = read_u16(data, i)?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
                 other_segments.push(JpgSegment { marker, data: seg.to_vec() });
                 i += len;
             }
@@ -990,12 +1022,14 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
     }
 }
 
-async fn read_u16(data: &[u8], at: usize) -> Result<usize, JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u16(data: &[u8], at: usize) -> Result<usize, JpgError> {
     let hi = *data.get(at).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     let lo = *data.get(at + 1).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     Ok(((hi as usize) << 8) | lo as usize)
 }
-async fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
     data.get(at..at + len).ok_or_else(|| JpgError::Malformed("segment out of bounds".into()))
 }
 
@@ -1003,7 +1037,8 @@ async fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError>
 /// chroma upsampling for subsampled components; grayscale skips color
 /// conversion entirely) into RGBA.
 #[allow(clippy::too_many_arguments)]
-async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
     let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
     let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
     let mcu_w = 8 * hmax;
@@ -1021,13 +1056,13 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
         plane_dims.push((pwc, phc));
     }
 
-    let mut br = BitReader::new(data, start).await;
+    let mut br = BitReader::new(data, start);
     let mut dc_pred = vec![0i32; frame.components.len()];
     let mut mcus_since_restart = 0u32;
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
             if restart_interval > 0 && mcus_since_restart == restart_interval as u32 && (my != 0 || mx != 0) {
-                br.skip_restart_marker().await?;
+                br.skip_restart_marker()?;
                 for p in dc_pred.iter_mut() {
                     *p = 0;
                 }
@@ -1041,7 +1076,7 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
                 let (pwc, _) = plane_dims[ci];
                 for by in 0..c.v_sampling.max(1) as usize {
                     for bx in 0..c.h_sampling.max(1) as usize {
-                        let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab).await?;
+                        let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab)?;
                         let mut natural = [0f64; 64];
                         for z in 0..64 {
                             natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64;
@@ -1086,7 +1121,7 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
                 let cbx = (x * cbc.h_sampling.max(1) as usize) / hmax;
                 let cry = (y * crc.v_sampling.max(1) as usize) / vmax;
                 let crx = (x * crc.h_sampling.max(1) as usize) / hmax;
-                ycbcr_to_rgb(yy, planes[cb_idx][cby * cbpwc + cbx], planes[cr_idx][cry * crpwc + crx]).await
+                ycbcr_to_rgb(yy, planes[cb_idx][cby * cbpwc + cbx], planes[cr_idx][cry * crpwc + crx])
             };
             let idx = (y * width + x) * 4;
             rgba[idx] = r;
@@ -1105,7 +1140,8 @@ mod tests {
     use super::*;
     use crate::artifacts::jpg::schema::demo_jpg_snapshot;
 
-    async fn gradient_image(w: u32, h: u32) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn gradient_image(w: u32, h: u32) -> Vec<u8> {
         let mut out = vec![0u8; (w * h * 4) as usize];
         for y in 0..h {
             for x in 0..w {
@@ -1119,7 +1155,8 @@ mod tests {
         out
     }
 
-    async fn checkerboard_image(w: u32, h: u32) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn checkerboard_image(w: u32, h: u32) -> Vec<u8> {
         let mut out = vec![0u8; (w * h * 4) as usize];
         for y in 0..h {
             for x in 0..w {
@@ -1135,7 +1172,8 @@ mod tests {
         out
     }
 
-    async fn mae(a: &[u8], b: &[u8]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn mae(a: &[u8], b: &[u8]) -> f64 {
         assert_eq!(a.len(), b.len());
         let mut sum = 0f64;
         let mut n = 0usize;

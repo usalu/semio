@@ -92,7 +92,8 @@ impl protocol::OpBinary for DeflateEditorCommand {
 /// `#`-prefixed and blank lines are ignored (the payload byte-count comment). `None` on any missing
 /// or malformed required key — the caller treats that as a whole-command no-op, never a partial
 /// apply.
-async fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
     let mut fields = std::collections::BTreeMap::new();
     for line in text.lines() {
         let line = line.trim();
@@ -104,7 +105,7 @@ async fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::d
     }
     let method = fields.get("method")?.parse::<u8>().ok()?;
     let window_bits = fields.get("windowBits")?.parse::<u8>().ok()?;
-    let level_hint = main::parse_level_hint(fields.get("levelHint")?).await?;
+    let level_hint = main::parse_level_hint(fields.get("levelHint")?)?;
     let dict_id = match fields.get("presetDictionary").copied() {
         None | Some("none") => None,
         Some(other) => Some(other.parse::<u32>().ok()?),
@@ -143,7 +144,7 @@ impl ArtifactEditor for DeflateEditor {
     /// a partial apply.
     async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let DeflateEditorCommand::ReplaceText { text } = command;
-        let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text).await else { return Ok(Emit::default()) };
+        let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text) else { return Ok(Emit::default()) };
         Ok(Emit {
             artifact_mutations: vec![DeflateMutation::SetCompressionParams { method, window_bits, level_hint }, DeflateMutation::SetPresetDictionary { dict_id }],
             description: Some("Set compression header".into()),
@@ -153,7 +154,7 @@ impl ArtifactEditor for DeflateEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -161,14 +162,15 @@ impl ArtifactEditor for DeflateEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DEFLATE_EDITOR_DIALECT)
-        .await.document(["stdio", "deflate"])
-        .await.icon_id("package")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::DEFLATE_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["stdio", "deflate"])
+        .icon_id("package")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::DEFLATE_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

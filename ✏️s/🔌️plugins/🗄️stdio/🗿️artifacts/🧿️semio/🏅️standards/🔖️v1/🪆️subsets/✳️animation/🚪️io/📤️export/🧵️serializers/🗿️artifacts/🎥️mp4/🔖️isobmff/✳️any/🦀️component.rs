@@ -60,7 +60,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
-    async fn real_world_animation() -> SemioAnimationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_animation() -> SemioAnimationSnapshot {
         SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {

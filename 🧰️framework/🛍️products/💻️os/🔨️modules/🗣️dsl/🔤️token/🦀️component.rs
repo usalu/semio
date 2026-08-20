@@ -19,7 +19,7 @@ static INTERNER: OnceLock<Mutex<InternerState>> = OnceLock::new();
 
 // 🚫️async: E1 pure accessor — plain `OnceLock`/`Mutex` interner, no suspension point, and
 // overwhelmingly consumed sync across the tokenizer/lexer/parser (112 sync call sites vs. 8 that
-// had been wrongly `.await`ed by the blind codemod) — see R9.
+// had been wrongly ``ed by the blind codemod) — see R9.
 fn interner() -> &'static Mutex<InternerState> {
     INTERNER.get_or_init(|| Mutex::new(InternerState { strings: Vec::new(), lookup: HashMap::new() }))
 }
@@ -163,7 +163,7 @@ pub fn escape_text(value: &str) -> String {
 
 /// @emoji 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
 /// keeps the backslash and following character literal instead (editor/recovery mode).
-pub async fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
+pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -231,7 +231,7 @@ pub fn format_f64(value: f64) -> String {
     }
 }
 
-pub async fn format_f32(value: f32) -> String {
+pub fn format_f32(value: f32) -> String {
     if value.is_nan() {
         "nan".to_string()
     } else if value.is_infinite() {
@@ -245,7 +245,7 @@ pub async fn format_f32(value: f32) -> String {
     }
 }
 
-pub async fn parse_f64(text: &str) -> Result<f64, String> {
+pub fn parse_f64(text: &str) -> Result<f64, String> {
     match text {
         "nan" => Ok(f64::NAN),
         "inf" => Ok(f64::INFINITY),
@@ -254,7 +254,7 @@ pub async fn parse_f64(text: &str) -> Result<f64, String> {
     }
 }
 
-pub async fn parse_f32(text: &str) -> Result<f32, String> {
+pub fn parse_f32(text: &str) -> Result<f32, String> {
     match text {
         "nan" => Ok(f32::NAN),
         "inf" => Ok(f32::INFINITY),
@@ -355,14 +355,14 @@ const UNITS: &[UnitSpec] = &[
 ];
 
 /// @emoji 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).
-pub async fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
+pub fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
     UNITS.iter().find(|u| u.symbol == symbol)
 }
 
 /// @emoji 🔁️ Converts `value` (expressed in `from`) into the equivalent value expressed in `to`.
 /// `None` if the two units don't share a dimension — never silently reinterprets across
 /// incompatible units (e.g. a length suffix on an angle field).
-pub async fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {
+pub fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {
     if from.dimension != to.dimension {
         return None;
     }

@@ -10,16 +10,19 @@ use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
-pub async fn definition() -> WindowKindDefinition {
-    ImageWindowKit::editable_window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    ImageWindowKit::editable_window_kind()
 }
 
-pub async fn render(snapshot: &JpgSnapshot) -> UiNode {
-    ImageWindowKit::render(&image_view(snapshot)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(snapshot: &JpgSnapshot) -> UiNode {
+    ImageWindowKit::render(&image_view(snapshot))
 }
 
-async fn image_view(snapshot: &JpgSnapshot) -> ImageView {
-    let bytes = encode_jpg(snapshot).await.ok().unwrap_or_default();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn image_view(snapshot: &JpgSnapshot) -> ImageView {
+    let bytes = encode_jpg(snapshot).ok().unwrap_or_default();
     ImageView { width: snapshot.width, height: snapshot.height, mime: "image/jpeg".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
 }
 

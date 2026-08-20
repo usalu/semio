@@ -1,0 +1,22 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 132,
+      "edits": 42,
+      "ambiguous": 0,
+      "other": 0
+    },
+    {
+      "pass": 2,
+      "errors": 90,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 0
+    }
+  ],
+  "residual_errors": 90,
+  "ambiguous": [],
+  "other": []
+}

@@ -68,7 +68,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawi
 /// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_drawing_artifact_schema_descriptor`'s own
 /// registration (`../🦀️component.rs`).
-pub async fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.drawing.inference",
         inference: schema::FacetLeaves {
@@ -90,7 +91,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::Inference;
 
-    async fn fixture() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },

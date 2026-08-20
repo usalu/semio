@@ -40,7 +40,8 @@ impl Default for SemioKitArtifact {
 }
 
 impl SemioKitArtifact {
-    pub async fn to_snapshot(&self) -> SemioKitSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioKitSnapshot {
         SemioKitSnapshot {
             schema: self.schema.clone(),
             types: self.types.clone(),
@@ -51,10 +52,12 @@ impl SemioKitArtifact {
             representations: self.representations.clone(),
         }
     }
-    pub async fn from_snapshot(snapshot: SemioKitSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioKitSnapshot) -> Self {
         Self { schema: snapshot.schema, types: snapshot.types, designs: snapshot.designs, objects: snapshot.objects, models: snapshot.models, properties: snapshot.properties, representations: snapshot.representations }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioKitSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioKitSnapshot) {
         self.schema = snapshot.schema;
         self.types = snapshot.types;
         self.designs = snapshot.designs;
@@ -65,7 +68,8 @@ impl SemioKitArtifact {
     }
 }
 
-pub async fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.kit",
         artifact: schema::FacetLeaves {
@@ -114,11 +118,13 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioKitBuilderConstruction {
         /// 🏗️ Starts a fresh, empty kit (no types/designs/geometry).
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             Self { snapshot: SemioKitSnapshot::default() }
         }
         /// 🏷️ Appends one TYPE to the catalog.
-        pub async fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
             self.snapshot.types.push(SemioKitType { id: id.into(), name: name.into(), category: category.into() });
             self
         }

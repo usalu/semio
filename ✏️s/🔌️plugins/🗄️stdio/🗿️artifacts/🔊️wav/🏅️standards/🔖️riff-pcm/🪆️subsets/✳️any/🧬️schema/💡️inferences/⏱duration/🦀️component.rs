@@ -32,7 +32,8 @@ impl Default for WavDuration {
 /// `fmt.channels`, `channels` floored to `1` to avoid a div-by-zero on a malformed `fmt`), and
 /// `durationSeconds = frameCount / sampleRate` (`0.0` when `sampleRate` is `0`, an honest
 /// degenerate case, not a panic).
-pub async fn compute_wav_duration(snapshot: &WavSnapshot) -> WavDuration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_wav_duration(snapshot: &WavSnapshot) -> WavDuration {
     let total_samples: u64 = match &snapshot.data {
         WavData::Pcm16(v) => v.len() as u64,
         WavData::Pcm8(v) => v.len() as u64,
@@ -58,7 +59,8 @@ mod tests {
     use super::*;
     use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt;
 
-    async fn snapshot(sample_rate: u32, channels: u16, data: WavData) -> WavSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(sample_rate: u32, channels: u16, data: WavData) -> WavSnapshot {
         WavSnapshot { fmt: WavFmt { sample_rate, channels, ..WavFmt::default() }, data, ..WavSnapshot::default() }
     }
 

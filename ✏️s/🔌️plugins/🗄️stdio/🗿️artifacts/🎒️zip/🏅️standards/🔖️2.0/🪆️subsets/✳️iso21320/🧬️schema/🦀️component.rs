@@ -22,24 +22,28 @@ pub mod derived_construction {
     }
 
     impl ZipIso21320BuilderConstruction {
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             Self { snapshot: ZipSnapshot::default() }
         }
 
         /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
-        pub async fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
         /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
-        pub async fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
         /// 💬️ Sets the archive-level (EOCD) comment.
-        pub async fn with_comment(mut self, comment: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
             self.snapshot.comment = comment.into();
             self
         }
@@ -51,7 +55,7 @@ pub mod derived_construction {
         type Diff = ZipDiff;
 
         async fn empty() -> Self {
-            Self::new().await
+            Self::new()
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -68,7 +72,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_zip_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -135,15 +139,18 @@ pub mod derived_analysis {
     pub const CODE_DATA_DESCRIPTOR: &str = "stdio.zip.iso21320.data-descriptor-present";
     pub const CODE_VERSION_NEEDED: &str = "stdio.zip.iso21320.version-needed-high";
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn check_iso21320_entry_headers(entries: &[crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         for (index, entry) in entries.iter().enumerate() {
             if entry.flags & FLAG_ENCRYPTED != 0 {
@@ -184,20 +191,22 @@ pub mod derived_analysis {
     }
 
     /// 🛡️ Checks ISO/IEC 21320-1 header policy against raw ZIP container bytes.
-    pub async fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data).await {
-            Ok(headers) => check_iso21320_entry_headers(&headers).await,
-            Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}")).await],
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data) {
+            Ok(headers) => check_iso21320_entry_headers(&headers),
+            Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}"))],
         }
     }
 
     /// 🛡️ Checks ISO/IEC 21320-1 constraints for a logical `ZipSnapshot` by materializing its
     /// canonical wire form and inspecting central-directory headers. Logical snapshots never carry
     /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
-    pub async fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot).await {
-            Ok(bytes) => check_iso21320_wire_conformance(&bytes).await,
-            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}")).await],
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot) {
+            Ok(bytes) => check_iso21320_wire_conformance(&bytes),
+            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
         }
     }
     //#endregion 🔖️Conformance
@@ -225,7 +234,7 @@ pub mod derived_analysis {
             let mut wire_checked = false;
             for source in sources {
                 if let AnalyzeSource::Binary(bytes) = source {
-                    let checks = check_iso21320_wire_conformance(bytes).await;
+                    let checks = check_iso21320_wire_conformance(bytes);
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                         confidence = IoConfidence::Low;
                     }
@@ -235,7 +244,7 @@ pub mod derived_analysis {
             }
             if !wire_checked {
                 if let Some(snapshot) = &inner.parts.snapshot {
-                    let checks = check_iso21320_conformance(snapshot).await;
+                    let checks = check_iso21320_conformance(snapshot);
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                         confidence = IoConfidence::Low;
                     }
@@ -253,11 +262,13 @@ pub mod derived_analysis {
         use crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipCentralEntryHeader;
         use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
 
-        async fn entry(name: &str) -> ZipEntry {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn entry(name: &str) -> ZipEntry {
             ZipEntry { name: name.into(), data: b"payload".to_vec() }
         }
 
-        async fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
             ZipCentralEntryHeader { name: name.into(), flags, version_needed }
         }
 

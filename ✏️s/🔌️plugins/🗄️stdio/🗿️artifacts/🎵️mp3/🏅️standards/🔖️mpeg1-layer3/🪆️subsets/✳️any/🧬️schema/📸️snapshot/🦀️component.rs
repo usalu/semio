@@ -128,11 +128,11 @@ impl store::ArtifactDsl for Mp3Snapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).await.map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self).await;
+        let bytes = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -153,7 +153,7 @@ impl store::ArtifactPack for Mp3Snapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&inner).await.map_err(store::PackError::Schema)
+        crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -163,7 +163,8 @@ impl store::ArtifactPack for Mp3Snapshot {
 mod tests {
     use super::*;
 
-    async fn sample_snapshot() -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> Mp3Snapshot {
         Mp3Snapshot {
             id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0, b's', b'x'] }] }),
             frames: vec![Mp3Frame {

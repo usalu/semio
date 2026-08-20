@@ -29,20 +29,24 @@ use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snaps
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-async fn frame_from_transform(t: &PptxTransform) -> SlideFrame {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn frame_from_transform(t: &PptxTransform) -> SlideFrame {
     SlideFrame { origin: SemioPoint2 { x: t.x as f64, y: t.y as f64 }, width: t.cx as f64, height: t.cy as f64 }
 }
 
-async fn map_run(run: &PptxRun) -> DocRun {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_run(run: &PptxRun) -> DocRun {
     DocRun { text: run.text.clone(), style: RunStyle { bold: run.bold, italic: run.italic, underline: false, size: run.font_size.map(|v| v as f64), font: None, color: None, link: None } }
 }
 
-async fn map_text_frame(paragraphs: &[PptxParagraph]) -> Vec<DocBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_text_frame(paragraphs: &[PptxParagraph]) -> Vec<DocBlock> {
     paragraphs.iter().map(|p| DocBlock::Paragraph { style_id: None, runs: p.runs.iter().map(map_run).collect() }).collect()
 }
 
 /// 🏷️ pptx placeholder type strings (ECMA-376 `ST_PlaceholderType`) -> `PlaceholderKind`.
-pub(crate) async fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
     match kind {
         "title" | "ctrTitle" => PlaceholderKind::Title,
         "subTitle" => PlaceholderKind::Subtitle,
@@ -54,11 +58,12 @@ pub(crate) async fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
     }
 }
 
-async fn map_shape(shape: &PptxShape) -> Option<SlideShape> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_shape(shape: &PptxShape) -> Option<SlideShape> {
     match shape {
-        PptxShape::TextBox { text_frame, position } => Some(SlideShape::TextBox { frame: frame_from_transform(position).await, blocks: map_text_frame(text_frame).await }),
-        PptxShape::Picture { blip_rel_id, position } => Some(SlideShape::Picture { frame: frame_from_transform(position).await, image: SlidePictureImage { asset_id: blip_rel_id.clone(), mime: String::new(), bytes: Vec::new() } }),
-        PptxShape::Placeholder { kind, position, .. } => Some(SlideShape::Placeholder { frame: frame_from_transform(position).await, kind: placeholder_kind_from_str(kind).await }),
+        PptxShape::TextBox { text_frame, position } => Some(SlideShape::TextBox { frame: frame_from_transform(position), blocks: map_text_frame(text_frame) }),
+        PptxShape::Picture { blip_rel_id, position } => Some(SlideShape::Picture { frame: frame_from_transform(position), image: SlidePictureImage { asset_id: blip_rel_id.clone(), mime: String::new(), bytes: Vec::new() } }),
+        PptxShape::Placeholder { kind, position, .. } => Some(SlideShape::Placeholder { frame: frame_from_transform(position), kind: placeholder_kind_from_str(kind) }),
         PptxShape::Other { .. } => None,
     }
 }
@@ -88,7 +93,8 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::XmlNode;
     use crate::artifacts::zip::opc::OpcPackage;
 
-    pub(crate) async fn sample_pptx() -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn sample_pptx() -> PptxSnapshot {
         PptxSnapshot::from_parts(
             OpcPackage::default(),
             Vec::new(),

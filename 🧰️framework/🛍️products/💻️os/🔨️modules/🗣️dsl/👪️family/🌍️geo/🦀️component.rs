@@ -7,7 +7,7 @@ use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 /// @emoji 📍 Parses `lon lat [alt]` tuples.
 pub async fn parse_point_text(text: &str) -> Result<(f64, f64, Option<f64>), TextError> {
     let limits = Limits::default();
-    let nums: Vec<f64> = lex(text, &limits, false).await?
+    let nums: Vec<f64> = lex(text, &limits, false)?
         .into_iter()
         .filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int))
         .map(|t| t.text.as_str().parse().map_err(|_| TextError::new("bad number", t.span.clone())))
@@ -25,7 +25,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-geo.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-geo.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-geo.grammar must parse");
         assert_eq!(grammar.id, "family-geo");
         assert!(grammar.productions.len() > 4, "family-geo should expose a real shared vocabulary");
     }

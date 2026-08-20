@@ -21,7 +21,7 @@ struct Fonts {
 
 /// @emoji 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
 /// call after the first reuses the same parsed `Font`s.
-async fn fonts() -> &'static Fonts {
+fn fonts() -> &'static Fonts {
     use std::sync::OnceLock;
     static FONTS: OnceLock<Fonts> = OnceLock::new();
     FONTS.get_or_init(|| {
@@ -79,7 +79,7 @@ fn render_to_svg(box_: &crate::math::MathBox, options: SnippetOptions) -> SvgSni
 /// @emoji 🎯️ Parses `src` as a semio math notation snippet ([`syntax::parse_formula`]) and renders
 /// it to a standalone SVG string — the functional replacement for
 /// `typst::compile::<PagedDocument>` + `typst_svg::svg_merged` at both existing Typst call sites.
-pub async fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
+pub fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
     let node = crate::syntax::parse_formula(src).map_err(CompileError::Syntax)?;
     let f = fonts();
     let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
@@ -90,7 +90,7 @@ pub async fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Resul
 /// @emoji 🔤️ Renders arbitrary `text` (not parsed as math notation — see
 /// [`crate::math::layout_raw_text`]) to a standalone SVG string. For callers with a plain string
 /// to render as an icon/label, where `text` isn't guaranteed to be valid math notation syntax.
-pub async fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
     let f = fonts();
     let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
     let box_ = crate::math::layout_raw_text(&layout_ctx, text);
@@ -99,7 +99,7 @@ pub async fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnip
 
 /// @emoji 😀️ Renders arbitrary emoji `text` (see [`crate::math::layout_raw_emoji`]) to a
 /// standalone SVG string.
-pub async fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
     let f = fonts();
     let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
     let box_ = crate::math::layout_raw_emoji(&layout_ctx, text);
@@ -108,7 +108,7 @@ pub async fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSni
 
 /// @emoji 💻️ Renders arbitrary `code` (not parsed — see [`crate::math::layout_raw_code`]) via the
 /// Mono font to a standalone SVG string. For callers rendering a monospace code/source snippet.
-pub async fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
     let f = fonts();
     let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
     let box_ = crate::math::layout_raw_code(&layout_ctx, code);
@@ -122,51 +122,51 @@ mod tests {
     use super::*;
 
     #[test]
-    async fn compiles_a_superscript_snippet_to_a_well_formed_svg() {
+    fn compiles_a_superscript_snippet_to_a_well_formed_svg() {
         let result = compile_snippet_to_svg("x^2", SnippetOptions::default()).expect("compile x^2");
         assert!(result.svg.starts_with("<svg "));
         assert!(result.svg.contains("<path"));
     }
 
     #[test]
-    async fn compiles_a_fraction_snippet() {
+    fn compiles_a_fraction_snippet() {
         let result = compile_snippet_to_svg("frac(a, b)", SnippetOptions::default()).expect("compile frac(a, b)");
         assert!(result.svg.contains("<rect"));
     }
 
     #[test]
-    async fn compiles_an_emoji_shortcode() {
+    fn compiles_an_emoji_shortcode() {
         let result = compile_snippet_to_svg(":rocket:", SnippetOptions::default()).expect("compile :rocket:");
         assert!(result.svg.contains("<image"));
     }
 
     #[test]
-    async fn compile_text_to_svg_renders_arbitrary_strings_including_notation_special_characters() {
+    fn compile_text_to_svg_renders_arbitrary_strings_including_notation_special_characters() {
         let result = compile_text_to_svg("a_b < c!", SnippetOptions::default());
         assert!(result.svg.starts_with("<svg "));
         assert!(result.svg.contains("<path"));
     }
 
     #[test]
-    async fn compile_emoji_to_svg_renders_a_known_emoji_character() {
+    fn compile_emoji_to_svg_renders_a_known_emoji_character() {
         let result = compile_emoji_to_svg("🚀", SnippetOptions::default());
         assert!(result.svg.contains("<image"));
     }
 
     #[test]
-    async fn compile_code_to_svg_renders_via_the_mono_font() {
+    fn compile_code_to_svg_renders_via_the_mono_font() {
         let result = compile_code_to_svg("fn main() {}", SnippetOptions::default());
         assert!(result.svg.contains("<path"));
     }
 
     #[test]
-    async fn invalid_syntax_is_a_syntax_error_not_a_panic() {
+    fn invalid_syntax_is_a_syntax_error_not_a_panic() {
         let err = compile_snippet_to_svg("frac(a, b", SnippetOptions::default()).expect_err("unclosed call must fail to parse");
         assert!(matches!(err, CompileError::Syntax(_)));
     }
 
     #[test]
-    async fn repeated_calls_reuse_the_lazily_parsed_fonts() {
+    fn repeated_calls_reuse_the_lazily_parsed_fonts() {
         // Not a behavioral assertion beyond "doesn't panic/reparsing corrupt state" — the OnceLock
         // is the actual mechanism under test; this just exercises it more than once.
         for src in ["x", "y^2", "frac(1, 2)"] {

@@ -71,11 +71,12 @@ impl Default for Ifc2x3Snapshot {
 }
 
 /// ✅ Validates the logical IFC2X3 document without materializing native Part-21 text.
-pub async fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String> {
     if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
         return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
     }
-    let declares_ifc2x3 = snapshot.document.header.file_schema.iter().any(|value| semio_framework_plugin::resolve_ready(value.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3"))).unwrap_or(false));
+    let declares_ifc2x3 = snapshot.document.header.file_schema.iter().any(|value| value.as_list().map(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3"))).unwrap_or(false));
     if !declares_ifc2x3 {
         return Err("ifc2x3: FILE_SCHEMA does not declare IFC2X3".into());
     }
@@ -104,7 +105,7 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_snapshot(body.trim()).await.map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+        parse_snapshot(body.trim()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -151,12 +152,12 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(store::PackError::Schema(format!("snapshot format: unsupported format {format}")));
         }
-        let schema = read_str_bin(&mut reader).await.map_err(|error| store::PackError::Schema(format!("snapshot schema: {error}")))?;
-        let header = dec_part21_header_bin(&mut reader).await.map_err(|error| store::PackError::Schema(format!("snapshot header: {error}")))?;
-        let instances = dec_instance_list_bin(&mut reader).await.map_err(|error| store::PackError::Schema(format!("snapshot instances: {error}")))?;
+        let schema = read_str_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot schema: {error}")))?;
+        let header = dec_part21_header_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot header: {error}")))?;
+        let instances = dec_instance_list_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot instances: {error}")))?;
         let edm_preamble = match reader.read_u8().await.map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble presence: {error}")))? {
             0 => None,
-            1 => Some(dec_edm_preamble_bin(&mut reader).await.map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble: {error}")))?),
+            1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble: {error}")))?),
             tag => return Err(store::PackError::Schema(format!("snapshot EDM preamble presence: unknown tag {tag}"))),
         };
         if reader.remaining().await != 0 {
@@ -166,26 +167,27 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
     }
 }
 
-async fn parse_snapshot(body: &str) -> Result<Ifc2x3Snapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_snapshot(body: &str) -> Result<Ifc2x3Snapshot, String> {
     let mut schema = None;
     let mut header = None;
     let mut instances = None;
     let mut edm_preamble = None;
     for token in body.split_whitespace() {
         if let Some(value) = token.strip_prefix("schema=") {
-            if schema.replace(dec_str(value).await?).is_some() {
+            if schema.replace(dec_str(value)?).is_some() {
                 return Err("duplicate snapshot schema".into());
             }
         } else if let Some(value) = token.strip_prefix("header=") {
-            if header.replace(dec_part21_header(value).await?).is_some() {
+            if header.replace(dec_part21_header(value)?).is_some() {
                 return Err("duplicate snapshot header".into());
             }
         } else if let Some(value) = token.strip_prefix("instances=") {
-            if instances.replace(dec_instance_list(value).await?).is_some() {
+            if instances.replace(dec_instance_list(value)?).is_some() {
                 return Err("duplicate snapshot instances".into());
             }
         } else if let Some(value) = token.strip_prefix("edm-preamble=") {
-            if edm_preamble.replace(dec_optional_edm_preamble(value).await?).is_some() {
+            if edm_preamble.replace(dec_optional_edm_preamble(value)?).is_some() {
                 return Err("duplicate snapshot EDM preamble".into());
             }
         } else {

@@ -158,7 +158,8 @@ pub struct DrawImageDiff {
 /// (index-keyed z-order) and every `Group.children` (recursive) so the two collections don't need
 /// two near-duplicate implementations. Mirrors svg's `apply_children_diff`/`between_children`/
 /// `inverse_children_diff`/`absorb_children_diff`, generalized over `T`/`D`.
-async fn apply_indexed<T: Clone, D>(items: &[T], diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed<T: Clone, D>(items: &[T], diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut slots: Vec<Option<T>> = items.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(it)) = slots.get(m.index) {
@@ -184,7 +185,8 @@ async fn apply_indexed<T: Clone, D>(items: &[T], diff: &IndexedTripleDiff<D, T>,
     out
 }
 
-async fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -203,14 +205,16 @@ async fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], betwe
     }
 }
 
-async fn added_indices<T>(added: &[IndexAdded<T>]) -> Vec<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn added_indices<T>(added: &[IndexAdded<T>]) -> Vec<usize> {
     added.iter().map(|a| a.index).collect()
 }
 
 /// 📐️ Maps a BASE-side index through a diff's own removed/added into the position it ends up at
 /// once that diff has been applied (used to build the inverse diff's own indices, which target
 /// the AFTER array).
-async fn transform_index(idx: usize, removed: &[usize], added_idx: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_index(idx: usize, removed: &[usize], added_idx: &[usize]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order = added_idx.to_vec();
@@ -226,14 +230,15 @@ async fn transform_index(idx: usize, removed: &[usize], added_idx: &[usize]) -> 
     pos + shift
 }
 
-async fn inverse_indexed<T: Clone, D>(base: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed<T: Clone, D>(base: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T> {
     let added_idx = added_indices(&diff.added);
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &added_idx);
-            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -251,7 +256,8 @@ enum ItemOrigin {
     Added(usize),
 }
 
-async fn simulate_mid_origins(base_len: usize, removed: &[usize], added_idx: &[usize]) -> Vec<ItemOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_mid_origins(base_len: usize, removed: &[usize], added_idx: &[usize]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added_idx.iter().enumerate().map(|(k, &idx)| (idx, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -264,8 +270,9 @@ async fn simulate_mid_origins(base_len: usize, removed: &[usize], added_idx: &[u
 
 /// 🧮️ Sequential-coalesce absorb (base-free index-transport over `d1`'s own removed/added),
 /// mirroring svg's `absorb_children_diff` generically over `T`/`D`.
-async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
-    let d1_added_idx = added_indices(&d1.added).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
+    let d1_added_idx = added_indices(&d1.added);
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1_added_idx.iter().map(|&i| i + 1).max().unwrap_or(0);
@@ -278,7 +285,7 @@ async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: Ind
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1_added_idx).await;
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1_added_idx);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -329,7 +336,7 @@ async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: Ind
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2_added_idx);
-        added.push(IndexAdded { index: final_index.await, item: add.item });
+        added.push(IndexAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -343,7 +350,8 @@ async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: Ind
 //#region 🔖️NamedHelpers
 /// 🏷️ Generic `NamedTripleDiff<K,D,T>` apply/between/inverse/absorb for `styles` -- key (not
 /// position) is the stable identity, mirroring svg's name-keyed attribute-triple absorb.
-async fn apply_named<K: PartialEq, D, T: Clone>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> &K, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K: PartialEq, D, T: Clone>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> &K, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut out: Vec<T> = items
         .iter()
         .filter(|it| !diff.removed.iter().any(|k| k == key_of(it)))
@@ -356,7 +364,8 @@ async fn apply_named<K: PartialEq, D, T: Clone>(items: &[T], diff: &NamedTripleD
     out
 }
 
-async fn between_named<K: PartialEq + Clone, D, T: Clone + PartialEq>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, between_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_named<K: PartialEq + Clone, D, T: Clone + PartialEq>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, between_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for b in base {
@@ -384,7 +393,8 @@ async fn between_named<K: PartialEq + Clone, D, T: Clone + PartialEq>(base: &[T]
     }
 }
 
-async fn inverse_named<K: PartialEq + Clone, D, T: Clone>(base: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K: PartialEq + Clone, D, T: Clone>(base: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T> {
     let removed: Vec<K> = diff.added.iter().map(|t| key_of(t)).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -401,7 +411,8 @@ async fn inverse_named<K: PartialEq + Clone, D, T: Clone>(base: &[T], diff: &Nam
     NamedTripleDiff { removed, modified, added }
 }
 
-async fn absorb_named<K, D, T>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T, key_of: impl Fn(&T) -> K) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_named<K, D, T>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T, key_of: impl Fn(&T) -> K) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone + std::hash::Hash + Eq,
     D: Clone,
@@ -443,7 +454,8 @@ where
 //#endregion 🔖️NamedHelpers
 
 //#region 🔖️NodeAlgebra
-async fn apply_node_diff(node: &DrawNode, diff: &DrawNodeDiff) -> DrawNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_node_diff(node: &DrawNode, diff: &DrawNodeDiff) -> DrawNode {
     match diff {
         DrawNodeDiff::Replace { node: replacement } => replacement.clone(),
         DrawNodeDiff::Path(pd) => match node {
@@ -458,7 +470,7 @@ async fn apply_node_diff(node: &DrawNode, diff: &DrawNodeDiff) -> DrawNode {
             DrawNode::Group { transform, children } => DrawNode::Group {
                 transform: gd.transform.unwrap_or(*transform),
                 children: match &gd.children {
-                    Some(cd) => apply_indexed(children, cd, apply_node_diff).await,
+                    Some(cd) => apply_indexed(children, cd, apply_node_diff),
                     None => children.clone(),
                 },
             },
@@ -473,7 +485,8 @@ async fn apply_node_diff(node: &DrawNode, diff: &DrawNodeDiff) -> DrawNode {
     }
 }
 
-async fn between_node(base: &DrawNode, other: &DrawNode) -> Option<DrawNodeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_node(base: &DrawNode, other: &DrawNode) -> Option<DrawNodeDiff> {
     if base == other {
         return None;
     }
@@ -500,7 +513,7 @@ async fn between_node(base: &DrawNode, other: &DrawNode) -> Option<DrawNodeDiff>
         (DrawNode::Group { transform: bt, children: bc }, DrawNode::Group { transform: ot, children: oc }) => {
             let transform = if bt != ot { Some(*ot) } else { None };
             let children = between_indexed(bc, oc, between_node);
-            if transform.is_none() && children.await.is_none() {
+            if transform.is_none() && children.is_none() {
                 None
             } else {
                 Some(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
@@ -522,7 +535,8 @@ async fn between_node(base: &DrawNode, other: &DrawNode) -> Option<DrawNodeDiff>
     }
 }
 
-async fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeDiff {
     match diff {
         DrawNodeDiff::Replace { .. } => DrawNodeDiff::Replace { node: current.clone() },
         DrawNodeDiff::Path(pd) => match current {
@@ -534,7 +548,7 @@ async fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeD
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Group(gd) => match current {
-            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| semio_framework_plugin::resolve_ready(inverse_node_diff(c, d)))) }),
+            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| inverse_node_diff(c, d))) }),
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Image(id) => match current {
@@ -550,10 +564,11 @@ async fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeD
     }
 }
 
-async fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
     match (a, b) {
         (_, DrawNodeDiff::Replace { node }) => DrawNodeDiff::Replace { node },
-        (DrawNodeDiff::Replace { node }, b) => DrawNodeDiff::Replace { node: apply_node_diff(&node, &b).await },
+        (DrawNodeDiff::Replace { node }, b) => DrawNodeDiff::Replace { node: apply_node_diff(&node, &b) },
         (DrawNodeDiff::Path(pa), DrawNodeDiff::Path(pb)) => DrawNodeDiff::Path(DrawPathDiff { segments: pb.segments.or(pa.segments), style: pb.style.or(pa.style) }),
         (DrawNodeDiff::Text(ta), DrawNodeDiff::Text(tb)) => DrawNodeDiff::Text(DrawTextDiff { value: tb.value.or(ta.value), at: tb.at.or(ta.at), style: tb.style.or(ta.style) }),
         (DrawNodeDiff::Group(ga), DrawNodeDiff::Group(gb)) => DrawNodeDiff::Group(DrawGroupDiff {
@@ -561,7 +576,7 @@ async fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
             children: match (ga.children, gb.children) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, bc, absorb_node_diff, apply_node_diff).await),
+                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, bc, absorb_node_diff, apply_node_diff)),
             },
         }),
         (DrawNodeDiff::Image(ia), DrawNodeDiff::Image(ib)) => DrawNodeDiff::Image(DrawImageDiff { at: ib.at.or(ia.at), width: ib.width.or(ia.width), height: ib.height.or(ia.height), mime: ib.mime.or(ia.mime), bytes: ib.bytes.or(ia.bytes) }),
@@ -573,10 +588,12 @@ async fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
 //#endregion 🔖️NodeAlgebra
 
 //#region 🔖️ScalarAlgebra
-async fn apply_canvas_diff(canvas: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvas {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_canvas_diff(canvas: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvas {
     DrawCanvas { width: diff.width.unwrap_or(canvas.width), height: diff.height.unwrap_or(canvas.height), background: diff.background.clone().unwrap_or(canvas.background) }
 }
-async fn between_canvas_diff(base: &DrawCanvas, other: &DrawCanvas) -> Option<DrawCanvasDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_canvas_diff(base: &DrawCanvas, other: &DrawCanvas) -> Option<DrawCanvasDiff> {
     let width = if base.width != other.width { Some(other.width) } else { None };
     let height = if base.height != other.height { Some(other.height) } else { None };
     let background = if base.background != other.background { Some(other.background) } else { None };
@@ -586,14 +603,17 @@ async fn between_canvas_diff(base: &DrawCanvas, other: &DrawCanvas) -> Option<Dr
         Some(DrawCanvasDiff { width, height, background })
     }
 }
-async fn inverse_canvas_diff(base: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_canvas_diff(base: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvasDiff {
     DrawCanvasDiff { width: diff.width.map(|_| base.width), height: diff.height.map(|_| base.height), background: diff.background.as_ref().map(|_| base.background) }
 }
-async fn absorb_canvas_diff(a: DrawCanvasDiff, b: DrawCanvasDiff) -> DrawCanvasDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_canvas_diff(a: DrawCanvasDiff, b: DrawCanvasDiff) -> DrawCanvasDiff {
     DrawCanvasDiff { width: b.width.or(a.width), height: b.height.or(a.height), background: b.background.or(a.background) }
 }
 
-async fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
     DrawStyle {
         name: style.name.clone(),
         fill: diff.fill.clone().unwrap_or(style.fill),
@@ -602,7 +622,8 @@ async fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle 
         opacity: diff.opacity.unwrap_or(style.opacity),
     }
 }
-async fn between_style_diff(base: &DrawStyle, other: &DrawStyle) -> Option<DrawStyleDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_style_diff(base: &DrawStyle, other: &DrawStyle) -> Option<DrawStyleDiff> {
     let fill = if base.fill != other.fill { Some(other.fill) } else { None };
     let stroke = if base.stroke != other.stroke { Some(other.stroke) } else { None };
     let stroke_width = if base.stroke_width != other.stroke_width { Some(other.stroke_width) } else { None };
@@ -613,39 +634,45 @@ async fn between_style_diff(base: &DrawStyle, other: &DrawStyle) -> Option<DrawS
         Some(DrawStyleDiff { fill, stroke, stroke_width, opacity })
     }
 }
-async fn inverse_style_diff(base: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyleDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_style_diff(base: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: diff.fill.map(|_| base.fill), stroke: diff.stroke.map(|_| base.stroke), stroke_width: diff.stroke_width.map(|_| base.stroke_width), opacity: diff.opacity.map(|_| base.opacity) }
 }
-async fn absorb_style_diff(a: DrawStyleDiff, b: DrawStyleDiff) -> DrawStyleDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_style_diff(a: DrawStyleDiff, b: DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: b.fill.or(a.fill), stroke: b.stroke.or(a.stroke), stroke_width: b.stroke_width.or(a.stroke_width), opacity: b.opacity.or(a.opacity) }
 }
 
-async fn apply_layer_diff(layer: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayer {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_layer_diff(layer: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayer {
     DrawLayer {
         id: diff.id.clone().unwrap_or_else(|| layer.id.clone()),
         name: diff.name.clone().unwrap_or_else(|| layer.name.clone()),
         visible: diff.visible.unwrap_or(layer.visible),
         root: match &diff.root {
-            Some(rd) => apply_node_diff(&layer.root, rd).await,
+            Some(rd) => apply_node_diff(&layer.root, rd),
             None => layer.root.clone(),
         },
     }
 }
-async fn between_layer_diff(base: &DrawLayer, other: &DrawLayer) -> Option<DrawLayerDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_layer_diff(base: &DrawLayer, other: &DrawLayer) -> Option<DrawLayerDiff> {
     let id = if base.id != other.id { Some(other.id.clone()) } else { None };
     let name = if base.name != other.name { Some(other.name.clone()) } else { None };
     let visible = if base.visible != other.visible { Some(other.visible) } else { None };
-    let root = between_node(&base.root, &other.root).await;
+    let root = between_node(&base.root, &other.root);
     if id.is_none() && name.is_none() && visible.is_none() && root.is_none() {
         None
     } else {
         Some(DrawLayerDiff { id, name, visible, root })
     }
 }
-async fn inverse_layer_diff(base: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayerDiff {
-    DrawLayerDiff { id: diff.id.as_ref().map(|_| base.id.clone()), name: diff.name.as_ref().map(|_| base.name.clone()), visible: diff.visible.as_ref().map(|_| base.visible), root: diff.root.as_ref().map(|rd| semio_framework_plugin::resolve_ready(inverse_node_diff(&base.root, rd))) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_layer_diff(base: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayerDiff {
+    DrawLayerDiff { id: diff.id.as_ref().map(|_| base.id.clone()), name: diff.name.as_ref().map(|_| base.name.clone()), visible: diff.visible.as_ref().map(|_| base.visible), root: diff.root.as_ref().map(|rd| inverse_node_diff(&base.root, rd)) }
 }
-async fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
     DrawLayerDiff {
         id: b.id.or(a.id),
         name: b.name.or(a.name),
@@ -653,7 +680,7 @@ async fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff 
         root: match (a.root, b.root) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ar), Some(br)) => Some(absorb_node_diff(ar, br).await),
+            (Some(ar), Some(br)) => Some(absorb_node_diff(ar, br)),
         },
     }
 }
@@ -664,15 +691,15 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
     async fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
         let mut next = base.clone();
         if let Some(cd) = &self.canvas {
-            next.canvas = apply_canvas_diff(&next.canvas, cd).await;
+            next.canvas = apply_canvas_diff(&next.canvas, cd);
         }
         if let Some(sd) = &self.styles {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"]).await?;
-            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff).await;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
+            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
         }
         if let Some(ld) = &self.layers {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"]).await?;
-            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff).await;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
+            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
         }
         Ok(next)
     }
@@ -681,17 +708,17 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
         self.canvas = match (self.canvas.take(), other.canvas) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_canvas_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_canvas_diff(a, b)),
         };
         self.styles = match (self.styles.take(), other.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone()).await),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone())),
         };
         self.layers = match (self.layers.take(), other.layers) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_layer_diff, apply_layer_diff).await),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_layer_diff, apply_layer_diff)),
         };
     }
 }
@@ -709,9 +736,9 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
 
     async fn between(base: &SemioDrawingSnapshot, other: &SemioDrawingSnapshot) -> Self {
         SemioDrawingDiff {
-            canvas: between_canvas_diff(&base.canvas, &other.canvas).await,
-            styles: between_named(&base.styles, &other.styles, |s: &DrawStyle| s.name.clone(), between_style_diff).await,
-            layers: between_indexed(&base.layers, &other.layers, between_layer_diff).await,
+            canvas: between_canvas_diff(&base.canvas, &other.canvas),
+            styles: between_named(&base.styles, &other.styles, |s: &DrawStyle| s.name.clone(), between_style_diff),
+            layers: between_indexed(&base.layers, &other.layers, between_layer_diff),
         }
     }
 
@@ -735,7 +762,8 @@ pub struct NodePath {
     pub path: Vec<usize>,
 }
 
-pub async fn diff_at_path(np: &NodePath, leaf: DrawNodeDiff) -> SemioDrawingDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_at_path(np: &NodePath, leaf: DrawNodeDiff) -> SemioDrawingDiff {
     let mut node_diff = leaf;
     for &index in np.path.iter().rev() {
         node_diff = DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: vec![IndexModified { index, diff: node_diff }], added: Vec::new() }) });
@@ -745,7 +773,8 @@ pub async fn diff_at_path(np: &NodePath, leaf: DrawNodeDiff) -> SemioDrawingDiff
 }
 
 /// 🔎️ Reads the node currently addressed by `np`, or `None` if the path is out of range.
-pub async fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> Option<&'a DrawNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> Option<&'a DrawNode> {
     let layer = snapshot.layers.get(np.layer)?;
     let mut current = &layer.root;
     for &idx in &np.path {
@@ -762,8 +791,9 @@ pub async fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> O
 /// 🧭️ Shared by `📍move-node`/`🖐️drag-nodes` (`Group.transform.translation.{x,y}` for a group,
 /// `at` for `Text`/`Image`) -- `Path` has no origin field of its own (its geometry lives entirely
 /// in `segments`), so it is honestly excluded rather than approximated.
-pub async fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Option<SemioPoint2> {
-    match node_at(snapshot, np).await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Option<SemioPoint2> {
+    match node_at(snapshot, np)? {
         DrawNode::Group { transform, .. } => Some(SemioPoint2 { x: transform.translation.x, y: transform.translation.y }),
         DrawNode::Text { at, .. } => Some(*at),
         DrawNode::Image { at, .. } => Some(*at),
@@ -773,27 +803,29 @@ pub async fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Opti
 
 /// 📍️ Builds the sparse diff that repositions the node at `np` to `new_origin` -- empty (no-op)
 /// diff when the node is absent or is a `Path` (no origin field).
-pub async fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin: SemioPoint2) -> SemioDrawingDiff {
-    match node_at(snapshot, np).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin: SemioPoint2) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let mut next = *transform;
             next.translation.x = new_origin.x;
             next.translation.y = new_origin.y;
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
         }
-        Some(DrawNode::Text { .. }) => diff_at_path(np, DrawNodeDiff::Text(DrawTextDiff { value: None, at: Some(new_origin), style: None })).await,
-        Some(DrawNode::Image { .. }) => diff_at_path(np, DrawNodeDiff::Image(DrawImageDiff { at: Some(new_origin), width: None, height: None, mime: None, bytes: None })).await,
+        Some(DrawNode::Text { .. }) => diff_at_path(np, DrawNodeDiff::Text(DrawTextDiff { value: None, at: Some(new_origin), style: None })),
+        Some(DrawNode::Image { .. }) => diff_at_path(np, DrawNodeDiff::Image(DrawImageDiff { at: Some(new_origin), width: None, height: None, mime: None, bytes: None })),
         _ => SemioDrawingDiff::default(),
     }
 }
 
 /// 🔄️ Builds the sparse diff that sets a `Group` node's `transform.rotation` -- empty (no-op) for
 /// every other node kind (`Path`/`Text`/`Image` carry no rotation field).
-pub async fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
-    match node_at(snapshot, np).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: new_rotation, scale: transform.scale };
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
         }
         _ => SemioDrawingDiff::default(),
     }
@@ -801,11 +833,12 @@ pub async fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, ne
 
 /// 📏️ Builds the sparse diff that sets a `Group` node's `transform.scale` -- empty (no-op) for
 /// every other node kind.
-pub async fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
-    match node_at(snapshot, np).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
+    match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: transform.rotation, scale: new_scale };
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
         }
         _ => SemioDrawingDiff::default(),
     }
@@ -823,30 +856,36 @@ pub async fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new
 /// were on pre-wave. One source of truth for the entity encoding across `📸️snapshot`/`🔺️diff`/
 /// `🧬️mutations`, not three independently-invented copies.
 //#region 🔖️Primitives
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -855,7 +894,8 @@ async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️NodeValueCodec
-async fn enc_node_diff(d: &DrawNodeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_diff(d: &DrawNodeDiff) -> String {
     match d {
         DrawNodeDiff::Path(p) => format!("P[{},{}]", encode_option(&p.segments, |v| enc_list(v, enc_path_segment)), encode_option(&p.style, |v| encode_option(v, |s| enc_str(s)))),
         DrawNodeDiff::Text(t) => format!("T[{},{},{}]", encode_option(&t.value, |v| enc_str(v)), encode_option(&t.at, enc_point2), encode_option(&t.style, |v| encode_option(v, |s| enc_str(s)))),
@@ -873,63 +913,67 @@ async fn enc_node_diff(d: &DrawNodeDiff) -> String {
         DrawNodeDiff::Replace { node } => format!("R[{}]", enc_node(node)),
     }
 }
-async fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "P" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [segments, style] = parts.as_slice() else { return Err(format!("path diff: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment)).await?, style: decode_option(style, |v| decode_option(v, dec_str)).await? }))
+            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment))?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
         }
         "T" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [value, at, style] = parts.as_slice() else { return Err(format!("text diff: expected 3 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str).await?, at: decode_option(at, dec_point2).await?, style: decode_option(style, |v| decode_option(v, dec_str)).await? }))
+            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str)?, at: decode_option(at, dec_point2)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
         }
         "G" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [transform_s, children_s] = parts.as_slice() else { return Err(format!("group diff: expected 2 fields, got {}", parts.len())) };
-            let transform = decode_option(transform_s, dec_transform).await?;
-            let children = match split_top_level(strip_brackets(children_s).await?, ',').await.as_slice() {
+            let transform = decode_option(transform_s, dec_transform)?;
+            let children = match split_top_level(strip_brackets(children_s)?, ',').as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node).await?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node)?),
                 other => return Err(format!("group children: bad shape {other:?}")),
             };
             Ok(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
         }
         "I" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [at, width, height, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 5 fields, got {}", parts.len())) };
             Ok(DrawNodeDiff::Image(DrawImageDiff {
-                at: decode_option(at, dec_point2).await?,
-                width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
-                height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
-                mime: decode_option(mime, dec_str).await?,
-                bytes: decode_option(bytes, hex_decode).await?,
+                at: decode_option(at, dec_point2)?,
+                width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
+                height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
+                mime: decode_option(mime, dec_str)?,
+                bytes: decode_option(bytes, hex_decode)?,
             }))
         }
-        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner).await? }),
+        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner)? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
 //#endregion 🔖️NodeValueCodec
 
 //#region 🔖️TopLevelCodec
-async fn enc_canvas(c: &DrawCanvasDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_canvas(c: &DrawCanvasDiff) -> String {
     format!("[{},{},{}]", encode_option(&c.width, |v| v.to_string()), encode_option(&c.height, |v| v.to_string()), encode_option(&c.background, |v| encode_option(v, enc_rgba)))
 }
-async fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [width, height, background] = parts.as_slice() else { return Err(format!("canvas diff: expected 3 fields, got {}", parts.len())) };
     Ok(DrawCanvasDiff {
-        width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
-        height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
-        background: decode_option(background, |v| decode_option(v, dec_rgba)).await?,
+        width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
+        height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
+        background: decode_option(background, |v| decode_option(v, dec_rgba))?,
     })
 }
 
-async fn enc_style_diff(d: &DrawStyleDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_style_diff(d: &DrawStyleDiff) -> String {
     format!(
         "[{},{},{},{}]",
         encode_option(&d.fill, |v| encode_option(v, enc_rgba)),
@@ -938,27 +982,31 @@ async fn enc_style_diff(d: &DrawStyleDiff) -> String {
         encode_option(&d.opacity, |v| encode_option(v, |x| x.to_string())),
     )
 }
-async fn dec_style_diff(s: &str) -> Result<DrawStyleDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_style_diff(s: &str) -> Result<DrawStyleDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style diff: expected 4 fields, got {}", parts.len())) };
     Ok(DrawStyleDiff {
-        fill: decode_option(fill, |v| decode_option(v, dec_rgba)).await?,
-        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba)).await?,
-        stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))).await?,
-        opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string()))).await?,
+        fill: decode_option(fill, |v| decode_option(v, dec_rgba))?,
+        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba))?,
+        stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
+        opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
     })
 }
 
-async fn enc_layer_diff(d: &DrawLayerDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_layer_diff(d: &DrawLayerDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.id, |v| enc_str(v)), encode_option(&d.name, |v| enc_str(v)), encode_option(&d.visible, |v| if *v { "1".to_string() } else { "0".to_string() }), encode_option(&d.root, enc_node_diff))
 }
-async fn dec_layer_diff(s: &str) -> Result<DrawLayerDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_layer_diff(s: &str) -> Result<DrawLayerDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, visible, root] = parts.as_slice() else { return Err(format!("layer diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DrawLayerDiff { id: decode_option(id, dec_str).await?, name: decode_option(name, dec_str).await?, visible: decode_option(visible, |v| Ok(v == "1")).await?, root: decode_option(root, dec_node_diff).await? })
+    Ok(DrawLayerDiff { id: decode_option(id, dec_str)?, name: decode_option(name, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))?, root: decode_option(root, dec_node_diff)? })
 }
 
-async fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.canvas {
         tokens.push(format!("canvas={}", enc_canvas(v)));
@@ -971,18 +1019,19 @@ async fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
     let mut d = SemioDrawingDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("canvas=") {
-            d.canvas = Some(dec_canvas(rest).await?);
+            d.canvas = Some(dec_canvas(rest)?);
         } else if let Some(rest) = token.strip_prefix("styles=") {
-            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style).await?);
+            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style)?);
         } else if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer).await?);
+            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer)?);
         } else {
             return Err(format!("drawing diff: unknown token {token:?}"));
         }
@@ -997,21 +1046,23 @@ async fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
 /// facet's own `print_diff` already emits) -- one opaque blob per present field rather than
 /// per-segment `Cond`-guards (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's
 /// itself only conditionally decoded hard-errors `eval_cond`).
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 impl protocol::DiffCodec for SemioDrawingDiff {
     async fn print_diff(&self) -> String {
-        print_drawing_diff(self).await
+        print_drawing_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_drawing_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_drawing_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
@@ -1027,13 +1078,13 @@ impl protocol::DiffCodec for SemioDrawingDiff {
         }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
         if let Some(c) = &self.canvas {
-            write_bytes_lp(&mut out, enc_canvas(c).await.as_bytes());
+            write_bytes_lp(&mut out, enc_canvas(c).as_bytes());
         }
         if let Some(s) = &self.styles {
-            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).await.as_bytes());
+            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).as_bytes());
         }
         if let Some(l) = &self.layers {
-            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).await.as_bytes());
+            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).as_bytes());
         }
         Ok(out)
     }
@@ -1047,23 +1098,23 @@ impl protocol::DiffCodec for SemioDrawingDiff {
         let presence = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
         let map_err = |what: &'static str| move |e: String| protocol::ProtocolError::Malformed { what, offset: 2, detail: e };
         let canvas = if presence & 1 != 0 {
-            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff canvas blob"))?;
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff canvas blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff canvas utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_canvas(text).await.map_err(map_err("diff canvas"))?)
+            Some(dec_canvas(text).map_err(map_err("diff canvas"))?)
         } else {
             None
         };
         let styles = if presence & 2 != 0 {
-            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff styles blob"))?;
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff styles blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).await.map_err(map_err("diff styles"))?)
+            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).map_err(map_err("diff styles"))?)
         } else {
             None
         };
         let layers = if presence & 4 != 0 {
-            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff layers blob"))?;
+            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff layers blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).await.map_err(map_err("diff layers"))?)
+            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).map_err(map_err("diff layers"))?)
         } else {
             None
         };
@@ -1079,7 +1130,8 @@ impl protocol::DiffCodec for SemioDrawingDiff {
 /// (a private item of `#[cfg(test)] mod tests` below is not visible to the sibling `composer`
 /// module — same real, first-hit variant of this pattern brep's own report flags).
 #[cfg(test)]
-async fn transform(tx: f64) -> SemioTransform {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform(tx: f64) -> SemioTransform {
     SemioTransform {
         translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
         rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion::default(),
@@ -1088,7 +1140,8 @@ async fn transform(tx: f64) -> SemioTransform {
 }
 
 #[cfg(test)]
-pub(crate) async fn sweep_a() -> SemioDrawingSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
@@ -1117,7 +1170,8 @@ pub(crate) async fn sweep_a() -> SemioDrawingSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn sweep_b() -> SemioDrawingSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
@@ -1148,7 +1202,8 @@ pub(crate) async fn sweep_b() -> SemioDrawingSnapshot {
 /// 🌱 Representative `SemioDrawingDiff` cases (incl. the empty no-op diff), single source of truth
 /// for `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
     use protocol::command::DiffAlgebra;
     let a = sweep_a();
     let b = sweep_b();

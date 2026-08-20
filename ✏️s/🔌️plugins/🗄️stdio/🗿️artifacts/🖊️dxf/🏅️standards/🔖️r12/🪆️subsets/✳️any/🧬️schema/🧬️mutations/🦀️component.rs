@@ -185,14 +185,15 @@ pub enum DxfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
-    let outcome = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
+    let outcome = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -204,47 +205,47 @@ impl Mutation<DxfSnapshot> for DxfMutation {
     async fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DxfMutation::NoMutation => DxfDiff::default(),
-            DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
             DxfMutation::SetHeaderVar { name, header_var } => {
                 let existed = base.header_vars.iter().any(|v| &v.name == name);
-                diff_set_header_var(base.header_vars.len(), name, header_var.clone(), existed).await
+                diff_set_header_var(base.header_vars.len(), name, header_var.clone(), existed)
             }
-            DxfMutation::RemoveHeaderVar { name } => diff_remove_header_var(name).await,
+            DxfMutation::RemoveHeaderVar { name } => diff_remove_header_var(name),
 
-            DxfMutation::InsertLayer { index, layer } => diff_insert_layer(*index, layer.clone()).await,
-            DxfMutation::RemoveLayer { name } => diff_remove_layer(name).await,
+            DxfMutation::InsertLayer { index, layer } => diff_insert_layer(*index, layer.clone()),
+            DxfMutation::RemoveLayer { name } => diff_remove_layer(name),
             DxfMutation::SetLayer { name, layer } => {
                 let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-                diff_set_layer(name, layer_diff_between(&old, layer).await).await
+                diff_set_layer(name, layer_diff_between(&old, layer))
             }
 
             DxfMutation::InsertStyle { index, style } => diff_insert_style(*index, style.clone()),
             DxfMutation::RemoveStyle { name } => diff_remove_style(name),
             DxfMutation::SetStyle { name, style } => {
                 let old = base.tables.styles.iter().find(|s| &s.name == name).cloned().unwrap_or_default();
-                diff_set_style(name, style_diff_between(&old, style).await)
+                diff_set_style(name, style_diff_between(&old, style))
             }
 
             DxfMutation::InsertLinetype { index, linetype } => diff_insert_linetype(*index, linetype.clone()),
             DxfMutation::RemoveLinetype { name } => diff_remove_linetype(name),
             DxfMutation::SetLinetype { name, linetype } => {
                 let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-                diff_set_linetype(name, linetype_diff_between(&old, linetype).await)
+                diff_set_linetype(name, linetype_diff_between(&old, linetype))
             }
 
             DxfMutation::InsertEntity { index, entity } => diff_insert_entity(*index, entity.clone()),
             DxfMutation::RemoveEntity { index } => diff_remove_entity(*index),
             DxfMutation::SetEntity { index, entity } => match base.entities.get(*index) {
-                Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity).await).await,
-                None => diff_insert_entity(*index, entity.clone()).await,
+                Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity)),
+                None => diff_insert_entity(*index, entity.clone()),
             },
 
             DxfMutation::InsertBlock { index, block } => diff_insert_block(*index, block.clone()),
             DxfMutation::RemoveBlock { index } => diff_remove_block(*index),
             DxfMutation::SetBlock { index, block } => match base.blocks.get(*index) {
-                Some(old) => diff_set_block(*index, block_diff_between(old, block).await).await,
-                None => diff_insert_block(*index, block.clone()).await,
+                Some(old) => diff_set_block(*index, block_diff_between(old, block)),
+                None => diff_insert_block(*index, block.clone()),
             },
         })
     }
@@ -325,7 +326,8 @@ impl Mutation<DxfSnapshot> for DxfMutation {
 /// available since nothing here derives it, see module doc). Every arg value is either hex
 /// (strings), decimal (indices), or a `🔺️diff` positional/tagged payload — never a literal
 /// space or `=`, so top-level tokenizing is a trivial `line.split(' ')` / `tok.split_once('=')`.
-async fn print_dxf_mutation(m: &DxfMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_dxf_mutation(m: &DxfMutation) -> String {
     match m {
         DxfMutation::NoMutation => "no-mutation".to_string(),
         DxfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_dxf_snapshot(snapshot)),
@@ -354,7 +356,8 @@ async fn print_dxf_mutation(m: &DxfMutation) -> String {
         DxfMutation::SetBlock { index, block } => format!("set-block index={index} block={}", enc_block(block)),
     }
 }
-async fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     if line == "no-mutation" {
         return Ok(DxfMutation::NoMutation);
     }
@@ -363,30 +366,30 @@ async fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("dxf mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot(arg("snapshot")?).await? }),
+        "set-snapshot" => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot(arg("snapshot")?)? }),
 
-        "set-header-var" => Ok(DxfMutation::SetHeaderVar { name: dec_str(arg("name")?).await?, header_var: dec_header_var(arg("header-var")?).await? }),
-        "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar { name: dec_str(arg("name")?).await? }),
+        "set-header-var" => Ok(DxfMutation::SetHeaderVar { name: dec_str(arg("name")?)?, header_var: dec_header_var(arg("header-var")?)? }),
+        "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar { name: dec_str(arg("name")?)? }),
 
-        "insert-layer" => Ok(DxfMutation::InsertLayer { index: usize_arg("index")?, layer: dec_layer(arg("layer")?).await? }),
-        "remove-layer" => Ok(DxfMutation::RemoveLayer { name: dec_str(arg("name")?).await? }),
-        "set-layer" => Ok(DxfMutation::SetLayer { name: dec_str(arg("name")?).await?, layer: dec_layer(arg("layer")?).await? }),
+        "insert-layer" => Ok(DxfMutation::InsertLayer { index: usize_arg("index")?, layer: dec_layer(arg("layer")?)? }),
+        "remove-layer" => Ok(DxfMutation::RemoveLayer { name: dec_str(arg("name")?)? }),
+        "set-layer" => Ok(DxfMutation::SetLayer { name: dec_str(arg("name")?)?, layer: dec_layer(arg("layer")?)? }),
 
-        "insert-style" => Ok(DxfMutation::InsertStyle { index: usize_arg("index")?, style: dec_style(arg("style")?).await? }),
-        "remove-style" => Ok(DxfMutation::RemoveStyle { name: dec_str(arg("name")?).await? }),
-        "set-style" => Ok(DxfMutation::SetStyle { name: dec_str(arg("name")?).await?, style: dec_style(arg("style")?).await? }),
+        "insert-style" => Ok(DxfMutation::InsertStyle { index: usize_arg("index")?, style: dec_style(arg("style")?)? }),
+        "remove-style" => Ok(DxfMutation::RemoveStyle { name: dec_str(arg("name")?)? }),
+        "set-style" => Ok(DxfMutation::SetStyle { name: dec_str(arg("name")?)?, style: dec_style(arg("style")?)? }),
 
-        "insert-linetype" => Ok(DxfMutation::InsertLinetype { index: usize_arg("index")?, linetype: dec_linetype(arg("linetype")?).await? }),
-        "remove-linetype" => Ok(DxfMutation::RemoveLinetype { name: dec_str(arg("name")?).await? }),
-        "set-linetype" => Ok(DxfMutation::SetLinetype { name: dec_str(arg("name")?).await?, linetype: dec_linetype(arg("linetype")?).await? }),
+        "insert-linetype" => Ok(DxfMutation::InsertLinetype { index: usize_arg("index")?, linetype: dec_linetype(arg("linetype")?)? }),
+        "remove-linetype" => Ok(DxfMutation::RemoveLinetype { name: dec_str(arg("name")?)? }),
+        "set-linetype" => Ok(DxfMutation::SetLinetype { name: dec_str(arg("name")?)?, linetype: dec_linetype(arg("linetype")?)? }),
 
-        "insert-entity" => Ok(DxfMutation::InsertEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?).await? }),
+        "insert-entity" => Ok(DxfMutation::InsertEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?)? }),
         "remove-entity" => Ok(DxfMutation::RemoveEntity { index: usize_arg("index")? }),
-        "set-entity" => Ok(DxfMutation::SetEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?).await? }),
+        "set-entity" => Ok(DxfMutation::SetEntity { index: usize_arg("index")?, entity: dec_dxf_entity(arg("entity")?)? }),
 
-        "insert-block" => Ok(DxfMutation::InsertBlock { index: usize_arg("index")?, block: dec_block(arg("block")?).await? }),
+        "insert-block" => Ok(DxfMutation::InsertBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
         "remove-block" => Ok(DxfMutation::RemoveBlock { index: usize_arg("index")? }),
-        "set-block" => Ok(DxfMutation::SetBlock { index: usize_arg("index")?, block: dec_block(arg("block")?).await? }),
+        "set-block" => Ok(DxfMutation::SetBlock { index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
 
         other => Err(format!("dxf mutation: unknown keyword {other:?}")),
     }
@@ -394,10 +397,10 @@ async fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
 
 impl OpText for DxfMutation {
     async fn print_op(&self) -> String {
-        print_dxf_mutation(self).await
+        print_dxf_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_dxf_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_dxf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -434,17 +437,17 @@ impl OpBinary for DxfMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             DxfMutation::NoMutation => {}
-            DxfMutation::SetSnapshot { snapshot } => enc_dxf_snapshot_bin(snapshot, &mut out).await,
+            DxfMutation::SetSnapshot { snapshot } => enc_dxf_snapshot_bin(snapshot, &mut out),
             DxfMutation::SetHeaderVar { name, header_var } => {
                 write_str_lp(&mut out, name);
                 enc_header_var_bin(header_var, &mut out);
             }
-            DxfMutation::RemoveHeaderVar { name } => write_str_lp(&mut out, name).await,
+            DxfMutation::RemoveHeaderVar { name } => write_str_lp(&mut out, name),
             DxfMutation::InsertLayer { index, layer } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_layer_bin(layer, &mut out);
             }
-            DxfMutation::RemoveLayer { name } => write_str_lp(&mut out, name).await,
+            DxfMutation::RemoveLayer { name } => write_str_lp(&mut out, name),
             DxfMutation::SetLayer { name, layer } => {
                 write_str_lp(&mut out, name);
                 enc_layer_bin(layer, &mut out);
@@ -453,7 +456,7 @@ impl OpBinary for DxfMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_style_bin(style, &mut out);
             }
-            DxfMutation::RemoveStyle { name } => write_str_lp(&mut out, name).await,
+            DxfMutation::RemoveStyle { name } => write_str_lp(&mut out, name),
             DxfMutation::SetStyle { name, style } => {
                 write_str_lp(&mut out, name);
                 enc_style_bin(style, &mut out);
@@ -462,7 +465,7 @@ impl OpBinary for DxfMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_linetype_bin(linetype, &mut out);
             }
-            DxfMutation::RemoveLinetype { name } => write_str_lp(&mut out, name).await,
+            DxfMutation::RemoveLinetype { name } => write_str_lp(&mut out, name),
             DxfMutation::SetLinetype { name, linetype } => {
                 write_str_lp(&mut out, name);
                 enc_linetype_bin(linetype, &mut out);
@@ -496,66 +499,66 @@ impl OpBinary for DxfMutation {
         let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(DxfMutation::NoMutation),
-            1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             2 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let header_var = dec_header_var_bin(&mut reader).await.map_err(|e| malformed("op header_var", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetHeaderVar { name, header_var })
             }
-            3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             4 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let layer = dec_layer_bin(&mut reader).await.map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertLayer { index, layer })
             }
-            5 => Ok(DxfMutation::RemoveLayer { name: read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            5 => Ok(DxfMutation::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             6 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let layer = dec_layer_bin(&mut reader).await.map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetLayer { name, layer })
             }
             7 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let style = dec_style_bin(&mut reader).await.map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertStyle { index, style })
             }
-            8 => Ok(DxfMutation::RemoveStyle { name: read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            8 => Ok(DxfMutation::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             9 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let style = dec_style_bin(&mut reader).await.map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetStyle { name, style })
             }
             10 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let linetype = dec_linetype_bin(&mut reader).await.map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertLinetype { index, linetype })
             }
-            11 => Ok(DxfMutation::RemoveLinetype { name: read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            11 => Ok(DxfMutation::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             12 => {
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let linetype = dec_linetype_bin(&mut reader).await.map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetLinetype { name, linetype })
             }
             13 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_dxf_entity_bin(&mut reader).await.map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertEntity { index, entity })
             }
             14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             15 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_dxf_entity_bin(&mut reader).await.map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetEntity { index, entity })
             }
             16 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertBlock { index, block })
             }
             17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             18 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetBlock { index, block })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -573,10 +576,12 @@ impl OpBinary for DxfMutation {
 /// by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, so a new variant only needs adding here once.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<DxfMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
     use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
 
-    async fn demo_snapshot_for_set() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn demo_snapshot_for_set() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
@@ -654,7 +659,8 @@ mod tests {
     }
 
     //#region 🔖️Fixtures
-    async fn base_snapshot() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] }],
@@ -672,7 +678,8 @@ mod tests {
     /// 🔁️ Every DxfMutation-generic property test below (`mutation_diff_law`/`inverse_law`/
     /// `op_text_binary_roundtrip_law`) shares ONE fixture with `⚙️engine/🦀️component.rs`'s
     /// conformance laws — `demo_mutation_cases()` (`#region 🔖️DemoCases` above).
-    async fn variants() -> Vec<DxfMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn variants() -> Vec<DxfMutation> {
         demo_mutation_cases()
     }
     //#endregion 🔖️Fixtures
@@ -680,7 +687,8 @@ mod tests {
     //#region 🔖️FieldSweepFixtures
     /// 🧬️ Canonical "differs in every mutable field" snapshot A — every collection carries a
     /// stable-prefix item plus one that will be modified (index-keyed) or removed (name-keyed).
-    async fn sweep_a() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![
@@ -711,7 +719,8 @@ mod tests {
     /// (`b` is longer) and REMOVED via `between(b,a)`. Name-keyed collections show removed +
     /// modified + added simultaneously from ONE `between(a,b)` call. `entities[1]` changes KIND
     /// (Circle → Text), proving `DxfEntityDiff::Replace`.
-    async fn sweep_b() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> DxfSnapshot {
         DxfSnapshot {
             schema: "stdio.dxf".into(),
             header_vars: vec![

@@ -28,19 +28,21 @@ pub const PLY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ply";
 /// `register()` had no `register_schema_specs()` call, so every registration `engine::register()`
 /// performed is covered by a declaration field — no `.setup()` survivor needed.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("ply", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("ply", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("ply").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("ply")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::ply::schema::ply_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::ply::schema::inferences::ply_artifact_inference_descriptor()])
-        .await.composers(crate::artifacts::ply::engine::io_registry::entries())
-        .await.languages(pilot_languages().await)
-        .await.document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA)
+        .schema(crate::artifacts::ply::schema::ply_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::ply::schema::inferences::ply_artifact_inference_descriptor()])
+        .composers(crate::artifacts::ply::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -48,7 +50,8 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
 /// verbatim (five `LanguageSpec` rows, one per role) from `crate::artifacts::ply::standards::v1_0::
 /// engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -111,7 +114,8 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.ply".into(),
         name: "Ply".into(),
@@ -141,12 +145,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v1_0::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("PlyComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v1_0::entries());
     }
 }

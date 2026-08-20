@@ -25,7 +25,7 @@ pub struct AviInference {
 
 impl protocol::Inference<AviSnapshot> for AviInference {
     async fn infer(snapshot: &AviSnapshot) -> Self {
-        Self { duration: compute_avi_duration(snapshot).await }
+        Self { duration: compute_avi_duration(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::avi::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `avi_artifact_schema_descriptor`'s registration.
-pub async fn avi_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn avi_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.avi.inference",
         inference: schema::FacetLeaves {

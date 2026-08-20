@@ -40,11 +40,13 @@ pub struct FlattenedNode {
 /// 🔑️ `"<layer>:<p0>.<p1>..."` — the same structural substitute for a stable node id every
 /// mutation triad in this facet already uses (`NodePath`), reformatted as one `Ord`/`Hash`-able
 /// `String` (`InferredField::Key`'s bound).
-pub(crate) async fn key_for(layer: usize, path: &[usize]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn key_for(layer: usize, path: &[usize]) -> String {
     format!("{layer}:{}", path.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("."))
 }
 
-pub(crate) async fn node_path_from_key(key: &str) -> NodePath {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn node_path_from_key(key: &str) -> NodePath {
     let (layer_str, path_str) = key.split_once(':').expect("flattened-scene key always contains ':'");
     let layer = layer_str.parse().expect("flattened-scene key layer segment always parses as usize");
     let path = if path_str.is_empty() { Vec::new() } else { path_str.split('.').map(|s| s.parse().expect("flattened-scene key path segment always parses as usize")).collect() };
@@ -58,21 +60,24 @@ pub(crate) async fn node_path_from_key(key: &str) -> NodePath {
 /// rotate(parent.rotation, child.translation * parent.scale)`, `world.rotation =
 /// normalize(parent.rotation * child.rotation)`, `world.scale = parent.scale * child.scale`
 /// (component-wise).
-pub(crate) async fn compose_transform(parent: SemioTransform, child: SemioTransform) -> SemioTransform {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn compose_transform(parent: SemioTransform, child: SemioTransform) -> SemioTransform {
     let scaled_child_translation = SemioPoint3 { x: child.translation.x * parent.scale.x, y: child.translation.y * parent.scale.y, z: child.translation.z * parent.scale.z };
-    let rotated = rotate_point(parent.rotation, scaled_child_translation).await;
+    let rotated = rotate_point(parent.rotation, scaled_child_translation);
     SemioTransform {
         translation: SemioPoint3 { x: parent.translation.x + rotated.x, y: parent.translation.y + rotated.y, z: parent.translation.z + rotated.z },
-        rotation: normalize_quaternion(multiply_quaternion(parent.rotation, child.rotation).await).await,
+        rotation: normalize_quaternion(multiply_quaternion(parent.rotation, child.rotation)),
         scale: SemioPoint3 { x: parent.scale.x * child.scale.x, y: parent.scale.y * child.scale.y, z: parent.scale.z * child.scale.z },
     }
 }
 
-async fn multiply_quaternion(a: SemioQuaternion, b: SemioQuaternion) -> SemioQuaternion {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn multiply_quaternion(a: SemioQuaternion, b: SemioQuaternion) -> SemioQuaternion {
     SemioQuaternion { w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z, x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y, y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x, z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w }
 }
 
-async fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
     let len = (q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w).sqrt();
     if len == 0.0 {
         return SemioQuaternion::default();
@@ -82,7 +87,8 @@ async fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
 
 /// ↻️ Rotates `v` by unit quaternion `q` — `v + 2*q.xyz × (q.xyz × v + q.w*v)` (the standard
 /// avoid-quaternion-inverse rotation formula).
-async fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
     let qv = (q.x, q.y, q.z);
     let cross1 = cross(qv, (v.x, v.y, v.z));
     let t = (cross1.0 + q.w * v.x, cross1.1 + q.w * v.y, cross1.2 + q.w * v.z);
@@ -90,22 +96,26 @@ async fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
     SemioPoint3 { x: v.x + 2.0 * cross2.0, y: v.y + 2.0 * cross2.1, z: v.z + 2.0 * cross2.2 }
 }
 
-async fn cross(a: (f64, f64, f64), b: (f64, f64, f64)) -> (f64, f64, f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cross(a: (f64, f64, f64), b: (f64, f64, f64)) -> (f64, f64, f64) {
     (a.1 * b.2 - a.2 * b.1, a.2 * b.0 - a.0 * b.2, a.0 * b.1 - a.1 * b.0)
 }
 //#endregion 🔖️Transform
 
 //#region 🔖️StyleResolution
-async fn resolve_style(snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) -> Option<DrawStyle> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_style(snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) -> Option<DrawStyle> {
     let name = style_ref.as_ref()?;
     snapshot.styles.iter().find(|s| &s.name == name).cloned()
 }
 
-async fn push_number(bytes: &mut Vec<u8>, v: f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_number(bytes: &mut Vec<u8>, v: f64) {
     bytes.extend_from_slice(&v.to_le_bytes());
 }
 
-async fn push_style_dep(bytes: &mut Vec<u8>, snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_style_dep(bytes: &mut Vec<u8>, snapshot: &SemioDrawingSnapshot, style_ref: &Option<String>) {
     match style_ref {
         None => bytes.push(0),
         Some(name) => {
@@ -176,7 +186,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     async fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let np = node_path_from_key(key);
         let mut bytes = Vec::new();
-        match node_at(snapshot, &np).await {
+        match node_at(snapshot, &np) {
             Some(DrawNode::Group { transform, .. }) => {
                 push_number(&mut bytes, transform.translation.x);
                 push_number(&mut bytes, transform.translation.y);
@@ -189,7 +199,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
                 push_number(&mut bytes, transform.scale.y);
                 push_number(&mut bytes, transform.scale.z);
             }
-            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => push_style_dep(&mut bytes, snapshot, style).await,
+            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => push_style_dep(&mut bytes, snapshot, style),
             Some(DrawNode::Image { .. }) | None => {}
         }
         bytes
@@ -198,15 +208,16 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     async fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let np = node_path_from_key(key);
         let parent_transform = parents.first().map(|p| p.world_transform).unwrap_or_else(SemioTransform::identity);
-        match node_at(snapshot, &np).await {
-            Some(DrawNode::Group { transform, .. }) => FlattenedNode { world_transform: compose_transform(parent_transform, *transform).await, resolved_style: None },
-            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => FlattenedNode { world_transform: parent_transform, resolved_style: resolve_style(snapshot, style).await },
+        match node_at(snapshot, &np) {
+            Some(DrawNode::Group { transform, .. }) => FlattenedNode { world_transform: compose_transform(parent_transform, *transform), resolved_style: None },
+            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => FlattenedNode { world_transform: parent_transform, resolved_style: resolve_style(snapshot, style) },
             Some(DrawNode::Image { .. }) | None => FlattenedNode { world_transform: parent_transform, resolved_style: None },
         }
     }
 }
 
-async fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option<String>, out: &mut Vec<store::InferenceStep<String>>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option<String>, out: &mut Vec<store::InferenceStep<String>>) {
     let key = key_for(layer, path);
     out.push(store::InferenceStep { key: key.clone(), parents: parent_key.into_iter().collect() });
     if let DrawNode::Group { children, .. } = node {
@@ -227,7 +238,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn fixture() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -320,7 +332,8 @@ mod tests {
     /// 🤝️ Sibling law: two INDEPENDENT leaves (each referencing its own style, under different
     /// parent Groups so neither is an ancestor of the other) — editing one's referenced style must
     /// leave the other's entire subtree, and everything between it and the shared root, warm.
-    async fn two_independent_styled_siblings() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_independent_styled_siblings() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },

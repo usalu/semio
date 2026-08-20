@@ -8,7 +8,8 @@ pub const ID: &str = "s.stdio.gltf.mutation.delete-scene.v1";
 pub struct GltfDeleteScenePayload {
     pub index: usize,
 }
-pub async fn validate(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if payload.index >= base.document.scenes.len() {
         return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "index must address a scene"));
     }
@@ -17,7 +18,8 @@ pub async fn validate(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> 
     }
     Ok(())
 }
-pub async fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     validate(payload, base)?;
     let mut next = base.clone();
     scenes_op(&mut next, GltfTopLevelFamily::Scenes, payload.index, None, None)?;

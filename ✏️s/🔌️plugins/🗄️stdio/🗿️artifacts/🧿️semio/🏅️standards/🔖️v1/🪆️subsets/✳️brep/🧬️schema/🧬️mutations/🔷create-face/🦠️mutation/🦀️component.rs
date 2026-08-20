@@ -20,10 +20,10 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateFace
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "face", kind: "create-face", record: "CreatedFace" };
 
     async fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         format!("Create face \"{}\"", self.id)

@@ -19,27 +19,33 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_pieces(pieces: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
     format!("[{}]", pieces.iter().map(enc_piece).collect::<Vec<_>>().join(","))
 }
-async fn dec_pieces(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_pieces(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("pieces: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_piece).collect()
 }
-async fn enc_connections(cs: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_connections(cs: &[crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
     format!("[{}]", cs.iter().map(enc_connection).collect::<Vec<_>>().join(","))
 }
-async fn dec_connections(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_connections(s: &str) -> Result<Vec<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("connections: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_connection).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-async fn print_kit_mutation(m: &SemioKitMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_kit_mutation(m: &SemioKitMutation) -> String {
     match m {
         SemioKitMutation::CreateObject(p) => format!("createObject:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
         SemioKitMutation::DeleteObject(p) => format!("deleteObject:{}", enc_str(&p.child_id)),
@@ -59,7 +65,8 @@ async fn print_kit_mutation(m: &SemioKitMutation) -> String {
     }
 }
 
-async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
     if line == "deleteProperties" {
         return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
     }
@@ -67,47 +74,47 @@ async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
     match tag {
         "createObject" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createObject: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
+            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
         }
-        "deleteObject" => Ok(SemioKitMutation::DeleteObject(DeleteObject { child_id: dec_str(rest).await? })),
+        "deleteObject" => Ok(SemioKitMutation::DeleteObject(DeleteObject { child_id: dec_str(rest)? })),
         "createModel" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createModel: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
+            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
         }
-        "deleteModel" => Ok(SemioKitMutation::DeleteModel(DeleteModel { child_id: dec_str(rest).await? })),
+        "deleteModel" => Ok(SemioKitMutation::DeleteModel(DeleteModel { child_id: dec_str(rest)? })),
         "createProperties" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createProperties: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateProperties(CreateProperties { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
+            Ok(SemioKitMutation::CreateProperties(CreateProperties { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
         }
         "bindRepresentation" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [target, pin, role] = parts.as_slice() else { return Err(format!("bindRepresentation: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(target).await?, pin: dec_pin(pin).await?, role: dec_str(role).await? }))
+            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(target)?, pin: dec_pin(pin)?, role: dec_str(role)? }))
         }
-        "unbindRepresentation" => Ok(SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: parse_usize(rest).await? })),
+        "unbindRepresentation" => Ok(SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: parse_usize(rest)? })),
         "changeRepresentationPin" => {
             let (index, pin) = rest.split_once(',').ok_or_else(|| "changeRepresentationPin: missing comma".to_string())?;
-            Ok(SemioKitMutation::ChangeRepresentationPin(ChangeRepresentationPin { index: parse_usize(index).await?, pin: dec_pin(pin).await? }))
+            Ok(SemioKitMutation::ChangeRepresentationPin(ChangeRepresentationPin { index: parse_usize(index)?, pin: dec_pin(pin)? }))
         }
         "addType" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [id, name, category] = parts.as_slice() else { return Err(format!("addType: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::AddType(AddType { id: dec_str(id).await?, name: dec_str(name).await?, category: dec_str(category).await? }))
+            Ok(SemioKitMutation::AddType(AddType { id: dec_str(id)?, name: dec_str(name)?, category: dec_str(category)? }))
         }
-        "removeType" => Ok(SemioKitMutation::RemoveType(RemoveType { id: dec_str(rest).await? })),
+        "removeType" => Ok(SemioKitMutation::RemoveType(RemoveType { id: dec_str(rest)? })),
         "renameType" => {
             let (id, new_name) = rest.split_once(',').ok_or_else(|| "renameType: missing comma".to_string())?;
-            Ok(SemioKitMutation::RenameType(RenameType { id: dec_str(id).await?, new_name: dec_str(new_name).await? }))
+            Ok(SemioKitMutation::RenameType(RenameType { id: dec_str(id)?, new_name: dec_str(new_name)? }))
         }
         "addDesign" => {
             let (id, name) = rest.split_once(',').ok_or_else(|| "addDesign: missing comma".to_string())?;
-            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(id).await?, name: dec_str(name).await? }))
+            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(id)?, name: dec_str(name)? }))
         }
-        "removeDesign" => Ok(SemioKitMutation::RemoveDesign(RemoveDesign { id: dec_str(rest).await? })),
+        "removeDesign" => Ok(SemioKitMutation::RemoveDesign(RemoveDesign { id: dec_str(rest)? })),
         "editDesign" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [id, pieces, connections] = parts.as_slice() else { return Err(format!("editDesign: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::EditDesign(EditDesign { id: dec_str(id).await?, pieces: dec_pieces(pieces).await?, connections: dec_connections(connections).await? }))
+            Ok(SemioKitMutation::EditDesign(EditDesign { id: dec_str(id)?, pieces: dec_pieces(pieces)?, connections: dec_connections(connections)? }))
         }
         other => Err(format!("kit mutation: unknown keyword {other:?}")),
     }
@@ -115,10 +122,10 @@ async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
 
 impl protocol::OpText for SemioKitMutation {
     async fn print_op(&self) -> String {
-        print_kit_mutation(self).await
+        print_kit_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_kit_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_kit_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -127,7 +134,8 @@ impl protocol::OpText for SemioKitMutation {
 /// 🌱 One representative value per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioKitMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
     let ref_of = |subset: &str, id: &str| store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1") }),

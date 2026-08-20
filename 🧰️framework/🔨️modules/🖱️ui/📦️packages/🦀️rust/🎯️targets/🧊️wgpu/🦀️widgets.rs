@@ -79,7 +79,7 @@ impl<E> Default for WidgetInteractionMaps<E> {
 }
 
 impl<E> WidgetInteractionMaps<E> {
-    pub async fn clear_frame(&mut self) {
+    pub fn clear_frame(&mut self) {
         self.input_metas.clear();
         self.select_metas.clear();
         self.toggle_metas.clear();
@@ -195,7 +195,7 @@ pub(crate) const TREE_TOGGLE_WIDTH: f32 = 14.0;
 pub(crate) const TREE_ICON_SIZE: f32 = 14.0;
 pub(crate) const TREE_SECTION_GAP: f32 = 8.0;
 
-pub async fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
+pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode<E>) -> (f32, f32) {
     match node {
         WidgetNode::Stack { direction, gap, padding, children } => {
             let gap = gap_for_token(theme, gap.as_deref());
@@ -263,7 +263,7 @@ pub async fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &Widg
     }
 }
 
-async fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &ControlNode<E>) -> (f32, f32) {
+fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &ControlNode<E>) -> (f32, f32) {
     match control {
         ControlNode::Button { .. } | ControlNode::Input { .. } | ControlNode::Select { .. } | ControlNode::Toggle { .. } | ControlNode::Slider { .. } | ControlNode::NumberStepper { .. } | ControlNode::IconSelect { .. } => {
             (theme.control_height, theme.control_height)
@@ -276,7 +276,7 @@ async fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &Cont
     }
 }
 
-pub async fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match node {
         WidgetNode::Stack { direction, gap, padding, children } => {
             let gap = gap_for_token(ctx.theme, gap.as_deref());
@@ -381,7 +381,7 @@ pub async fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &m
     }
 }
 
-async fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {
         ControlNode::Button { id, icon_id, label, event } => {
             render_button(id.as_ref(), *icon_id, label, event.clone(), bounds, ctx);
@@ -412,19 +412,19 @@ async fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &
     }
 }
 
-pub(crate) async fn register_input_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, value: &str, commit: Option<String>, on_change: Option<E>) {
+pub(crate) fn register_input_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, value: &str, commit: Option<String>, on_change: Option<E>) {
     if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
         maps.input_metas.insert(id.to_string(), InputMeta { on_change, commit, value: value.to_string() });
     }
 }
 
-async fn register_select_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, on_change: Option<E>) {
+fn register_select_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, on_change: Option<E>) {
     if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
         maps.select_metas.insert(id.to_string(), on_change);
     }
 }
 
-async fn register_toggle_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, pressed: bool, on_change: Option<E>) {
+fn register_toggle_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, pressed: bool, on_change: Option<E>) {
     if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
         maps.toggle_metas.insert(id.to_string(), (pressed, on_change));
     }
@@ -441,25 +441,25 @@ use crate::wgpu::stepper::render_number_stepper;
 use crate::wgpu::toggle::render_toggle;
 use crate::wgpu::tree_element::{measure_tree_sections, measure_tree_sections_state, measure_tree_sections_width, render_tree};
 
-pub(crate) async fn tree_gutter_width(depth: u32) -> f32 {
+pub(crate) fn tree_gutter_width(depth: u32) -> f32 {
     depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH
 }
 
-pub(crate) async fn tree_icon_id<E>(item: &TreeItem<E>, expandable: bool) -> Option<&str> {
+pub(crate) fn tree_icon_id<E>(item: &TreeItem<E>, expandable: bool) -> Option<&str> {
     item.icon_id.map(IconName::as_str).or(if expandable { Some("folder") } else { None })
 }
 
-pub(crate) async fn tree_row_collapsed(collapsed: &HashMap<String, bool>, key: &str, default_open: bool) -> bool {
+pub(crate) fn tree_row_collapsed(collapsed: &HashMap<String, bool>, key: &str, default_open: bool) -> bool {
     collapsed.get(key).copied().unwrap_or(!default_open)
 }
 
-pub(crate) async fn tree_draw_chevron<E>(ctx: &mut WidgetContext<'_, E>, icon_id: &str, rect: Rect) {
+pub(crate) fn tree_draw_chevron<E>(ctx: &mut WidgetContext<'_, E>, icon_id: &str, rect: Rect) {
     if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
         draw_icon(ctx, uv, rect.x + (rect.w - TREE_ICON_SIZE) * 0.5, rect.y + (rect.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, ctx.theme.text_muted);
     }
 }
 
-pub(crate) async fn tree_draw_guides<E>(ctx: &mut WidgetContext<'_, E>, gutter: Rect, depth: u32, is_last_at_level: &[bool]) {
+pub(crate) fn tree_draw_guides<E>(ctx: &mut WidgetContext<'_, E>, gutter: Rect, depth: u32, is_last_at_level: &[bool]) {
     let hair = ctx.theme.stroke_hairline.max(1.0);
     let guide_color = ctx.theme.border_normal;
     for level in 0..depth {
@@ -477,7 +477,7 @@ pub(crate) async fn tree_draw_guides<E>(ctx: &mut WidgetContext<'_, E>, gutter: 
     }
 }
 
-pub async fn render_scroll_region<E: Clone, F: FnOnce(Rect, &mut WidgetContext<'_, E>)>(scroll_id: &str, bounds: Rect, content_height: f32, ctx: &mut WidgetContext<'_, E>, render_content: F) {
+pub fn render_scroll_region<E: Clone, F: FnOnce(Rect, &mut WidgetContext<'_, E>)>(scroll_id: &str, bounds: Rect, content_height: f32, ctx: &mut WidgetContext<'_, E>, render_content: F) {
     let max_scroll = (content_height - bounds.h).max(0.0);
     let offset = ctx.scroll_offsets.entry(scroll_id.to_string()).or_insert(0.0);
     *offset = offset.clamp(0.0, max_scroll);
@@ -489,16 +489,16 @@ pub async fn render_scroll_region<E: Clone, F: FnOnce(Rect, &mut WidgetContext<'
     ctx.draw.pop_scissor();
 }
 
-pub async fn draw_icon<E>(ctx: &mut WidgetContext<'_, E>, uv: [f32; 4], x: f32, y: f32, size: f32, color: Rgba) {
+pub fn draw_icon<E>(ctx: &mut WidgetContext<'_, E>, uv: [f32; 4], x: f32, y: f32, size: f32, color: Rgba) {
     ctx.draw.push_textured([x, y, size, size], uv, color);
 }
 
-pub(crate) async fn measure_text_width<E>(ctx: &mut WidgetContext<'_, E>, text: &str, size: f32) -> f32 {
+pub(crate) fn measure_text_width<E>(ctx: &mut WidgetContext<'_, E>, text: &str, size: f32) -> f32 {
     let (w, _) = ctx.atlas.measure_text(text, size);
     w
 }
 
-pub async fn draw_text_wrapped<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, max_width: f32, size: f32, color: Rgba) -> f32 {
+pub fn draw_text_wrapped<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, max_width: f32, size: f32, color: Rgba) -> f32 {
     let lines = wrap_text(ctx.atlas, text, max_width, size);
     let line_h = size * 1.35;
     for (index, line) in lines.iter().enumerate() {
@@ -507,7 +507,7 @@ pub async fn draw_text_wrapped<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x:
     lines.len() as f32 * line_h
 }
 
-pub async fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<String> {
+pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<String> {
     let mut lines = Vec::new();
     let mut current = String::new();
     for word in text.split_whitespace() {
@@ -529,7 +529,7 @@ pub async fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: 
     lines
 }
 
-pub async fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+pub fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
@@ -545,7 +545,7 @@ pub async fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str
     }
 }
 
-pub async fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+pub fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
@@ -561,7 +561,7 @@ pub async fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, te
     }
 }
 
-pub async fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = ctx.atlas.width as f32;
     let atlas_h = ctx.atlas.height as f32;
     let mut cursor_x = x;
@@ -577,7 +577,7 @@ pub async fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y:
     }
 }
 
-pub async fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     draw_text_overlay_on(ctx.draw, ctx.atlas, text, x, y, size, color);
 }
 
@@ -594,7 +594,7 @@ pub mod gizmo {
     use crate::wgpu::{Camera3d, Rect, Rgba, Vec3};
 
     /// 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome.
-    pub async fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
+    pub fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
         match axis {
             0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
             1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
@@ -603,7 +603,7 @@ pub mod gizmo {
     }
 
     /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome.
-    pub async fn orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
+    pub fn orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
         let chrome_inset = 4.0_f32;
         let gizmo_half_extent = 28.0_f32;
         let preferred = chrome_inset + gizmo_half_extent;
@@ -623,7 +623,7 @@ pub mod gizmo {
         pub prominent: bool,
     }
 
-    pub async fn orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<OrbitViewGizmoTip> {
+    pub fn orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<OrbitViewGizmoTip> {
         let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
         let origin_x = viewport.x + viewport.w - margin_x;
         let origin_y = viewport.y + viewport.h - margin_y;
@@ -685,7 +685,7 @@ pub mod gizmo {
         tips
     }
 
-    pub async fn orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[OrbitViewGizmoTip]) -> Option<usize> {
+    pub fn orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[OrbitViewGizmoTip]) -> Option<usize> {
         tips.iter()
             .enumerate()
             .filter_map(|(index, tip)| {
@@ -701,7 +701,7 @@ pub mod gizmo {
     }
 
     /// 🧭️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
-    pub async fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
+    pub fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
         let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
         let origin_x = viewport.x + viewport.w - margin_x;
         let origin_y = viewport.y + viewport.h - margin_y;

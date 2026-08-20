@@ -35,7 +35,8 @@ use protocol::{DiffCodec, Inference, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
 use store::{ArtifactDsl, ArtifactPack};
 
-async fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
     assert!(snapshot.objects.len() > 1_000, "native PDF import must retain the logical COS object graph");
     assert!(snapshot.objects.iter().any(|object| matches!(object.value, crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfObject::Stream { ref data, .. } if !data.is_empty())));
     assert!(snapshot.trailer.iter().any(|entry| entry.key == "Root"));

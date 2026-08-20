@@ -15,18 +15,21 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::json_i_json::create_json_i_json_viewer`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `JsonSnapshot -> UiNode` read: same shape as the editor's own render, no mutation.
-pub async fn render(document: &JsonSnapshot) -> UiNode {
-    TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value).await] }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &JsonSnapshot) -> UiNode {
+    TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
 }
 
-async fn scalar_label(value: &JsonValue) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scalar_label(value: &JsonValue) -> Option<String> {
     match value {
         JsonValue::Null => Some("null".to_string()),
         JsonValue::Bool { value } => Some(value.to_string()),
@@ -36,7 +39,8 @@ async fn scalar_label(value: &JsonValue) -> Option<String> {
     }
 }
 
-async fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
     let id = path.join("/");
     let prefix = key_label.map(|key| format!("{key}: ")).unwrap_or_default();
     match value {
@@ -63,7 +67,7 @@ async fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue
                 .collect();
             TreeNodeView { id, label: format!("{prefix}[{}]", items.len()), children }
         }
-        scalar => TreeNodeView { id, label: format!("{prefix}{}", scalar_label(scalar).await.unwrap_or_default()), children: Vec::new() },
+        scalar => TreeNodeView { id, label: format!("{prefix}{}", scalar_label(scalar).unwrap_or_default()), children: Vec::new() },
     }
 }
 //#endregion 🔖️Render

@@ -23,7 +23,7 @@ pub struct BmpInference {
 
 impl protocol::Inference<BmpSnapshot> for BmpInference {
     async fn infer(snapshot: &BmpSnapshot) -> Self {
-        Self { dimensions: compute_bmp_dimensions(snapshot).await }
+        Self { dimensions: compute_bmp_dimensions(snapshot) }
     }
 }
 
@@ -63,7 +63,8 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::bmp::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `bmp_artifact_schema_descriptor`'s registration.
-pub async fn bmp_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bmp_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.bmp.inference",
         inference: schema::FacetLeaves {

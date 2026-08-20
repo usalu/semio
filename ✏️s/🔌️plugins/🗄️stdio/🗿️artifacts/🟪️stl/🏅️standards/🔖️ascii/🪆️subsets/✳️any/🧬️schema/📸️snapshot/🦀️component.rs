@@ -93,7 +93,7 @@ impl store::ArtifactDsl for StlSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::stl::engine::decode_stl_ascii(body).await.map_err(|e| store::TextError::new(format!("stl parse: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::stl::engine::decode_stl_ascii(body).map_err(|e| store::TextError::new(format!("stl parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = crate::artifacts::stl::engine::encode_stl_ascii(self);
@@ -105,7 +105,7 @@ impl store::ArtifactDsl for StlSnapshot {
 impl store::ArtifactPack for StlSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::stl::engine::encode_stl_ascii(self).await.into_bytes();
+        let raw = crate::artifacts::stl::engine::encode_stl_ascii(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -116,7 +116,7 @@ impl store::ArtifactPack for StlSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::stl::engine::decode_stl_ascii(&text).await.map_err(store::PackError::Schema)
+        crate::artifacts::stl::engine::decode_stl_ascii(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

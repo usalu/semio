@@ -59,7 +59,8 @@ mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviStream, AviStreamHeader};
 
-    async fn real_world_avi() -> AviSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_avi() -> AviSnapshot {
         AviSnapshot {
             schema: "stdio.avi".into(),
             main_header: AviMainHeader {

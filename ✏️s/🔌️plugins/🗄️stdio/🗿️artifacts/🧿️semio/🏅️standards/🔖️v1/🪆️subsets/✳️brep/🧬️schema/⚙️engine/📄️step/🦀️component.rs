@@ -29,35 +29,37 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 // #region 🔖️Api
 
 /// 📄 Serializes one or more manifold solids from `body` to STEP Part 21 (AP203 subset).
-pub async fn write_step(body: &Body, solids: &[SolidId]) -> Result<String, StepError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn write_step(body: &Body, solids: &[SolidId]) -> Result<String, StepError> {
     if solids.is_empty() {
         return Err(StepError::Syntax("no solids to export".to_string()));
     }
-    let mut ctx = StepWriteContext::new().await;
-    let repr_context_id = ctx.write_geometric_context().await;
-    let product_ids = ctx.write_product_structure().await;
+    let mut ctx = StepWriteContext::new();
+    let repr_context_id = ctx.write_geometric_context();
+    let product_ids = ctx.write_product_structure();
     let mut brep_ids = Vec::new();
     for &solid_id in solids {
-        brep_ids.push(ctx.write_solid(body, solid_id).await?);
+        brep_ids.push(ctx.write_solid(body, solid_id)?);
     }
     let items: Vec<String> = brep_ids.iter().map(|id| format!("#{id}")).collect();
-    let shape_repr_id = ctx.next_id().await;
+    let shape_repr_id = ctx.next_id();
     ctx.write_entity(shape_repr_id, "ADVANCED_BREP_SHAPE_REPRESENTATION", &format!("'semio export', ({},), #{repr_context_id})", items.join(", ")));
-    let prod_def_shape_id = ctx.next_id().await;
+    let prod_def_shape_id = ctx.next_id();
     ctx.write_entity(prod_def_shape_id, "PRODUCT_DEFINITION_SHAPE", &format!("'','',#{})", product_ids.definition));
-    let shape_def_repr_id = ctx.next_id().await;
+    let shape_def_repr_id = ctx.next_id();
     ctx.write_entity(shape_def_repr_id, "SHAPE_DEFINITION_REPRESENTATION", &format!("#{prod_def_shape_id}, #{shape_repr_id})"));
-    Ok(ctx.finish().await)
+    Ok(ctx.finish())
 }
 
 /// 📄 Parses STEP Part 21 text into a fresh [`Body`] containing every `MANIFOLD_SOLID_BREP` found.
-pub async fn read_step(text: &str) -> Result<Body, StepError> {
-    let entities = parse_step_entities(text).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn read_step(text: &str) -> Result<Body, StepError> {
+    let entities = parse_step_entities(text)?;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
-    let mut builder = StepBuilder::new(&mut body, &entities, &mut rec).await;
-    builder.build_all_solids().await?;
-    Ok(body.await)
+    let mut builder = StepBuilder::new(&mut body, &entities, &mut rec);
+    builder.build_all_solids()?;
+    Ok(body)
 }
 
 // #endregion 🔖️Api
@@ -76,42 +78,49 @@ struct StepWriteContext {
 }
 
 impl StepWriteContext {
-    async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new() -> Self {
         Self { next: 1, entities: String::new(), vertex_map: HashMap::new(), edge_map: HashMap::new() }
     }
 
-    async fn next_id(&mut self) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next_id(&mut self) -> u64 {
         let id = self.next;
         self.next += 1;
         id
     }
 
-    async fn write_entity(&mut self, id: u64, entity: &str, attrs: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_entity(&mut self, id: u64, entity: &str, attrs: &str) {
         let _ = writeln!(self.entities, "#{id} = {entity}({attrs};");
     }
 
-    async fn write_point(&mut self, p: Pnt3) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_point(&mut self, p: Pnt3) -> u64 {
         let id = self.next_id();
-        self.write_entity(id.await, "CARTESIAN_POINT", &format!("'', ({}, {}, {}))", fmt_f64(p.x), fmt_f64(p.y), fmt_f64(p.z)));
-        id.await
+        self.write_entity(id, "CARTESIAN_POINT", &format!("'', ({}, {}, {}))", fmt_f64(p.x), fmt_f64(p.y), fmt_f64(p.z)));
+        id
     }
 
-    async fn write_direction(&mut self, d: Vec3) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_direction(&mut self, d: Vec3) -> u64 {
         let id = self.next_id();
-        self.write_entity(id.await, "DIRECTION", &format!("'', ({}, {}, {}))", fmt_f64(d.x), fmt_f64(d.y), fmt_f64(d.z)));
-        id.await
+        self.write_entity(id, "DIRECTION", &format!("'', ({}, {}, {}))", fmt_f64(d.x), fmt_f64(d.y), fmt_f64(d.z)));
+        id
     }
 
-    async fn write_axis2_placement(&mut self, origin: Pnt3, axis: Vec3, ref_dir: Vec3) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_axis2_placement(&mut self, origin: Pnt3, axis: Vec3, ref_dir: Vec3) -> u64 {
         let origin_id = self.write_point(origin);
         let axis_id = self.write_direction(axis);
         let ref_id = self.write_direction(ref_dir);
         let id = self.next_id();
-        self.write_entity(id.await, "AXIS2_PLACEMENT_3D", &format!("'', #{origin_id}, #{axis_id}, #{ref_id})"));
-        id.await
+        self.write_entity(id, "AXIS2_PLACEMENT_3D", &format!("'', #{origin_id}, #{axis_id}, #{ref_id})"));
+        id
     }
 
-    async fn write_geometric_context(&mut self) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_geometric_context(&mut self) -> u64 {
         let len_unit = self.next_id();
         let _ = writeln!(self.entities, "#{len_unit} = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );");
         let angle_unit = self.next_id();
@@ -119,7 +128,7 @@ impl StepWriteContext {
         let solid_angle_unit = self.next_id();
         let _ = writeln!(self.entities, "#{solid_angle_unit} = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );");
         let uncertainty = self.next_id();
-        self.write_entity(uncertainty.await, "UNCERTAINTY_MEASURE_WITH_UNIT", &format!("LENGTH_MEASURE(1.E-07), #{len_unit}, 'distance_accuracy_value', 'confusion accuracy')"));
+        self.write_entity(uncertainty, "UNCERTAINTY_MEASURE_WITH_UNIT", &format!("LENGTH_MEASURE(1.E-07), #{len_unit}, 'distance_accuracy_value', 'confusion accuracy')"));
         let ctx = self.next_id();
         let _ = writeln!(
             self.entities,
@@ -128,87 +137,91 @@ impl StepWriteContext {
              GLOBAL_UNIT_ASSIGNED_CONTEXT((#{len_unit},#{angle_unit},#{solid_angle_unit})) \
              REPRESENTATION_CONTEXT('Context3D','3D Context with UNIT and UNCERTAINTY') );"
         );
-        ctx.await
+        ctx
     }
 
-    async fn write_product_structure(&mut self) -> ProductIds {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_product_structure(&mut self) -> ProductIds {
         let app_context = self.next_id();
-        self.write_entity(app_context.await, "APPLICATION_CONTEXT", "'configuration controlled 3D design of mechanical parts and assemblies')");
+        self.write_entity(app_context, "APPLICATION_CONTEXT", "'configuration controlled 3D design of mechanical parts and assemblies')");
         let mech_context = self.next_id();
-        self.write_entity(mech_context.await, "MECHANICAL_CONTEXT", &format!("'', #{app_context}, 'mechanical')"));
+        self.write_entity(mech_context, "MECHANICAL_CONTEXT", &format!("'', #{app_context}, 'mechanical')"));
         let protocol_def = self.next_id();
-        self.write_entity(protocol_def.await, "APPLICATION_PROTOCOL_DEFINITION", &format!("'international standard', 'config_control_design', 1994, #{app_context})"));
+        self.write_entity(protocol_def, "APPLICATION_PROTOCOL_DEFINITION", &format!("'international standard', 'config_control_design', 1994, #{app_context})"));
         let product = self.next_id();
-        self.write_entity(product.await, "PRODUCT", &format!("'semio_solid', 'semio_solid', '', (#{mech_context}))"));
+        self.write_entity(product, "PRODUCT", &format!("'semio_solid', 'semio_solid', '', (#{mech_context}))"));
         let formation = self.next_id();
-        self.write_entity(formation.await, "PRODUCT_DEFINITION_FORMATION", &format!("'', '', #{product})"));
+        self.write_entity(formation, "PRODUCT_DEFINITION_FORMATION", &format!("'', '', #{product})"));
         let def_context = self.next_id();
-        self.write_entity(def_context.await, "PRODUCT_DEFINITION_CONTEXT", &format!("'part definition', #{app_context}, 'design')"));
+        self.write_entity(def_context, "PRODUCT_DEFINITION_CONTEXT", &format!("'part definition', #{app_context}, 'design')"));
         let definition = self.next_id();
-        self.write_entity(definition.await, "PRODUCT_DEFINITION", &format!("'design', '', #{formation}, #{def_context})"));
+        self.write_entity(definition, "PRODUCT_DEFINITION", &format!("'design', '', #{formation}, #{def_context})"));
         ProductIds { definition }
     }
 
-    async fn write_vertex(&mut self, body: &Body, vid: VertexId) -> Result<u64, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_vertex(&mut self, body: &Body, vid: VertexId) -> Result<u64, StepError> {
         let key = vid.raw_index();
         if let Some(&cached) = self.vertex_map.get(&key) {
             return Ok(cached);
         }
-        let vertex = body.vertices.get(vid).await.ok_or(StepError::Syntax(format!("missing vertex {vid}")))?;
+        let vertex = body.vertices.get(vid).ok_or(StepError::Syntax(format!("missing vertex {vid}")))?;
         let pt_id = self.write_point(vertex.position);
         let vp_id = self.next_id();
-        self.write_entity(vp_id.await, "VERTEX_POINT", &format!("'', #{pt_id})"));
-        self.vertex_map.insert(key.await, vp_id.await);
-        Ok(vp_id.await)
+        self.write_entity(vp_id, "VERTEX_POINT", &format!("'', #{pt_id})"));
+        self.vertex_map.insert(key, vp_id);
+        Ok(vp_id)
     }
 
-    async fn write_edge_curve(&mut self, body: &Body, eid: EdgeId) -> Result<u64, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_edge_curve(&mut self, body: &Body, eid: EdgeId) -> Result<u64, StepError> {
         let key = eid.raw_index();
         if let Some(&cached) = self.edge_map.get(&key) {
             return Ok(cached);
         }
-        let edge = body.edges.get(eid).await.ok_or(StepError::Syntax(format!("missing edge {eid}")))?;
-        let start_vp = self.write_vertex(body, edge.v0).await?;
-        let end_vp = self.write_vertex(body, edge.v1).await?;
-        let start_pt = body.vertices.get(edge.v0).await.unwrap().position;
-        let end_pt = body.vertices.get(edge.v1).await.unwrap().position;
-        let curve = body.curves3.get(edge.curve).await.ok_or(StepError::Syntax("missing edge curve".to_string()))?;
+        let edge = body.edges.get(eid).ok_or(StepError::Syntax(format!("missing edge {eid}")))?;
+        let start_vp = self.write_vertex(body, edge.v0)?;
+        let end_vp = self.write_vertex(body, edge.v1)?;
+        let start_pt = body.vertices.get(edge.v0).unwrap().position;
+        let end_pt = body.vertices.get(edge.v1).unwrap().position;
+        let curve = body.curves3.get(edge.curve).ok_or(StepError::Syntax("missing edge curve".to_string()))?;
         let curve_id = match curve {
             Curve3::Line { .. } => {
-                let dir = (end_pt - start_pt).normalized().await.unwrap_or(Vec3::X);
+                let dir = (end_pt - start_pt).normalized().unwrap_or(Vec3::X);
                 let length = (end_pt - start_pt).norm();
                 let line_origin = self.write_point(start_pt);
                 let dir_id = self.write_direction(dir);
                 let vector = self.next_id();
-                self.write_entity(vector.await, "VECTOR", &format!("'', #{dir_id}, {})", fmt_f64(length.await)));
+                self.write_entity(vector, "VECTOR", &format!("'', #{dir_id}, {})", fmt_f64(length)));
                 let line = self.next_id();
-                self.write_entity(line.await, "LINE", &format!("'', #{line_origin}, #{vector})"));
-                line.await
+                self.write_entity(line, "LINE", &format!("'', #{line_origin}, #{vector})"));
+                line
             }
             Curve3::Circle { frame, radius } => {
                 let placement = self.write_axis2_placement(frame.origin, frame.z, frame.x);
                 let cid = self.next_id();
-                self.write_entity(cid.await, "CIRCLE", &format!("'', #{placement}, {})", fmt_f64(*radius)));
-                cid.await
+                self.write_entity(cid, "CIRCLE", &format!("'', #{placement}, {})", fmt_f64(*radius)));
+                cid
             }
             Curve3::Ellipse { frame, major_radius, minor_radius } => {
                 let placement = self.write_axis2_placement(frame.origin, frame.z, frame.x);
                 let eid_step = self.next_id();
-                self.write_entity(eid_step.await, "ELLIPSE", &format!("'', #{placement}, {}, {})", fmt_f64(*major_radius), fmt_f64(*minor_radius)));
-                eid_step.await
+                self.write_entity(eid_step, "ELLIPSE", &format!("'', #{placement}, {}, {})", fmt_f64(*major_radius), fmt_f64(*minor_radius)));
+                eid_step
             }
-            Curve3::Nurbs { knots, controls, weights } => self.write_nurbs_curve(knots, controls, weights).await,
+            Curve3::Nurbs { knots, controls, weights } => self.write_nurbs_curve(knots, controls, weights),
         };
         let edge_curve = self.next_id();
-        self.write_entity(edge_curve.await, "EDGE_CURVE", &format!("'', #{start_vp}, #{end_vp}, #{curve_id}, .T.)"));
-        self.edge_map.insert(key.await, edge_curve.await);
-        Ok(edge_curve.await)
+        self.write_entity(edge_curve, "EDGE_CURVE", &format!("'', #{start_vp}, #{end_vp}, #{curve_id}, .T.)"));
+        self.edge_map.insert(key, edge_curve);
+        Ok(edge_curve)
     }
 
-    async fn write_nurbs_curve(&mut self, knots: &KnotVector, controls: &[Pnt3], weights: &[f64]) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_nurbs_curve(&mut self, knots: &KnotVector, controls: &[Pnt3], weights: &[f64]) -> u64 {
         let cp_ids: Vec<u64> = controls.iter().map(|p| self.write_point(*p)).collect();
         let cp_refs: Vec<String> = cp_ids.iter().map(|id| format!("#{id}")).collect();
-        let (knot_mults, knot_vals) = compute_knot_multiplicities(&knots.knots).await;
+        let (knot_mults, knot_vals) = compute_knot_multiplicities(&knots.knots);
         let mults_str: Vec<String> = knot_mults.iter().map(ToString::to_string).collect();
         let vals_str: Vec<String> = knot_vals.iter().map(|v| fmt_f64(*v)).collect();
         let id = self.next_id();
@@ -222,68 +235,71 @@ impl StepWriteContext {
             vals_str.join(", ")
         );
         let _ = weights;
-        id.await
+        id
     }
 
-    async fn write_edge_loop(&mut self, body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<u64, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_edge_loop(&mut self, body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<u64, StepError> {
         let mut oriented_edge_ids = Vec::new();
         for coedge_id in body.loop_coedges(loop_id) {
-            let coedge = body.coedges.get(coedge_id).await.ok_or(StepError::Syntax("missing coedge".to_string()))?;
-            let edge_curve = self.write_edge_curve(body, coedge.edge).await?;
+            let coedge = body.coedges.get(coedge_id).ok_or(StepError::Syntax("missing coedge".to_string()))?;
+            let edge_curve = self.write_edge_curve(body, coedge.edge)?;
             let oriented_edge = self.next_id();
             let orient = if coedge.forward { ".T." } else { ".F." };
-            self.write_entity(oriented_edge.await, "ORIENTED_EDGE", &format!("'', *, *, #{edge_curve}, {orient})"));
+            self.write_entity(oriented_edge, "ORIENTED_EDGE", &format!("'', *, *, #{edge_curve}, {orient})"));
             oriented_edge_ids.push(oriented_edge);
         }
         let refs: Vec<String> = oriented_edge_ids.iter().map(|id| format!("#{id}")).collect();
         let step_loop = self.next_id();
-        self.write_entity(step_loop.await, "EDGE_LOOP", &format!("'', ({}))", refs.join(", ")));
-        Ok(step_loop.await)
+        self.write_entity(step_loop, "EDGE_LOOP", &format!("'', ({}))", refs.join(", ")));
+        Ok(step_loop)
     }
 
-    async fn write_surface(&mut self, body: &Body, surface_id: SurfaceId) -> Result<u64, StepError> {
-        let surface = body.surfaces.get(surface_id).await.ok_or(StepError::Syntax("missing surface".to_string()))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_surface(&mut self, body: &Body, surface_id: SurfaceId) -> Result<u64, StepError> {
+        let surface = body.surfaces.get(surface_id).ok_or(StepError::Syntax("missing surface".to_string()))?;
         Ok(match surface {
             Surface::Plane { frame } => {
                 let ref_dir = compute_ref_direction(frame.z);
-                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir.await);
+                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir);
                 let plane = self.next_id();
-                self.write_entity(plane.await, "PLANE", &format!("'', #{axis})"));
-                plane.await
+                self.write_entity(plane, "PLANE", &format!("'', #{axis})"));
+                plane
             }
             Surface::Cylinder { frame, radius } => {
                 let ref_dir = compute_ref_direction(frame.z);
-                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir.await);
+                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir);
                 let id = self.next_id();
-                self.write_entity(id.await, "CYLINDRICAL_SURFACE", &format!("'', #{axis}, {:.15E})", radius));
-                id.await
+                self.write_entity(id, "CYLINDRICAL_SURFACE", &format!("'', #{axis}, {:.15E})", radius));
+                id
             }
             Surface::Cone { frame, half_angle } => {
                 let ref_dir = compute_ref_direction(frame.z);
-                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir.await);
+                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir);
                 let id = self.next_id();
-                self.write_entity(id.await, "CONICAL_SURFACE", &format!("'', #{axis}, 0.0E0, {:.15E})", half_angle));
-                id.await
+                self.write_entity(id, "CONICAL_SURFACE", &format!("'', #{axis}, 0.0E0, {:.15E})", half_angle));
+                id
             }
             Surface::Sphere { frame, radius } => {
                 let ref_dir = compute_ref_direction(frame.z);
-                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir.await);
+                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir);
                 let id = self.next_id();
-                self.write_entity(id.await, "SPHERICAL_SURFACE", &format!("'', #{axis}, {:.15E})", radius));
-                id.await
+                self.write_entity(id, "SPHERICAL_SURFACE", &format!("'', #{axis}, {:.15E})", radius));
+                id
             }
             Surface::Torus { frame, major_radius, minor_radius } => {
                 let ref_dir = compute_ref_direction(frame.z);
-                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir.await);
+                let axis = self.write_axis2_placement(frame.origin, frame.z, ref_dir);
                 let id = self.next_id();
-                self.write_entity(id.await, "TOROIDAL_SURFACE", &format!("'', #{axis}, {:.15E}, {:.15E})", major_radius, minor_radius));
-                id.await
+                self.write_entity(id, "TOROIDAL_SURFACE", &format!("'', #{axis}, {:.15E}, {:.15E})", major_radius, minor_radius));
+                id
             }
-            Surface::Nurbs { u_knots, v_knots, controls, weights } => self.write_nurbs_surface(u_knots, v_knots, controls, weights).await?,
+            Surface::Nurbs { u_knots, v_knots, controls, weights } => self.write_nurbs_surface(u_knots, v_knots, controls, weights)?,
         })
     }
 
-    async fn write_nurbs_surface(&mut self, u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Result<u64, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_nurbs_surface(&mut self, u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Result<u64, StepError> {
         if controls.is_empty() {
             return Err(StepError::Syntax("NURBS surface has no control points".to_string()));
         }
@@ -293,8 +309,8 @@ impl StepWriteContext {
             let row_refs: Vec<String> = row_ids.iter().map(|id| format!("#{id}")).collect();
             cp_grid_refs.push(format!("({})", row_refs.join(", ")));
         }
-        let (u_mults, u_vals) = compute_knot_multiplicities(&u_knots.knots).await;
-        let (v_mults, v_vals) = compute_knot_multiplicities(&v_knots.knots).await;
+        let (u_mults, u_vals) = compute_knot_multiplicities(&u_knots.knots);
+        let (v_mults, v_vals) = compute_knot_multiplicities(&v_knots.knots);
         let u_mults_str: Vec<String> = u_mults.iter().map(ToString::to_string).collect();
         let u_vals_str: Vec<String> = u_vals.iter().map(|v| fmt_f64(*v)).collect();
         let v_mults_str: Vec<String> = v_mults.iter().map(ToString::to_string).collect();
@@ -313,53 +329,57 @@ impl StepWriteContext {
             v_vals_str.join(", ")
         );
         let _ = weights;
-        Ok(id.await)
+        Ok(id)
     }
 
-    async fn write_face(&mut self, body: &Body, face_id: FaceId) -> Result<u64, StepError> {
-        let face = body.faces.get(face_id).await.ok_or(StepError::Syntax("missing face".to_string()))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_face(&mut self, body: &Body, face_id: FaceId) -> Result<u64, StepError> {
+        let face = body.faces.get(face_id).ok_or(StepError::Syntax("missing face".to_string()))?;
         let mut bound_ids = Vec::new();
         if let Some(outer) = face.outer {
-            let outer_loop = self.write_edge_loop(body, outer).await?;
+            let outer_loop = self.write_edge_loop(body, outer)?;
             let outer_bound = self.next_id();
-            self.write_entity(outer_bound.await, "FACE_OUTER_BOUND", &format!("'', #{outer_loop}, .T.)"));
+            self.write_entity(outer_bound, "FACE_OUTER_BOUND", &format!("'', #{outer_loop}, .T.)"));
             bound_ids.push(outer_bound);
         }
         for &inner in &face.inners {
-            let inner_loop = self.write_edge_loop(body, inner).await?;
+            let inner_loop = self.write_edge_loop(body, inner)?;
             let inner_bound = self.next_id();
-            self.write_entity(inner_bound.await, "FACE_BOUND", &format!("'', #{inner_loop}, .T.)"));
+            self.write_entity(inner_bound, "FACE_BOUND", &format!("'', #{inner_loop}, .T.)"));
             bound_ids.push(inner_bound);
         }
-        let surface_id = self.write_surface(body, face.surface).await?;
+        let surface_id = self.write_surface(body, face.surface)?;
         let bound_refs: Vec<String> = bound_ids.iter().map(|id| format!("#{id}")).collect();
         let face_orient = if face.flipped { ".F." } else { ".T." };
         let advanced_face = self.next_id();
-        self.write_entity(advanced_face.await, "ADVANCED_FACE", &format!("'', ({}), #{surface_id}, {face_orient})", bound_refs.join(", ")));
-        Ok(advanced_face.await)
+        self.write_entity(advanced_face, "ADVANCED_FACE", &format!("'', ({}), #{surface_id}, {face_orient})", bound_refs.join(", ")));
+        Ok(advanced_face)
     }
 
-    async fn write_shell(&mut self, body: &Body, shell_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId) -> Result<u64, StepError> {
-        let shell = body.shells.get(shell_id).await.ok_or(StepError::Syntax("missing shell".to_string()))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_shell(&mut self, body: &Body, shell_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId) -> Result<u64, StepError> {
+        let shell = body.shells.get(shell_id).ok_or(StepError::Syntax("missing shell".to_string()))?;
         let mut face_step_ids = Vec::new();
         for &face_id in &shell.faces {
-            face_step_ids.push(self.write_face(body, face_id).await?);
+            face_step_ids.push(self.write_face(body, face_id)?);
         }
         let refs: Vec<String> = face_step_ids.iter().map(|id| format!("#{id}")).collect();
         let closed_shell = self.next_id();
-        self.write_entity(closed_shell.await, "CLOSED_SHELL", &format!("'', ({}))", refs.join(", ")));
-        Ok(closed_shell.await)
+        self.write_entity(closed_shell, "CLOSED_SHELL", &format!("'', ({}))", refs.join(", ")));
+        Ok(closed_shell)
     }
 
-    async fn write_solid(&mut self, body: &Body, solid_id: SolidId) -> Result<u64, StepError> {
-        let solid = body.solids.get(solid_id).await.ok_or(StepError::Syntax("missing solid".to_string()))?;
-        let shell = self.write_shell(body, solid.outer).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_solid(&mut self, body: &Body, solid_id: SolidId) -> Result<u64, StepError> {
+        let solid = body.solids.get(solid_id).ok_or(StepError::Syntax("missing solid".to_string()))?;
+        let shell = self.write_shell(body, solid.outer)?;
         let brep = self.next_id();
-        self.write_entity(brep.await, "MANIFOLD_SOLID_BREP", &format!("'', #{shell})"));
-        Ok(brep.await)
+        self.write_entity(brep, "MANIFOLD_SOLID_BREP", &format!("'', #{shell})"));
+        Ok(brep)
     }
 
-    async fn finish(self) -> String {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn finish(self) -> String {
         let mut out = String::new();
         let _ = writeln!(out, "ISO-10303-21;");
         let _ = writeln!(out, "HEADER;");
@@ -375,7 +395,8 @@ impl StepWriteContext {
     }
 }
 
-async fn fmt_f64(v: f64) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fmt_f64(v: f64) -> String {
     if v.abs() < 1e-15 {
         "0.".to_string()
     } else {
@@ -383,14 +404,16 @@ async fn fmt_f64(v: f64) -> String {
     }
 }
 
-async fn compute_ref_direction(normal: Vec3) -> Vec3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn compute_ref_direction(normal: Vec3) -> Vec3 {
     let ax = Vec3::X;
     let ay = Vec3::Y;
-    let candidate = if normal.dot(ax).await.abs() < 0.9 { ax } else { ay };
-    normal.cross(candidate).await.normalized().await.unwrap_or(ax)
+    let candidate = if normal.dot(ax).abs() < 0.9 { ax } else { ay };
+    normal.cross(candidate).normalized().unwrap_or(ax)
 }
 
-async fn compute_knot_multiplicities(knots: &[f64]) -> (Vec<u32>, Vec<f64>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn compute_knot_multiplicities(knots: &[f64]) -> (Vec<u32>, Vec<f64>) {
     if knots.is_empty() {
         return (Vec::new(), Vec::new());
     }
@@ -423,7 +446,8 @@ struct StepEntity {
     attrs: String,
 }
 
-async fn parse_step_entities(input: &str) -> Result<HashMap<u64, StepEntity>, StepError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_step_entities(input: &str) -> Result<HashMap<u64, StepEntity>, StepError> {
     let mut entities = HashMap::new();
     let data_start = input.find("DATA;").ok_or_else(|| StepError::Syntax("no DATA section found".to_string()))?;
     let data_end = input[data_start..].find("ENDSEC;").ok_or_else(|| StepError::Syntax("no ENDSEC after DATA".to_string()))?;
@@ -437,7 +461,7 @@ async fn parse_step_entities(input: &str) -> Result<HashMap<u64, StepEntity>, St
         if let Some(eq_pos) = stmt.find('=') {
             let id_part = stmt[..eq_pos].trim();
             let rest = stmt[eq_pos + 1..].trim();
-            if let Some(id) = parse_entity_id(id_part).await {
+            if let Some(id) = parse_entity_id(id_part) {
                 if let Some(paren_pos) = rest.find('(') {
                     let entity_type = rest[..paren_pos].trim().to_uppercase();
                     let attrs = rest[paren_pos + 1..].trim().to_string();
@@ -449,11 +473,13 @@ async fn parse_step_entities(input: &str) -> Result<HashMap<u64, StepEntity>, St
     Ok(entities)
 }
 
-async fn parse_entity_id(s: &str) -> Option<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_entity_id(s: &str) -> Option<u64> {
     s.trim().strip_prefix('#')?.parse().ok()
 }
 
-async fn parse_refs(attrs: &str) -> Vec<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_refs(attrs: &str) -> Vec<u64> {
     let mut refs = Vec::new();
     let bytes = attrs.as_bytes();
     let mut i = 0;
@@ -476,16 +502,18 @@ async fn parse_refs(attrs: &str) -> Vec<u64> {
     refs
 }
 
-async fn parse_list_refs(attrs: &str) -> Vec<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_list_refs(attrs: &str) -> Vec<u64> {
     if let Some(start) = attrs.find('(') {
         if let Some(end) = attrs[start..].find(')') {
-            return parse_refs(&attrs[start + 1..start + end]).await;
+            return parse_refs(&attrs[start + 1..start + end]);
         }
     }
     Vec::new()
 }
 
-async fn parse_floats(attrs: &str) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_floats(attrs: &str) -> Vec<f64> {
     let mut result = Vec::new();
     if let Some(start) = attrs.find('(') {
         if let Some(end) = attrs[start..].find(')') {
@@ -511,7 +539,8 @@ async fn parse_floats(attrs: &str) -> Vec<f64> {
     result
 }
 
-async fn parse_ints_in_parens(s: &str) -> Vec<u32> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_ints_in_parens(s: &str) -> Vec<u32> {
     let mut result = Vec::new();
     for part in s.split(',') {
         let trimmed = part.trim().trim_matches('(').trim_matches(')').trim();
@@ -522,7 +551,8 @@ async fn parse_ints_in_parens(s: &str) -> Vec<u32> {
     result
 }
 
-async fn expand_knots(mults: &[u32], vals: &[f64]) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_knots(mults: &[u32], vals: &[f64]) -> Vec<f64> {
     let mut knots = Vec::new();
     for (&m, &v) in mults.iter().zip(vals.iter()) {
         for _ in 0..m {
@@ -532,7 +562,8 @@ async fn expand_knots(mults: &[u32], vals: &[f64]) -> Vec<f64> {
     knots
 }
 
-async fn find_composite_bspline_attrs<'a>(attrs: &'a str, base_name: &str) -> Option<&'a str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_composite_bspline_attrs<'a>(attrs: &'a str, base_name: &str) -> Option<&'a str> {
     let with_knots = format!("{base_name}_WITH_KNOTS");
     if let Some(pos) = attrs.find(&with_knots) {
         return Some(&attrs[pos + with_knots.len()..]);
@@ -544,7 +575,8 @@ async fn find_composite_bspline_attrs<'a>(attrs: &'a str, base_name: &str) -> Op
     None
 }
 
-async fn parse_bspline_curve_attrs(attrs: &str) -> Option<(usize, Vec<u64>, Vec<u32>, Vec<f64>)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_bspline_curve_attrs(attrs: &str) -> Option<(usize, Vec<u64>, Vec<u32>, Vec<f64>)> {
     let mut tokens = Vec::new();
     let mut depth = 0i32;
     let mut current = String::new();
@@ -594,10 +626,11 @@ async fn parse_bspline_curve_attrs(attrs: &str) -> Option<(usize, Vec<u64>, Vec<
     if groups.len() < 3 {
         return None;
     }
-    Some((degree, parse_refs(&groups[0]).await, parse_ints_in_parens(&groups[1]).await, parse_floats(&groups[2]).await))
+    Some((degree, parse_refs(&groups[0]), parse_ints_in_parens(&groups[1]), parse_floats(&groups[2])))
 }
 
-async fn parse_nested_refs(s: &str) -> Vec<Vec<u64>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_nested_refs(s: &str) -> Vec<Vec<u64>> {
     let mut rows: Vec<Vec<u64>> = Vec::new();
     let mut depth = 0i32;
     let mut current = String::new();
@@ -615,13 +648,13 @@ async fn parse_nested_refs(s: &str) -> Vec<Vec<u64>> {
                 }
                 depth -= 1;
                 if depth == 1 && !current.is_empty() {
-                    rows.push(parse_refs(&current).await);
+                    rows.push(parse_refs(&current));
                     current.clear();
                 }
             }
             ',' if depth == 1 => {
                 if !current.is_empty() {
-                    rows.push(parse_refs(&current).await);
+                    rows.push(parse_refs(&current));
                     current.clear();
                 }
             }
@@ -636,7 +669,8 @@ async fn parse_nested_refs(s: &str) -> Vec<Vec<u64>> {
 }
 
 #[allow(clippy::type_complexity)]
-async fn parse_bspline_surface_attrs(attrs: &str) -> Option<(usize, usize, Vec<Vec<u64>>, Vec<u32>, Vec<u32>, Vec<f64>, Vec<f64>)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_bspline_surface_attrs(attrs: &str) -> Option<(usize, usize, Vec<Vec<u64>>, Vec<u32>, Vec<u32>, Vec<f64>, Vec<f64>)> {
     let mut tokens = Vec::new();
     let mut depth = 0i32;
     let mut current = String::new();
@@ -684,14 +718,15 @@ async fn parse_bspline_surface_attrs(attrs: &str) -> Option<(usize, usize, Vec<V
     if degrees.len() < 2 || groups.len() < 5 {
         return None;
     }
-    Some((degrees[0], degrees[1], parse_nested_refs(&groups[0]).await, parse_ints_in_parens(&groups[1]).await, parse_ints_in_parens(&groups[2]).await, parse_floats(&groups[3]).await, parse_floats(&groups[4]).await))
+    Some((degrees[0], degrees[1], parse_nested_refs(&groups[0]), parse_ints_in_parens(&groups[1]), parse_ints_in_parens(&groups[2]), parse_floats(&groups[3]), parse_floats(&groups[4])))
 }
 
 // #endregion 🔖️Parse
 
 // #region 🔖️Read
 
-async fn placeholder_face() -> FaceId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn placeholder_face() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
@@ -705,54 +740,59 @@ struct StepBuilder<'a> {
 }
 
 impl<'a> StepBuilder<'a> {
-    async fn new(body: &'a mut Body, entities: &'a HashMap<u64, StepEntity>, rec: &'a mut OpRecorder) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(body: &'a mut Body, entities: &'a HashMap<u64, StepEntity>, rec: &'a mut OpRecorder) -> Self {
         Self { body, entities, rec, vertex_cache: HashMap::new(), edge_cache: HashMap::new(), tol: Tol::DEFAULT }
     }
 
-    async fn build_all_solids(&mut self) -> Result<(), StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_all_solids(&mut self) -> Result<(), StepError> {
         let brep_ids: Vec<u64> = self.entities.iter().filter(|(_, e)| e.entity_type == "MANIFOLD_SOLID_BREP").map(|(&id, _)| id).collect();
         for brep_id in brep_ids {
-            self.build_solid(brep_id).await?;
+            self.build_solid(brep_id)?;
         }
         Ok(())
     }
 
-    async fn build_solid(&mut self, brep_id: u64) -> Result<(), StepError> {
-        let attrs = self.get_entity(brep_id).await?.attrs.clone();
-        let shell_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax(format!("MANIFOLD_SOLID_BREP #{brep_id} missing shell")))?;
-        let shell_id = self.build_shell(shell_ref).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_solid(&mut self, brep_id: u64) -> Result<(), StepError> {
+        let attrs = self.get_entity(brep_id)?.attrs.clone();
+        let shell_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax(format!("MANIFOLD_SOLID_BREP #{brep_id} missing shell")))?;
+        let shell_id = self.build_shell(shell_ref)?;
         add_solid(self.body, shell_id, vec![], self.rec);
         Ok(())
     }
 
-    async fn build_shell(&mut self, shell_ref: u64) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId, StepError> {
-        let attrs = self.get_entity(shell_ref).await?.attrs.clone();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_shell(&mut self, shell_ref: u64) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ShellId, StepError> {
+        let attrs = self.get_entity(shell_ref)?.attrs.clone();
         let face_refs = parse_list_refs(&attrs);
         let mut face_ids = Vec::new();
         for face_ref in face_refs {
-            face_ids.push(self.build_face(face_ref).await?);
+            face_ids.push(self.build_face(face_ref)?);
         }
-        Ok(add_shell(self.body, face_ids, self.rec).await)
+        Ok(add_shell(self.body, face_ids, self.rec))
     }
 
-    async fn build_face(&mut self, face_ref: u64) -> Result<FaceId, StepError> {
-        let attrs = self.get_entity(face_ref).await?.attrs.clone();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_face(&mut self, face_ref: u64) -> Result<FaceId, StepError> {
+        let attrs = self.get_entity(face_ref)?.attrs.clone();
         let orient_tail = attrs.trim_end_matches(')').trim();
         let face_reversed = orient_tail.ends_with(".F.") || orient_tail.ends_with(".FALSE.");
-        let all_refs = parse_refs(&attrs).await;
-        let list_refs = parse_list_refs(&attrs).await;
+        let all_refs = parse_refs(&attrs);
+        let list_refs = parse_list_refs(&attrs);
         let list_set: std::collections::HashSet<u64> = list_refs.iter().copied().collect();
         let surface_ref = all_refs.iter().rev().find(|r| !list_set.contains(r)).copied().ok_or(StepError::Syntax(format!("ADVANCED_FACE #{face_ref} missing surface")))?;
-        let surface_id = self.build_surface(surface_ref).await?;
+        let surface_id = self.build_surface(surface_ref)?;
         let mut outer_loop = None;
         let mut inner_loops = Vec::new();
         for &bound_ref in &list_refs {
-            let bound_entity = self.get_entity(bound_ref).await?;
+            let bound_entity = self.get_entity(bound_ref)?;
             let is_outer = bound_entity.entity_type == "FACE_OUTER_BOUND";
             let bound_attrs = bound_entity.attrs.clone();
-            let loop_ref = parse_refs(&bound_attrs).await.first().copied().ok_or(StepError::Syntax("face bound missing loop".to_string()))?;
-            let members = self.build_loop_members(loop_ref).await?;
-            let loop_id = make_loop(self.body, placeholder_face().await, &members);
+            let loop_ref = parse_refs(&bound_attrs).first().copied().ok_or(StepError::Syntax("face bound missing loop".to_string()))?;
+            let members = self.build_loop_members(loop_ref)?;
+            let loop_id = make_loop(self.body, placeholder_face(), &members);
             if is_outer && outer_loop.is_none() {
                 outer_loop = Some(loop_id);
             } else {
@@ -761,157 +801,164 @@ impl<'a> StepBuilder<'a> {
         }
         let outer = outer_loop.or_else(|| if inner_loops.is_empty() { None } else { Some(inner_loops.remove(0)) });
         let outer = outer.ok_or(StepError::Syntax(format!("ADVANCED_FACE #{face_ref} has no bounds")))?;
-        let face_id = add_face(self.body, surface_id, Some(outer.await), inner_loops.clone(), face_reversed, self.tol, self.rec);
-        self.body.loops.get_mut(outer.await).await.unwrap().face = face_id.await;
+        let face_id = add_face(self.body, surface_id, Some(outer), inner_loops.clone(), face_reversed, self.tol, self.rec);
+        self.body.loops.get_mut(outer).unwrap().face = face_id;
         for loop_id in inner_loops {
-            self.body.loops.get_mut(loop_id.await).await.unwrap().face = face_id.await;
+            self.body.loops.get_mut(loop_id).unwrap().face = face_id;
         }
-        Ok(face_id.await)
+        Ok(face_id)
     }
 
-    async fn build_loop_members(&mut self, loop_ref: u64) -> Result<Vec<(EdgeId, bool)>, StepError> {
-        let attrs = self.get_entity(loop_ref).await?.attrs.clone();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_loop_members(&mut self, loop_ref: u64) -> Result<Vec<(EdgeId, bool)>, StepError> {
+        let attrs = self.get_entity(loop_ref)?.attrs.clone();
         let oe_refs = parse_list_refs(&attrs);
         let mut members = Vec::new();
         for oe_ref in oe_refs {
-            members.push(self.build_oriented_edge(oe_ref).await?);
+            members.push(self.build_oriented_edge(oe_ref)?);
         }
         Ok(members)
     }
 
-    async fn build_oriented_edge(&mut self, oe_ref: u64) -> Result<(EdgeId, bool), StepError> {
-        let attrs = self.get_entity(oe_ref).await?.attrs.clone();
-        let refs = parse_refs(&attrs).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_oriented_edge(&mut self, oe_ref: u64) -> Result<(EdgeId, bool), StepError> {
+        let attrs = self.get_entity(oe_ref)?.attrs.clone();
+        let refs = parse_refs(&attrs);
         let forward = attrs.contains(".T.");
         let edge_curve_ref = refs.last().copied().ok_or(StepError::Syntax(format!("ORIENTED_EDGE #{oe_ref} missing edge curve")))?;
-        let edge_id = self.build_edge_curve(edge_curve_ref).await?;
+        let edge_id = self.build_edge_curve(edge_curve_ref)?;
         Ok((edge_id, forward))
     }
 
-    async fn build_edge_curve(&mut self, ec_ref: u64) -> Result<EdgeId, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_edge_curve(&mut self, ec_ref: u64) -> Result<EdgeId, StepError> {
         if let Some(&cached) = self.edge_cache.get(&ec_ref) {
             return Ok(cached);
         }
-        let attrs = self.get_entity(ec_ref).await?.attrs.clone();
-        let refs = parse_refs(&attrs).await;
+        let attrs = self.get_entity(ec_ref)?.attrs.clone();
+        let refs = parse_refs(&attrs);
         if refs.len() < 3 {
             return Err(StepError::Syntax(format!("EDGE_CURVE #{ec_ref} needs at least 3 references")));
         }
-        let v0 = self.build_vertex_point(refs[0]).await?;
-        let v1 = self.build_vertex_point(refs[1]).await?;
-        let curve_id = self.build_curve_geometry(refs[2], v0, v1).await?;
+        let v0 = self.build_vertex_point(refs[0])?;
+        let v1 = self.build_vertex_point(refs[1])?;
+        let curve_id = self.build_curve_geometry(refs[2], v0, v1)?;
         let edge_id = make_edge(self.body, curve_id, (0.0, 1.0), v0, v1, self.tol, self.rec);
-        self.edge_cache.insert(ec_ref, edge_id.await);
-        Ok(edge_id.await)
+        self.edge_cache.insert(ec_ref, edge_id);
+        Ok(edge_id)
     }
 
-    async fn build_curve_geometry(&mut self, curve_ref: u64, v0: VertexId, v1: VertexId) -> Result<Curve3Id, StepError> {
-        let entity = self.get_entity(curve_ref).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_curve_geometry(&mut self, curve_ref: u64, v0: VertexId, v1: VertexId) -> Result<Curve3Id, StepError> {
+        let entity = self.get_entity(curve_ref)?;
         let entity_type = entity.entity_type.clone();
         let attrs = entity.attrs.clone();
-        let p0 = self.body.vertices.get(v0).await.unwrap().position;
-        let p1 = self.body.vertices.get(v1).await.unwrap().position;
+        let p0 = self.body.vertices.get(v0).unwrap().position;
+        let p1 = self.body.vertices.get(v1).unwrap().position;
         let curve = match entity_type.as_str() {
             "LINE" => Curve3::Line { origin: p0, dir: p1 - p0 },
             "CIRCLE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("CIRCLE missing axis".to_string()))?;
-                let radius = parse_floats(&attrs).await.first().copied().ok_or(StepError::Syntax("CIRCLE missing radius".to_string()))?;
-                let (center, normal, u_axis) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(center, u_axis, normal).await.ok_or(StepError::Syntax("invalid circle frame".to_string()))?;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("CIRCLE missing axis".to_string()))?;
+                let radius = parse_floats(&attrs).first().copied().ok_or(StepError::Syntax("CIRCLE missing radius".to_string()))?;
+                let (center, normal, u_axis) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(center, u_axis, normal).ok_or(StepError::Syntax("invalid circle frame".to_string()))?;
                 Curve3::Circle { frame, radius }
             }
             "ELLIPSE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("ELLIPSE missing axis".to_string()))?;
-                let floats = parse_floats(&attrs).await;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("ELLIPSE missing axis".to_string()))?;
+                let floats = parse_floats(&attrs);
                 if floats.len() < 2 {
                     return Err(StepError::Syntax("ELLIPSE needs semi axes".to_string()));
                 }
-                let (center, normal, u_axis) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(center, u_axis, normal).await.ok_or(StepError::Syntax("invalid ellipse frame".to_string()))?;
+                let (center, normal, u_axis) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(center, u_axis, normal).ok_or(StepError::Syntax("invalid ellipse frame".to_string()))?;
                 Curve3::Ellipse { frame, major_radius: floats[0], minor_radius: floats[1] }
             }
-            "B_SPLINE_CURVE_WITH_KNOTS" => self.build_bspline_curve(curve_ref, &attrs).await?,
+            "B_SPLINE_CURVE_WITH_KNOTS" => self.build_bspline_curve(curve_ref, &attrs)?,
             _ if entity_type.is_empty() || attrs.contains("B_SPLINE_CURVE_WITH_KNOTS") => {
-                let bspline_attrs = find_composite_bspline_attrs(&attrs, "B_SPLINE_CURVE").await.ok_or_else(|| StepError::Unsupported(format!("composite curve #{curve_ref}")))?;
-                self.build_bspline_curve(curve_ref, bspline_attrs).await?
+                let bspline_attrs = find_composite_bspline_attrs(&attrs, "B_SPLINE_CURVE").ok_or_else(|| StepError::Unsupported(format!("composite curve #{curve_ref}")))?;
+                self.build_bspline_curve(curve_ref, bspline_attrs)?
             }
             other => return Err(StepError::Unsupported(other.to_string())),
         };
-        Ok(self.body.curves3.insert(curve).await)
+        Ok(self.body.curves3.insert(curve))
     }
 
-    async fn build_bspline_curve(&self, curve_ref: u64, attrs: &str) -> Result<Curve3, StepError> {
-        let (degree, cp_refs, mults, knot_vals) = parse_bspline_curve_attrs(attrs).await.ok_or_else(|| StepError::Syntax(format!("B_SPLINE_CURVE #{curve_ref} parse failed")))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_bspline_curve(&self, curve_ref: u64, attrs: &str) -> Result<Curve3, StepError> {
+        let (degree, cp_refs, mults, knot_vals) = parse_bspline_curve_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_CURVE #{curve_ref} parse failed")))?;
         let mut control_points = Vec::with_capacity(cp_refs.len());
         for &cp_ref in &cp_refs {
-            control_points.push(self.build_cartesian_point(cp_ref).await?);
+            control_points.push(self.build_cartesian_point(cp_ref)?);
         }
         let knots = expand_knots(&mults, &knot_vals);
         let n = control_points.len();
-        let knot_vec = KnotVector::new(knots.await, degree, n).await.ok_or(StepError::Syntax("invalid B-spline knots".to_string()))?;
+        let knot_vec = KnotVector::new(knots, degree, n).ok_or(StepError::Syntax("invalid B-spline knots".to_string()))?;
         let weights = vec![1.0; n];
         Ok(Curve3::Nurbs { knots: knot_vec, controls: control_points, weights })
     }
 
-    async fn build_surface(&mut self, surface_ref: u64) -> Result<SurfaceId, StepError> {
-        let entity = self.get_entity(surface_ref).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_surface(&mut self, surface_ref: u64) -> Result<SurfaceId, StepError> {
+        let entity = self.get_entity(surface_ref)?;
         let entity_type = entity.entity_type.clone();
         let attrs = entity.attrs.clone();
         let surface = match entity_type.as_str() {
             "PLANE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("PLANE missing axis".to_string()))?;
-                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(origin, ref_dir, axis).await.ok_or(StepError::Syntax("invalid plane frame".to_string()))?;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("PLANE missing axis".to_string()))?;
+                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(origin, ref_dir, axis).ok_or(StepError::Syntax("invalid plane frame".to_string()))?;
                 Surface::Plane { frame }
             }
             "CYLINDRICAL_SURFACE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("CYLINDRICAL_SURFACE missing axis".to_string()))?;
-                let radius = parse_floats(&attrs).await.first().copied().ok_or(StepError::Syntax("CYLINDRICAL_SURFACE missing radius".to_string()))?;
-                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(origin, ref_dir, axis).await.ok_or(StepError::Syntax("invalid cylinder frame".to_string()))?;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("CYLINDRICAL_SURFACE missing axis".to_string()))?;
+                let radius = parse_floats(&attrs).first().copied().ok_or(StepError::Syntax("CYLINDRICAL_SURFACE missing radius".to_string()))?;
+                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(origin, ref_dir, axis).ok_or(StepError::Syntax("invalid cylinder frame".to_string()))?;
                 Surface::Cylinder { frame, radius }
             }
             "CONICAL_SURFACE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("CONICAL_SURFACE missing axis".to_string()))?;
-                let half_angle = parse_floats(&attrs).await.last().copied().ok_or(StepError::Syntax("CONICAL_SURFACE missing half_angle".to_string()))?;
-                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(origin, ref_dir, axis).await.ok_or(StepError::Syntax("invalid cone frame".to_string()))?;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("CONICAL_SURFACE missing axis".to_string()))?;
+                let half_angle = parse_floats(&attrs).last().copied().ok_or(StepError::Syntax("CONICAL_SURFACE missing half_angle".to_string()))?;
+                let (origin, axis, ref_dir) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(origin, ref_dir, axis).ok_or(StepError::Syntax("invalid cone frame".to_string()))?;
                 Surface::Cone { frame, half_angle }
             }
             "SPHERICAL_SURFACE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("SPHERICAL_SURFACE missing axis".to_string()))?;
-                let radius = parse_floats(&attrs).await.first().copied().ok_or(StepError::Syntax("SPHERICAL_SURFACE missing radius".to_string()))?;
-                let (center, axis, ref_dir) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(center, ref_dir, axis).await.ok_or(StepError::Syntax("invalid sphere frame".to_string()))?;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("SPHERICAL_SURFACE missing axis".to_string()))?;
+                let radius = parse_floats(&attrs).first().copied().ok_or(StepError::Syntax("SPHERICAL_SURFACE missing radius".to_string()))?;
+                let (center, axis, ref_dir) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(center, ref_dir, axis).ok_or(StepError::Syntax("invalid sphere frame".to_string()))?;
                 Surface::Sphere { frame, radius }
             }
             "TOROIDAL_SURFACE" => {
-                let axis_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax("TOROIDAL_SURFACE missing axis".to_string()))?;
-                let floats = parse_floats(&attrs).await;
+                let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("TOROIDAL_SURFACE missing axis".to_string()))?;
+                let floats = parse_floats(&attrs);
                 if floats.len() < 2 {
                     return Err(StepError::Syntax("TOROIDAL_SURFACE missing radii".to_string()));
                 }
-                let (center, axis, ref_dir) = self.build_axis2_placement(axis_ref).await?;
-                let frame = Frame3::from_x_z(center, ref_dir, axis).await.ok_or(StepError::Syntax("invalid torus frame".to_string()))?;
+                let (center, axis, ref_dir) = self.build_axis2_placement(axis_ref)?;
+                let frame = Frame3::from_x_z(center, ref_dir, axis).ok_or(StepError::Syntax("invalid torus frame".to_string()))?;
                 Surface::Torus { frame, major_radius: floats[0], minor_radius: floats[1] }
             }
-            "B_SPLINE_SURFACE_WITH_KNOTS" | "BOUNDED_SURFACE" | "B_SPLINE_SURFACE" => self.build_bspline_surface(surface_ref, &attrs).await?,
+            "B_SPLINE_SURFACE_WITH_KNOTS" | "BOUNDED_SURFACE" | "B_SPLINE_SURFACE" => self.build_bspline_surface(surface_ref, &attrs)?,
             _ if entity_type.is_empty() || attrs.contains("B_SPLINE_SURFACE_WITH_KNOTS") => {
-                let bspline_attrs = find_composite_bspline_attrs(&attrs, "B_SPLINE_SURFACE").await.ok_or_else(|| StepError::Unsupported(format!("composite surface #{surface_ref}")))?;
-                self.build_bspline_surface(surface_ref, bspline_attrs).await?
+                let bspline_attrs = find_composite_bspline_attrs(&attrs, "B_SPLINE_SURFACE").ok_or_else(|| StepError::Unsupported(format!("composite surface #{surface_ref}")))?;
+                self.build_bspline_surface(surface_ref, bspline_attrs)?
             }
             other => return Err(StepError::Unsupported(other.to_string())),
         };
-        Ok(self.body.surfaces.insert(surface).await)
+        Ok(self.body.surfaces.insert(surface))
     }
 
-    async fn build_bspline_surface(&self, surface_ref: u64, attrs: &str) -> Result<Surface, StepError> {
-        let (degree_u, degree_v, cp_grid_refs, u_mults, v_mults, u_knots, v_knots) = parse_bspline_surface_attrs(attrs).await.ok_or_else(|| StepError::Syntax(format!("B_SPLINE_SURFACE #{surface_ref} parse failed")))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_bspline_surface(&self, surface_ref: u64, attrs: &str) -> Result<Surface, StepError> {
+        let (degree_u, degree_v, cp_grid_refs, u_mults, v_mults, u_knots, v_knots) = parse_bspline_surface_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_SURFACE #{surface_ref} parse failed")))?;
         let mut cp_grid: Vec<Vec<Pnt3>> = Vec::new();
         for row_refs in &cp_grid_refs {
             let mut row: Vec<Pnt3> = Vec::new();
             for &cp_ref in row_refs {
-                row.push(self.build_cartesian_point(cp_ref).await?);
+                row.push(self.build_cartesian_point(cp_ref)?);
             }
             cp_grid.push(row);
         }
@@ -919,50 +966,55 @@ impl<'a> StepBuilder<'a> {
         let knots_v = expand_knots(&v_mults, &v_knots);
         let n_rows = cp_grid.len();
         let n_cols = cp_grid.first().map_or(0, Vec::len);
-        let u_kv = KnotVector::new(knots_u.await, degree_u, n_cols).await.ok_or(StepError::Syntax("invalid surface u knots".to_string()))?;
-        let v_kv = KnotVector::new(knots_v.await, degree_v, n_rows).await.ok_or(StepError::Syntax("invalid surface v knots".to_string()))?;
+        let u_kv = KnotVector::new(knots_u, degree_u, n_cols).ok_or(StepError::Syntax("invalid surface u knots".to_string()))?;
+        let v_kv = KnotVector::new(knots_v, degree_v, n_rows).ok_or(StepError::Syntax("invalid surface v knots".to_string()))?;
         let weights = vec![vec![1.0; n_cols]; n_rows];
         Ok(Surface::Nurbs { u_knots: u_kv, v_knots: v_kv, controls: cp_grid, weights })
     }
 
-    async fn build_vertex_point(&mut self, vp_ref: u64) -> Result<VertexId, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_vertex_point(&mut self, vp_ref: u64) -> Result<VertexId, StepError> {
         if let Some(&cached) = self.vertex_cache.get(&vp_ref) {
             return Ok(cached);
         }
-        let attrs = self.get_entity(vp_ref).await?.attrs.clone();
-        let cp_ref = parse_refs(&attrs).await.first().copied().ok_or(StepError::Syntax(format!("VERTEX_POINT #{vp_ref} missing point")))?;
-        let point = self.build_cartesian_point(cp_ref).await?;
+        let attrs = self.get_entity(vp_ref)?.attrs.clone();
+        let cp_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax(format!("VERTEX_POINT #{vp_ref} missing point")))?;
+        let point = self.build_cartesian_point(cp_ref)?;
         let vid = make_vertex(self.body, point, self.tol, self.rec);
-        self.vertex_cache.insert(vp_ref, vid.await);
-        Ok(vid.await)
+        self.vertex_cache.insert(vp_ref, vid);
+        Ok(vid)
     }
 
-    async fn build_cartesian_point(&self, cp_ref: u64) -> Result<Pnt3, StepError> {
-        let coords = parse_floats(&self.get_entity(cp_ref).await?.attrs).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_cartesian_point(&self, cp_ref: u64) -> Result<Pnt3, StepError> {
+        let coords = parse_floats(&self.get_entity(cp_ref)?.attrs);
         if coords.len() < 3 {
             return Err(StepError::Syntax(format!("CARTESIAN_POINT #{cp_ref} needs 3 coordinates")));
         }
-        Ok(Pnt3::new(coords[0], coords[1], coords[2]).await)
+        Ok(Pnt3::new(coords[0], coords[1], coords[2]))
     }
 
-    async fn build_direction(&self, dir_ref: u64) -> Result<Vec3, StepError> {
-        let coords = parse_floats(&self.get_entity(dir_ref).await?.attrs).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_direction(&self, dir_ref: u64) -> Result<Vec3, StepError> {
+        let coords = parse_floats(&self.get_entity(dir_ref)?.attrs);
         if coords.len() < 3 {
             return Err(StepError::Syntax(format!("DIRECTION #{dir_ref} needs 3 components")));
         }
-        Ok(Vec3::new(coords[0], coords[1], coords[2]).await)
+        Ok(Vec3::new(coords[0], coords[1], coords[2]))
     }
 
-    async fn build_axis2_placement(&self, axis_ref: u64) -> Result<(Pnt3, Vec3, Vec3), StepError> {
-        let attrs = self.get_entity(axis_ref).await?.attrs.clone();
-        let refs = parse_refs(&attrs).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_axis2_placement(&self, axis_ref: u64) -> Result<(Pnt3, Vec3, Vec3), StepError> {
+        let attrs = self.get_entity(axis_ref)?.attrs.clone();
+        let refs = parse_refs(&attrs);
         if refs.len() < 3 {
             return Err(StepError::Syntax(format!("AXIS2_PLACEMENT_3D #{axis_ref} needs 3 references")));
         }
-        Ok((self.build_cartesian_point(refs[0]).await?, self.build_direction(refs[1]).await?, self.build_direction(refs[2]).await?))
+        Ok((self.build_cartesian_point(refs[0])?, self.build_direction(refs[1])?, self.build_direction(refs[2])?))
     }
 
-    async fn get_entity(&self, id: u64) -> Result<&StepEntity, StepError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn get_entity(&self, id: u64) -> Result<&StepEntity, StepError> {
         self.entities.get(&id).ok_or(StepError::UnresolvedReference(id))
     }
 }

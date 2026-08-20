@@ -14,7 +14,7 @@ use crate::wgpu::chrome::{chrome_item_bg, push_control_border, push_icon, ICON_T
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget};
 
-pub(crate) async fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)));
     let content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {

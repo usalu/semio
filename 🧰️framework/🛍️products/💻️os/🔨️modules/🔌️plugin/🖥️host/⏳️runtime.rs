@@ -268,6 +268,15 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         // `path: String` + `node: UiNode` has no agreed conversion yet.
         ui_patches: Vec::new(),
         effects,
+        // 👥️ terra-shard-lane: same wire-shape mismatch as `component.rs`'s `execute_turn` —
+        // `turn.presence` is real guest-emitted data (WIT `presence-update{peer: pack}`, a
+        // pack-encoded `📡️replication/📡️wire::PresencePeer`, the collaboration-ROSTER shape), but
+        // `KernelTurnResult.presence: Vec<ui_contract::PresenceUpdate>` wants the render-plane,
+        // `(surface, node_key)`-addressed channel — a DIFFERENT shape by that field's own doc
+        // comment (`🎠️kernel/🦀️component.rs:918-923`), and no `PresencePeer → PresenceUpdate`
+        // conversion exists anywhere in this repo yet. See `📓️terra-shard-lane-report.md`'s
+        // presence-wire-mismatch finding.
+        presence: Vec::new(),
         next_wake: turn.next_wake,
         status: super::wit_turn_status_to_kernel(turn.status).await,
         fuel_used: turn.fuel_used,

@@ -24,7 +24,7 @@ pub struct TxtInference {
 
 impl protocol::Inference<TxtSnapshot> for TxtInference {
     async fn infer(snapshot: &TxtSnapshot) -> Self {
-        Self { outline: TxtOutline::compute(snapshot).await }
+        Self { outline: TxtOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::txt::standards::v_utf_8::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `txt_artifact_schema_descriptor`'s registration.
-pub async fn txt_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn txt_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.txt.inference",
         inference: schema::FacetLeaves {

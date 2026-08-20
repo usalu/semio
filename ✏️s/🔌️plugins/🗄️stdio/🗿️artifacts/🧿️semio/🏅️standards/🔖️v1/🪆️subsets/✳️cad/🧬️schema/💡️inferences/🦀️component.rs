@@ -25,7 +25,7 @@ pub struct SemioCadInference {
 
 impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
     async fn infer(snapshot: &SemioCadSnapshot) -> Self {
-        Self { bounds: compute_semio_cad_bounds(snapshot).await }
+        Self { bounds: compute_semio_cad_bounds(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::cad::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_cad_artifact_schema_descriptor`'s registration.
-pub async fn semio_cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.cad.inference",
         inference: schema::FacetLeaves {

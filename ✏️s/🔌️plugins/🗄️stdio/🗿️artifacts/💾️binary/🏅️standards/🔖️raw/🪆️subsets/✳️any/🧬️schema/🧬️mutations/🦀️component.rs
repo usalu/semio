@@ -42,14 +42,15 @@ pub enum BinaryMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source.
-pub async fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
-    let outcome = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
+    let outcome = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -61,7 +62,7 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
     async fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BinaryMutation::NoMutation => BinaryDiff::default(),
-            BinaryMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            BinaryMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BinaryMutation::Splice { offset, remove_len, insert } => BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: *remove_len, insert: insert.clone() }] },
             BinaryMutation::AppendBytes { data } => BinaryDiff { splices: vec![ByteSplice { offset: base.bytes.len(), remove_len: 0, insert: data.clone() }] },
             BinaryMutation::TruncateAt { offset } => {
@@ -143,7 +144,8 @@ impl OpBinary for BinaryMutation {
 /// below AND the new `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests in
 /// `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<BinaryMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<BinaryMutation> {
     vec![
         BinaryMutation::NoMutation,
         BinaryMutation::SetSnapshot { snapshot: BinarySnapshot { bytes: vec![9, 9], ..Default::default() } },
@@ -160,7 +162,8 @@ mod tests {
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    pub(crate) async fn base() -> BinarySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn base() -> BinarySnapshot {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }
     }
 

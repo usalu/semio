@@ -6,13 +6,15 @@ use graph_core::{EdgeId, EdgeRef, GraphView, NodeId};
 
 // #region 🔖️Shared
 /// 🔗️ Picks the first (lowest `EdgeId`) edge connecting `u` to `v`; safe to `expect` because every caller only invokes this for a pair already reported by `out_neighbors`/`neighbors`, which guarantees at least one connecting edge exists.
-async fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
     graph.edges_between(u, v).next().expect("out_neighbors/neighbors only report pairs with a connecting edge")
 }
 
 /// 🔌️ Every edge incident to `node`: out-edges only for directed views (matching successor-direction traversal), all touching edges for undirected views. Parallel edges (multigraphs) each appear once per their `EdgeId`.
-async fn incident_edges<G: GraphView>(graph: &G, node: NodeId) -> Vec<EdgeRef> {
-    if graph.is_directed().await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn incident_edges<G: GraphView>(graph: &G, node: NodeId) -> Vec<EdgeRef> {
+    if graph.is_directed() {
         graph.out_neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
     } else {
         graph.neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
@@ -34,7 +36,7 @@ pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(g
     while let Some(node) = queue.pop_front() {
         for nbr in neighbor_fn(graph, node) {
             if visited.insert(nbr) {
-                result.push(any_edge(graph, node, nbr).await);
+                result.push(any_edge(graph, node, nbr));
                 queue.push_back(nbr);
             }
         }
@@ -43,17 +45,20 @@ pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(g
 }
 
 /// 🔁️ Breadth-first tree edges from `source`, in discovery order (NetworkX `bfs_edges`).
-pub async fn bfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect() }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect() })
 }
 
 /// 🌳️ Breadth-first spanning tree edges from `source` (NetworkX `bfs_tree`); NetworkX returns a tree graph, this crate returns the same edge list as `bfs_edges` — callers build a graph from it if a materialized tree is needed.
-pub async fn bfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    bfs_edges(graph, source).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+    bfs_edges(graph, source)
 }
 
 /// 🧱️ Multi-source breadth-first layering: `layers[0]` is the (deduplicated, existing) `sources`, `layers[k]` is every node first reached at distance `k` (NetworkX `bfs_layers`).
-pub async fn bfs_layers<G: GraphView>(graph: &G, sources: &[NodeId]) -> Vec<Vec<NodeId>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_layers<G: GraphView>(graph: &G, sources: &[NodeId]) -> Vec<Vec<NodeId>> {
     let mut layers = Vec::new();
     let mut visited: BTreeSet<NodeId> = BTreeSet::new();
     let mut frontier: BTreeSet<NodeId> = sources.iter().copied().filter(|&n| graph.contains_node(n)).collect();
@@ -81,7 +86,8 @@ pub async fn bfs_layers<G: GraphView>(graph: &G, sources: &[NodeId]) -> Vec<Vec<
 }
 
 /// ⬅️ Maps every non-source node reached from `source` to its breadth-first parent (NetworkX `bfs_predecessors`).
-pub async fn bfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, NodeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, NodeId> {
     let mut preds = BTreeMap::new();
     for edge in bfs_edges(graph, source) {
         preds.insert(edge.v, edge.u);
@@ -90,7 +96,8 @@ pub async fn bfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeM
 }
 
 /// ➡️ Maps every node with breadth-first tree children to the list of those children, in discovery order (NetworkX `bfs_successors`).
-pub async fn bfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, Vec<NodeId>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, Vec<NodeId>> {
     let mut succs: BTreeMap<NodeId, Vec<NodeId>> = BTreeMap::new();
     for edge in bfs_edges(graph, source) {
         succs.entry(edge.u).or_default().push(edge.v);
@@ -99,7 +106,8 @@ pub async fn bfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap
 }
 
 /// 📏️ Every node whose shortest-path distance from `source` is exactly `distance` (NetworkX `descendants_at_distance`); `distance == 0` yields `{source}`, and an unreachable `distance` yields the empty set.
-pub async fn descendants_at_distance<G: GraphView>(graph: &G, source: NodeId, distance: usize) -> BTreeSet<NodeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descendants_at_distance<G: GraphView>(graph: &G, source: NodeId, distance: usize) -> BTreeSet<NodeId> {
     let mut current: BTreeSet<NodeId> = BTreeSet::new();
     if !graph.contains_node(source) {
         return current;
@@ -126,7 +134,8 @@ pub async fn descendants_at_distance<G: GraphView>(graph: &G, source: NodeId, di
 
 // #region 🔖️Dfs
 /// 🪆️ Depth-first tree edges from `source`, iterative (explicit stack, no recursion) so traversal depth is bounded only by heap memory (NetworkX `dfs_edges`).
-pub async fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -141,7 +150,7 @@ pub async fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> 
             let nbr = stack[i].1[stack[i].2];
             stack[i].2 += 1;
             if visited.insert(nbr) {
-                result.push(any_edge(graph, node, nbr).await);
+                result.push(any_edge(graph, node, nbr));
                 stack.push((nbr, graph.out_neighbors(nbr).collect(), 0));
             }
         } else {
@@ -152,12 +161,14 @@ pub async fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> 
 }
 
 /// 🌲️ Depth-first spanning tree edges from `source` (NetworkX `dfs_tree`); same simplification as `bfs_tree` — returns the edge list, not a materialized tree graph.
-pub async fn dfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    dfs_edges(graph, source).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+    dfs_edges(graph, source)
 }
 
 /// 🔼️ Nodes in depth-first preorder (parent emitted before its subtree) starting at `source` (NetworkX `dfs_preorder_nodes`).
-pub async fn dfs_preorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_preorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeId> {
     if !graph.contains_node(source) {
         return Vec::new();
     }
@@ -167,7 +178,8 @@ pub async fn dfs_preorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<
 }
 
 /// 🔽️ Nodes in depth-first postorder (a node emitted only after its whole subtree finishes) starting at `source` (NetworkX `dfs_postorder_nodes`).
-pub async fn dfs_postorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_postorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeId> {
     let mut postorder = Vec::new();
     if !graph.contains_node(source) {
         return postorder;
@@ -193,7 +205,8 @@ pub async fn dfs_postorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec
 }
 
 /// 🏷️ Every edge encountered during a depth-first walk from `source`, labeled `true` for a tree (forward-discovery) edge and `false` for a non-tree edge (a back/cross/forward edge to an already-visited node) — NetworkX `dfs_labeled_edges` additionally emits synthetic start/finish markers per node; this crate omits those and keeps strictly one label per physically traversed edge. On undirected views the trivial mirror edge back to a node's own parent is not re-emitted (it is the same physical edge already labeled `true` on the way in); every other repeat, including self-loops and true back-edges in a cycle, is labeled `false`.
-pub async fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(EdgeRef, bool)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(EdgeRef, bool)> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -211,10 +224,10 @@ pub async fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(
             stack[i].2 += 1;
             let edge = any_edge(graph, node, nbr);
             if visited.insert(nbr) {
-                result.push((edge.await, true));
+                result.push((edge, true));
                 stack.push((nbr, graph.out_neighbors(nbr).collect(), 0, Some(node)));
-            } else if directed.await || Some(nbr) != parent {
-                result.push((edge.await, false));
+            } else if directed || Some(nbr) != parent {
+                result.push((edge, false));
             }
         } else {
             stack.pop();
@@ -224,7 +237,8 @@ pub async fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(
 }
 
 /// ⏪️ Maps every non-source node reached from `source` to its depth-first parent (NetworkX `dfs_predecessors`).
-pub async fn dfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, NodeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, NodeId> {
     let mut preds = BTreeMap::new();
     for edge in dfs_edges(graph, source) {
         preds.insert(edge.v, edge.u);
@@ -233,7 +247,8 @@ pub async fn dfs_predecessors<G: GraphView>(graph: &G, source: NodeId) -> BTreeM
 }
 
 /// ⏩️ Maps every node with depth-first tree children to the list of those children, in discovery order (NetworkX `dfs_successors`).
-pub async fn dfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, Vec<NodeId>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap<NodeId, Vec<NodeId>> {
     let mut succs: BTreeMap<NodeId, Vec<NodeId>> = BTreeMap::new();
     for edge in dfs_edges(graph, source) {
         succs.entry(edge.u).or_default().push(edge.v);
@@ -244,7 +259,8 @@ pub async fn dfs_successors<G: GraphView>(graph: &G, source: NodeId) -> BTreeMap
 
 // #region 🔖️EdgeTraversal
 /// 🕸️ Visits every edge reachable from `source` in breadth-first order, each edge exactly once by `EdgeId` — unlike `bfs_edges`, parallel edges in a multigraph are all visited, not just the first between a pair (NetworkX `edge_bfs`).
-pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -253,7 +269,7 @@ pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut visited_edges: BTreeSet<EdgeId> = BTreeSet::new();
     visited_nodes.insert(source);
     let mut queue: VecDeque<(NodeId, Vec<EdgeRef>, usize)> = VecDeque::new();
-    queue.push_back((source, incident_edges(graph, source).await, 0));
+    queue.push_back((source, incident_edges(graph, source), 0));
     while !queue.is_empty() {
         let node = queue[0].0;
         if queue[0].2 < queue[0].1.len() {
@@ -263,7 +279,7 @@ pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
                 result.push(edge);
                 let other = if edge.u == node { edge.v } else { edge.u };
                 if visited_nodes.insert(other) {
-                    queue.push_back((other, incident_edges(graph, other).await, 0));
+                    queue.push_back((other, incident_edges(graph, other), 0));
                 }
             }
         } else {
@@ -274,7 +290,8 @@ pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
 }
 
 /// 🕳️ Visits every edge reachable from `source` in depth-first order, each edge exactly once by `EdgeId` (NetworkX `edge_dfs`); same multigraph-aware semantics as `edge_bfs`, but LIFO exploration order.
-pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -282,7 +299,7 @@ pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut visited_nodes: BTreeSet<NodeId> = BTreeSet::new();
     let mut visited_edges: BTreeSet<EdgeId> = BTreeSet::new();
     visited_nodes.insert(source);
-    let mut stack: Vec<(NodeId, Vec<EdgeRef>, usize)> = vec![(source, incident_edges(graph, source).await, 0)];
+    let mut stack: Vec<(NodeId, Vec<EdgeRef>, usize)> = vec![(source, incident_edges(graph, source), 0)];
     while !stack.is_empty() {
         let i = stack.len() - 1;
         let node = stack[i].0;
@@ -293,7 +310,7 @@ pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
                 result.push(edge);
                 let other = if edge.u == node { edge.v } else { edge.u };
                 if visited_nodes.insert(other) {
-                    stack.push((other, incident_edges(graph, other).await, 0));
+                    stack.push((other, incident_edges(graph, other), 0));
                 }
             }
         } else {
@@ -306,7 +323,8 @@ pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
 
 // #region 🔖️Beam
 /// 📡️ Breadth-first traversal that keeps only the `width` highest-`value` nodes of each newly discovered layer before expanding further (NetworkX `bfs_beam_edges` instead prunes per-node successor lists to the top `width` by value; this crate prunes per-layer across the whole frontier, which is the semantics specified for this crate — documented deviation).
-pub async fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usize, value: impl Fn(NodeId) -> f64) -> Vec<EdgeRef> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usize, value: impl Fn(NodeId) -> f64) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -334,7 +352,7 @@ pub async fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usiz
         let mut next_frontier = Vec::new();
         for child in chosen {
             let parent = discovered[&child];
-            result.push(any_edge(graph, parent, child).await);
+            result.push(any_edge(graph, parent, child));
             visited.insert(child);
             next_frontier.push(child);
         }
@@ -351,7 +369,8 @@ mod tests {
     use graph_core::{Directed, Normal, Ported, Storage, Undirected};
 
     // #subregion Fixtures
-    async fn chain() -> (Storage<Normal, Directed>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn chain() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
         let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
         g.add_edge(nodes[0], nodes[1]);
@@ -360,7 +379,8 @@ mod tests {
         (g, nodes)
     }
 
-    async fn tree() -> (Storage<Normal, Directed>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn tree() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
         let nodes: Vec<NodeId> = (0..6).map(|_| g.add_node()).collect();
         g.add_edge(nodes[0], nodes[1]);
@@ -371,7 +391,8 @@ mod tests {
         (g, nodes)
     }
 
-    async fn cycle() -> (Storage<Normal, Directed>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn cycle() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
         let nodes: Vec<NodeId> = (0..3).map(|_| g.add_node()).collect();
         g.add_edge(nodes[0], nodes[1]);
@@ -380,7 +401,8 @@ mod tests {
         (g, nodes)
     }
 
-    async fn disconnected() -> (Storage<Normal, Undirected>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn disconnected() -> (Storage<Normal, Undirected>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Undirected>::new();
         let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
         g.add_edge(nodes[0], nodes[1]);
@@ -388,7 +410,8 @@ mod tests {
         (g, nodes)
     }
 
-    async fn self_loop() -> (Storage<Normal, Directed>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn self_loop() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
         let nodes: Vec<NodeId> = (0..2).map(|_| g.add_node()).collect();
         g.add_edge(nodes[0], nodes[0]);
@@ -396,7 +419,8 @@ mod tests {
         (g, nodes)
     }
 
-    async fn multigraph() -> (Storage<Ported, Directed>, Vec<NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn multigraph() -> (Storage<Ported, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Ported, Directed>::new();
         let n0 = g.add_node();
         let n1 = g.add_node();

@@ -49,18 +49,21 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn fixture() -> SemioObjectSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioObjectSnapshot {
         demo_object_snapshot()
     }
 
-    async fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
         store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } }
     }
 
     /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     /// stale pre-operation `base` — same fix `✳️text`'s corrected `round_trip` helper established
     /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
-    async fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

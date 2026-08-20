@@ -24,8 +24,9 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::binary::create_binary_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
@@ -33,7 +34,8 @@ pub async fn definition() -> WindowKindDefinition {
 /// ✏️ Real `BinarySnapshot -> UiNode`: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, editable (`read_only: false`), plus a trailing `#`-prefixed byte-count comment
 /// (never parsed back — informational only).
-pub async fn render(document: &BinarySnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &BinarySnapshot) -> UiNode {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
@@ -42,7 +44,7 @@ pub async fn render(document: &BinarySnapshot) -> UiNode {
     } else {
         format!("{hex}\n# total bytes: {total}")
     };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: false }).await
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: false })
 }
 //#endregion 🔖️Render
 

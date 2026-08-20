@@ -45,12 +45,12 @@ pub use crate::os_spr::wire::{
 //#region 🔖️Compile
 /// 🎬️ Ops text -> `.spr` binary, the bidirectional law `protocol_cli compile`/`decompile` exercise.
 pub async fn compile_ops(ops: &str, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
-    encode_history(&parse_ops_text(ops).await?, options).await
+    encode_history(&parse_ops_text(ops)?, options).await
 }
 
 /// 🎬️ `.spr` binary -> ops text, the inverse of `compile_ops`.
 pub async fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, ProtocolError> {
-    print_ops_text(&decode_history(bytes, options).await?).await
+    print_ops_text(&decode_history(bytes, options).await?)
 }
 //#endregion 🔖️Compile
 
@@ -254,13 +254,13 @@ mod tests {
             composition: None,
             conflicts: Vec::new(),
         };
-        let ops_text = print_ops_text(&log).await.unwrap();
+        let ops_text = print_ops_text(&log).unwrap();
 
         let compiled = compile_ops(&ops_text, &EncodeOptions::default()).await.unwrap();
         let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).await.unwrap();
 
-        assert_eq!(parse_ops_text(&decompiled).await.unwrap(), parse_ops_text(&ops_text).await.unwrap());
-        assert_eq!(parse_ops_text(&decompiled).await.unwrap().cursor, log.cursor);
+        assert_eq!(parse_ops_text(&decompiled).unwrap(), parse_ops_text(&ops_text).unwrap());
+        assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
     }
 
     #[semio_framework_async_macros::async_test]

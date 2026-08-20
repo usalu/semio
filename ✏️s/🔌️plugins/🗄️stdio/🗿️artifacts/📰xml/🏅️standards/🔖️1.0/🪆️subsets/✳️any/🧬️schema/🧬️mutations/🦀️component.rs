@@ -19,14 +19,16 @@ pub struct XmlNodePath(pub Vec<usize>);
 
 impl XmlNodePath {
     /// 🌳 The empty path -- addresses the document root.
-    pub async fn root() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn root() -> Self {
         Self(Vec::new())
     }
 
     /// 🔎️ Walks `self` from `root`, returning the addressed node if it exists and every
     /// intermediate segment is itself an `Element` (any other shape or an out-of-range index is a
     /// graceful `None`, never a panic).
-    pub async fn resolve<'a>(&self, root: Option<&'a XmlNode>) -> Option<&'a XmlNode> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn resolve<'a>(&self, root: Option<&'a XmlNode>) -> Option<&'a XmlNode> {
         let mut current = root?;
         for &index in &self.0 {
             let XmlNode::Element { children, .. } = current else { return None };
@@ -95,14 +97,15 @@ pub enum XmlMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`
 /// -- the diff is the single semantics source, never a separate imperative apply path.
-pub async fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
-    let outcome = Mutation::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -114,18 +117,18 @@ impl Mutation<XmlSnapshot> for XmlMutation {
     async fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             XmlMutation::NoMutation => XmlDiff::default(),
-            XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             XmlMutation::SetDeclaration { declaration } => XmlDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None },
             XmlMutation::SetDoctype { doctype } => XmlDiff { prolog: None, declaration: None, doctype: Some(doctype.clone()), root: None },
             XmlMutation::InsertElement { path, index, node } => diff_at_path(
                 &path.0,
                 XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlChildAdded { index: *index, item: node.clone() }] }) }),
-            ).await,
+            ),
             XmlMutation::RemoveElement { path, index } => {
-                diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) })).await
+                diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }))
             }
             XmlMutation::SetAttribute { path, name, value } => {
-                let target = path.resolve(base.doc.root.as_ref()).await;
+                let target = path.resolve(base.doc.root.as_ref());
                 let existing = target.and_then(|n| match n {
                     XmlNode::Element { attrs, .. } => attrs.iter().find(|a| &a.name == name),
                     _ => None,
@@ -142,9 +145,9 @@ impl Mutation<XmlSnapshot> for XmlMutation {
                     }
                     (None, None) => XmlAttributesDiff::default(),
                 };
-                diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attrs_diff), children: None })).await
+                diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attrs_diff), children: None }))
             }
-            XmlMutation::SetText { path, text } => diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }).await,
+            XmlMutation::SetText { path, text } => diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }),
         }).await
     }
 
@@ -160,7 +163,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
             XmlMutation::RemoveElement { path, index } => {
                 let parent = path.resolve(base.doc.root.as_ref());
                 let node = parent
-                    .await.and_then(|n| match n {
+                    .and_then(|n| match n {
                         XmlNode::Element { children, .. } => children.get(*index).cloned(),
                         _ => None,
                     })
@@ -168,7 +171,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
                 vec![XmlMutation::InsertElement { path: path.clone(), index: *index, node }]
             }
             XmlMutation::SetAttribute { path, name, .. } => {
-                let target = path.resolve(base.doc.root.as_ref()).await;
+                let target = path.resolve(base.doc.root.as_ref());
                 let prior = target.and_then(|n| match n {
                     XmlNode::Element { attrs, .. } => attrs.iter().find(|a| &a.name == name).map(|a| a.value.clone()),
                     _ => None,
@@ -178,7 +181,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
             XmlMutation::SetText { path, .. } => {
                 let prior = path
                     .resolve(base.doc.root.as_ref())
-                    .await.and_then(|n| match n {
+                    .and_then(|n| match n {
                         XmlNode::Text { text } => Some(text.clone()),
                         _ => None,
                     })
@@ -191,8 +194,9 @@ impl Mutation<XmlSnapshot> for XmlMutation {
 
 /// 🧭️ `path`-addressing convenience over `crate::artifacts::xml::schema::diff::diff_at_path`
 /// (which takes a bare `&[usize]` so the diff module never needs to depend on this one).
-async fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
-    crate::artifacts::xml::schema::diff::diff_at_path(path, leaf).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
+    crate::artifacts::xml::schema::diff::diff_at_path(path, leaf)
 }
 //#endregion 🔖️MutationTrait
 
@@ -206,25 +210,30 @@ async fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 /// (no `DslVariants` scaffolding available since nothing here derives it). Replaces the previous
 /// `serde_json`-based placeholder, which satisfied the trait's LAWS but was not a genuine
 /// handcrafted grammar (the recon report explicitly warns against copying `WriterDiff`'s shortcut).
-async fn enc_node_path(p: &XmlNodePath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_path(p: &XmlNodePath) -> String {
     format!("[{}]", p.0.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
-async fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<usize>, String>>().map(XmlNodePath)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_path(s: &str) -> Result<XmlNodePath, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<usize>, String>>().map(XmlNodePath)
 }
-pub(crate) async fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_snapshot(s: &XmlSnapshot) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.schema), encode_option(&s.doc.root, enc_xml_node), encode_option(&s.doc.doctype, enc_doctype), encode_option(&s.doc.declaration, enc_declaration), enc_prolog(&s.doc.prolog),)
 }
-pub(crate) async fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_snapshot(s: &str) -> Result<XmlSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, root, doctype, declaration, prolog] = parts.as_slice() else { return Err(format!("xml snapshot: expected 5 fields, got {}", parts.len())) };
     Ok(XmlSnapshot {
-        schema: dec_str(schema).await?,
-        doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: decode_option(root, dec_xml_node).await?, doctype: decode_option(doctype, dec_doctype).await?, declaration: decode_option(declaration, dec_declaration).await?, prolog: dec_prolog(prolog).await? },
+        schema: dec_str(schema)?,
+        doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)? },
     })
 }
 
-async fn print_xml_mutation(m: &XmlMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_xml_mutation(m: &XmlMutation) -> String {
     match m {
         XmlMutation::NoMutation => "no-mutation".to_string(),
         XmlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_xml_snapshot(snapshot)),
@@ -236,7 +245,8 @@ async fn print_xml_mutation(m: &XmlMutation) -> String {
         XmlMutation::SetText { path, text } => format!("set-text path={} text={}", enc_node_path(path), enc_str(text)),
     }
 }
-async fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
     if line == "no-mutation" {
         return Ok(XmlMutation::NoMutation);
     }
@@ -245,23 +255,23 @@ async fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("xml mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(XmlMutation::SetSnapshot { snapshot: dec_xml_snapshot(arg("snapshot")?).await? }),
-        "set-declaration" => Ok(XmlMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration).await? }),
-        "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_doctype).await? }),
-        "insert-element" => Ok(XmlMutation::InsertElement { path: dec_node_path(arg("path")?).await?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?).await? }),
-        "remove-element" => Ok(XmlMutation::RemoveElement { path: dec_node_path(arg("path")?).await?, index: usize_arg("index")? }),
-        "set-attribute" => Ok(XmlMutation::SetAttribute { path: dec_node_path(arg("path")?).await?, name: dec_str(arg("name")?).await?, value: decode_option(arg("value")?, dec_str).await? }),
-        "set-text" => Ok(XmlMutation::SetText { path: dec_node_path(arg("path")?).await?, text: dec_str(arg("text")?).await? }),
+        "set-snapshot" => Ok(XmlMutation::SetSnapshot { snapshot: dec_xml_snapshot(arg("snapshot")?)? }),
+        "set-declaration" => Ok(XmlMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration)? }),
+        "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_doctype)? }),
+        "insert-element" => Ok(XmlMutation::InsertElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
+        "remove-element" => Ok(XmlMutation::RemoveElement { path: dec_node_path(arg("path")?)?, index: usize_arg("index")? }),
+        "set-attribute" => Ok(XmlMutation::SetAttribute { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)?, value: decode_option(arg("value")?, dec_str)? }),
+        "set-text" => Ok(XmlMutation::SetText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
         other => Err(format!("xml mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for XmlMutation {
     async fn print_op(&self) -> String {
-        print_xml_mutation(self).await
+        print_xml_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_xml_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_xml_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -274,21 +284,24 @@ impl OpText for XmlMutation {
 /// `pub(crate)` to this artifact).
 use crate::artifacts::xml::schema::diff::{dec_declaration_bin, dec_prolog_bin, dec_xml_node_bin, enc_declaration_bin, enc_prolog_bin, enc_xml_node_bin, read_str_lp, write_str_lp};
 
-async fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.0.len() as u64);
     for index in &p.0 {
         store::pack_rt::write_varint_u64(out, *index as u64);
     }
 }
-async fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        path.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        path.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
     Ok(XmlNodePath(path))
 }
-pub(crate) async fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(if s.doc.root.is_some() { 1 } else { 0 });
     if let Some(root) = &s.doc.root {
@@ -304,12 +317,13 @@ pub(crate) async fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
     }
     enc_prolog_bin(&s.doc.prolog, out);
 }
-pub(crate) async fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let root = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader).await?) } else { None };
-    let doctype = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader).await?) } else { None };
-    let declaration = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader).await?) } else { None };
-    let prolog = dec_prolog_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
+    let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
+    let prolog = dec_prolog_bin(reader)?;
     Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -333,7 +347,7 @@ impl protocol::OpBinary for XmlMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             XmlMutation::NoMutation => {}
-            XmlMutation::SetSnapshot { snapshot } => enc_xml_snapshot_bin(snapshot, &mut out).await,
+            XmlMutation::SetSnapshot { snapshot } => enc_xml_snapshot_bin(snapshot, &mut out),
             XmlMutation::SetDeclaration { declaration } => {
                 out.push(if declaration.is_some() { 1 } else { 0 });
                 if let Some(declaration) = declaration {
@@ -379,40 +393,40 @@ impl protocol::OpBinary for XmlMutation {
         match tag {
             0 => Ok(XmlMutation::NoMutation),
             1 => {
-                let snapshot = dec_xml_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_xml_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XmlMutation::SetSnapshot { snapshot })
             }
             2 => {
                 let has = reader.read_u8().await.map_err(|e| malformed("op declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).await.map_err(|e| malformed("op declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetDeclaration { declaration })
             }
             3 => {
                 let has = reader.read_u8().await.map_err(|e| malformed("op doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).await.map_err(|e| malformed("op doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetDoctype { doctype })
             }
             4 => {
-                let path = dec_node_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let node = dec_xml_node_bin(&mut reader).await.map_err(|e| malformed("op node", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XmlMutation::InsertElement { path, index, node })
             }
             5 => {
-                let path = dec_node_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(XmlMutation::RemoveElement { path, index })
             }
             6 => {
-                let path = dec_node_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let has = reader.read_u8().await.map_err(|e| malformed("op value presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let value = if has != 0 { Some(read_str_lp(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetAttribute { path, name, value })
             }
             7 => {
-                let path = dec_node_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let text = read_str_lp(&mut reader).await.map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XmlMutation::SetText { path, text })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -428,7 +442,8 @@ impl protocol::OpBinary for XmlMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
 /// adding here once.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<XmlMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
     let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(r#"<root a="1"><child x="0"/></root>"#).unwrap();

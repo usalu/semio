@@ -63,7 +63,8 @@ pub mod derived_composition {
     /// function, two call sites, matching pdf/a's `check_pdf_a_conformance` precedent). None of these
     /// are hard compose-failures (audio has no PDF/A-style conformance gate) — every finding is
     /// advisory, surfaced as a real `Diagnostic` rather than silently dropped.
-    pub async fn check_semio_audio_invariants(snapshot: &SemioAudioSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_semio_audio_invariants(snapshot: &SemioAudioSnapshot) -> Vec<Diagnostic> {
         let mut diagnostics = Vec::new();
         if snapshot.sample_rate == 0 {
             diagnostics.push(warning("stdio.semio_audio.zero-sample-rate", "sample_rate is 0 -- no real audio can play back at this rate".to_string()));
@@ -84,7 +85,8 @@ pub mod derived_composition {
         diagnostics
     }
 
-    async fn warning(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn warning(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: dsl::FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
     //#endregion 🔖️Invariants
@@ -103,7 +105,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_semio_audio_invariants(&snapshot).await,
+                Some(snapshot) => check_semio_audio_invariants(&snapshot),
                 None => vec![Diagnostic {
                     code: dsl::FaultCode::new("stdio.semio_audio.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -117,7 +119,8 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioAudioValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -127,26 +130,29 @@ pub mod derived_composition {
     /// document-codec id, repo-wide unique per the ticket's static policy check, distinct from every
     /// other artifact's own document schema string), and `SubsetValidator`. Called from this
     /// artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioAudioSnapshot, crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
             crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(bridge_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(bridge_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.audio.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor());
     }
 
     /// 🌉️ audio↔mp3 / audio↔wav bridge entries (W4) -- forward + reverse rows per pair, giving all 4
     /// IoKeys per pair per the master plan's io architecture note.
-    async fn bridge_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioAudioFromMp3>(), serializer_entry_of::<SemioAudioToMp3>(), deserializer_entry_of::<SemioAudioFromWav>(), serializer_entry_of::<SemioAudioToWav>()]).as_slice()
     }

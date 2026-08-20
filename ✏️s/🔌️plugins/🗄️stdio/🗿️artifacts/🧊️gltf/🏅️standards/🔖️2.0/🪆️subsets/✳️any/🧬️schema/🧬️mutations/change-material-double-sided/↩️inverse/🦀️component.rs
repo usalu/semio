@@ -11,10 +11,12 @@ pub struct GltfChangeMaterialDoubleSidedInverse {
     pub touched_paths: Vec<String>,
 }
 impl GltfChangeMaterialDoubleSidedInverse {
-    pub async fn expected_touched_paths(&self) -> Vec<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn expected_touched_paths(&self) -> Vec<String> {
         vec![format!("document/materials/{}/doubleSided", self.material)]
     }
-    pub async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
         if self.touched_paths != self.expected_touched_paths() {
             return Err(GltfChangeMaterialDoubleSidedRejection { code: "gltf.mutation.invalid-touched-paths".into(), path: "inverse/touchedPaths".into(), detail: "touched paths must equal the concrete material double-sided path".into() });
         }
@@ -34,8 +36,9 @@ impl GltfChangeMaterialDoubleSidedInverse {
         Ok(())
     }
 }
-pub async fn reconstruct(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedInverse, GltfChangeMaterialDoubleSidedRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn reconstruct(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedInverse, GltfChangeMaterialDoubleSidedRejection> {
+    validate(payload, base)?;
     Ok(GltfChangeMaterialDoubleSidedInverse {
         material: payload.material,
         expected_double_sided: payload.double_sided,

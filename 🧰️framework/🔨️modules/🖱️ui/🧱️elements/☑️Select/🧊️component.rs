@@ -14,7 +14,7 @@ use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::theme::Level;
 
-pub(crate) async fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem], placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem], placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let open = *ctx.open_selects.get(id).unwrap_or(&false);
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = if hovered { ctx.theme.button_hover } else { ctx.theme.input_bg };
@@ -30,7 +30,7 @@ pub(crate) async fn render_select<E: Clone>(id: &str, value: &str, items: &[Sele
     }
 }
 
-pub(crate) async fn render_select_menu<E: Clone>(id: &str, value: &str, items: &[SelectItem], bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_select_menu<E: Clone>(id: &str, value: &str, items: &[SelectItem], bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let item_h = ctx.theme.control_height;
     let menu_h = items.len() as f32 * item_h + 4.0;
     let menu = crate::wgpu::geometry::Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);

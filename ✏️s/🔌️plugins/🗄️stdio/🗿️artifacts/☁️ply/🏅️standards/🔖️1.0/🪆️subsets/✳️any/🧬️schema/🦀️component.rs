@@ -34,17 +34,20 @@ impl Default for PlyArtifact {
 
 impl PlyArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> PlySnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> PlySnapshot {
         PlySnapshot { schema: self.schema.clone(), format: self.format, comments: self.comments.clone(), elements: self.elements.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: PlySnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: PlySnapshot) -> Self {
         Self { schema: snapshot.schema, format: snapshot.format, comments: snapshot.comments, elements: snapshot.elements }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: PlySnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: PlySnapshot) {
         self.schema = snapshot.schema;
         self.format = snapshot.format;
         self.comments = snapshot.comments;
@@ -55,7 +58,8 @@ impl PlyArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.ply`.
-pub async fn ply_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ply_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ply",
         artifact: schema::FacetLeaves {
@@ -120,7 +124,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ply::schema::mutations::apply_ply_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -222,7 +226,8 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_ply_snapshot() -> PlySnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_ply_snapshot() -> PlySnapshot {
     PlySnapshot::default()
 }
 
@@ -237,7 +242,8 @@ pub async fn empty_ply_snapshot() -> PlySnapshot {
 /// DSL/text facet's own format-normalization would silently overwrite it. The Pack facet (which
 /// DOES respect `self.format`) is exercised against genuine BINARY bytes separately, by
 /// `protocol_walk_law` calling `encode_ply_with_format` directly with a non-ascii format.
-pub async fn demo_ply_snapshot() -> PlySnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_ply_snapshot() -> PlySnapshot {
     use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyRow, PlyScalarType, PlyValue};
     PlySnapshot {
         schema: crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA.into(),

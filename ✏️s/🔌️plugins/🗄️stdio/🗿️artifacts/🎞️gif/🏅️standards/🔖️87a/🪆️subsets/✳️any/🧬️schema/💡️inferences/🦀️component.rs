@@ -25,7 +25,7 @@ pub struct GifInference {
 
 impl protocol::Inference<GifSnapshot> for GifInference {
     async fn infer(snapshot: &GifSnapshot) -> Self {
-        Self { dimensions: compute_gif_dimensions(snapshot).await }
+        Self { dimensions: compute_gif_dimensions(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gif::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside 87a's own artifact schema descriptor registration.
-pub async fn gif_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gif_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.gif.inference",
         inference: schema::FacetLeaves {

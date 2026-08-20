@@ -40,17 +40,20 @@ impl Default for DeflateArtifact {
 
 impl DeflateArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> DeflateSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> DeflateSnapshot {
         DeflateSnapshot { schema: self.schema.clone(), compression_method: self.compression_method, window_bits: self.window_bits, compression_level_hint: self.compression_level_hint, dict_id: self.dict_id, payload: self.payload.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: DeflateSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: DeflateSnapshot) -> Self {
         Self { schema: snapshot.schema, compression_method: snapshot.compression_method, window_bits: snapshot.window_bits, compression_level_hint: snapshot.compression_level_hint, dict_id: snapshot.dict_id, payload: snapshot.payload }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: DeflateSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: DeflateSnapshot) {
         self.schema = snapshot.schema;
         self.compression_method = snapshot.compression_method;
         self.window_bits = snapshot.window_bits;
@@ -66,7 +69,8 @@ impl DeflateArtifact {
 /// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
 /// artifact struct.
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_deflate_snapshot() -> DeflateSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_deflate_snapshot() -> DeflateSnapshot {
     DeflateSnapshot::default()
 }
 
@@ -77,7 +81,8 @@ pub async fn empty_deflate_snapshot() -> DeflateSnapshot {
 /// `🎒️example.pack.semio` (all three are literally this snapshot's `print_dsl`/
 /// `encode_deflate_snapshot`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️component.rs`).
-pub async fn demo_deflate_snapshot() -> DeflateSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_deflate_snapshot() -> DeflateSnapshot {
     DeflateSnapshot {
         schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
         compression_method: 8,
@@ -91,7 +96,8 @@ pub async fn demo_deflate_snapshot() -> DeflateSnapshot {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.deflate`.
-pub async fn deflate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn deflate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.deflate",
         artifact: schema::FacetLeaves {
@@ -156,7 +162,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::deflate::schema::mutations::apply_deflate_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DeflateDiff as protocol::MutationDiff<DeflateSnapshot>>::apply(&diff, &self.snapshot).await?;

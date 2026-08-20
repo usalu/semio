@@ -65,10 +65,11 @@ pub enum SemioDrawingMutation {
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
 /// (consumed by `../🦀️component.rs`'s `SemioDrawingBuilderConstruction::mutate`).
-pub async fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
     use protocol::Mutation;
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -76,7 +77,8 @@ pub async fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, m
 /// 🌱 One representative value per variant — single source of truth for `🚪️io/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` AND this file's own round-trip tests.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
@@ -122,7 +124,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn fixture() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
             canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
@@ -146,7 +149,8 @@ mod tests {
     /// 🔧️ Diffs/inverses each step against the CURRENT (evolving) state, never the stale
     /// pre-operation `base` — the din4108 harness's own documented bug, deliberately NOT copied
     /// here (this ticket's binding instruction).
-    async fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

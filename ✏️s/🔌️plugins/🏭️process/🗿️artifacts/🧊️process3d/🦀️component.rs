@@ -106,7 +106,7 @@ pub enum MeasureRecipe {
 }
 
 impl MeasureRecipe {
-    pub async fn measure_kind(&self) -> MeasureKind {
+    pub fn measure_kind(&self) -> MeasureKind {
         match self {
             MeasureRecipe::DiscCut { .. } | MeasureRecipe::BladeCut { .. } | MeasureRecipe::PocketCut { .. } => MeasureKind::Cut,
             MeasureRecipe::BoreDrill { .. } => MeasureKind::Drill,
@@ -118,13 +118,13 @@ impl MeasureRecipe {
 /// 🌉️ Hand `dsl::DslField` impl — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
 /// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
 impl dsl::DslField for MeasureRecipe {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Statements(<MeasureRecipe as dsl::DslVariants>::variants())
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Statements(vec![<MeasureRecipe as dsl::DslVariants>::to_named_record(self)])
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Statements(items) if items.len() == 1 => <MeasureRecipe as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
             other => Err(format!("expected exactly 1 tagged recipe value, found {other:?}")),
@@ -166,7 +166,7 @@ pub struct WorkshopMachine {
 }
 
 impl Identified<String> for WorkshopMachine {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -184,7 +184,7 @@ pub struct WorkshopMachinePatch {
 }
 
 impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
-    async fn apply_patch(&mut self, patch: &WorkshopMachinePatch) {
+    fn apply_patch(&mut self, patch: &WorkshopMachinePatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -196,7 +196,7 @@ impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<WorkshopMachinePatch> {
+    fn diff_patch(&self, other: &Self) -> Option<WorkshopMachinePatch> {
         let patch = WorkshopMachinePatch {
             label: (self.label != other.label).then(|| other.label.clone()),
             icon_id: (self.icon_id != other.icon_id).then(|| other.icon_id.clone()),
@@ -224,7 +224,7 @@ impl Default for Workshop {
 /// sizes `ProcessMeasure` used before capabilities existed — pure data with no catalog dependency, so
 /// every document (including ones deserialized without a `workshop` field) always has a working
 /// workshop and the utility bar's click-to-place cut/drill/attach never dead-ends.
-pub async fn generic_machines() -> Vec<WorkshopMachine> {
+pub fn generic_machines() -> Vec<WorkshopMachine> {
     vec![
         WorkshopMachine {
             id: "saw".into(),
@@ -282,12 +282,16 @@ pub async fn generic_machines() -> Vec<WorkshopMachine> {
 /// (`crate::editor::process3d::ContributedMachineCatalog`) — closed into `MachineCatalogs` below
 /// (O1: dyn dispatch is banned from trait-method return position; R11: closed implementor set ⇒
 /// `dyn_enum_close!`, never a box).
+// 🚫️async: E1 pure — every implementor (5 in `schema`, `editor`'s `ContributedMachineCatalog`, plus
+// each `process-extension-*` crate's local catalog) is a zero-suspension struct-literal/field
+// accessor; every caller (`editor::installed_catalogs`/`catalog_machine`, each extension's `bundle()`)
+// already consumes these unawaited — see R9.
 #[dyn_enum]
 pub trait MachineCatalog {
-    async fn catalog_id(&self) -> &'static str;
-    async fn label(&self) -> &'static str;
-    async fn icon_id(&self) -> &'static str;
-    async fn machines(&self) -> Vec<WorkshopMachine>;
+    fn catalog_id(&self) -> &'static str;
+    fn label(&self) -> &'static str;
+    fn icon_id(&self) -> &'static str;
+    fn machines(&self) -> Vec<WorkshopMachine>;
 }
 
 /// 🗃️ The closed set of `MachineCatalog` implementors. Closed HERE, in the same module as `#[dyn_enum]`
@@ -314,11 +318,11 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🔖️Workshop
 
 //#region 🔖️Document
-async fn default_axis_z() -> [f64; 3] {
+fn default_axis_z() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
-async fn default_true() -> bool {
+fn default_true() -> bool {
     true
 }
 
@@ -435,7 +439,7 @@ pub enum ProcessMeasure {
 }
 
 impl ProcessMeasure {
-    pub async fn kind_slug(&self) -> &'static str {
+    pub fn kind_slug(&self) -> &'static str {
         match self {
             ProcessMeasure::Cut { .. } => "cut",
             ProcessMeasure::Drill { .. } => "drill",
@@ -443,7 +447,7 @@ impl ProcessMeasure {
         }
     }
 
-    pub async fn pose(&self) -> &Pose {
+    pub fn pose(&self) -> &Pose {
         match self {
             ProcessMeasure::Cut { pose, .. } | ProcessMeasure::Drill { pose, .. } | ProcessMeasure::Attach { pose, .. } => pose,
         }
@@ -465,7 +469,7 @@ pub struct ProcessStep {
 }
 
 impl Identified<String> for ProcessStep {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -486,7 +490,7 @@ pub struct ProcessStepPatch {
 }
 
 impl Patchable<ProcessStepPatch> for ProcessStep {
-    async fn apply_patch(&mut self, patch: &ProcessStepPatch) {
+    fn apply_patch(&mut self, patch: &ProcessStepPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -501,7 +505,7 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<ProcessStepPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<ProcessStepPatch> {
         let patch = ProcessStepPatch {
             label: (self.label != other.label).then(|| other.label.clone()),
             enabled: (self.enabled != other.enabled).then_some(other.enabled),
@@ -538,7 +542,7 @@ pub struct ProcessWorkingScene {
 /// tessellate/import that here, so it mints an honest EMPTY-topology placeholder rather than
 /// fabricating fake geometry; the doc comment on `SolidSpec`'s old `ImportedMesh`/`ImportedSolid`
 /// variants already flagged this as kernel-session-resolved, never persisted-content-resolved.
-pub async fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapshot {
+pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapshot {
     match solid {
         WorkingSolid::Box { width, depth, height } => brep_snapshot_for_box(*width, *depth, *height),
         WorkingSolid::Cylinder { radius, height } => brep_snapshot_for_cylinder(*radius, *height),
@@ -547,17 +551,17 @@ pub async fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepS
     }
 }
 
-async fn empty_brep_snapshot() -> SemioBrepSnapshot {
+fn empty_brep_snapshot() -> SemioBrepSnapshot {
     SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new() }
 }
 
-async fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 {
+fn point3(p: [f64; 3]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 {
     semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
 }
 
 /// 📦️ Corner-at-local-origin box, spanning `[0,w]×[0,d]×[0,h]` — 8 vertices, 12 straight edges, 6
 /// planar faces, 1 shell, 1 solid.
-async fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapshot {
+fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapshot {
     let (w, d, h) = (width, depth, height);
     let corners = [[0.0, 0.0, 0.0], [w, 0.0, 0.0], [w, d, 0.0], [0.0, d, 0.0], [0.0, 0.0, h], [w, 0.0, h], [w, d, h], [0.0, d, h]];
     let vertices: Vec<BrepVertex> = corners.iter().enumerate().map(|(i, c)| BrepVertex { id: format!("v{i}"), point: point3(*c) }).collect();
@@ -610,7 +614,7 @@ async fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrep
 /// face (untrimmed — its loop has no bounding edges, since the lateral surface is naturally closed
 /// around the axis and only bounded top/bottom by the shared circular edges via the loop's implicit
 /// parametric domain, matching the same "loop may be empty" convention the sphere face uses).
-async fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
+fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
     let (r, h) = (radius, height);
     let vertices = vec![BrepVertex { id: "v0".into(), point: point3([r, 0.0, 0.0]) }, BrepVertex { id: "v1".into(), point: point3([r, 0.0, h]) }];
     let edges = vec![
@@ -635,7 +639,7 @@ async fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapsh
 /// 🔮️ Sphere centered at local origin — one closed, untrimmed analytic `BrepSurface::Sphere` face
 /// (no boundary curves at all: zero vertices/edges, one loop with zero edges, matching the shared
 /// "a `BrepLoop` with no edges means the whole surface" convention).
-async fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
+fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
     let loops = vec![BrepLoop { id: "l0".into(), edges: Vec::new() }];
     let faces = vec![BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Sphere { center: point3([0.0, 0.0, 0.0]), radius }, orientation: true }];
     let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }] }];
@@ -649,7 +653,7 @@ async fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
 /// documented read-side gap for its per-pane object lists. Callers that only need SOME extent
 /// (rendering/bounds) should read `stock_bounding_box`, which works directly off the brep's own
 /// vertex list instead of trying to recover a `WorkingSolid`.
-pub async fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSolid {
+pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSolid {
     WorkingSolid::default()
 }
 
@@ -657,7 +661,7 @@ pub async fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> Work
 /// (mirrors `📐️cad`'s `cad_model_child_handle`/`💠️lowpoly`'s `mesh_child_handle` — same
 /// `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
 /// mint the same handle.
-pub async fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
+pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
@@ -676,7 +680,7 @@ pub async fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store
 /// naming its entry in `Process3dSnapshot::tool_solids` (minted alongside by the caller — see
 /// `process_working_scene_to_snapshot`), since a `FlowParam` value is a plain string, never a child
 /// handle itself.
-pub async fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_child_id: Option<&str>) -> FlowNode {
+pub fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_child_id: Option<&str>) -> FlowNode {
     let mut params = vec![FlowParam { key: "enabled".into(), value: step.enabled.to_string() }];
     if let Some(origin) = &step.origin {
         params.push(FlowParam { key: "originMachineId".into(), value: origin.machine_id.clone() });
@@ -709,7 +713,7 @@ pub async fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_
 /// (`working_solid_from_brep_snapshot`'s own doc comment — a `toolChildId` param names WHICH child
 /// holds the resolved geometry, but resolving that handle to real content needs a `LinkResolver`
 /// this ticket doesn't add).
-pub async fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
+pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
     let param = |key: &str| node.params.iter().find(|p| p.key == key).map(|p| p.value.as_str());
     let f = |key: &str| -> f64 { param(key).and_then(|v| v.parse().ok()).unwrap_or(0.0) };
     let enabled = param("enabled").map(|v| v == "true").unwrap_or(true);
@@ -727,7 +731,7 @@ pub async fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
 }
 
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
-pub async fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
+pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
@@ -742,7 +746,7 @@ pub async fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactCh
 /// `flow_node_from_process_step`) plus a linear sequence edge between consecutive steps (this
 /// plugin's timeline has no branching, so a simple chain is an honest, lossless topology — not an
 /// approximation of a richer graph the old `Vec<ProcessStep>` never had either).
-pub async fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std::collections::BTreeMap<String, String>) -> SemioFlowSnapshot {
+pub fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std::collections::BTreeMap<String, String>) -> SemioFlowSnapshot {
     let nodes: Vec<FlowNode> = steps.iter().enumerate().map(|(i, step)| flow_node_from_process_step(step, i, tool_child_ids.get(&step.id).map(|s| s.as_str()))).collect();
     let edges: Vec<FlowEdge> = steps
         .windows(2)
@@ -754,7 +758,7 @@ pub async fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std
 /// 🌉️ READ direction: node order in `SemioFlowSnapshot.nodes` IS the step order (matches
 /// `flow_snapshot_for_steps`'s construction — the `position.x` synthetic layout is display-only,
 /// never re-derived from).
-pub async fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<ProcessStep> {
+pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<ProcessStep> {
     flow.nodes.iter().map(process_step_from_flow_node).collect()
 }
 //#endregion 🔖️FlowConverters
@@ -785,7 +789,7 @@ thread_local! {
 /// carries no `WorkingSolid`) — and caches the literal `Stock`/`Vec<ProcessStep>` behind each
 /// minted handle's `child_id` (see `PROCESS3D_STOCK_SCRATCH`/`PROCESS3D_STEPS_SCRATCH` above) so a
 /// same-process `process_working_scene_from_snapshot` call gets real content back.
-pub async fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop, resolved_up_to: Option<usize>) -> Process3dSnapshot {
+pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop, resolved_up_to: Option<usize>) -> Process3dSnapshot {
     let mut tool_solids = Vec::new();
     let mut tool_child_ids = std::collections::BTreeMap::new();
     for step in &scene.steps {
@@ -822,7 +826,7 @@ pub async fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, work
 /// cross-process case. Once a real resolver exists, replace the fallback arms with real calls to
 /// `working_solid_from_brep_snapshot`/`process_steps_from_flow_snapshot` against the resolved
 /// child content.
-pub async fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
+pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
     let stock = PROCESS3D_STOCK_SCRATCH.with(|cache| cache.borrow().get(&snapshot.stock_solid.child_id).cloned()).unwrap_or_default();
     let steps = PROCESS3D_STEPS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.steps.child_id).cloned()).unwrap_or_default();
     ProcessWorkingScene { stock, steps }
@@ -837,7 +841,7 @@ pub use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
 /// 🗄️ Empty process3d snapshot (default workshop + stock, no steps) — real composed children minted
 /// from the default `ProcessWorkingScene` via `process_working_scene_to_snapshot`, never bare/unset
 /// handles.
-pub async fn empty_process3d_snapshot() -> Process3dSnapshot {
+pub fn empty_process3d_snapshot() -> Process3dSnapshot {
     process_working_scene_to_snapshot(&ProcessWorkingScene::default(), Workshop::default(), None)
 }
 //#endregion 🔖️Document
@@ -845,7 +849,7 @@ pub async fn empty_process3d_snapshot() -> Process3dSnapshot {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::process3d::create_process3d_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.process".into(),
         name: "3D Process".into(),
@@ -882,7 +886,7 @@ mod tests {
     }
 
     //#region 🔖️WorkshopTests
-    async fn sample_capability() -> Capability {
+    fn sample_capability() -> Capability {
         Capability {
             id: "crosscut".into(),
             label: "Crosscut".into(),
@@ -893,7 +897,7 @@ mod tests {
         }
     }
 
-    async fn sample_workshop() -> Workshop {
+    fn sample_workshop() -> Workshop {
         Workshop { machines: vec![WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![sample_capability()] }] }
     }
 
@@ -969,7 +973,7 @@ mod tests {
         }
     }
 
-    async fn sample_step(id: &str, measure: ProcessMeasure) -> ProcessStep {
+    fn sample_step(id: &str, measure: ProcessMeasure) -> ProcessStep {
         ProcessStep { id: id.into(), label: format!("Step {id}"), enabled: true, origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() }), measure }
     }
 
@@ -1011,7 +1015,7 @@ mod tests {
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.process3d")?)
         .capability(
@@ -1083,7 +1087,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
         )
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor()])

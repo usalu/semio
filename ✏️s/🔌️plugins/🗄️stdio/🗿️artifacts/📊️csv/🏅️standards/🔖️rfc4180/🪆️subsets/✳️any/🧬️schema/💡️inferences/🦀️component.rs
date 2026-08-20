@@ -24,7 +24,7 @@ pub struct CsvInference {
 
 impl protocol::Inference<CsvSnapshot> for CsvInference {
     async fn infer(snapshot: &CsvSnapshot) -> Self {
-        Self { outline: CsvOutline::compute(snapshot).await }
+        Self { outline: CsvOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::csv::standards::v_rfc4180::subsets::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.csv.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `csv_artifact_schema_descriptor`'s registration.
-pub async fn csv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn csv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.csv.inference",
         inference: schema::FacetLeaves {

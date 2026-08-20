@@ -23,14 +23,15 @@ pub enum DwgMutation {
     },
 }
 
-pub async fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
-    let outcome = mutation.diff(snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
+    let outcome = mutation.diff(snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -40,8 +41,8 @@ impl Mutation<DwgSnapshot> for DwgMutation {
     async fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DwgMutation::NoMutation => DwgDiff::default(),
-            DwgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => diff::diff_set_version_info(base, version, *maintenance_version, *codepage).await,
+            DwgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => diff::diff_set_version_info(base, version, *maintenance_version, *codepage),
         }).await
     }
 
@@ -89,7 +90,8 @@ impl OpBinary for DwgMutation {
 //#endregion Codecs
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<DwgMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
     let base = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
     vec![DwgMutation::NoMutation, DwgMutation::SetSnapshot { snapshot: base }, DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 }]
 }

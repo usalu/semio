@@ -122,14 +122,15 @@ pub enum ObjMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
-    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
+    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -141,34 +142,34 @@ impl Mutation<ObjSnapshot> for ObjMutation {
     async fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             ObjMutation::NoMutation => ObjDiff::default(),
-            ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
-            ObjMutation::InsertVertex { index, vertex } => diff_insert_vertex(*index, vertex.clone()).await,
-            ObjMutation::RemoveVertex { index } => diff_remove_vertex(*index).await,
+            ObjMutation::InsertVertex { index, vertex } => diff_insert_vertex(*index, vertex.clone()),
+            ObjMutation::RemoveVertex { index } => diff_remove_vertex(*index),
             ObjMutation::SetVertex { index, vertex } => {
                 let old = base.vertices.get(*index).cloned().unwrap_or_default();
-                diff_set_vertex(*index, vertex_diff_between(&old, vertex).await).await
+                diff_set_vertex(*index, vertex_diff_between(&old, vertex))
             }
 
-            ObjMutation::InsertTexCoord { index, texcoord } => diff_insert_texcoord(*index, texcoord.clone()).await,
-            ObjMutation::RemoveTexCoord { index } => diff_remove_texcoord(*index).await,
+            ObjMutation::InsertTexCoord { index, texcoord } => diff_insert_texcoord(*index, texcoord.clone()),
+            ObjMutation::RemoveTexCoord { index } => diff_remove_texcoord(*index),
             ObjMutation::SetTexCoord { index, texcoord } => {
                 let old = base.texcoords.get(*index).cloned().unwrap_or_default();
-                diff_set_texcoord(*index, texcoord_diff_between(&old, texcoord).await)
+                diff_set_texcoord(*index, texcoord_diff_between(&old, texcoord))
             }
 
             ObjMutation::InsertNormal { index, normal } => diff_insert_normal(*index, normal.clone()),
             ObjMutation::RemoveNormal { index } => diff_remove_normal(*index),
             ObjMutation::SetNormal { index, normal } => {
                 let old = base.normals.get(*index).cloned().unwrap_or_default();
-                diff_set_normal(*index, normal_diff_between(&old, normal).await)
+                diff_set_normal(*index, normal_diff_between(&old, normal))
             }
 
             ObjMutation::InsertFace { index, face } => diff_insert_face(*index, face.clone()),
             ObjMutation::RemoveFace { index } => diff_remove_face(*index),
             ObjMutation::SetFace { index, face } => {
                 let old = base.faces.get(*index).cloned().unwrap_or_default();
-                diff_set_face(*index, face_diff_between(&old, face).await)
+                diff_set_face(*index, face_diff_between(&old, face))
             }
 
             ObjMutation::SetGroup { name, faces } => {
@@ -301,7 +302,8 @@ impl OpBinary for ObjMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests (same convention P2-P1's
 /// json/zip pilots established: `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`).
 #[cfg(test)]
-pub(crate) async fn base_snapshot() -> ObjSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn base_snapshot() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
@@ -318,7 +320,8 @@ pub(crate) async fn base_snapshot() -> ObjSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<ObjMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
     vec![
         ObjMutation::NoMutation,
         ObjMutation::SetSnapshot { snapshot: sweep_b() },
@@ -358,7 +361,8 @@ pub(crate) async fn demo_mutation_cases() -> Vec<ObjMutation> {
 /// has 2 items (a stable prefix item + one that will be modified); every name-keyed
 /// collection has 2 named entries (one that will be removed, one that will be modified).
 #[cfg(test)]
-pub(crate) async fn sweep_a() -> ObjSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_a() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 1.0, z: 1.0, w: None }],
@@ -381,7 +385,8 @@ pub(crate) async fn sweep_a() -> ObjSnapshot {
 /// removed+modified+added simultaneously from ONE `between(a,b)` call (name-keyed
 /// collections aren't subject to the flat/positional "only one tail" limitation).
 #[cfg(test)]
-pub(crate) async fn sweep_b() -> ObjSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sweep_b() -> ObjSnapshot {
     ObjSnapshot {
         schema: "stdio.obj".into(),
         vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(0.5) }, ObjVertex { x: 5.0, y: 5.0, z: 5.0, w: Some(1.0) }],

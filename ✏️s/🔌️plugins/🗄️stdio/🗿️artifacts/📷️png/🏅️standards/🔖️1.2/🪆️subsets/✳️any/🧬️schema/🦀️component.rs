@@ -67,7 +67,8 @@ impl Default for PngArtifact {
 }
 
 impl PngArtifact {
-    pub async fn to_snapshot(&self) -> PngSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> PngSnapshot {
         PngSnapshot {
             schema: self.schema.clone(),
             width: self.width,
@@ -89,7 +90,8 @@ impl PngArtifact {
             unknown_chunks: self.unknown_chunks.clone(),
         }
     }
-    pub async fn from_snapshot(snapshot: PngSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: PngSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             width: snapshot.width,
@@ -111,8 +113,9 @@ impl PngArtifact {
             unknown_chunks: snapshot.unknown_chunks,
         }
     }
-    pub async fn set_snapshot(&mut self, snapshot: PngSnapshot) {
-        *self = Self::from_snapshot(snapshot).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: PngSnapshot) {
+        *self = Self::from_snapshot(snapshot);
     }
 }
 
@@ -120,7 +123,8 @@ impl PngArtifact {
 /// 🕳️ Relocated verbatim from `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: pure helpers over document
 /// types live in `🧬️schema/`).
-pub async fn empty_png_snapshot() -> PngSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_png_snapshot() -> PngSnapshot {
     PngSnapshot::default()
 }
 
@@ -141,7 +145,8 @@ pub async fn empty_png_snapshot() -> PngSnapshot {
 /// no non-`None` value here could ever round-trip either); `bkgd` uses the `Rgb` variant
 /// specifically (the ONLY variant whose own 6-byte wire shape matches what `color_type == 6`
 /// decodes, `2|6 => 6 bytes`).
-pub async fn demo_png_snapshot() -> PngSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_png_snapshot() -> PngSnapshot {
     let (w, h) = (3u32, 3u32);
     let mut pixels = Vec::with_capacity((w * h * 4) as usize);
     for y in 0..h {
@@ -186,7 +191,8 @@ pub async fn demo_png_snapshot() -> PngSnapshot {
 }
 //#endregion 🔖️DemoFixtures
 
-pub async fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn png_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.png",
         artifact: schema::FacetLeaves {

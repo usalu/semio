@@ -1,0 +1,26 @@
+{
+  "name": "@semio-tech/plugin-window-kits",
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts typecheck",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework",
+    "type:plugin"
+  ]
+}

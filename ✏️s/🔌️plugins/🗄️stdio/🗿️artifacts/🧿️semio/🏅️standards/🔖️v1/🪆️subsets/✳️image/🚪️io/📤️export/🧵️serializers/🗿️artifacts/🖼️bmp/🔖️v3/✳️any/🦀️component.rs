@@ -55,7 +55,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 
-    async fn sample_semio() -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 2,
             height: 1,

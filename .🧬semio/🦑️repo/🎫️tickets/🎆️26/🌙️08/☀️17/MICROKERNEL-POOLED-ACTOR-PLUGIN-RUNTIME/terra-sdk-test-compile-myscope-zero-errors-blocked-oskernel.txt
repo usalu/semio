@@ -1,0 +1,73 @@
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16: warning: unexpected `cfg` condition value: `typegen`
+warning: `semio-framework-replication` (lib) generated 20 warnings
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13096:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:103: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13098:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13099:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:107: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13102:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13103:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:311:32: error[E0277]: `std::option::Option<&token::UnitSpec>` is not a future: `std::option::Option<&token::UnitSpec>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:18:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:46:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs:10:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:92:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs:69:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs:10:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs:99:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:287:64: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1855:84: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1875:84: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:248:44: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:306:52: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:317:63: error[E0277]: `std::option::Option<&token::UnitSpec>` is not a future: `std::option::Option<&token::UnitSpec>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:318:55: error[E0277]: `std::option::Option<f64>` is not a future: `std::option::Option<f64>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:342:52: error[E0277]: `std::option::Option<&token::UnitSpec>` is not a future: `std::option::Option<&token::UnitSpec>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:348:60: error[E0277]: `std::option::Option<&token::UnitSpec>` is not a future: `std::option::Option<&token::UnitSpec>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:639:49: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:673:57: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:741:57: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:764:57: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:803:55: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:855:82: error[E0277]: `Result<std::string::String, std::string::String>` is not a future: `Result<std::string::String, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:909:56: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:914:66: error[E0277]: `std::option::Option<&token::UnitSpec>` is not a future: `std::option::Option<&token::UnitSpec>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:915:78: error[E0277]: `std::option::Option<f64>` is not a future: `std::option::Option<f64>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:930:37: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:973:41: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1140:82: error[E0277]: `Result<std::string::String, std::string::String>` is not a future: `Result<std::string::String, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1145:57: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1245:44: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2005:48: error[E0277]: `bool` is not a future: `bool` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2271:47: error[E0277]: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future: `Result<Vec<token::SpannedToken>, protocol::TextError>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2274:62: error[E0277]: `Vec<(token::TokenClass, protocol::TextSpan)>` is not a future: `Vec<(token::TokenClass, protocol::TextSpan)>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:91:67: error[E0277]: `Result<f64, std::string::String>` is not a future: `Result<f64, std::string::String>` is not a future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:686:43: error[E0599]: no method named `into_inner` found for opaque type `impl Future<Output = Sanitized<Vec<token::SpannedToken>>>` in the current scope: method not found in `impl Future<Output = Sanitized<Vec<token::SpannedToken>>>`
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 36 previous errors; 9 warnings emitted

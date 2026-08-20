@@ -54,12 +54,14 @@ pub mod derived_composition {
     /// 🛡️ Real cross-reference checks over a decoded snapshot: unresolved `image_id`/`style_id`
     /// references and `based_on` cycles. Recurses through `List`/`Table`/`Quote` nesting so a
     /// reference buried in a table cell or list item is caught too.
-    pub async fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
         let known_images: std::collections::HashSet<&str> = snapshot.images.iter().map(|i| i.id.as_str()).collect();
         let known_styles: std::collections::HashSet<&str> = snapshot.styles.iter().map(|s| s.id.as_str()).collect();
 
-        async fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<dsl::Diagnostic>) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<dsl::Diagnostic>) {
             for block in blocks {
                 match block {
                     DocBlock::Paragraph { style_id: Some(id), .. } | DocBlock::Heading { style_id: Some(id), .. } if !known_styles.contains(id.as_str()) => {
@@ -83,7 +85,7 @@ pub mod derived_composition {
                             }
                         }
                     }
-                    DocBlock::Quote { blocks } => Box::pin(walk(blocks, known_images, known_styles, out)).await,
+                    DocBlock::Quote { blocks } => Box::pin(walk(blocks, known_images, known_styles, out)),
                     _ => {}
                 }
             }
@@ -126,14 +128,15 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_document_referential_integrity(&snapshot).await,
+                Some(snapshot) => check_document_referential_integrity(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_document.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDocumentValidator: payload did not decode as a SemioDocumentSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDocumentValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -147,7 +150,8 @@ pub mod derived_composition {
     /// these 2 rows, per `io_compose_via`'s own doc comment / `register_composer_entries`'s
     /// reads-derives-both-directions behavior.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    async fn io_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| {
             vec![
                 deserializer_entry_of::<SemioDocumentFromDocx>(),
@@ -167,21 +171,23 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// document<->{docx,md,txt,pdf} io bridge rows. Called from this artifact's standard-level
     /// `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioDocumentSnapshot, crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
             crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.document.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 

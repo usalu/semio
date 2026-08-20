@@ -24,7 +24,7 @@ pub struct XlsxInference {
 
 impl protocol::Inference<XlsxSnapshot> for XlsxInference {
     async fn infer(snapshot: &XlsxSnapshot) -> Self {
-        Self { outline: XlsxOutline::compute(snapshot).await }
+        Self { outline: XlsxOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::xlsx::standards::v_ecma_376::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.xlsx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `xlsx_artifact_schema_descriptor`'s registration.
-pub async fn xlsx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xlsx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.xlsx.inference",
         inference: schema::FacetLeaves {

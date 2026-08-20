@@ -6,32 +6,32 @@ use semio_s_plugin_process::artifacts::process3d::{Capability, CapabilityParamet
 //#region 🔖️Catalog
 pub struct WoodCatalog;
 
-async fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
+fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
     CapabilityParameter { id: id.into(), label: label.into(), value }
 }
 
-async fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Max { quantity, parameter: parameter.into(), margin }
 }
 
-async fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
+fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> CapabilityRule {
     CapabilityRule::Min { quantity, parameter: parameter.into(), margin }
 }
 
 impl MachineCatalog for WoodCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         "wood"
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         "Wood"
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         "beam"
     }
 
-    async fn machines(&self) -> Vec<WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         vec![
             WorkshopMachine {
                 id: "circularSaw".into(),
@@ -159,7 +159,7 @@ impl MachineCatalog for WoodCatalog {
     }
 }
 
-pub async fn catalog() -> WoodCatalog {
+pub fn catalog() -> WoodCatalog {
     WoodCatalog
 }
 //#endregion 🔖️Catalog
@@ -168,21 +168,26 @@ pub async fn catalog() -> WoodCatalog {
 const EXTENSION_ID: &str = "process-extension-wood";
 const HOST_APP_ID: &str = "process3d-play";
 
-async fn bundle() -> ExtensionBundle {
+// 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
+// plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
+// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's path_scope);
+// bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request asking the SDK
+// owner to revert those two (plus `TopicContribution::new`) to sync directly, matching the sibling
+// reversion already applied to `ExtensionBundle::new`/`.extends`/`.depends_on` in that same impl block.
+fn bundle() -> ExtensionBundle {
     let catalog = WoodCatalog;
-    ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", "0.1.0")
-        .extends("process")
-        .mode(semio_framework_plugin::ExecutionMode::Declarative)
-        .contributes_topic(
-            "process.machines",
-            serde_json::json!({
-                "appId": HOST_APP_ID,
-                "moduleId": catalog.catalog_id(),
-                "label": catalog.label(),
-                "iconId": catalog.icon_id(),
-                "machinesJson": serde_json::to_string(&catalog.machines()).unwrap_or_default(),
-            }),
-        )
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", "0.1.0").extends("process");
+    let bundle = semio_framework::io::resolve_ready(bundle.mode(semio_framework_plugin::ExecutionMode::Declarative));
+    semio_framework::io::resolve_ready(bundle.contributes_topic(
+        "process.machines",
+        serde_json::json!({
+            "appId": HOST_APP_ID,
+            "moduleId": catalog.catalog_id(),
+            "label": catalog.label(),
+            "iconId": catalog.icon_id(),
+            "machinesJson": serde_json::to_string(&catalog.machines()).unwrap_or_default(),
+        }),
+    ))
 }
 
 semio_framework_plugin::extension_exports!(bundle);

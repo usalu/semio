@@ -22,8 +22,8 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 /// `IFC2X3` (so this decoder never silently accepts an IFC4 or plain STEP AP214 file).
 pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
-    let document = parse_part21(text).await.map_err(|e| format!("ifc2x3 parse: {e}"))?;
-    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| semio_framework_plugin::resolve_ready(v.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
+    let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
+    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
@@ -33,9 +33,9 @@ pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub async fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).await?;
+    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
-    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).await.into_bytes())
+    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
 }
 //#endregion 🔖️Codec
 

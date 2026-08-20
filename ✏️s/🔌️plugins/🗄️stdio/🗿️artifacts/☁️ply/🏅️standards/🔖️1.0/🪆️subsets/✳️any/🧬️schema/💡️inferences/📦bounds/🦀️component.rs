@@ -25,7 +25,8 @@ pub struct PlyBounds {
 
 /// 🔣️ Converts whichever numeric [`PlyValue`] variant appears to `f64`; `List` cells (e.g. a
 /// face's vertex-index list) have no scalar meaning and are honestly `None`.
-async fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
     match value {
         PlyValue::Char(v) => Some(*v as f64),
         PlyValue::UChar(v) => Some(*v as f64),
@@ -39,7 +40,8 @@ async fn ply_value_as_f64(value: &PlyValue) -> Option<f64> {
     }
 }
 
-async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -52,13 +54,15 @@ async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64
     }
 }
 
-async fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn property_index(properties: &[PlyProperty], name: &str) -> Option<usize> {
     properties.iter().position(|p| p.name() == name)
 }
 
 /// 📦️ Computes [`PlyBounds`] over the `"vertex"` element's own `x`/`y`/`z` property columns, plus
 /// the `"face"` element's own row count — see module doc comment for the by-name lookup rule.
-pub async fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -68,7 +72,7 @@ pub async fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
     for element in &snapshot.elements {
         if element.name == "vertex" {
             vertex_count += element.rows.len() as u32;
-            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x").await.zip(property_index(&element.properties, "y").await).zip(property_index(&element.properties, "z").await).map(|((ix, iy), iz)| (ix, iy, iz));
+            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x").zip(property_index(&element.properties, "y")).zip(property_index(&element.properties, "z")).map(|((ix, iy), iz)| (ix, iy, iz));
             if let Some((ix, iy, iz)) = coords {
                 for row in &element.rows {
                     let x = row.values.get(ix).and_then(ply_value_as_f64);
@@ -95,7 +99,8 @@ mod tests {
     use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
     use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
 
-    async fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
         PlyElement {
             name: "vertex".into(),
             count: rows.len(),
@@ -108,7 +113,8 @@ mod tests {
         }
     }
 
-    async fn face_element(face_count: usize) -> PlyElement {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn face_element(face_count: usize) -> PlyElement {
         PlyElement {
             name: "face".into(),
             count: face_count,

@@ -105,36 +105,43 @@ impl Default for SemioVideoSnapshot {
 /// established hand-rolled convention). Duplicated here (not imported from `schema::diff`) to keep
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
 /// either sibling facet (same convention `flow`'s own pilot established).
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_bool(b: &bool) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-async fn dec_bool(s: &str) -> Result<bool, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bool: bad value {other:?}")),
     }
 }
-async fn enc_kind(k: &SemioVideoStreamKind) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_kind(k: &SemioVideoStreamKind) -> String {
     match k {
         SemioVideoStreamKind::Video => "V",
         SemioVideoStreamKind::Audio => "A",
@@ -142,7 +149,8 @@ async fn enc_kind(k: &SemioVideoStreamKind) -> String {
     }
     .to_string()
 }
-async fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     match s {
         "V" => Ok(SemioVideoStreamKind::Video),
         "A" => Ok(SemioVideoStreamKind::Audio),
@@ -150,38 +158,44 @@ async fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
         other => Err(format!("stream kind: bad value {other:?}")),
     }
 }
-async fn enc_rational(r: &SemioRational) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rational(r: &SemioRational) -> String {
     format!("[{},{}]", r.num, r.den)
 }
-async fn dec_rational(s: &str) -> Result<SemioRational, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rational(s: &str) -> Result<SemioRational, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
     Ok(SemioRational { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
-async fn enc_sample(s: &SemioVideoSample) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_sample(s: &SemioVideoSample) -> String {
     format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
 }
-async fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key).await?, data: hex_decode(data).await? })
+    Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key)?, data: hex_decode(data)? })
 }
-async fn enc_stream(s: &SemioVideoStream) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_stream(s: &SemioVideoStream) -> String {
     format!("[{},{},{},{},{},[{}]]", enc_kind(&s.kind), enc_str(&s.codec), s.width, s.height, enc_rational(&s.rate), s.samples.iter().map(enc_sample).collect::<Vec<_>>().join(","))
 }
-async fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream: expected 6 fields, got {}", parts.len())) };
-    let samples = split_top_level(strip_brackets(samples).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_sample).collect::<Result<Vec<_>, String>>()?;
+    let samples = split_top_level(strip_brackets(samples)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_sample).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioVideoStream {
-        kind: dec_kind(kind).await?,
-        codec: dec_str(codec).await?,
+        kind: dec_kind(kind)?,
+        codec: dec_str(codec)?,
         width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        rate: dec_rational(rate).await?,
+        rate: dec_rational(rate)?,
         samples,
     })
 }
@@ -190,10 +204,12 @@ async fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
 /// matching the grammar's `document = artifact-mark schema-line streams-line`. Newlines are pure
 /// lexer trivia in the shared dialect, so this is genuinely recognizable by `dsl::Recognizer`, not
 /// merely readable.
-async fn print_video_snapshot_body(s: &SemioVideoSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_video_snapshot_body(s: &SemioVideoSnapshot) -> String {
     format!("schema={}\nstreams=[{}]", enc_str(&s.schema), s.streams.iter().map(enc_stream).collect::<Vec<_>>().join(","))
 }
-async fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, String> {
     let mut schema = None;
     let mut streams = Vec::new();
     for line in body.lines() {
@@ -202,9 +218,9 @@ async fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, Str
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest).await?);
+            schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("streams=") {
-            let inner = strip_brackets(rest).await?;
+            let inner = strip_brackets(rest)?;
             streams = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_stream).collect::<Result<Vec<_>, String>>()?;
         } else {
             return Err(format!("video snapshot: unknown line {line:?}"));
@@ -219,28 +235,34 @@ async fn parse_video_snapshot_body(body: &str) -> Result<SemioVideoSnapshot, Str
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers flow's/mesh's upgraded facets reuse) backing the real
 /// `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn kind_tag(k: SemioVideoStreamKind) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn kind_tag(k: SemioVideoStreamKind) -> u8 {
     match k {
         SemioVideoStreamKind::Video => 0,
         SemioVideoStreamKind::Audio => 1,
         SemioVideoStreamKind::Subtitle => 2,
     }
 }
-async fn kind_from_tag(t: u8) -> Result<SemioVideoStreamKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn kind_from_tag(t: u8) -> Result<SemioVideoStreamKind, String> {
     match t {
         0 => Ok(SemioVideoStreamKind::Video),
         1 => Ok(SemioVideoStreamKind::Audio),
@@ -249,14 +271,15 @@ async fn kind_from_tag(t: u8) -> Result<SemioVideoStreamKind, String> {
     }
 }
 
-async fn encode_video_snapshot_binary(s: &SemioVideoSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_video_snapshot_binary(s: &SemioVideoSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
     write_str_lp(&mut out, &s.schema);
     store::pack_rt::write_varint_u64(&mut out, s.streams.len() as u64);
     for stream in &s.streams {
-        out.push(kind_tag(stream.kind).await);
+        out.push(kind_tag(stream.kind));
         write_str_lp(&mut out, &stream.codec);
         out.extend_from_slice(&stream.width.to_le_bytes());
         out.extend_from_slice(&stream.height.to_le_bytes());
@@ -271,33 +294,34 @@ async fn encode_video_snapshot_binary(s: &SemioVideoSnapshot) -> Vec<u8> {
     }
     out
 }
-async fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes).await;
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader).await?;
-    let stream_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader)?;
+    let stream_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut streams = Vec::with_capacity(stream_count as usize);
     for _ in 0..stream_count {
-        let kind = kind_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?).await?;
-        let codec = read_str_lp(&mut reader).await?;
-        let width = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-        let height = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-        let num = i64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.num: truncated".to_string())?);
-        let den = i64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.den: truncated".to_string())?);
-        let sample_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let kind = kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+        let codec = read_str_lp(&mut reader)?;
+        let width = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let height = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let num = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.num: truncated".to_string())?);
+        let den = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.den: truncated".to_string())?);
+        let sample_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut samples = Vec::with_capacity(sample_count as usize);
         for _ in 0..sample_count {
-            let pts = reader.read_u64_le().await.map_err(|e| e.to_string())?;
-            let key = match reader.read_u8().await.map_err(|e| e.to_string())? {
+            let pts = reader.read_u64_le().map_err(|e| e.to_string())?;
+            let key = match reader.read_u8().map_err(|e| e.to_string())? {
                 0 => false,
                 1 => true,
                 other => return Err(format!("sample key: bad tag {other}")),
             };
-            let data = read_bytes_lp(&mut reader).await?;
+            let data = read_bytes_lp(&mut reader)?;
             samples.push(SemioVideoSample { pts, key, data });
         }
         streams.push(SemioVideoStream { kind, codec, width, height, rate: SemioRational { num, den }, samples });
@@ -321,7 +345,7 @@ impl store::ArtifactDsl for SemioVideoSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_video_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_video_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -345,7 +369,7 @@ impl store::ArtifactPack for SemioVideoSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_video_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
+        decode_video_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -356,7 +380,8 @@ impl store::ArtifactPack for SemioVideoSnapshot {
 /// truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_video_snapshot() -> SemioVideoSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_video_snapshot() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
         schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
@@ -379,7 +404,8 @@ pub(crate) async fn demo_video_snapshot() -> SemioVideoSnapshot {
 mod tests {
     use super::*;
 
-    async fn sample_snapshot() -> SemioVideoSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![

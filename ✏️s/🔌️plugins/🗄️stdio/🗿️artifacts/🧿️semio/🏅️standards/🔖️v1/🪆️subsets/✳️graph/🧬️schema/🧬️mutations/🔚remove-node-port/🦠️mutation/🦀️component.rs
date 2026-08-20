@@ -16,10 +16,10 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-port", kind: "remove-node-port", record: "RemovedNodePort" };
 
     async fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         format!("Remove port #{} from node \"{}\"", self.index, self.node_id.value)

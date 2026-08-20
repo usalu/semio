@@ -83,7 +83,8 @@ pub struct SemioFlowDiff {
 //#region 🔖️GenericNamedEngine
 /// 🧮️ Name/key-keyed `between` (recipe rule: "name/id keys by key"). Reused for `nodes`, `edges`,
 /// and each node's own `params`.
-async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -116,7 +117,8 @@ where
     }
 }
 
-async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -132,7 +134,8 @@ where
     }
 }
 
-async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -157,7 +160,8 @@ where
 /// needed since identity IS the key): a `d2`-removal of a `d1`-added key annihilates the add; a
 /// `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes
 /// directly on the shared key space.
-async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -200,39 +204,45 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️ParamLogic
-async fn diff_param(old: &FlowParam, new: &FlowParam) -> Option<FlowParamDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_param(old: &FlowParam, new: &FlowParam) -> Option<FlowParamDiff> {
     if old == new {
         return None;
     }
     Some(FlowParamDiff { value: (old.value != new.value).then(|| new.value.clone()) })
 }
-async fn apply_param(param: &mut FlowParam, diff: &FlowParamDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_param(param: &mut FlowParam, diff: &FlowParamDiff) {
     if let Some(v) = &diff.value {
         param.value = v.clone();
     }
 }
-async fn inverse_param(base: &FlowParam, diff: &FlowParamDiff) -> FlowParamDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_param(base: &FlowParam, diff: &FlowParamDiff) -> FlowParamDiff {
     FlowParamDiff { value: diff.value.as_ref().map(|_| base.value.clone()) }
 }
-async fn absorb_param_diff(mut a: FlowParamDiff, b: FlowParamDiff) -> FlowParamDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_param_diff(mut a: FlowParamDiff, b: FlowParamDiff) -> FlowParamDiff {
     if b.value.is_some() {
         a.value = b.value;
     }
     a
 }
-async fn diff_params(old: &[FlowParam], new: &[FlowParam]) -> Option<FlowParamsDiff> {
-    between_named(old, new, |p| p.key.clone(), diff_param).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_params(old: &[FlowParam], new: &[FlowParam]) -> Option<FlowParamsDiff> {
+    between_named(old, new, |p| p.key.clone(), diff_param)
 }
 //#endregion 🔖️ParamLogic
 
 //#region 🔖️NodeLogic
-async fn diff_node(old: &FlowNode, new: &FlowNode) -> Option<FlowNodeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_node(old: &FlowNode, new: &FlowNode) -> Option<FlowNodeDiff> {
     if old == new {
         return None;
     }
     let kind = (old.kind != new.kind).then(|| new.kind.clone());
     let label = (old.label != new.label).then(|| new.label.clone());
-    let params = diff_params(&old.params, &new.params).await;
+    let params = diff_params(&old.params, &new.params);
     let position = (old.position != new.position).then_some(new.position);
     if kind.is_none() && label.is_none() && params.is_none() && position.is_none() {
         None
@@ -241,7 +251,8 @@ async fn diff_node(old: &FlowNode, new: &FlowNode) -> Option<FlowNodeDiff> {
     }
 }
 
-async fn apply_node(node: &mut FlowNode, diff: &FlowNodeDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_node(node: &mut FlowNode, diff: &FlowNodeDiff) {
     if let Some(v) = &diff.kind {
         node.kind = v.clone();
     }
@@ -256,7 +267,8 @@ async fn apply_node(node: &mut FlowNode, diff: &FlowNodeDiff) {
     }
 }
 
-async fn inverse_node(base: &FlowNode, diff: &FlowNodeDiff) -> FlowNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_node(base: &FlowNode, diff: &FlowNodeDiff) -> FlowNodeDiff {
     FlowNodeDiff {
         kind: diff.kind.as_ref().map(|_| base.kind.clone()),
         label: diff.label.as_ref().map(|_| base.label.clone()),
@@ -265,7 +277,8 @@ async fn inverse_node(base: &FlowNode, diff: &FlowNodeDiff) -> FlowNodeDiff {
     }
 }
 
-async fn absorb_node_diff(mut a: FlowNodeDiff, b: FlowNodeDiff) -> FlowNodeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_node_diff(mut a: FlowNodeDiff, b: FlowNodeDiff) -> FlowNodeDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -278,18 +291,20 @@ async fn absorb_node_diff(mut a: FlowNodeDiff, b: FlowNodeDiff) -> FlowNodeDiff 
     a.params = match (a.params.take(), b.params) {
         (None, x) => x,
         (x, None) => x,
-        (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.key.clone(), absorb_param_diff, apply_param).await),
+        (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.key.clone(), absorb_param_diff, apply_param)),
     };
     a
 }
 
-async fn diff_nodes(old: &[FlowNode], new: &[FlowNode]) -> Option<FlowNodesDiff> {
-    between_named(old, new, |n| n.id.clone(), diff_node).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_nodes(old: &[FlowNode], new: &[FlowNode]) -> Option<FlowNodesDiff> {
+    between_named(old, new, |n| n.id.clone(), diff_node)
 }
 //#endregion 🔖️NodeLogic
 
 //#region 🔖️EdgeLogic
-async fn diff_edge(old: &FlowEdge, new: &FlowEdge) -> Option<FlowEdgeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_edge(old: &FlowEdge, new: &FlowEdge) -> Option<FlowEdgeDiff> {
     if old == new {
         return None;
     }
@@ -303,7 +318,8 @@ async fn diff_edge(old: &FlowEdge, new: &FlowEdge) -> Option<FlowEdgeDiff> {
     }
 }
 
-async fn apply_edge(edge: &mut FlowEdge, diff: &FlowEdgeDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_edge(edge: &mut FlowEdge, diff: &FlowEdgeDiff) {
     if let Some(v) = &diff.from {
         edge.from = v.clone();
     }
@@ -315,11 +331,13 @@ async fn apply_edge(edge: &mut FlowEdge, diff: &FlowEdgeDiff) {
     }
 }
 
-async fn inverse_edge(base: &FlowEdge, diff: &FlowEdgeDiff) -> FlowEdgeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_edge(base: &FlowEdge, diff: &FlowEdgeDiff) -> FlowEdgeDiff {
     FlowEdgeDiff { from: diff.from.as_ref().map(|_| base.from.clone()), to: diff.to.as_ref().map(|_| base.to.clone()), kind: diff.kind.as_ref().map(|_| base.kind.clone()) }
 }
 
-async fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff {
     if b.from.is_some() {
         a.from = b.from;
     }
@@ -332,8 +350,9 @@ async fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff 
     a
 }
 
-async fn diff_edges(old: &[FlowEdge], new: &[FlowEdge]) -> Option<FlowEdgesDiff> {
-    between_named(old, new, |e| e.id.clone(), diff_edge).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_edges(old: &[FlowEdge], new: &[FlowEdge]) -> Option<FlowEdgesDiff> {
+    between_named(old, new, |e| e.id.clone(), diff_edge)
 }
 //#endregion 🔖️EdgeLogic
 
@@ -342,11 +361,11 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
     async fn apply(&self, base: &SemioFlowSnapshot) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"]).await?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"])?;
             apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
         }
         if let Some(d) = &self.edges {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"]).await?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
         }
         Ok(next)
@@ -356,12 +375,12 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
         self.nodes = match (self.nodes.take(), other.nodes) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |n| n.id.clone(), absorb_node_diff, apply_node).await),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |n| n.id.clone(), absorb_node_diff, apply_node)),
         };
         self.edges = match (self.edges.take(), other.edges) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.id.clone(), absorb_edge_diff, apply_edge).await),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.id.clone(), absorb_edge_diff, apply_edge)),
         };
     }
 }
@@ -374,7 +393,7 @@ impl DiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
     }
 
     async fn between(base: &SemioFlowSnapshot, other: &SemioFlowSnapshot) -> Self {
-        SemioFlowDiff { nodes: diff_nodes(&base.nodes, &other.nodes).await, edges: diff_edges(&base.edges, &other.edges).await }
+        SemioFlowDiff { nodes: diff_nodes(&base.nodes, &other.nodes), edges: diff_edges(&base.edges, &other.edges) }
     }
 
     async fn is_empty(&self) -> bool {
@@ -386,31 +405,38 @@ impl DiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
 //#region 🔖️MutationDiffHelpers
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<SemioFlowSnapshot>` full-replace slot — this IS `SemioFlowDiff::between`.
-pub async fn diff_set_snapshot(base: &SemioFlowSnapshot, next: &SemioFlowSnapshot) -> SemioFlowDiff {
-    SemioFlowDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &SemioFlowSnapshot, next: &SemioFlowSnapshot) -> SemioFlowDiff {
+    SemioFlowDiff::between(base, next)
 }
 
-pub async fn diff_insert_node(node: FlowNode) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_node(node: FlowNode) -> SemioFlowDiff {
     SemioFlowDiff { nodes: Some(FlowNodesDiff { added: vec![node], ..Default::default() }), edges: None }
 }
-pub async fn diff_remove_node(id: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_node(id: &str) -> SemioFlowDiff {
     SemioFlowDiff { nodes: Some(FlowNodesDiff { removed: vec![id.to_string()], ..Default::default() }), edges: None }
 }
-pub async fn diff_set_node_kind(id: &str, kind: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_node_kind(id: &str, kind: &str) -> SemioFlowDiff {
     let d = FlowNodeDiff { kind: Some(kind.to_string()), ..Default::default() };
     SemioFlowDiff { nodes: Some(FlowNodesDiff { modified: vec![NamedModified { key: id.to_string(), diff: d }], ..Default::default() }), edges: None }
 }
-pub async fn diff_set_node_label(id: &str, label: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_node_label(id: &str, label: &str) -> SemioFlowDiff {
     let d = FlowNodeDiff { label: Some(label.to_string()), ..Default::default() };
     SemioFlowDiff { nodes: Some(FlowNodesDiff { modified: vec![NamedModified { key: id.to_string(), diff: d }], ..Default::default() }), edges: None }
 }
-pub async fn diff_set_node_position(id: &str, position: SemioPoint2) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_node_position(id: &str, position: SemioPoint2) -> SemioFlowDiff {
     let d = FlowNodeDiff { position: Some(position), ..Default::default() };
     SemioFlowDiff { nodes: Some(FlowNodesDiff { modified: vec![NamedModified { key: id.to_string(), diff: d }], ..Default::default() }), edges: None }
 }
 /// 🧩 Upserts one param on node `id` — a `FlowParamsDiff` `modified` entry if `key` already
 /// exists on that node, an `added` entry (full `FlowParam`) otherwise.
-pub async fn diff_set_node_param(base: &SemioFlowSnapshot, id: &str, key: &str, value: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_node_param(base: &SemioFlowSnapshot, id: &str, key: &str, value: &str) -> SemioFlowDiff {
     let Some(node) = base.nodes.iter().find(|n| n.id == id) else { return SemioFlowDiff::default() };
     let params_diff = match node.params.iter().find(|p| p.key == key) {
         Some(existing) if existing.value == value => return SemioFlowDiff::default(),
@@ -420,22 +446,27 @@ pub async fn diff_set_node_param(base: &SemioFlowSnapshot, id: &str, key: &str, 
     let node_diff = FlowNodeDiff { params: Some(params_diff), ..Default::default() };
     SemioFlowDiff { nodes: Some(FlowNodesDiff { modified: vec![NamedModified { key: id.to_string(), diff: node_diff }], ..Default::default() }), edges: None }
 }
-pub async fn diff_remove_node_param(id: &str, key: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_node_param(id: &str, key: &str) -> SemioFlowDiff {
     let params_diff = FlowParamsDiff { removed: vec![key.to_string()], ..Default::default() };
     let node_diff = FlowNodeDiff { params: Some(params_diff), ..Default::default() };
     SemioFlowDiff { nodes: Some(FlowNodesDiff { modified: vec![NamedModified { key: id.to_string(), diff: node_diff }], ..Default::default() }), edges: None }
 }
-pub async fn diff_insert_edge(edge: FlowEdge) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_edge(edge: FlowEdge) -> SemioFlowDiff {
     SemioFlowDiff { nodes: None, edges: Some(FlowEdgesDiff { added: vec![edge], ..Default::default() }) }
 }
-pub async fn diff_remove_edge(id: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_edge(id: &str) -> SemioFlowDiff {
     SemioFlowDiff { nodes: None, edges: Some(FlowEdgesDiff { removed: vec![id.to_string()], ..Default::default() }) }
 }
-pub async fn diff_set_edge_endpoints(id: &str, from: PortRef, to: PortRef) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_edge_endpoints(id: &str, from: PortRef, to: PortRef) -> SemioFlowDiff {
     let d = FlowEdgeDiff { from: Some(from), to: Some(to), kind: None };
     SemioFlowDiff { nodes: None, edges: Some(FlowEdgesDiff { modified: vec![NamedModified { key: id.to_string(), diff: d }], ..Default::default() }) }
 }
-pub async fn diff_set_edge_kind(id: &str, kind: &str) -> SemioFlowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_edge_kind(id: &str, kind: &str) -> SemioFlowDiff {
     let d = FlowEdgeDiff { from: None, to: None, kind: Some(kind.to_string()) };
     SemioFlowDiff { nodes: None, edges: Some(FlowEdgesDiff { modified: vec![NamedModified { key: id.to_string(), diff: d }], ..Default::default() }) }
 }
@@ -448,36 +479,44 @@ pub async fn diff_set_edge_kind(id: &str, kind: &str) -> SemioFlowDiff {
 /// (bracket-depth-aware split via the shared `🧰️triples::split_top_level`/`strip_brackets`, hex
 /// for strings, `[0]`/`[1,x]` for `Option<T>`).
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_f64(v: f64) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_f64(v: f64) -> String {
     format!("{v}")
 }
-pub(crate) async fn dec_f64(s: &str) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -489,121 +528,148 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// 🧪️ P2 pilot: real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
 /// write_varint_u64` / `store::ByteReader` — same helpers `stdio.json`'s upgraded `DiffCodec`
 /// reuses) backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_point2(p: &SemioPoint2) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
 }
-pub(crate) async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: dec_f64(x).await?, y: dec_f64(y).await? })
+    Ok(SemioPoint2 { x: dec_f64(x)?, y: dec_f64(y)? })
 }
-pub(crate) async fn enc_port_ref(p: &PortRef) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_port_ref(p: &PortRef) -> String {
     format!("[{},{}]", enc_str(&p.node), enc_str(&p.port))
 }
-pub(crate) async fn dec_port_ref(s: &str) -> Result<PortRef, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_port_ref(s: &str) -> Result<PortRef, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [node, port] = parts.as_slice() else { return Err(format!("port ref: expected 2 fields, got {}", parts.len())) };
-    Ok(PortRef { node: dec_str(node).await?, port: dec_str(port).await? })
+    Ok(PortRef { node: dec_str(node)?, port: dec_str(port)? })
 }
-pub(crate) async fn enc_param(p: &FlowParam) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_param(p: &FlowParam) -> String {
     format!("[{},{}]", enc_str(&p.key), enc_str(&p.value))
 }
-pub(crate) async fn dec_param(s: &str) -> Result<FlowParam, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_param(s: &str) -> Result<FlowParam, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("param: expected 2 fields, got {}", parts.len())) };
-    Ok(FlowParam { key: dec_str(key).await?, value: dec_str(value).await? })
+    Ok(FlowParam { key: dec_str(key)?, value: dec_str(value)? })
 }
-pub(crate) async fn enc_node(n: &FlowNode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_node(n: &FlowNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
-pub(crate) async fn dec_node(s: &str) -> Result<FlowNode, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_node(s: &str) -> Result<FlowNode, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [id, kind, label, params, position] = parts.as_slice() else { return Err(format!("node: expected 5 fields, got {}", parts.len())) };
-    let params = split_top_level(strip_brackets(params).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_param).collect::<Result<Vec<_>, String>>()?;
-    Ok(FlowNode { id: dec_str(id).await?, kind: dec_str(kind).await?, label: dec_str(label).await?, params, position: dec_point2(position).await? })
+    let params = split_top_level(strip_brackets(params)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_param).collect::<Result<Vec<_>, String>>()?;
+    Ok(FlowNode { id: dec_str(id)?, kind: dec_str(kind)?, label: dec_str(label)?, params, position: dec_point2(position)? })
 }
-pub(crate) async fn enc_edge(e: &FlowEdge) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_edge(e: &FlowEdge) -> String {
     format!("[{},{},{},{}]", enc_str(&e.id), enc_port_ref(&e.from), enc_port_ref(&e.to), enc_str(&e.kind))
 }
-pub(crate) async fn dec_edge(s: &str) -> Result<FlowEdge, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_edge(s: &str) -> Result<FlowEdge, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [id, from, to, kind] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(FlowEdge { id: dec_str(id).await?, from: dec_port_ref(from).await?, to: dec_port_ref(to).await?, kind: dec_str(kind).await? })
+    Ok(FlowEdge { id: dec_str(id)?, from: dec_port_ref(from)?, to: dec_port_ref(to)?, kind: dec_str(kind)? })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_param_diff(d: &FlowParamDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_param_diff(d: &FlowParamDiff) -> String {
     format!("[{}]", encode_option(&d.value, |v| enc_str(v)))
 }
-async fn dec_param_diff(s: &str) -> Result<FlowParamDiff, String> {
-    let inner = strip_brackets(s).await?;
-    Ok(FlowParamDiff { value: decode_option(inner, dec_str).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_param_diff(s: &str) -> Result<FlowParamDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(FlowParamDiff { value: decode_option(inner, dec_str)? })
 }
-async fn enc_params_diff(d: &FlowParamsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_param_diff, enc_param).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_params_diff(d: &FlowParamsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_param_diff, enc_param)
 }
-async fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> {
-    dec_named_triple(s, dec_str, dec_param_diff, dec_param).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> {
+    dec_named_triple(s, dec_str, dec_param_diff, dec_param)
 }
 
-async fn enc_node_diff(d: &FlowNodeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_node_diff(d: &FlowNodeDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.kind, |v| enc_str(v)), encode_option(&d.label, |v| enc_str(v)), encode_option(&d.params, enc_params_diff), encode_option(&d.position, |v| enc_point2(v)))
 }
-async fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [kind, label, params, position] = parts.as_slice() else { return Err(format!("node diff: expected 4 fields, got {}", parts.len())) };
-    Ok(FlowNodeDiff { kind: decode_option(kind, dec_str).await?, label: decode_option(label, dec_str).await?, params: decode_option(params, dec_params_diff).await?, position: decode_option(position, dec_point2).await? })
+    Ok(FlowNodeDiff { kind: decode_option(kind, dec_str)?, label: decode_option(label, dec_str)?, params: decode_option(params, dec_params_diff)?, position: decode_option(position, dec_point2)? })
 }
-async fn enc_nodes_diff(d: &FlowNodesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_node_diff, enc_node).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_nodes_diff(d: &FlowNodesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_node_diff, enc_node)
 }
-async fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> {
-    dec_named_triple(s, dec_str, dec_node_diff, dec_node).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> {
+    dec_named_triple(s, dec_str, dec_node_diff, dec_node)
 }
 
-async fn enc_edge_diff(d: &FlowEdgeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_edge_diff(d: &FlowEdgeDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.from, |v| enc_port_ref(v)), encode_option(&d.to, |v| enc_port_ref(v)), encode_option(&d.kind, |v| enc_str(v)))
 }
-async fn dec_edge_diff(s: &str) -> Result<FlowEdgeDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_edge_diff(s: &str) -> Result<FlowEdgeDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [from, to, kind] = parts.as_slice() else { return Err(format!("edge diff: expected 3 fields, got {}", parts.len())) };
-    Ok(FlowEdgeDiff { from: decode_option(from, dec_port_ref).await?, to: decode_option(to, dec_port_ref).await?, kind: decode_option(kind, dec_str).await? })
+    Ok(FlowEdgeDiff { from: decode_option(from, dec_port_ref)?, to: decode_option(to, dec_port_ref)?, kind: decode_option(kind, dec_str)? })
 }
-async fn enc_edges_diff(d: &FlowEdgesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_edge_diff, enc_edge).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_edges_diff(d: &FlowEdgesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_edge_diff, enc_edge)
 }
-async fn dec_edges_diff(s: &str) -> Result<FlowEdgesDiff, String> {
-    dec_named_triple(s, dec_str, dec_edge_diff, dec_edge).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_edges_diff(s: &str) -> Result<FlowEdgesDiff, String> {
+    dec_named_triple(s, dec_str, dec_edge_diff, dec_edge)
 }
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_flow_diff(d: &SemioFlowDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_flow_diff(d: &SemioFlowDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.nodes {
         tokens.push(format!("nodes={}", enc_nodes_diff(v)));
@@ -613,16 +679,17 @@ async fn print_flow_diff(d: &SemioFlowDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
     let mut d = SemioFlowDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("nodes=") {
-            d.nodes = Some(dec_nodes_diff(rest).await?);
+            d.nodes = Some(dec_nodes_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("edges=") {
-            d.edges = Some(dec_edges_diff(rest).await?);
+            d.edges = Some(dec_edges_diff(rest)?);
         } else {
             return Err(format!("flow diff: unknown token {token:?}"));
         }
@@ -632,10 +699,10 @@ async fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
 
 impl protocol::DiffCodec for SemioFlowDiff {
     async fn print_diff(&self) -> String {
-        print_flow_diff(self).await
+        print_flow_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_flow_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_flow_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot: real binary diff frame, replacing the old `print_diff().into_bytes()`
     /// text-as-binary shortcut. `format u8` + `presence u8` (bit0 = `nodes` present, bit1 =
@@ -672,16 +739,16 @@ impl protocol::DiffCodec for SemioFlowDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
         let nodes = if presence & 0b01 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes blob", offset: 2, detail: e })?;
-            Some(dec_nodes_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes blob", offset: 2, detail: e })?;
+            Some(dec_nodes_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes text", offset: 2, detail: e })?)
         } else {
             None
         };
         let edges = if presence & 0b10 != 0 {
-            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges blob", offset: 2, detail: e })?;
-            Some(dec_edges_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges blob", offset: 2, detail: e })?;
+            Some(dec_edges_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?)
         } else {
             None
         };
@@ -695,11 +762,14 @@ impl protocol::DiffCodec for SemioFlowDiff {
 /// directions, a bare node insert, a bare edge insert) — single source of truth for
 /// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioFlowDiff> {
-    async fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioFlowDiff> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
         FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(), position: SemioPoint2 { x, y } }
     }
-    async fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
     }
     let schema = crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
@@ -721,14 +791,17 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    async fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
         FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: params.into_iter().map(|(k, v)| FlowParam { key: k.into(), value: v.into() }).collect(), position: SemioPoint2 { x, y } }
     }
-    async fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str, kind: &str) -> FlowEdge {
         FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: from_port.into() }, to: PortRef { node: to_node.into(), port: to_port.into() }, kind: kind.into() }
     }
 
-    async fn base_snapshot() -> SemioFlowSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("n1", "source", "Source", vec![("count", "1")], 0.0, 0.0), node("n2", "sink", "Sink", vec![], 10.0, 10.0)],
@@ -749,14 +822,16 @@ mod tests {
     /// the front — a real `assert_eq!` mismatch caught by both `between_roundtrip_law` and
     /// `field_sweep`, not a bug in `apply_named` itself (its append-at-end behavior is the
     /// correct, documented semantics for a name-keyed — i.e. order-insignificant — collection).
-    async fn sweep_a() -> SemioFlowSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("keep", "old-kind", "Old Label", vec![("toModify", "old"), ("stay", "same"), ("toRemove", "gone")], 0.0, 0.0), node("toRemoveNode", "sink", "Gone", vec![], 5.0, 5.0)],
             edges: vec![edge("keepEdge", "keep", "out", "toRemoveNode", "in", "old-kind"), edge("toRemoveEdge", "toRemoveNode", "out", "keep", "in", "data")],
         }
     }
-    async fn sweep_b() -> SemioFlowSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![node("keep", "new-kind", "New Label", vec![("toModify", "new"), ("stay", "same"), ("added", "fresh")], 42.0, 7.0), node("addedNode", "source", "Added", vec![], 9.0, 9.0)],
@@ -818,7 +893,8 @@ mod tests {
     //#endregion 🔖️FieldSweep
 
     //#region 🔖️AbsorbLaw
-    async fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff, d2: &SemioFlowDiff) -> SemioFlowDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff, d2: &SemioFlowDiff) -> SemioFlowDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());

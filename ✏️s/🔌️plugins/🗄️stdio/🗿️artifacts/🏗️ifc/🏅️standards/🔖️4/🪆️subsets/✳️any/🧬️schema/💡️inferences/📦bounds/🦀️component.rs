@@ -35,7 +35,8 @@ impl Default for IfcBounds {
 /// (`args.first()`, no leading label arg — `IfcCartesianPoint.Coordinates` is IFC4's own sole
 /// attribute, unlike STEP AP214's `CARTESIAN_POINT('label',(x,y,z))` shape). `name` is matched
 /// case-insensitively even though this format's own convention always persists it uppercase.
-pub async fn compute_ifc_bounds(snapshot: &IfcSnapshot) -> IfcBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_ifc_bounds(snapshot: &IfcSnapshot) -> IfcBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -71,7 +72,8 @@ mod tests {
     use crate::artifacts::ifc::schema::snapshot::IfcEntity;
     use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 
-    async fn point_entity(id: u64, x: f64, y: f64, z: f64) -> IfcEntity {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn point_entity(id: u64, x: f64, y: f64, z: f64) -> IfcEntity {
         IfcEntity { id, name: "IFCCARTESIANPOINT".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Real(x), IfcValue::Real(y), IfcValue::Real(z)])], complex: Vec::new() }
     }
 

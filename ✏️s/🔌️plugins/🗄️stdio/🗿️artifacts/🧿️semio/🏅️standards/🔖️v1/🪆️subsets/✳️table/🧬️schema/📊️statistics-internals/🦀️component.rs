@@ -34,44 +34,49 @@ pub enum StatisticsError {
 // #endregion 🔖️Error
 
 // #region 🔖️Descriptive
-pub async fn mean(values: &[f64]) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mean(values: &[f64]) -> Result<f64, StatisticsError> {
     if values.is_empty() {
         return Err(StatisticsError::InsufficientData { needed: 1, found: 0 });
     }
     Ok(values.iter().sum::<f64>() / values.len() as f64)
 }
 
-pub async fn variance(values: &[f64]) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn variance(values: &[f64]) -> Result<f64, StatisticsError> {
     if values.len() < 2 {
         return Err(StatisticsError::InsufficientData { needed: 2, found: values.len() });
     }
-    let m = mean(values).await?;
+    let m = mean(values)?;
     let ss: f64 = values.iter().map(|x| (x - m) * (x - m)).sum();
     Ok(ss / (values.len() as f64 - 1.0))
 }
 
-pub async fn std_dev(values: &[f64]) -> Result<f64, StatisticsError> {
-    Ok(variance(values).await?.sqrt())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn std_dev(values: &[f64]) -> Result<f64, StatisticsError> {
+    Ok(variance(values)?.sqrt())
 }
 
-pub async fn covariance(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn covariance(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
     if x.len() != y.len() {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
     }
     if x.len() < 2 {
         return Err(StatisticsError::InsufficientData { needed: 2, found: x.len() });
     }
-    let mx = mean(x).await?;
-    let my = mean(y).await?;
+    let mx = mean(x)?;
+    let my = mean(y)?;
     let ss: f64 = x.iter().zip(y).map(|(a, b)| (a - mx) * (b - my)).sum();
     Ok(ss / (x.len() as f64 - 1.0))
 }
 
 /// 📈️ Pearson correlation; errors if either column has zero variance.
-pub async fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
-    let cov = covariance(x, y).await?;
-    let sx = std_dev(x).await?;
-    let sy = std_dev(y).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
+    let cov = covariance(x, y)?;
+    let sx = std_dev(x)?;
+    let sy = std_dev(y)?;
     if sx == 0.0 || sy == 0.0 {
         return Err(StatisticsError::InvalidArgument("zero-variance column has no correlation"));
     }
@@ -80,28 +85,30 @@ pub async fn correlation(x: &[f64], y: &[f64]) -> Result<f64, StatisticsError> {
 // #endregion 🔖️Descriptive
 
 // #region 🔖️Matrices
-pub async fn covariance_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn covariance_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
     let p = columns.len();
-    let mut m = MatD::zeros(p, p).await;
+    let mut m = MatD::zeros(p, p);
     for i in 0..p {
         for j in i..p {
-            let c = covariance(columns[i], columns[j]).await?;
-            m.set(i, j, c).await;
-            m.set(j, i, c).await;
+            let c = covariance(columns[i], columns[j])?;
+            m.set(i, j, c);
+            m.set(j, i, c);
         }
     }
     Ok(m)
 }
 
-pub async fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsError> {
     let p = columns.len();
-    let mut m = MatD::zeros(p, p).await;
+    let mut m = MatD::zeros(p, p);
     for i in 0..p {
-        m.set(i, i, 1.0).await;
+        m.set(i, i, 1.0);
         for j in (i + 1)..p {
-            let c = correlation(columns[i], columns[j]).await?;
-            m.set(i, j, c).await;
-            m.set(j, i, c).await;
+            let c = correlation(columns[i], columns[j])?;
+            m.set(i, j, c);
+            m.set(j, i, c);
         }
     }
     Ok(m)
@@ -109,8 +116,9 @@ pub async fn correlation_matrix(columns: &[&[f64]]) -> Result<MatD, StatisticsEr
 
 /// 📈️ Complete-case correlation matrix over the given table columns; returns the matrix alongside
 /// the effective row count (post complete-case filtering) that Fisher-z tests need.
-pub async fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<(MatD, usize), StatisticsError> {
-    let complete = table.complete_rows(columns).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<(MatD, usize), StatisticsError> {
+    let complete = table.complete_rows(columns)?;
     let n = complete.len();
     let series: Vec<Vec<f64>> = columns
         .iter()
@@ -120,24 +128,25 @@ pub async fn correlation_from_table(table: &Table, columns: &[usize]) -> Result<
         })
         .collect::<Result<_, _>>()?;
     let refs: Vec<&[f64]> = series.iter().map(Vec::as_slice).collect();
-    Ok((correlation_matrix(&refs).await?, n))
+    Ok((correlation_matrix(&refs)?, n))
 }
 // #endregion 🔖️Matrices
 
 // #region 🔖️Partial
 /// 🔄️ Matrix inverse via `lu_solve` against each identity column.
-pub async fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
     if matrix.rows != matrix.cols {
         return Err(StatisticsError::DimensionMismatch { expected: matrix.rows, found: matrix.cols });
     }
     let n = matrix.rows;
-    let mut inv = MatD::zeros(n, n).await;
+    let mut inv = MatD::zeros(n, n);
     for col in 0..n {
-        let mut e = VecD::zeros(n).await;
-        e.set(col, 1.0).await;
-        let x = matrix.lu_solve(&e).await.ok_or(StatisticsError::SingularMatrix)?;
+        let mut e = VecD::zeros(n);
+        e.set(col, 1.0);
+        let x = matrix.lu_solve(&e).ok_or(StatisticsError::SingularMatrix)?;
         for row in 0..n {
-            inv.set(row, col, x.get(row).await).await;
+            inv.set(row, col, x.get(row));
         }
     }
     Ok(inv)
@@ -145,17 +154,18 @@ pub async fn invert(matrix: &MatD) -> Result<MatD, StatisticsError> {
 
 /// 🔗️ Partial correlation of `i` and `j` given a conditioning set, via the precision matrix of the
 /// submatrix restricted to `{i, j} ∪ given`: `r_ij.given = -P_ij / sqrt(P_ii * P_jj)`.
-pub async fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> Result<f64, StatisticsError> {
     let mut idx = vec![i, j];
     idx.extend_from_slice(given);
     let k = idx.len();
-    let mut sub = MatD::zeros(k, k).await;
+    let mut sub = MatD::zeros(k, k);
     for (a, &ia) in idx.iter().enumerate() {
         for (b, &ib) in idx.iter().enumerate() {
-            sub.set(a, b, corr.get(ia, ib).await).await;
+            sub.set(a, b, corr.get(ia, ib));
         }
     }
-    let prec = invert(&sub).await?;
+    let prec = invert(&sub)?;
     let (p00, p11, p01) = (prec.get(0, 0), prec.get(1, 1), prec.get(0, 1));
     if p00 <= 0.0 || p11 <= 0.0 {
         return Err(StatisticsError::SingularMatrix);
@@ -179,7 +189,8 @@ pub struct LinearFit {
     pub dof: usize,
 }
 
-pub async fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, StatisticsError> {
     let n = x.rows;
     if y.len() != n {
         return Err(StatisticsError::DimensionMismatch { expected: n, found: y.len() });
@@ -189,29 +200,29 @@ pub async fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, Stat
         return Err(StatisticsError::InsufficientData { needed: p + 1, found: n });
     }
     let offset = usize::from(intercept);
-    let mut design = MatD::zeros(n, p).await;
+    let mut design = MatD::zeros(n, p);
     for row in 0..n {
         if intercept {
             design.set(row, 0, 1.0);
         }
         for col in 0..x.cols {
-            design.set(row, col + offset, x.get(row, col).await);
+            design.set(row, col + offset, x.get(row, col));
         }
     }
     let yv = VecD::from_vec(y.to_vec());
     let design_t = design.transpose();
-    let xtx = design_t.await.matmul(&design);
-    let xty = design_t.await.mul_vec(&yv);
-    let beta = xtx.await.lu_solve(&xty).await.ok_or(StatisticsError::SingularMatrix)?.await;
-    let fitted: Vec<f64> = (0..n).map(|row| (0..p).map(|col| semio_framework_plugin::resolve_ready(design.get(row, col)) * beta.get(col)).sum()).collect();
+    let xtx = design_t.matmul(&design);
+    let xty = design_t.mul_vec(&yv);
+    let beta = xtx.lu_solve(&xty).ok_or(StatisticsError::SingularMatrix)?;
+    let fitted: Vec<f64> = (0..n).map(|row| (0..p).map(|col| design.get(row, col) * beta.get(col)).sum()).collect();
     let residuals: Vec<f64> = (0..n).map(|row| y[row] - fitted[row]).collect();
     let ss_res: f64 = residuals.iter().map(|r| r * r).sum();
-    let y_mean = mean(y).await?;
+    let y_mean = mean(y)?;
     let ss_tot: f64 = y.iter().map(|v| (v - y_mean).powi(2)).sum();
     let r_squared = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 1.0 };
     let dof = n - p;
     let sigma2 = ss_res / dof as f64;
-    let xtx_inv = invert(&xtx).await?;
+    let xtx_inv = invert(&xtx)?;
     let std_errors: Vec<f64> = (0..p).map(|i| (sigma2 * xtx_inv.get(i, i)).max(0.0).sqrt()).collect();
     Ok(LinearFit { coefficients: beta.0, std_errors, residuals, r_squared, sigma2, dof })
 }
@@ -228,33 +239,35 @@ pub struct LogisticFit {
     pub iterations: usize,
 }
 
-async fn logistic_design(x: &MatD, intercept: bool) -> MatD {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn logistic_design(x: &MatD, intercept: bool) -> MatD {
     let n = x.rows;
     let p = x.cols + usize::from(intercept);
     let offset = usize::from(intercept);
-    let mut design = MatD::zeros(n, p).await;
+    let mut design = MatD::zeros(n, p);
     for row in 0..n {
         if intercept {
-            design.set(row, 0, 1.0).await;
+            design.set(row, 0, 1.0);
         }
         for col in 0..x.cols {
-            design.set(row, col + offset, x.get(row, col).await).await;
+            design.set(row, col + offset, x.get(row, col));
         }
     }
     design
 }
 
 #[allow(clippy::needless_range_loop, reason = "each loop body indexes both a MatD by (row, col) and one or more parallel Vec<f64> by row; enumerate() only removes the Vec index and would leave the MatD access no clearer")]
-pub async fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFit, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFit, StatisticsError> {
     const MAX_ITER: usize = 50;
     const TOL: f64 = 1e-8;
     let n = x.rows;
     if y.len() != n {
         return Err(StatisticsError::DimensionMismatch { expected: n, found: y.len() });
     }
-    let design = logistic_design(x, intercept).await;
+    let design = logistic_design(x, intercept);
     let p = design.cols;
-    let mut beta = VecD::zeros(p).await;
+    let mut beta = VecD::zeros(p);
     let mut converged = false;
     let mut iterations = 0;
     for iter in 0..MAX_ITER {
@@ -262,25 +275,25 @@ pub async fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFi
         let mut mu = vec![0.0; n];
         let mut w = vec![0.0; n];
         for row in 0..n {
-            let eta: f64 = (0..p).map(|col| semio_framework_plugin::resolve_ready(design.get(row, col)) * semio_framework_plugin::resolve_ready(beta.get(col))).sum();
+            let eta: f64 = (0..p).map(|col| design.get(row, col) * beta.get(col)).sum();
             let m = 1.0 / (1.0 + (-eta).exp());
             mu[row] = m;
             w[row] = (m * (1.0 - m)).max(1e-10);
         }
-        let mut xtwx = MatD::zeros(p, p).await;
-        let mut score = VecD::zeros(p).await;
+        let mut xtwx = MatD::zeros(p, p);
+        let mut score = VecD::zeros(p);
         for row in 0..n {
             for a in 0..p {
-                score.add_at(a, design.get(row, a).await * (y[row] - mu[row])).await;
+                score.add_at(a, design.get(row, a) * (y[row] - mu[row]));
                 for b in 0..p {
-                    xtwx.add_at(a, b, design.get(row, a).await * w[row] * design.get(row, b).await).await;
+                    xtwx.add_at(a, b, design.get(row, a) * w[row] * design.get(row, b));
                 }
             }
         }
-        let step = xtwx.lu_solve(&score).await.ok_or(StatisticsError::SingularMatrix)?;
+        let step = xtwx.lu_solve(&score).ok_or(StatisticsError::SingularMatrix)?;
         let step_norm = step.norm2();
         for i in 0..p {
-            beta.add_at(i, step.get(i).await).await;
+            beta.add_at(i, step.get(i));
         }
         if step_norm < TOL {
             converged = true;
@@ -293,40 +306,42 @@ pub async fn logistic(x: &MatD, y: &[f64], intercept: bool) -> Result<LogisticFi
     let mut w = vec![0.0; n];
     let mut log_likelihood = 0.0;
     for (row, w_row) in w.iter_mut().enumerate() {
-        let eta: f64 = (0..p).map(|col| semio_framework_plugin::resolve_ready(design.get(row, col)) * semio_framework_plugin::resolve_ready(beta.get(col))).sum();
+        let eta: f64 = (0..p).map(|col| design.get(row, col) * beta.get(col)).sum();
         let m = 1.0 / (1.0 + (-eta).exp());
         *w_row = (m * (1.0 - m)).max(1e-10);
         let mc = m.clamp(1e-12, 1.0 - 1e-12);
         log_likelihood += y[row] * mc.ln() + (1.0 - y[row]) * (1.0 - mc).ln();
     }
-    let mut xtwx = MatD::zeros(p, p).await;
+    let mut xtwx = MatD::zeros(p, p);
     for row in 0..n {
         for a in 0..p {
             for b in 0..p {
-                xtwx.add_at(a, b, design.get(row, a).await * w[row] * design.get(row, b).await).await;
+                xtwx.add_at(a, b, design.get(row, a) * w[row] * design.get(row, b));
             }
         }
     }
-    let cov = invert(&xtwx).await?;
-    let std_errors: Vec<f64> = (0..p).map(|i| semio_framework_plugin::resolve_ready(cov.get(i, i)).max(0.0).sqrt()).collect();
+    let cov = invert(&xtwx)?;
+    let std_errors: Vec<f64> = (0..p).map(|i| cov.get(i, i).max(0.0).sqrt()).collect();
     Ok(LogisticFit { coefficients: beta.0, std_errors, log_likelihood, iterations })
 }
 
 /// 🎯️ Fitted propensity scores `P(y=1 | x)` for new rows.
-pub async fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<Vec<f64>, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<Vec<f64>, StatisticsError> {
     let p = x.cols + usize::from(intercept);
     if fit.coefficients.len() != p {
         return Err(StatisticsError::DimensionMismatch { expected: p, found: fit.coefficients.len() });
     }
-    let design = logistic_design(x, intercept).await;
-    Ok((0..x.rows).map(|row| 1.0 / (1.0 + (-(0..p).map(|col| semio_framework_plugin::resolve_ready(design.get(row, col)) * fit.coefficients[col]).sum::<f64>()).exp())).collect())
+    let design = logistic_design(x, intercept);
+    Ok((0..x.rows).map(|row| 1.0 / (1.0 + (-(0..p).map(|col| design.get(row, col) * fit.coefficients[col]).sum::<f64>()).exp())).collect())
 }
 // #endregion 🔖️Logistic
 
 // #region 🔖️Internal
 /// 🗂️ Stratifies `(x, y)` counts by the mixed-radix code of `given`, skipping rows missing in `x`,
 /// `y`, or any conditioning column. Shared by [`g2_ci_test`] and [`conditional_mutual_information`].
-async fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
     let mut tables: HashMap<usize, MatD> = HashMap::new();
     for row in 0..x.len() {
         if x[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || y[row] == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
@@ -363,8 +378,9 @@ pub struct TestResult {
 
 /// 🔗️ Fisher-z test of partial correlation `r_ij.given = 0`, i.e. conditional independence for
 /// continuous data under a joint-Gaussian assumption.
-pub async fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: usize) -> Result<TestResult, StatisticsError> {
-    let r = partial_correlation(corr, i, j, given).await?.clamp(-1.0 + 1e-15, 1.0 - 1e-15);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: usize) -> Result<TestResult, StatisticsError> {
+    let r = partial_correlation(corr, i, j, given)?.clamp(-1.0 + 1e-15, 1.0 - 1e-15);
     let dof = n as f64 - given.len() as f64 - 3.0;
     if dof <= 0.0 {
         return Err(StatisticsError::InsufficientData { needed: given.len() + 4, found: n });
@@ -375,22 +391,24 @@ pub async fn fisher_z_test(corr: &MatD, i: usize, j: usize, given: &[usize], n: 
 }
 
 /// 🗂️ Contingency-table cross-tabulation; rows missing in either column are excluded.
-pub async fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, StatisticsError> {
     if x.len() != y.len() {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
     }
-    let mut m = MatD::zeros(nx, ny).await;
+    let mut m = MatD::zeros(nx, ny);
     for (&xi, &yi) in x.iter().zip(y) {
         if xi == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE || yi == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
             continue;
         }
-        m.add_at(xi as usize, yi as usize, 1.0).await;
+        m.add_at(xi as usize, yi as usize, 1.0);
     }
     Ok(m)
 }
 
 /// 🔢️ Pearson's chi-squared test of independence on a contingency table.
-pub async fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsError> {
     let (r, c) = (counts.rows, counts.cols);
     if r < 2 || c < 2 {
         return Err(StatisticsError::InvalidArgument("chi2_independence needs at least a 2x2 table"));
@@ -412,13 +430,14 @@ pub async fn chi2_independence(counts: &MatD) -> Result<TestResult, StatisticsEr
         }
     }
     let dof = ((r - 1) * (c - 1)) as f64;
-    let p_value = 1.0 - ChiSquared::new(dof).await?.cdf(stat);
+    let p_value = 1.0 - ChiSquared::new(dof)?.cdf(stat);
     Ok(TestResult { statistic: stat, p_value, dof })
 }
 
 /// 🔢️ G² (likelihood-ratio) conditional-independence test for discrete data, stratified over the
 /// conditioning columns; `levels = (nx, ny, given_levels)`.
-pub async fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<TestResult, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<TestResult, StatisticsError> {
     let (nx, ny, given_levels) = levels;
     if y.len() != x.len() || given.iter().any(|g| g.len() != x.len()) {
         return Err(StatisticsError::DimensionMismatch { expected: x.len(), found: y.len() });
@@ -429,7 +448,7 @@ pub async fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, 
     if nx < 2 || ny < 2 {
         return Err(StatisticsError::InvalidArgument("g2_ci_test needs at least 2 levels per tested variable"));
     }
-    let tables = build_strata(x, y, given, nx, ny, given_levels).await;
+    let tables = build_strata(x, y, given, nx, ny, given_levels);
     let mut g2 = 0.0;
     for table in tables.values() {
         let total: f64 = table.data.iter().sum();
@@ -453,18 +472,19 @@ pub async fn g2_ci_test(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, 
     }
     let n_strata: usize = given_levels.iter().product::<usize>().max(1);
     let dof = ((nx - 1) * (ny - 1) * n_strata) as f64;
-    let p_value = 1.0 - ChiSquared::new(dof).await?.cdf(g2);
+    let p_value = 1.0 - ChiSquared::new(dof)?.cdf(g2);
     Ok(TestResult { statistic: g2, p_value, dof })
 }
 
 /// 📏️ Two-sample t-test; Welch (unequal-variance, fractional Welch–Satterthwaite dof) unless `pooled`.
-pub async fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<TestResult, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<TestResult, StatisticsError> {
     if a.len() < 2 || b.len() < 2 {
         return Err(StatisticsError::InsufficientData { needed: 2, found: a.len().min(b.len()) });
     }
     let (na, nb) = (a.len() as f64, b.len() as f64);
-    let (ma, mb) = (mean(a).await?, mean(b).await?);
-    let (va, vb) = (variance(a).await?, variance(b).await?);
+    let (ma, mb) = (mean(a)?, mean(b)?);
+    let (va, vb) = (variance(a)?, variance(b)?);
     let (stat, dof) = if pooled {
         let dof = na + nb - 2.0;
         let sp2 = ((na - 1.0) * va + (nb - 1.0) * vb) / dof;
@@ -476,14 +496,15 @@ pub async fn t_test_two_sample(a: &[f64], b: &[f64], pooled: bool) -> Result<Tes
         let dof = se2 * se2 / ((va / na).powi(2) / (na - 1.0) + (vb / nb).powi(2) / (nb - 1.0));
         ((ma - mb) / se, dof)
     };
-    let p_value = 2.0 * (1.0 - StudentT::new(dof).await?.cdf(stat.abs()));
+    let p_value = 2.0 * (1.0 - StudentT::new(dof)?.cdf(stat.abs()));
     Ok(TestResult { statistic: stat, p_value, dof })
 }
 // #endregion 🔖️Tests
 
 // #region 🔖️Information
 /// 🔢️ Shannon entropy in nats, missing codes excluded.
-pub async fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
     let mut counts = vec![0usize; n_levels];
     let mut total = 0usize;
     for &c in codes {
@@ -507,8 +528,9 @@ pub async fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsEr
 }
 
 /// 🔢️ Mutual information `I(X;Y)` in nats.
-pub async fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<f64, StatisticsError> {
-    let table = crosstab(x, y, nx, ny).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<f64, StatisticsError> {
+    let table = crosstab(x, y, nx, ny)?;
     let total: f64 = table.data.iter().sum();
     if total <= 0.0 {
         return Err(StatisticsError::InsufficientData { needed: 1, found: 0 });
@@ -532,9 +554,10 @@ pub async fn mutual_information(x: &[u32], y: &[u32], nx: usize, ny: usize) -> R
 }
 
 /// 🔢️ Conditional mutual information `I(X;Y|Z)` in nats, stratified over `given`.
-pub async fn conditional_mutual_information(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<f64, StatisticsError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn conditional_mutual_information(x: &[u32], y: &[u32], given: &[&[u32]], levels: (usize, usize, &[usize])) -> Result<f64, StatisticsError> {
     let (nx, ny, given_levels) = levels;
-    let tables = build_strata(x, y, given, nx, ny, given_levels).await;
+    let tables = build_strata(x, y, given, nx, ny, given_levels);
     let grand_total: f64 = tables.values().map(|t| t.data.iter().sum::<f64>()).sum();
     if grand_total <= 0.0 {
         return Err(StatisticsError::InsufficientData { needed: 1, found: 0 });

@@ -36,7 +36,8 @@ pub const XLSX_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx"
 /// `workbook.sheets` storage order, then each sheet's own `cells` storage order (sparse, never
 /// re-sorted) — the SAME order `XlsxStrictEditorCommand::SetCell`'s `row` indexes into, so a
 /// `set-cell` edit always addresses the row this fn emitted at that position.
-pub(crate) async fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
     document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
 }
 
@@ -45,7 +46,8 @@ pub(crate) async fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32
 /// XML, see the snapshot module's own doc comment on why the two must stay distinct); an
 /// out-of-range index degrades to `"#<index>"` rather than panicking. `Formula` shows `=expr`, plus
 /// its cached value in parens when present.
-pub(crate) async fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
     match value {
         XlsxCellValue::Number(n) => format!("{n}"),
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
@@ -65,7 +67,8 @@ pub(crate) async fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings
 /// display text (that would be a guess, not a decode) — editing a formula or shared-string cell
 /// through this window turns it into a literal string cell, the same "type a value over a formula"
 /// behavior every spreadsheet editor has; documented narrowing, not a silent loss.
-pub(crate) async fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
     match text {
         "true" => XlsxCellValue::Boolean(true),
         "false" => XlsxCellValue::Boolean(false),
@@ -154,12 +157,12 @@ impl ArtifactEditor for XlsxStrictEditor {
         let Some((sheet_name, cell_row, cell_col, _)) = xlsx_flat_cells(doc.snapshot).into_iter().nth(*row as usize) else { return Ok(Emit::default()) };
         let parsed = parse_xlsx_cell_value(value);
         let description = format!("Set {sheet_name}!{cell_row},{cell_col}");
-        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed.await }], description: Some(description), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -167,14 +170,15 @@ impl ArtifactEditor for XlsxStrictEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_xlsx_strict_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_xlsx_strict_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XLSX_STRICT_DIALECT)
-        .await.document(["stdio", "xlsx", "strict"])
-        .await.icon_id("table")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::XLSX_STRICT_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["stdio", "xlsx", "strict"])
+        .icon_id("table")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::XLSX_STRICT_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

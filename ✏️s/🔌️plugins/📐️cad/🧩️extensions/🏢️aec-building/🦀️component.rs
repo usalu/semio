@@ -56,7 +56,8 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-async fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
+// 🚫️async: E1 pure — `BTreeMap::from` literal, zero suspension points — see R9.
+fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
     BTreeMap::from([
         ("slab", "building.building.slab"),
         ("slabs", "building.building.slab"),
@@ -83,7 +84,9 @@ async fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
     ])
 }
 
-async fn computers_manifest() -> CadComputersManifest {
+// 🚫️async: E1 pure — struct literal over `building_layer_typology` (sync), zero suspension points —
+// see R9.
+fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec!["aec.building"],
         stat_computers: Vec::new(),
@@ -100,27 +103,34 @@ async fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-async fn bundle() -> ExtensionBundle {
-    ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
+// 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
+// plain sync fn). `.mode`/`.contributes_topic`/`.contributes` are still `async fn` in
+// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+// path_scope; `.contributes` is genuinely stateful registry work per that file's own doc comment,
+// but is dressed as `async` with zero real suspension — same shape `.depends_on` already bridges in
+// that same file); bridged here via `semio_framework::io::resolve_ready`, matching that established
+// idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
+fn bundle() -> ExtensionBundle {
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
         .extends("cad")
-        .depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"))
-        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-        // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
-        // artifact, one composite mutation + one inference (both dispatched by the host through
-        // the contributed-mutation/inference registries as bounded Cold job kinds at invocation
-        // time, not by running this extension's own actor).
-        .mode(ExecutionMode::Declarative)
-        .contributes_topic(
-            "cad.computer",
-            serde_json::json!({
-                "appId": HOST_APP_ID,
-                "moduleId": MODULE_ID,
-                "label": "AEC Building",
-                "iconId": "building",
-                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-            }),
-        )
-        .contributes(building_storey_contribution())
+        .depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"));
+    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+    // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
+    // artifact, one composite mutation + one inference (both dispatched by the host through
+    // the contributed-mutation/inference registries as bounded Cold job kinds at invocation
+    // time, not by running this extension's own actor).
+    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
+    let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(
+        "cad.computer",
+        serde_json::json!({
+            "appId": HOST_APP_ID,
+            "moduleId": MODULE_ID,
+            "label": "AEC Building",
+            "iconId": "building",
+            "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+        }),
+    ));
+    semio_framework::io::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -142,7 +152,10 @@ pub struct CreateBuildingStorey {
 }
 
 impl CreateBuildingStorey {
-    async fn storey_label(&self) -> String {
+    // 🚫️async: E1 pure — `format!` only, zero suspension points; consumed unawaited by both
+    // `CompositeMutationKind::plan`/`label` below (still `async fn` — external trait, see R9 case 1)
+    // and this file's own tests — see R9.
+    fn storey_label(&self) -> String {
         format!("Level {}: {}", self.level_index, self.storey_name)
     }
 }
@@ -175,7 +188,9 @@ struct BuildingStructureSummary {
     storey_count: u32,
 }
 
-async fn building_structure_summary_service() -> ArtifactInferenceService {
+// 🚫️async: E1 pure — `ArtifactInferenceService::new` is already `const fn`; the fn-pointer argument
+// `infer_building_structure_summary` is E4 (fn-pointer slot, see that fn's own tag) — see R9.
+fn building_structure_summary_service() -> ArtifactInferenceService {
     ArtifactInferenceService::new(
         ArtifactInferenceServiceMetadata {
             owner: EXTENSION_ID,
@@ -193,7 +208,10 @@ async fn building_structure_summary_service() -> ArtifactInferenceService {
     )
 }
 
-async fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+// 🚫️async: E4 fn-pointer slot — `semio_framework_plugin::ArtifactInference` is a plain
+// `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `async fn` item's
+// pointer type is unnameable); also E1 pure (pack decode + struct literal, zero suspension) — see R9.
+fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = serde_json::to_vec(&summary).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.encode", error.to_string()))?;
@@ -202,8 +220,17 @@ async fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRe
 
 /// 🗂️ The single `ArtifactContribution` this extension registers onto cad's `s.cad.cad` artifact —
 /// one composite mutation, one inference, both gated by the `.depends_on("cad", …)` declared above.
-async fn building_storey_contribution() -> ArtifactContribution {
-    ArtifactContribution::builder(CAD_ARTIFACT_KIND).mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1).inference_service(building_structure_summary_service()).build()
+// 🚫️async: E1 pure — consumed unawaited as the argument to `bundle()`'s `.contributes(...)` (which
+// itself must be sync — see that fn's own tag). `ArtifactContribution::builder`/`.mutation`/
+// `.inference_service`/`.build` are still `async fn` in
+// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+// path_scope; that file's own `.mutation` doc comment already notes its body is "pure, no-real-
+// suspension calls" bridged via `resolve_ready`) — bridged the same way here. See R9.
+fn building_storey_contribution() -> ArtifactContribution {
+    let contribution = semio_framework::io::resolve_ready(ArtifactContribution::builder(CAD_ARTIFACT_KIND));
+    let contribution = semio_framework::io::resolve_ready(contribution.mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1));
+    let contribution = semio_framework::io::resolve_ready(contribution.inference_service(building_structure_summary_service()));
+    semio_framework::io::resolve_ready(contribution.build())
 }
 //#endregion 🔖️Composite
 

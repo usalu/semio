@@ -59,7 +59,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_strict_conformance(&snapshot).await,
+                Some(snapshot) => check_strict_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.xlsx.strict.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -74,7 +74,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<XlsxStrictValidator>)
     }
 
@@ -84,8 +85,9 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -104,7 +106,8 @@ pub mod derived_composition {
         /// Encoding the OPC package directly (bypassing the typed-model regeneration entirely) is how
         /// this test genuinely exercises a workbook whose XML matches what the strict builder seeded —
         /// same fix as docx's sibling `✳️strict` composer test.
-        async fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_pack_bytes(snapshot: &XlsxSnapshot) -> Vec<u8> {
             let raw = crate::artifacts::zip::opc::encode_opc(&snapshot.opc).expect("valid opc package encodes");
             let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<XlsxSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).expect("valid envelope_id");
             store::semio_format::wrap_binary(&envelope, &raw)

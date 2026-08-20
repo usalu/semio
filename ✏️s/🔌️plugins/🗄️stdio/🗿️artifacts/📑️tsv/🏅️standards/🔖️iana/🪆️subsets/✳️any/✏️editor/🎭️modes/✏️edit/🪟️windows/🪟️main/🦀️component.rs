@@ -14,19 +14,21 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::tsv::create_tsv_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// ✏️ Real `TsvSnapshot -> UiNode`: one row per record, `set-cell`'s `row`/`column` index this
 /// grid directly (a 1:1 mapping onto `records`, unlike csv's header-offset math).
-pub async fn render(document: &TsvSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &TsvSnapshot) -> UiNode {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();
-    TableWindowKit::render(&TableView { columns, rows }).await
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

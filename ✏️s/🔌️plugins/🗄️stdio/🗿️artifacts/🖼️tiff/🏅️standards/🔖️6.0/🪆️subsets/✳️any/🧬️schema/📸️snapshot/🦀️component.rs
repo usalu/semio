@@ -48,7 +48,8 @@ pub enum TiffFieldType {
 }
 
 impl TiffFieldType {
-    pub async fn from_u16(v: u16) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_u16(v: u16) -> Result<Self, String> {
         match v {
             1 => Ok(Self::Byte),
             2 => Ok(Self::Ascii),
@@ -65,7 +66,8 @@ impl TiffFieldType {
             other => Err(format!("tiff: unrecognized field type code {other} (TIFF 6.0 core table is 1-12)")),
         }
     }
-    pub async fn to_u16(self) -> u16 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_u16(self) -> u16 {
         match self {
             Self::Byte => 1,
             Self::Ascii => 2,
@@ -83,7 +85,8 @@ impl TiffFieldType {
     }
     /// 📏️ Byte size of ONE value of this type (TIFF6 §2 Table 2) — drives the inline-vs-offset
     /// rule (`element_size * count <= 4` stays inline in the entry's value field).
-    pub async fn element_size(self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn element_size(self) -> usize {
         match self {
             Self::Byte | Self::Ascii | Self::SByte | Self::Undefined => 1,
             Self::Short | Self::SShort => 2,
@@ -119,7 +122,8 @@ pub enum TiffValues {
 }
 
 impl TiffValues {
-    pub async fn kind(&self) -> TiffFieldType {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn kind(&self) -> TiffFieldType {
         match self {
             Self::Byte(_) => TiffFieldType::Byte,
             Self::Ascii(_) => TiffFieldType::Ascii,
@@ -137,7 +141,8 @@ impl TiffValues {
     }
     /// 🔢️ IFD entry `Count` for this value — number of elements of `kind()`, EXCEPT `Ascii`
     /// which counts BYTES including the terminating NUL (TIFF6 §2's own special case).
-    pub async fn count(&self) -> u32 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn count(&self) -> u32 {
         match self {
             Self::Byte(v) => v.len() as u32,
             Self::Ascii(s) => s.len() as u32 + 1,
@@ -156,7 +161,8 @@ impl TiffValues {
     /// 🔍️ First value widened to `u32`, for integer-typed variants only — convenience used by
     /// well-known-tag accessors ([`TiffSnapshot::width`] etc.) and the baseline subset's
     /// conformance checks. `None` for non-integer/empty variants.
-    pub async fn first_u32(&self) -> Option<u32> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn first_u32(&self) -> Option<u32> {
         match self {
             Self::Byte(v) => v.first().map(|&x| x as u32),
             Self::Short(v) => v.first().map(|&x| x as u32),
@@ -239,16 +245,19 @@ impl Default for TiffSnapshot {
 impl TiffSnapshot {
     /// 🔍️ Looks up a tag by id in IFD 0 (the primary image) — `None` if there is no IFD 0 or
     /// the tag isn't present in it.
-    pub async fn tag(&self, tag: u16) -> Option<&TiffTag> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tag(&self, tag: u16) -> Option<&TiffTag> {
         self.ifds.first()?.entries.iter().find(|t| t.tag == tag)
     }
     /// 📐️ `ImageWidth` (256) from IFD 0, widened to `u32`.
-    pub async fn width(&self) -> Option<u32> {
-        self.tag(TAG_IMAGE_WIDTH).await.and_then(|t| t.values.first_u32())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn width(&self) -> Option<u32> {
+        self.tag(TAG_IMAGE_WIDTH).and_then(|t| t.values.first_u32())
     }
     /// 📐️ `ImageLength` (257) from IFD 0, widened to `u32`.
-    pub async fn height(&self) -> Option<u32> {
-        self.tag(TAG_IMAGE_LENGTH).await.and_then(|t| t.values.first_u32())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn height(&self) -> Option<u32> {
+        self.tag(TAG_IMAGE_LENGTH).and_then(|t| t.values.first_u32())
     }
 }
 //#endregion Snapshot

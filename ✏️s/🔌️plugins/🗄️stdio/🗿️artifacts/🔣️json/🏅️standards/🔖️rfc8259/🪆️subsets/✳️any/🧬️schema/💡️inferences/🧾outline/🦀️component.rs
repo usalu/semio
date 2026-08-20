@@ -18,7 +18,8 @@ pub struct JsonOutline {
     pub root_kind: String,
 }
 
-async fn root_kind_name(value: &JsonValue) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn root_kind_name(value: &JsonValue) -> &'static str {
     match value {
         JsonValue::Null => "null",
         JsonValue::Bool { .. } => "bool",
@@ -31,13 +32,14 @@ async fn root_kind_name(value: &JsonValue) -> &'static str {
 
 /// 🌳️ Recursively walks `value`, returning `(node_count, max_depth)` — `depth` is the caller's
 /// own nesting level (the root call passes `1`).
-async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
     match value {
         JsonValue::Array { items } => {
             let mut count = 1u32;
             let mut max_depth = depth;
             for item in items {
-                let (c, d) = Box::pin(walk(item, depth + 1)).await;
+                let (c, d) = Box::pin(walk(item, depth + 1));
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -47,7 +49,7 @@ async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for member in members {
-                let (c, d) = Box::pin(walk(&member.value, depth + 1)).await;
+                let (c, d) = Box::pin(walk(&member.value, depth + 1));
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -58,8 +60,9 @@ async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
 }
 
 impl JsonOutline {
-    pub async fn compute(snapshot: &JsonSnapshot) -> Self {
-        let (node_count, max_depth) = walk(&snapshot.value, 1).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &JsonSnapshot) -> Self {
+        let (node_count, max_depth) = walk(&snapshot.value, 1);
         Self { node_count, max_depth, root_kind: root_kind_name(&snapshot.value).to_string() }
     }
 }

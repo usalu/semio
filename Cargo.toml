@@ -25,6 +25,7 @@ members = [
     "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+  "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",

@@ -111,11 +111,13 @@ pub struct Body {
 }
 
 impl Body {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new() -> Self {
         Body::default()
     }
-    pub async fn new_label(&mut self) -> PersistentLabel {
-        self.labels.next_label().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new_label(&mut self) -> PersistentLabel {
+        self.labels.next_label()
     }
 }
 
@@ -127,57 +129,66 @@ impl Body {
     /// 🧱️ Walks a loop's coedge ring starting from `Loop::first`, following `next` until it
     /// returns to the start. Panics via a debug assertion in the euler layer's invariant checks
     /// if the ring is malformed; callers here get a plain `Vec` (empty if the loop id is stale).
-    pub async fn loop_coedges(&self, loop_id: LoopId) -> Vec<CoedgeId> {
-        let Some(lp) = self.loops.get(loop_id).await else { return Vec::new() };
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn loop_coedges(&self, loop_id: LoopId) -> Vec<CoedgeId> {
+        let Some(lp) = self.loops.get(loop_id) else { return Vec::new() };
         let mut result = Vec::new();
         let mut current = lp.first;
         loop {
             result.push(current);
-            let Some(coedge) = self.coedges.get(current).await else { break };
+            let Some(coedge) = self.coedges.get(current) else { break };
             current = coedge.next;
             if current == lp.first {
                 break;
             }
-            if result.len() > self.coedges.len().await {
+            if result.len() > self.coedges.len() {
                 break; // malformed ring guard: never loop forever on corrupt data
             }
         }
         result
     }
-    pub async fn face_loops(&self, face_id: FaceId) -> Vec<LoopId> {
-        let Some(face) = self.faces.get(face_id).await else { return Vec::new() };
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn face_loops(&self, face_id: FaceId) -> Vec<LoopId> {
+        let Some(face) = self.faces.get(face_id) else { return Vec::new() };
         let mut result: Vec<LoopId> = face.outer.into_iter().collect();
         result.extend(face.inners.iter().copied());
         result
     }
-    pub async fn face_coedges(&self, face_id: FaceId) -> Vec<CoedgeId> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn face_coedges(&self, face_id: FaceId) -> Vec<CoedgeId> {
         self.face_loops(face_id).into_iter().flat_map(|l| self.loop_coedges(l)).collect()
     }
-    pub async fn shell_faces(&self, shell_id: ShellId) -> Vec<FaceId> {
-        self.shells.get(shell_id).await.map(|s| s.faces.clone()).unwrap_or_default()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn shell_faces(&self, shell_id: ShellId) -> Vec<FaceId> {
+        self.shells.get(shell_id).map(|s| s.faces.clone()).unwrap_or_default()
     }
-    pub async fn solid_shells(&self, solid_id: SolidId) -> Vec<ShellId> {
-        let Some(solid) = self.solids.get(solid_id).await else { return Vec::new() };
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn solid_shells(&self, solid_id: SolidId) -> Vec<ShellId> {
+        let Some(solid) = self.solids.get(solid_id) else { return Vec::new() };
         let mut result = vec![solid.outer];
         result.extend(solid.inners.iter().copied());
         result
     }
-    pub async fn solid_faces(&self, solid_id: SolidId) -> Vec<FaceId> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn solid_faces(&self, solid_id: SolidId) -> Vec<FaceId> {
         self.solid_shells(solid_id).into_iter().flat_map(|s| self.shell_faces(s)).collect()
     }
     /// 🧱️ The edge's endpoint vertices in `(start, end)` order as seen through `coedge`'s own
     /// orientation (i.e. respecting `forward`, not the underlying edge's raw `v0`/`v1`).
-    pub async fn coedge_endpoints(&self, coedge_id: CoedgeId) -> Option<(VertexId, VertexId)> {
-        let coedge = self.coedges.get(coedge_id).await?;
-        let edge = self.edges.get(coedge.edge).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn coedge_endpoints(&self, coedge_id: CoedgeId) -> Option<(VertexId, VertexId)> {
+        let coedge = self.coedges.get(coedge_id)?;
+        let edge = self.edges.get(coedge.edge)?;
         Some(if coedge.forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) })
     }
     /// 🧱️ Every vertex incident to at least one edge that references it as `v0` or `v1`.
-    pub async fn vertex_edges(&self, vertex_id: VertexId) -> Vec<EdgeId> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn vertex_edges(&self, vertex_id: VertexId) -> Vec<EdgeId> {
         self.edges.iter().filter(|(_, e)| e.v0 == vertex_id || e.v1 == vertex_id).map(|(id, _)| id).collect()
     }
     /// 🧱️ Every coedge that uses `edge_id` (both orientations, both faces if the edge is shared).
-    pub async fn edge_coedges(&self, edge_id: EdgeId) -> Vec<CoedgeId> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn edge_coedges(&self, edge_id: EdgeId) -> Vec<CoedgeId> {
         self.coedges.iter().filter(|(_, c)| c.edge == edge_id).map(|(id, _)| id).collect()
     }
 }
@@ -191,7 +202,8 @@ impl Body {
     /// with (generally) different arena indices, but *the same* [`PersistentLabel`]s — used
     /// wherever a caller needs an independent, mutable working copy without disturbing the
     /// original (e.g. undo snapshots, before the document layer's smarter delta-based history).
-    pub async fn deep_copy(&self) -> Body {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn deep_copy(&self) -> Body {
         self.clone()
     }
 }
@@ -268,7 +280,8 @@ pub struct BrepArenaSeed {
     pub solids: Vec<SeedSolid>,
 }
 
-async fn placeholder_face_for_build() -> FaceId {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn placeholder_face_for_build() -> FaceId {
     ArenaId::from_raw(0, 0)
 }
 
@@ -283,20 +296,20 @@ impl EngineRep<BrepArenaSeed> for Body {
     /// calling them would silently break the round-trip law below. `euler::make_loop` is the one
     /// euler function this DOES call, because loops carry no label to preserve or break.
     async fn build(seed: &BrepArenaSeed) -> Self {
-        let mut body = Body::new().await;
-        body.labels = LabelSource::from_next(seed.next_label).await;
+        let mut body = Body::new();
+        body.labels = LabelSource::from_next(seed.next_label);
 
         let mut vertex_ids: HashMap<PersistentLabel, VertexId> = HashMap::with_capacity(seed.vertices.len());
         for v in &seed.vertices {
             let id = body.vertices.insert(Vertex { position: v.position, tol: v.tol, label: v.label });
-            vertex_ids.insert(v.label, id.await);
+            vertex_ids.insert(v.label, id);
         }
 
         let mut edge_ids: HashMap<PersistentLabel, EdgeId> = HashMap::with_capacity(seed.edges.len());
         for e in &seed.edges {
             let curve_id = body.curves3.insert(e.curve.clone());
-            let id = body.edges.insert(Edge { curve: curve_id.await, range: e.range, v0: vertex_ids[&e.v0], v1: vertex_ids[&e.v1], tol: e.tol, label: e.label });
-            edge_ids.insert(e.label, id.await);
+            let id = body.edges.insert(Edge { curve: curve_id, range: e.range, v0: vertex_ids[&e.v0], v1: vertex_ids[&e.v1], tol: e.tol, label: e.label });
+            edge_ids.insert(e.label, id);
         }
 
         let placeholder = placeholder_face_for_build();
@@ -314,21 +327,21 @@ impl EngineRep<BrepArenaSeed> for Body {
             let surface_id = body.surfaces.insert(f.surface.clone());
             let outer = f.outer.map(|i| loop_ids[i]);
             let inners: Vec<LoopId> = f.inners.iter().map(|&i| loop_ids[i]).collect();
-            let id = body.faces.insert(Face { surface: surface_id.await, outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: f.label });
+            let id = body.faces.insert(Face { surface: surface_id, outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: f.label });
             if let Some(outer_id) = outer {
-                body.loops.get_mut(outer_id).await.expect("just inserted").face = id.await;
+                body.loops.get_mut(outer_id).expect("just inserted").face = id;
             }
             for inner_id in &inners {
-                body.loops.get_mut(*inner_id).await.expect("just inserted").face = id.await;
+                body.loops.get_mut(*inner_id).expect("just inserted").face = id;
             }
-            face_ids.insert(f.label, id.await);
+            face_ids.insert(f.label, id);
         }
 
         let mut shell_ids: HashMap<PersistentLabel, ShellId> = HashMap::with_capacity(seed.shells.len());
         for s in &seed.shells {
             let faces = s.faces.iter().map(|l| face_ids[l]).collect();
             let id = body.shells.insert(Shell { faces, label: s.label });
-            shell_ids.insert(s.label, id.await);
+            shell_ids.insert(s.label, id);
         }
 
         for s in &seed.solids {
@@ -345,27 +358,28 @@ impl EngineRep<BrepArenaSeed> for Body {
 /// from a live `Body`. Needed by the round-trip law (`to_seed(&Body::build(&seed)) == seed`) and
 /// by a future diff constructor, which reads post-op state back out this way to translate into a
 /// `SemioBrepDiff` via the label↔snapshot-id map it owns.
-pub async fn to_seed(body: &Body) -> BrepArenaSeed {
-    let vertex_label = |id: VertexId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.vertices.get(id)).expect("live vertex").label };
-    let edge_label = |id: EdgeId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.edges.get(id)).expect("live edge").label };
-    let face_label = |id: FaceId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.faces.get(id)).expect("live face").label };
-    let shell_label = |id: ShellId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.shells.get(id)).expect("live shell").label };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn to_seed(body: &Body) -> BrepArenaSeed {
+    let vertex_label = |id: VertexId| -> PersistentLabel { body.vertices.get(id).expect("live vertex").label };
+    let edge_label = |id: EdgeId| -> PersistentLabel { body.edges.get(id).expect("live edge").label };
+    let face_label = |id: FaceId| -> PersistentLabel { body.faces.get(id).expect("live face").label };
+    let shell_label = |id: ShellId| -> PersistentLabel { body.shells.get(id).expect("live shell").label };
 
     let vertices: Vec<SeedVertex> = body.vertices.iter().map(|(_, v)| SeedVertex { label: v.label, position: v.position, tol: v.tol }).collect();
 
-    let edges: Vec<SeedEdge> = body.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: semio_framework_plugin::resolve_ready(body.curves3.get(e.curve)).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
+    let edges: Vec<SeedEdge> = body.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: body.curves3.get(e.curve).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
 
     // One entry per distinct LoopId, in the order faces first reference it — the same order
     // `build` assigns indices in, which is what the round-trip law needs to hold.
     let mut loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
     let mut loop_index: HashMap<LoopId, usize> = HashMap::new();
-    let mut faces: Vec<SeedFace> = Vec::with_capacity(body.faces.len().await);
+    let mut faces: Vec<SeedFace> = Vec::with_capacity(body.faces.len());
     for (_, f) in body.faces.iter() {
         let mut resolve_loop = |loop_id: LoopId| -> usize {
             if let Some(&i) = loop_index.get(&loop_id) {
                 return i;
             }
-            let ring: Vec<(PersistentLabel, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| semio_framework_plugin::resolve_ready(body.coedges.get(cid)).map(|c| (edge_label(c.edge), c.forward))).collect();
+            let ring: Vec<(PersistentLabel, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| body.coedges.get(cid).map(|c| (edge_label(c.edge), c.forward))).collect();
             let i = loops.len();
             loops.push(ring);
             loop_index.insert(loop_id, i);
@@ -373,14 +387,14 @@ pub async fn to_seed(body: &Body) -> BrepArenaSeed {
         };
         let outer = f.outer.map(|l| resolve_loop(l));
         let inners: Vec<usize> = f.inners.iter().map(|&l| resolve_loop(l)).collect();
-        faces.push(SeedFace { label: f.label, surface: body.surfaces.get(f.surface).await.expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
+        faces.push(SeedFace { label: f.label, surface: body.surfaces.get(f.surface).expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
     }
 
     let shells: Vec<SeedShell> = body.shells.iter().map(|(_, s)| SeedShell { label: s.label, faces: s.faces.iter().map(|&f| face_label(f)).collect() }).collect();
 
     let solids: Vec<SeedSolid> = body.solids.iter().map(|(_, s)| SeedSolid { label: s.label, outer: shell_label(s.outer), inners: s.inners.iter().map(|&sh| shell_label(sh)).collect() }).collect();
 
-    BrepArenaSeed { next_label: body.labels.next().await, vertices, edges, loops, faces, shells, solids }
+    BrepArenaSeed { next_label: body.labels.next(), vertices, edges, loops, faces, shells, solids }
 }
 
 // #endregion 🔖️EngineRep
@@ -408,23 +422,27 @@ pub mod history {
     }
 
     impl LabelSource {
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             LabelSource { next: 0 }
         }
         /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
         /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`]'s `EngineRep::build` so a rebuild from a persisted seed carries
         /// the label numbering forward instead of colliding with the labels it is restoring.
-        pub async fn from_next(next: u64) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_next(next: u64) -> Self {
             LabelSource { next }
         }
-        pub async fn next_label(&mut self) -> PersistentLabel {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next_label(&mut self) -> PersistentLabel {
             let label = PersistentLabel(self.next);
             self.next += 1;
             label
         }
         /// 📜️ The next label this source would mint — the high-water mark a seed must carry forward
         /// (see [`Self::from_next`]) so a rebuilt `Body` never re-mints a label already in use.
-        pub async fn next(&self) -> u64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next(&self) -> u64 {
             self.next
         }
     }
@@ -445,10 +463,12 @@ pub mod history {
     }
 
     impl OpDelta {
-        pub async fn is_empty(&self) -> bool {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn is_empty(&self) -> bool {
             self.generated.is_empty() && self.modified.is_empty() && self.deleted.is_empty()
         }
-        pub async fn merge(&mut self, other: OpDelta) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn merge(&mut self, other: OpDelta) {
             self.generated.extend(other.generated);
             self.modified.extend(other.modified);
             self.deleted.extend(other.deleted);
@@ -465,27 +485,32 @@ pub mod history {
     }
 
     impl OpRecorder {
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             OpRecorder::default()
         }
-        pub async fn record_generated(&mut self, label: PersistentLabel) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn record_generated(&mut self, label: PersistentLabel) {
             if !self.delta.generated.contains(&label) {
                 self.delta.generated.push(label);
             }
         }
-        pub async fn record_modified(&mut self, label: PersistentLabel) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn record_modified(&mut self, label: PersistentLabel) {
             if !self.delta.modified.contains(&label) && !self.delta.generated.contains(&label) {
                 self.delta.modified.push(label);
             }
         }
-        pub async fn record_deleted(&mut self, label: PersistentLabel) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn record_deleted(&mut self, label: PersistentLabel) {
             self.delta.generated.retain(|l| *l != label);
             self.delta.modified.retain(|l| *l != label);
             if !self.delta.deleted.contains(&label) {
                 self.delta.deleted.push(label);
             }
         }
-        pub async fn into_delta(self) -> OpDelta {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn into_delta(self) -> OpDelta {
             self.delta
         }
     }
@@ -579,13 +604,16 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
-    async fn null_coedge() -> CoedgeId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn null_coedge() -> CoedgeId {
         ArenaId::from_raw(0, 0)
     }
-    async fn null_loop() -> LoopId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn null_loop() -> LoopId {
         ArenaId::from_raw(0, 0)
     }
-    async fn null_face() -> FaceId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn null_face() -> FaceId {
         ArenaId::from_raw(0, 0)
     }
 
@@ -593,28 +621,34 @@ mod tests {
     // `insert(...)` call — calling `body.new_label()` inline as an argument to `body.x.insert(..)`
     // is a double mutable borrow of `body` the borrow checker rejects even though the fields are
     // disjoint (the two calls are nested, not sequential).
-    async fn insert_vertex(body: &mut Body, position: Pnt3) -> VertexId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_vertex(body: &mut Body, position: Pnt3) -> VertexId {
         let label = body.new_label();
         body.vertices.insert(Vertex { position, tol: Tol::DEFAULT, label })
     }
-    async fn insert_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
         let label = body.new_label();
         body.edges.insert(Edge { curve, range, v0, v1, tol: Tol::DEFAULT, label })
     }
-    async fn insert_face(body: &mut Body, surface: SurfaceId) -> FaceId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_face(body: &mut Body, surface: SurfaceId) -> FaceId {
         let label = body.new_label();
         body.faces.insert(Face { surface, outer: None, inners: vec![], flipped: false, tol: Tol::DEFAULT, label })
     }
-    async fn insert_shell(body: &mut Body, faces: Vec<FaceId>) -> ShellId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_shell(body: &mut Body, faces: Vec<FaceId>) -> ShellId {
         let label = body.new_label();
         body.shells.insert(Shell { faces, label })
     }
-    async fn insert_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>) -> SolidId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>) -> SolidId {
         let label = body.new_label();
         body.solids.insert(Solid { outer, inners, label })
     }
 
-    async fn make_triangle_loop(body: &mut Body, face: FaceId, positions: [Pnt3; 3]) -> LoopId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn make_triangle_loop(body: &mut Body, face: FaceId, positions: [Pnt3; 3]) -> LoopId {
         let vertices: Vec<VertexId> = positions.iter().map(|&p| insert_vertex(body, p)).collect();
         let curves: Vec<Curve3Id> = (0..3)
             .map(|i| {

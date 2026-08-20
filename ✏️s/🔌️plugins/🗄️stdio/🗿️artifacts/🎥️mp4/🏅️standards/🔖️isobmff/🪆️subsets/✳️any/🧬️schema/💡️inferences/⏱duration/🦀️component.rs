@@ -23,7 +23,8 @@ pub struct Mp4Duration {
 /// timescale` (`0.0` for a `timescale` of `0`, an honest degenerate case, not a panic);
 /// `durationSeconds` reports the MAXIMUM across tracks (the container plays until its longest
 /// track ends). `sampleCount` sums every track's sample count.
-pub async fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
     let duration_seconds = snapshot
         .tracks
         .iter()
@@ -47,7 +48,8 @@ mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Track};
 
-    async fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
         Mp4Track { timescale, samples: sample_durations.iter().map(|&d| Mp4Sample { duration: d, ..Mp4Sample::default() }).collect(), ..Mp4Track::default() }
     }
 

@@ -25,7 +25,7 @@ pub struct SemioImageInference {
 
 impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
     async fn infer(snapshot: &SemioImageSnapshot) -> Self {
-        Self { dimensions: compute_semio_image_dimensions(snapshot).await }
+        Self { dimensions: compute_semio_image_dimensions(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::image
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.image.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_image_artifact_schema_descriptor`'s registration.
-pub async fn semio_image_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_image_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.image.inference",
         inference: schema::FacetLeaves {

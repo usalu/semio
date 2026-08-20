@@ -3,14 +3,17 @@
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::txt::TxtSnapshot;
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 
-pub async fn serialize(from: &Ifc2x3Snapshot) -> Result<TxtSnapshot, store::PackError> {
-    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).await.map_err(store::PackError::Schema)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn serialize(from: &Ifc2x3Snapshot) -> Result<TxtSnapshot, store::PackError> {
+    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).map_err(store::PackError::Schema)?;
     let text = String::from_utf8(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(TxtSnapshot::from_body(&text).await)
+    Ok(TxtSnapshot::from_body(&text))
 }
 
-pub async fn serialize_text(from: &Ifc2x3Snapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn serialize_text(from: &Ifc2x3Snapshot) -> Result<String, store::PackError> {
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
 }

@@ -21,13 +21,14 @@ pub struct XmlOutline {
 /// 🌳️ Recursively walks an element subtree, returning `(element_count, max_depth)` — `depth` is
 /// the caller's own nesting level (the root element call passes `1`). Non-`Element` nodes
 /// (`Text`/`CData`/`Comment`/`ProcessingInstruction`) don't recurse further and don't count.
-async fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
     match node {
         XmlNode::Element { children, .. } => {
             let mut count = 1u32;
             let mut max_depth = depth;
             for child in children {
-                let (c, d) = Box::pin(walk(child, depth + 1)).await;
+                let (c, d) = Box::pin(walk(child, depth + 1));
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -38,9 +39,10 @@ async fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
 }
 
 impl XmlOutline {
-    pub async fn compute(snapshot: &XmlSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &XmlSnapshot) -> Self {
         let (element_count, max_depth) = match &snapshot.doc.root {
-            Some(root) => walk(root, 1).await,
+            Some(root) => walk(root, 1),
             None => (0, 0),
         };
         Self { element_count, max_depth, has_doctype: snapshot.doc.doctype.is_some() }

@@ -29,7 +29,8 @@ pub struct GltfSymmetryIndicators {
     pub modularity_ratio: GltfMeasure<f64>,
 }
 
-async fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale: f64, rotation: bool, budget: usize) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn symmetry_score(points: &[[f64; 3]], centroid: [f64; 3], axis: [f64; 3], scale: f64, rotation: bool, budget: usize) -> f64 {
     if points.is_empty() || scale <= 1e-15 {
         return 1.0;
     }
@@ -67,18 +68,20 @@ pub(crate) struct GltfSymmetryRaw {
     pub(crate) rotations: Vec<GltfDirectionScore>,
 }
 
-pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
     let score = |axis: GltfVec3, rotation| symmetry_score(&context.points, context.centroid, axis.array(), context.diagonal, rotation, context.policy.sampling_budget as usize);
     let axes = &context.principal_frame.axes;
     GltfSymmetryRaw {
-        reflection_score: score(axes[0], false).await,
-        rotation_score: score(axes[0], true).await,
+        reflection_score: score(axes[0], false),
+        rotation_score: score(axes[0], true),
         reflections: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, false), order: None }).collect(),
         rotations: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, true), order: Some(2) }).collect(),
     }
 }
 
-pub(crate) async fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
     if parts.is_empty() {
         return None;
     }
@@ -107,11 +110,12 @@ pub(crate) async fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAn
 }
 
 impl GltfSymmetryInference {
-    pub(crate) async fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
-        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology).await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
+        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) {
             indicators.repetition_ratio = measure;
         }
-        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology).await {
+        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) {
             indicators.modularity_ratio = measure;
         }
     }
@@ -123,23 +127,23 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw).await,
-            rotational_symmetry_score: rotational_symmetry_score::from_raw(context, &raw).await,
-            reflection_symmetries: reflection_symmetries::from_raw(context, &raw).await,
-            rotational_symmetries: rotational_symmetries::from_raw(context, &raw).await,
-            repetition_ratio: repetition_ratio::infer(context).await,
-            modularity_ratio: modularity_ratio::infer(context).await,
+            reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw),
+            rotational_symmetry_score: rotational_symmetry_score::from_raw(context, &raw),
+            reflection_symmetries: reflection_symmetries::from_raw(context, &raw),
+            rotational_symmetries: rotational_symmetries::from_raw(context, &raw),
+            repetition_ratio: repetition_ratio::infer(context),
+            modularity_ratio: modularity_ratio::infer(context),
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids).await,
-            rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids).await,
-            reflection_symmetries: reflection_symmetries::unavailable_measure(diagnostic_ids).await,
-            rotational_symmetries: rotational_symmetries::unavailable_measure(diagnostic_ids).await,
-            repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids).await,
-            modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids).await,
+            reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids),
+            rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids),
+            reflection_symmetries: reflection_symmetries::unavailable_measure(diagnostic_ids),
+            rotational_symmetries: rotational_symmetries::unavailable_measure(diagnostic_ids),
+            repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids),
+            modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids),
         }
     }
 }

@@ -29,13 +29,16 @@ impl Default for Mp3Artifact {
 }
 
 impl Mp3Artifact {
-    pub async fn to_snapshot(&self) -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> Mp3Snapshot {
         Mp3Snapshot { schema: self.schema.clone(), id3v2: self.id3v2.clone(), frames: self.frames.clone(), id3v1: self.id3v1.clone() }
     }
-    pub async fn from_snapshot(snapshot: Mp3Snapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: Mp3Snapshot) -> Self {
         Self { schema: snapshot.schema, id3v2: snapshot.id3v2, frames: snapshot.frames, id3v1: snapshot.id3v1 }
     }
-    pub async fn set_snapshot(&mut self, snapshot: Mp3Snapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: Mp3Snapshot) {
         self.schema = snapshot.schema;
         self.id3v2 = snapshot.id3v2;
         self.frames = snapshot.frames;
@@ -43,7 +46,8 @@ impl Mp3Artifact {
     }
 }
 
-pub async fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.mp3",
         artifact: schema::FacetLeaves {
@@ -82,7 +86,8 @@ pub async fn mp3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 /// `💡️inferences/⏱duration` needs the same real table for its duration derivation and
 /// `🧬️schema` must never depend on `🚪️io` — `🚪️io` depends on `🧬️schema` instead (both call
 /// sites reuse this one definition, never re-declare it).
-pub async fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sample_rate_hz(version_id: u8, index: u8) -> Option<u32> {
     match (version_id, index) {
         (3, 0) => Some(44_100),
         (3, 1) => Some(48_000),
@@ -128,7 +133,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_mp3_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, &self.snapshot).await?;
@@ -162,7 +167,7 @@ pub mod derived_analysis {
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if io::sniff_real_bytes(bytes).await {
+                    if io::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_MP3_DOCUMENT_SCHEMA.as_bytes();
@@ -173,7 +178,7 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    if io::sniff_real_bytes(text.as_bytes()).await || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
+                    if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP3_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

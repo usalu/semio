@@ -28,14 +28,16 @@ pub enum XmlAnyEditorCommand {
     SetNode { node_id: String, value: String },
 }
 
-async fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
     if node_id.is_empty() {
         return Ok(Vec::new());
     }
     node_id.split('/').map(|segment| segment.parse::<usize>().map_err(|error| error.to_string())).collect()
 }
 
-async fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
     let mut node = root;
     for &index in path {
         match node {
@@ -115,15 +117,15 @@ impl ArtifactEditor for XmlAnyEditor {
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let XmlAnyEditorCommand::SetNode { node_id, value } = command;
-        let Ok(path) = decode_node_id(node_id).await else { return Ok(Emit::default()) };
+        let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
         let Some(root) = &doc.snapshot.doc.root else { return Ok(Emit::default()) };
-        let Some(XmlNode::Text { .. }) = resolve_node(root, &path).await else { return Ok(Emit::default()) };
+        let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
         Ok(Emit { artifact_mutations: vec![XmlMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -131,14 +133,15 @@ impl ArtifactEditor for XmlAnyEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_xml_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_xml_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XML_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "xml"])
-        .await.icon_id("list-tree")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::XML_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "stdio", "xml"])
+        .icon_id("list-tree")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::XML_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

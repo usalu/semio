@@ -43,19 +43,21 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
             crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
-        ).await);
+        ));
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.mp3.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -67,18 +69,21 @@ use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapsh
 
 /// 🔍 Real magic sniff: an ID3v2 header at the front, OR a valid MPEG frame sync anywhere in the
 /// buffer.
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
-    detect_id3v2_header(bytes).await.is_some() || find_frame_sync(bytes).await.is_some()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
+    detect_id3v2_header(bytes).is_some() || find_frame_sync(bytes).is_some()
 }
 //#endregion 🔖️Sniff
 
 //#region 🔖️Syncsafe
 /// 📐️ Decodes a 4-byte ID3v2 synchsafe integer (7 significant bits per byte).
-async fn decode_syncsafe(bytes: &[u8; 4]) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_syncsafe(bytes: &[u8; 4]) -> u32 {
     bytes.iter().fold(0u32, |acc, &b| (acc << 7) | (b as u32 & 0x7F))
 }
 /// 📐️ Encodes a `u32` (must be `< 2^28`) as a 4-byte ID3v2 synchsafe integer.
-async fn encode_syncsafe(mut value: u32) -> [u8; 4] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_syncsafe(mut value: u32) -> [u8; 4] {
     let mut out = [0u8; 4];
     for slot in out.iter_mut().rev() {
         *slot = (value & 0x7F) as u8;
@@ -95,19 +100,21 @@ struct Id3v2HeaderRaw {
     flags: u8,
     size: u32,
 }
-async fn detect_id3v2_header(bytes: &[u8]) -> Option<Id3v2HeaderRaw> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn detect_id3v2_header(bytes: &[u8]) -> Option<Id3v2HeaderRaw> {
     if bytes.len() < 10 || &bytes[0..3] != b"ID3" {
         return None;
     }
     let size_bytes: [u8; 4] = bytes[6..10].try_into().ok()?;
-    Some(Id3v2HeaderRaw { major_version: bytes[3], minor_version: bytes[4], flags: bytes[5], size: decode_syncsafe(&size_bytes).await })
+    Some(Id3v2HeaderRaw { major_version: bytes[3], minor_version: bytes[4], flags: bytes[5], size: decode_syncsafe(&size_bytes) })
 }
 
 /// 🏷️ Parses the ID3v2 tag (10-byte header + `size` bytes of frames, stopping at padding — a
 /// frame id of all-zero bytes). ID3v2.3 frame sizes are a plain big-endian `u32`; ID3v2.4 frame
 /// sizes are themselves synchsafe (spec difference honored here).
-async fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
-    let header = detect_id3v2_header(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
+    let header = detect_id3v2_header(bytes)?;
     let body_start = 10usize;
     let body_end = body_start + header.size as usize;
     if body_end > bytes.len() {
@@ -122,7 +129,7 @@ async fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
         }
         let id = String::from_utf8_lossy(id_bytes).into_owned();
         let size_bytes: [u8; 4] = bytes[pos + 4..pos + 8].try_into().ok()?;
-        let size = if header.major_version >= 4 { decode_syncsafe(&size_bytes).await } else { u32::from_be_bytes(size_bytes) } as usize;
+        let size = if header.major_version >= 4 { decode_syncsafe(&size_bytes) } else { u32::from_be_bytes(size_bytes) } as usize;
         let flags = u16::from_be_bytes([bytes[pos + 8], bytes[pos + 9]]);
         let data_start = pos + 10;
         let data_end = data_start + size;
@@ -138,7 +145,8 @@ async fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
 /// 🏷️ Re-encodes an `Id3v2Tag` to real bytes: `ID3` + version + flags + synchsafe size, then
 /// every frame's id/size/flags/data verbatim (size recomputed from `data.len()`, never carried
 /// stale).
-async fn encode_id3v2(tag: &Id3v2Tag) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_id3v2(tag: &Id3v2Tag) -> Vec<u8> {
     let mut frames_bytes = Vec::new();
     for frame in &tag.frames {
         let mut id = frame.id.clone().into_bytes();
@@ -167,7 +175,8 @@ async fn encode_id3v2(tag: &Id3v2Tag) -> Vec<u8> {
 //#region 🔖️FrameHeader
 /// 🔍 Real 11-bit MPEG sync-word scan: `0xFFE` in the top 11 bits, plus a sanity check that the
 /// version (bits 19-20) and layer (bits 17-18) fields are not the reserved values.
-pub async fn find_frame_sync(bytes: &[u8]) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn find_frame_sync(bytes: &[u8]) -> Option<usize> {
     let mut i = 0usize;
     while i + 1 < bytes.len() {
         if bytes[i] == 0xFF && (bytes[i + 1] & 0xE0) == 0xE0 {
@@ -186,7 +195,8 @@ pub async fn find_frame_sync(bytes: &[u8]) -> Option<usize> {
 /// `0`=2.5, `2`=2, `3`=1 (`1` is the reserved value, never reached here). `layer`: `1`=III,
 /// `2`=II, `3`=I. Index `0` = "free" bitrate (unsupported — no frame-size formula applies) and
 /// `15` = reserved; both are honest decode failures, not silently substituted.
-async fn bitrate_kbps(version_id: u8, layer: u8, index: u8) -> Option<u16> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bitrate_kbps(version_id: u8, layer: u8, index: u8) -> Option<u16> {
     const V1_L1: [u16; 16] = [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0];
     const V1_L2: [u16; 16] = [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0];
     const V1_L3: [u16; 16] = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0];
@@ -209,7 +219,8 @@ async fn bitrate_kbps(version_id: u8, layer: u8, index: u8) -> Option<u16> {
 /// 📐️ Parses the 4-byte frame header at `bytes[pos..pos+4]` and computes the real total frame
 /// size (header + payload, per Layer I/II/III's own formula). Returns `None` on any reserved
 /// field or a size that would overrun the buffer.
-async fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize)> {
     if pos + 4 > bytes.len() {
         return None;
     }
@@ -232,8 +243,8 @@ async fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader,
     let original = ((b3 >> 2) & 0x01) != 0;
     let emphasis = b3 & 0x03;
 
-    let bitrate_bps = bitrate_kbps(mpeg_version_id, layer, bitrate_index).await? as u32 * 1000;
-    let sample_rate = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index).await?;
+    let bitrate_bps = bitrate_kbps(mpeg_version_id, layer, bitrate_index)? as u32 * 1000;
+    let sample_rate = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index)?;
     let pad = if padding { 1u32 } else { 0 };
     let frame_size = if layer == 3 {
         // Layer I: slots are 4 bytes.
@@ -249,7 +260,8 @@ async fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader,
 }
 
 /// 📐️ Re-encodes a frame header's typed fields back to the real 4 header bytes.
-async fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
     let b0 = 0xFFu8;
     let b1 = 0xE0 | (h.mpeg_version_id << 3) | (h.layer << 1) | (h.protection_bit as u8);
     let b2 = (h.bitrate_index << 4) | (h.sample_rate_index << 2) | ((h.padding as u8) << 1) | (h.private_bit as u8);
@@ -262,9 +274,10 @@ async fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
 /// 🚶 Decodes a full `.mp3` byte stream: optional leading ID3v2 tag, a sequence of real MPEG
 /// frames (sync-scanned + header-decoded + sized by the real bitrate/sample-rate formula), and
 /// an optional trailing 128-byte ID3v1 tag (`TAG` magic).
-pub async fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
     let mut pos = 0usize;
-    let id3v2 = match parse_id3v2(bytes).await {
+    let id3v2 = match parse_id3v2(bytes) {
         Some((tag, consumed)) => {
             pos = consumed;
             Some(tag)
@@ -274,10 +287,10 @@ pub async fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
 
     let mut frames = Vec::new();
     loop {
-        match find_frame_sync(&bytes[pos..]).await {
+        match find_frame_sync(&bytes[pos..]) {
             Some(offset) => {
                 let frame_pos = pos + offset;
-                match parse_frame_header(bytes, frame_pos).await {
+                match parse_frame_header(bytes, frame_pos) {
                     Some((header, frame_size)) => {
                         let payload = bytes[frame_pos + 4..frame_pos + frame_size].to_vec();
                         frames.push(Mp3Frame { header, payload });
@@ -306,7 +319,8 @@ pub async fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
 /// (reconstructed from typed fields) + its retained payload + `id3v1` (if present) — for a
 /// snapshot decoded from a real file, this reproduces the original bytes exactly (see
 /// `codec_retention_law` below).
-pub async fn encode_mp3(snapshot: &Mp3Snapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_mp3(snapshot: &Mp3Snapshot) -> Vec<u8> {
     let mut out = Vec::new();
     if let Some(tag) = &snapshot.id3v2 {
         out.extend_from_slice(&encode_id3v2(tag));
@@ -330,7 +344,8 @@ mod codec_tests {
     /// `📚️examples/🎬️demo/🖼️assets/🎵️example.mp3` (per ticket `fixtures/mp3/NOTES.md`), duplicated
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!`
     /// boundary.
-    async fn real_fixture() -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_fixture() -> Vec<u8> {
         include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎵️example.mp3").to_vec()
     }
 

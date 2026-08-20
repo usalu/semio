@@ -79,23 +79,28 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// 🧭️ Resolves the package root's officeDocument relationship regardless of whether it was
 /// authored under the Transitional or the Strict relationship-type namespace -- see
 /// `REL_TYPE_OFFICE_DOCUMENT_STRICT`.
-pub async fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
-    opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).await.or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
+    opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
 }
 
-pub async fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
     crate::artifacts::xml::schema::snapshot::XmlAttr { name: name.into(), value: value.into() }
 }
 
-pub async fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn attr_val<'a>(attrs: &'a [crate::artifacts::xml::schema::snapshot::XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
-pub async fn find_child<'a>(children: &'a [crate::artifacts::xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a crate::artifacts::xml::schema::snapshot::XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn find_child<'a>(children: &'a [crate::artifacts::xml::schema::snapshot::XmlNode], name: &str) -> Option<&'a crate::artifacts::xml::schema::snapshot::XmlNode> {
     children.iter().find(|c| matches!(c, crate::artifacts::xml::schema::snapshot::XmlNode::Element { name: n, .. } if n == name))
 }
 
-pub async fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> &[crate::artifacts::xml::schema::snapshot::XmlNode] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn element_children(node: &crate::artifacts::xml::schema::snapshot::XmlNode) -> &[crate::artifacts::xml::schema::snapshot::XmlNode] {
     match node {
         crate::artifacts::xml::schema::snapshot::XmlNode::Element { children, .. } => children,
         _ => &[],

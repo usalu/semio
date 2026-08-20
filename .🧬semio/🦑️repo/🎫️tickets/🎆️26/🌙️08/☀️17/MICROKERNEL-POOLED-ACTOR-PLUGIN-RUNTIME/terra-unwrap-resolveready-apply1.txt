@@ -1,0 +1,112 @@
+[pass 1] candidate sites=457 skipped=0
+  applied 130
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 17210:17215 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 14569:14574 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 22876:22881 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 6442:6469 = b'CsvFieldDiff::between(b, o)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 29189:29194 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 1934:1945 = b'v.as_list()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 38516:38521 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 38429:38434 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 163780:163802 = b'read_bin_attr_pairs(r)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 99986:100008 = b'dec_attr_pairs(&value)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68948:68953 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68866:68871 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68783:68788 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68707:68712 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68627:68632 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68549:68554 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68466:68471 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68378:68383 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68289:68294 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 68205:68210 = b'await', not a resolve_ready(...) wrapper
+[pass 2] candidate sites=226 skipped=0
+  applied 22
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 22837:22842 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 6490:6502 = b'd.is_empty()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 65130:65135 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 65108:65113 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 65086:65091 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 65064:65069 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs: span 18301:18317 = b'parts.as_slice()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️component.rs: span 26256:26261 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️component.rs: span 24825:24830 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️component.rs: span 23421:23426 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️component.rs: span 22640:22645 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️component.rs: span 21862:21867 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️ply/🔖️1.0/✳️any/🦀️component.rs: span 8701:8716 = b'value_as_f64(v)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🔗️causal-internals/🦀️component.rs: span 30762:30767 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🔗️causal-internals/🦀️component.rs: span 30095:30100 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🧱️brep/🦀️component.rs: span 10848:10905 = b'b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(p)])', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🪜️ladder/🦀️component.rs: span 4650:4670 = b'walk(v, schema_name)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/🦀️component.rs: span 6366:6376 = b'r.u64_be()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/🦀️component.rs: span 6165:6175 = b'r.fourcc()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/🦀️component.rs: span 6010:6020 = b'r.u32_be()', not a resolve_ready(...) wrapper
+[pass 3] candidate sites=188 skipped=0
+  applied 6
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span 22798:22803 = b'await', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 14188:14201 = b'cov.get(i, i)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 13604:13617 = b'beta.get(col)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 13542:13562 = b'design.get(row, col)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰xml/🔖️1.0/✳️any/🦀️component.rs: span 11953:11975 = b'find(&fields, "value")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 539767:539780 = b'data.read_b()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 519716:519730 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513516:513530 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513451:513465 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 512913:512927 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 488608:488622 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 480719:480732 = b'data.read_b()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 475087:475101 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 473224:473238 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 471093:471107 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467636:467650 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467447:467461 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 466895:466909 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 459652:459666 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 458665:458679 = b'data.read_bl()', not a resolve_ready(...) wrapper
+[pass 4] candidate sites=180 skipped=0
+  applied 4
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 14149:14162 = b'cov.get(i, i)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 13565:13578 = b'beta.get(col)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 539650:539663 = b'data.read_b()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 519599:519613 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513399:513413 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513334:513348 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 512796:512810 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 488491:488505 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 475009:475023 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 473146:473160 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 471015:471029 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467558:467572 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467369:467383 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 466817:466831 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 459574:459588 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451990:452004 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451289:451303 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451144:451158 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 450313:450327 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 450121:450135 = b'data.read_bd()', not a resolve_ready(...) wrapper
+[pass 5] candidate sites=175 skipped=0
+  applied 3
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/📊️statistics-internals/🦀️component.rs: span 14110:14123 = b'cov.get(i, i)', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 519521:519535 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513321:513335 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513256:513270 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 512718:512732 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 488413:488427 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 474931:474945 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 473068:473082 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 470937:470951 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467480:467494 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 467291:467305 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 459535:459549 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451951:451965 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451250:451264 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 451105:451119 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 450274:450288 = b'data.read_bd()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 450082:450096 = b'data.read_bd()', not a resolve_ready(...) wrapper
+[pass 6] candidate sites=171 skipped=0
+  applied 2
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 519443:519457 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513243:513257 = b'data.read_bl()', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 513178:513192 = b'data.read_bl()', not a resolve_ready(...) wrapper

@@ -559,7 +559,7 @@ async fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
 async fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth).await?;
-    let has_label = !w.edge_label.is_empty().await;
+    let has_label = !w.edge_label.is_empty();
     let mut presence = 0u8;
     if w.edge.is_some() {
         presence |= 0b01;
@@ -796,7 +796,7 @@ async fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &
             // 🔁️ Same closure constraint as `read_inline_string`: read the position before the
             // sync `map_err` closure, don't `.await` inside it.
             let offset = reader.position().await as u64;
-            crate::os_dsl::schema::parse_expr_text(&text).await.map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset, detail: e.message })
+            crate::os_dsl::schema::parse_expr_text(&text).map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset, detail: e.message })
         }
         TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape).await, ctx, depth).await?)),
         TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape).await).await,
@@ -1485,8 +1485,8 @@ mod tests {
                 FieldSpec::new(14, "value_field", Shape::Value),
                 FieldSpec::new(15, "table_field", Shape::Table(table_row_spec)),
                 FieldSpec::new(16, "wire_field", Shape::Wire),
-                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap())),
-                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").await.unwrap())),
+                FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
                 FieldSpec::new(19, "ref_field", Shape::Ref("material")),
                 FieldSpec::new(20, "coord_field", Shape::Coord(3)),
                 FieldSpec::new(21, "dir_field", Shape::Dir),

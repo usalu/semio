@@ -26,7 +26,7 @@ pub struct SemioPresentationInference {
 
 impl protocol::Inference<SemioPresentationSnapshot> for SemioPresentationInference {
     async fn infer(snapshot: &SemioPresentationSnapshot) -> Self {
-        Self { outline: compute_semio_presentation_outline(snapshot).await }
+        Self { outline: compute_semio_presentation_outline(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::prese
 /// 💡️ Registers `s.stdio.semio.presentation.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_presentation_artifact_schema_descriptor`'s
 /// registration.
-pub async fn semio_presentation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_presentation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.presentation.inference",
         inference: schema::FacetLeaves {

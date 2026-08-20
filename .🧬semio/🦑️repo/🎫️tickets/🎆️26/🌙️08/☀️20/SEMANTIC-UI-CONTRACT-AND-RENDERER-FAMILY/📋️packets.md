@@ -52,3 +52,19 @@ cheaper and safer than a fresh packet, because the author still held the design 
 | `backend-webgpu` | `🖼️render/🎯️targets/🧊️webgpu/**` | new crate; sol scaffolds first |
 | `backend-metal` / `backend-d3d12` / `backend-vulkan` | `🖼️render/🎯️targets/{🍎️metal,🪟️d3d12,🌋️vulkan}/**` | new crates; Metal is the only one runtime-testable on this machine |
 | `ui-host` | `🖱️ui/🖥️host/📦️packages/🦀️rust/**` | new crate; **W0 open question: check whether the existing `🖥️platform` module already owns window abstractions** |
+
+---
+
+# ⤴️ ABSORBED into `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` (2026-08-20 15:00)
+
+This program's session ended. The user designated the MICROKERNEL ticket's session sole coordinator of
+both programs, and a liveness probe at 14:52 confirmed no session was live here (zero `.rs` files
+modified repo-wide in the preceding 15 minutes).
+
+**All remaining work continues under `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`**, whose
+`📓️design-unified.md` is the single plan of record. This ticket's `📌️important.md`, `📋️master.md` and
+`📋️packets.md` are preserved there as `📓️absorbed-ui-*.md`, and `📓️recipe-plugin.md` was copied over as
+the fleet migration recipe. The owner ruling U1 (UI crates are literal sync `fn`) is ratified there as
+exception class **E6**.
+
+Do not start new work from this file. This ticket stays open only until the unified program exits.

@@ -26,18 +26,22 @@ use crate::artifacts::step::engine::part21::{Part21Builder, Part21Header, Part21
 use crate::artifacts::step::schema::snapshot::StepSnapshot;
 
 //#region 🔖️ValueBuild
-async fn s(text: &str) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
-async fn xyz(p: SemioPoint3) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xyz(p: SemioPoint3) -> Part21Value {
     Part21Value::List(vec![Part21Value::Real(p.x.into()), Part21Value::Real(p.y.into()), Part21Value::Real(p.z.into())])
 }
-async fn bool_enum(b: bool) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bool_enum(b: bool) -> Part21Value {
     Part21Value::Enum(if b { "T".to_string() } else { "F".to_string() })
 }
 /// 🔁️ Inverse of the `📥️import` leaf's `expand_knots`: a flat knot vector -> `(multiplicities,
 /// distinct_knots)`, grouping consecutive equal (within float-epsilon) values into runs.
-async fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
     let mut mults: Vec<i64> = Vec::new();
     let mut uniq: Vec<f64> = Vec::new();
     for &k in flat {
@@ -55,39 +59,43 @@ async fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
 //#endregion 🔖️ValueBuild
 
 //#region 🔖️Build
-async fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
-    b.alloc("CARTESIAN_POINT", vec![s("").await, xyz(p).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
+    b.alloc("CARTESIAN_POINT", vec![s(""), xyz(p)])
 }
-async fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
-    b.alloc("DIRECTION", vec![s("").await, xyz(d).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
+    b.alloc("DIRECTION", vec![s(""), xyz(d)])
 }
 /// 📐️ `AXIS2_PLACEMENT_3D` with the ref_direction (in-plane rotation) always `$` — see module
 /// doc comment.
-async fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
     let origin_id = point_to_part21(b, origin);
     let axis_id = direction_to_part21(b, axis);
-    b.alloc("AXIS2_PLACEMENT_3D", vec![s("").await, Part21Value::Ref(origin_id.await), Part21Value::Ref(axis_id.await), Part21Value::Unset]).await
+    b.alloc("AXIS2_PLACEMENT_3D", vec![s(""), Part21Value::Ref(origin_id), Part21Value::Ref(axis_id), Part21Value::Unset])
 }
 
-async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
     match curve {
         BrepCurve::Line { origin, direction } => {
             let point_id = point_to_part21(b, *origin);
             let dir_id = direction_to_part21(b, *direction);
-            let vector_id = b.alloc("VECTOR", vec![s("").await, Part21Value::Ref(dir_id.await), Part21Value::Real(1.0.into())]);
-            b.alloc("LINE", vec![s("").await, Part21Value::Ref(point_id.await), Part21Value::Ref(vector_id.await)]).await
+            let vector_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(1.0.into())]);
+            b.alloc("LINE", vec![s(""), Part21Value::Ref(point_id), Part21Value::Ref(vector_id)])
         }
         BrepCurve::Circle { center, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("CIRCLE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
+            b.alloc("CIRCLE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("ELLIPSE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius_major).into()), Part21Value::Real((*radius_minor).into())]).await
+            b.alloc("ELLIPSE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius_major).into()), Part21Value::Real((*radius_minor).into())])
         }
         BrepCurve::Nurbs { control_points, weights, degree, knots } => {
             let cp_ids: Vec<Part21Value> = control_points.iter().map(|p| Part21Value::Ref(point_to_part21(b, *p))).collect();
-            let (mults, uniq_knots) = compress_knots(knots).await;
+            let (mults, uniq_knots) = compress_knots(knots);
             let base_args = vec![
                 s(""),
                 Part21Value::Int(*degree as i64),
@@ -105,32 +113,33 @@ async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
                 let weight_args = vec![Part21Value::List(weights.iter().map(|w| Part21Value::Real((*w).into())).collect())];
                 b.instances.last_mut().expect("just allocated above").entities.push(("RATIONAL_B_SPLINE_CURVE".to_string(), weight_args));
             }
-            id.await
+            id
         }
     }
 }
 
-async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
     match surface {
         BrepSurface::Plane { origin, normal } => {
             let pos_id = axis_placement_to_part21(b, *origin, *normal);
-            b.alloc("PLANE", vec![s("").await, Part21Value::Ref(pos_id.await)]).await
+            b.alloc("PLANE", vec![s(""), Part21Value::Ref(pos_id)])
         }
         BrepSurface::Cylinder { origin, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CYLINDRICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
+            b.alloc("CYLINDRICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepSurface::Cone { origin, axis, radius, half_angle } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CONICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into()), Part21Value::Real((*half_angle).into())]).await
+            b.alloc("CONICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into()), Part21Value::Real((*half_angle).into())])
         }
         BrepSurface::Sphere { center, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 });
-            b.alloc("SPHERICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
+            b.alloc("SPHERICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
         }
         BrepSurface::Torus { center, axis, major_radius, minor_radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("TOROIDAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*major_radius).into()), Part21Value::Real((*minor_radius).into())]).await
+            b.alloc("TOROIDAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*major_radius).into()), Part21Value::Real((*minor_radius).into())])
         }
         BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => {
             let (u, v) = (*u_count as usize, *v_count as usize);
@@ -138,12 +147,12 @@ async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 
             for ui in 0..u {
                 let mut row = Vec::with_capacity(v);
                 for vi in 0..v {
-                    row.push(Part21Value::Ref(point_to_part21(b, control_points[ui * v + vi]).await));
+                    row.push(Part21Value::Ref(point_to_part21(b, control_points[ui * v + vi])));
                 }
                 rows.push(Part21Value::List(row));
             }
-            let (u_mults, u_uniq) = compress_knots(knots_u).await;
-            let (v_mults, v_uniq) = compress_knots(knots_v).await;
+            let (u_mults, u_uniq) = compress_knots(knots_u);
+            let (v_mults, v_uniq) = compress_knots(knots_v);
             let base_args = vec![
                 s(""),
                 Part21Value::Int(*degree_u as i64),
@@ -172,18 +181,19 @@ async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 
                 }
                 b.instances.last_mut().expect("just allocated above").entities.push(("RATIONAL_B_SPLINE_SURFACE".to_string(), vec![Part21Value::List(wrows)]));
             }
-            id.await
+            id
         }
     }
 }
 
-async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
-    let mut b = Part21Builder::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
+    let mut b = Part21Builder::new();
 
     let mut vertex_ids: HashMap<&str, u64> = HashMap::new();
     for v in &snapshot.vertices {
         let point_id = point_to_part21(&mut b, v.point);
-        let vertex_id = b.alloc("VERTEX_POINT", vec![s("").await, Part21Value::Ref(point_id.await)]).await;
+        let vertex_id = b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(point_id)]);
         vertex_ids.insert(v.id.as_str(), vertex_id);
     }
 
@@ -192,7 +202,7 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
         let &start = vertex_ids.get(e.start_vertex.as_str()).ok_or_else(|| format!("edge {:?}: dangling start_vertex {:?}", e.id, e.start_vertex))?;
         let &end = vertex_ids.get(e.end_vertex.as_str()).ok_or_else(|| format!("edge {:?}: dangling end_vertex {:?}", e.id, e.end_vertex))?;
         let curve_id = curve_to_part21(&mut b, &e.curve);
-        let edge_id = b.alloc("EDGE_CURVE", vec![s("").await, Part21Value::Ref(start), Part21Value::Ref(end), Part21Value::Ref(curve_id.await), bool_enum(true).await]).await;
+        let edge_id = b.alloc("EDGE_CURVE", vec![s(""), Part21Value::Ref(start), Part21Value::Ref(end), Part21Value::Ref(curve_id), bool_enum(true)]);
         edge_ids.insert(e.id.as_str(), edge_id);
     }
 
@@ -201,25 +211,25 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
         let mut members = Vec::with_capacity(l.edges.len());
         for le in &l.edges {
             let &edge_ref = edge_ids.get(le.edge.as_str()).ok_or_else(|| format!("loop {:?}: dangling edge {:?}", l.id, le.edge))?;
-            let oe_id = b.alloc("ORIENTED_EDGE", vec![s("").await, Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_ref), bool_enum(le.orientation).await]).await;
+            let oe_id = b.alloc("ORIENTED_EDGE", vec![s(""), Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_ref), bool_enum(le.orientation)]);
             members.push(Part21Value::Ref(oe_id));
         }
-        let loop_id = b.alloc("EDGE_LOOP", vec![s("").await, Part21Value::List(members)]).await;
+        let loop_id = b.alloc("EDGE_LOOP", vec![s(""), Part21Value::List(members)]);
         loop_ids.insert(l.id.as_str(), loop_id);
     }
 
     let mut face_ids: HashMap<&str, u64> = HashMap::new();
     for f in &snapshot.faces {
         let &outer_ref = loop_ids.get(f.outer_loop.as_str()).ok_or_else(|| format!("face {:?}: dangling outer_loop {:?}", f.id, f.outer_loop))?;
-        let outer_bound_id = b.alloc("FACE_OUTER_BOUND", vec![s("").await, Part21Value::Ref(outer_ref), bool_enum(true).await]).await;
+        let outer_bound_id = b.alloc("FACE_OUTER_BOUND", vec![s(""), Part21Value::Ref(outer_ref), bool_enum(true)]);
         let mut bounds = vec![Part21Value::Ref(outer_bound_id)];
         for il in &f.inner_loops {
             let &loop_ref = loop_ids.get(il.as_str()).ok_or_else(|| format!("face {:?}: dangling inner_loop {:?}", f.id, il))?;
-            let bound_id = b.alloc("FACE_BOUND", vec![s("").await, Part21Value::Ref(loop_ref), bool_enum(true).await]).await;
+            let bound_id = b.alloc("FACE_BOUND", vec![s(""), Part21Value::Ref(loop_ref), bool_enum(true)]);
             bounds.push(Part21Value::Ref(bound_id));
         }
         let surface_id = surface_to_part21(&mut b, &f.surface);
-        let face_id = b.alloc("ADVANCED_FACE", vec![s("").await, Part21Value::List(bounds), Part21Value::Ref(surface_id.await), bool_enum(f.orientation).await]).await;
+        let face_id = b.alloc("ADVANCED_FACE", vec![s(""), Part21Value::List(bounds), Part21Value::Ref(surface_id), bool_enum(f.orientation)]);
         face_ids.insert(f.id.as_str(), face_id);
     }
 
@@ -230,14 +240,14 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
             let &face_ref = face_ids.get(sf.face.as_str()).ok_or_else(|| format!("shell {:?}: dangling face {:?}", sh.id, sf.face))?;
             members.push(Part21Value::Ref(face_ref));
         }
-        let shell_id = b.alloc("CLOSED_SHELL", vec![s("").await, Part21Value::List(members)]).await;
+        let shell_id = b.alloc("CLOSED_SHELL", vec![s(""), Part21Value::List(members)]);
         shell_ids.insert(sh.id.as_str(), shell_id);
     }
 
     for so in &snapshot.solids {
         let outer = so.shells.iter().find(|m| !m.is_void).ok_or_else(|| format!("solid {:?}: has no non-void outer shell", so.id))?;
         let &outer_ref = shell_ids.get(outer.shell.as_str()).ok_or_else(|| format!("solid {:?}: dangling outer shell {:?}", so.id, outer.shell))?;
-        b.alloc("MANIFOLD_SOLID_BREP", vec![s("").await, Part21Value::Ref(outer_ref)]).await;
+        b.alloc("MANIFOLD_SOLID_BREP", vec![s(""), Part21Value::Ref(outer_ref)]);
         let void_refs: Vec<Part21Value> =
             so.shells.iter().filter(|m| m.is_void).map(|m| shell_ids.get(m.shell.as_str()).copied().map(Part21Value::Ref).ok_or_else(|| format!("solid {:?}: dangling void shell {:?}", so.id, m.shell))).collect::<Result<Vec<_>, _>>()?;
         if !void_refs.is_empty() {
@@ -246,11 +256,11 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
     }
 
     let header = Part21Header {
-        file_description: vec![Part21Value::List(vec![s("").await]), s("2;1").await],
-        file_name: vec![s("semio.step").await, s("").await, Part21Value::List(vec![s("").await]), Part21Value::List(vec![s("").await]), s("semio").await, s("").await, s("").await],
-        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN").await])],
+        file_description: vec![Part21Value::List(vec![s("")]), s("2;1")],
+        file_name: vec![s("semio.step"), s(""), Part21Value::List(vec![s("")]), Part21Value::List(vec![s("")]), s("semio"), s(""), s("")],
+        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN")])],
     };
-    Ok(b.build(header).await)
+    Ok(b.build(header))
 }
 //#endregion 🔖️Build
 
@@ -269,8 +279,8 @@ impl ArtifactSerializer for SemioBrepToStep {
     const INTO: Dialect = STEP_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let doc = build_part21(from).await.map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
-        Ok(StepSnapshot::from_part21_document(doc).await)
+        let doc = build_part21(from).map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
+        Ok(StepSnapshot::from_part21_document(doc))
     }
 }
 //#endregion 🔖️Serializer
@@ -287,7 +297,8 @@ mod tests {
     /// Plane/Cylinder/Cone/Sphere/Torus/Nurbs surfaces) plus a face with an inner (hole) loop and
     /// a solid with a void shell — real-world-shaped coverage of the full AP214 vocabulary this
     /// bridge supports, not a minimal degenerate case.
-    async fn full_vocabulary_snapshot() -> SemioBrepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn full_vocabulary_snapshot() -> SemioBrepSnapshot {
         let mut snap = SemioBrepSnapshot::default();
         snap.vertices = vec![
             BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } },
@@ -370,7 +381,8 @@ mod tests {
         snap
     }
 
-    async fn assert_curve_matches(o: &BrepCurve, r: &BrepCurve) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_curve_matches(o: &BrepCurve, r: &BrepCurve) {
         match (o, r) {
             (BrepCurve::Line { origin: oo, direction: od }, BrepCurve::Line { origin: ro, direction: rd }) => {
                 assert_eq!(oo, ro);
@@ -397,7 +409,8 @@ mod tests {
         }
     }
 
-    async fn assert_surface_matches(o: &BrepSurface, r: &BrepSurface) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_surface_matches(o: &BrepSurface, r: &BrepSurface) {
         match (o, r) {
             (BrepSurface::Plane { origin: oo, normal: on }, BrepSurface::Plane { origin: ro, normal: rn }) => {
                 assert_eq!(oo, ro);

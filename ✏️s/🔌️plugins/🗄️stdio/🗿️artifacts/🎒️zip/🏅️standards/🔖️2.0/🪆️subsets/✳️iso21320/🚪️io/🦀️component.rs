@@ -21,17 +21,19 @@ pub mod derived_composition {
     //#region 🔖️Normalize
     /// 🧹 Logical snapshots carry no native header fields — canonical serialization policy already
     /// emits conforming Stored/Deflate headers. Retained as the composer's normalization hook.
-    async fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
         let _ = entry;
     }
 
-    async fn zip_wire_bytes_from_payload(payload: &IoPayload) -> Option<Vec<u8>> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn zip_wire_bytes_from_payload(payload: &IoPayload) -> Option<Vec<u8>> {
         match payload {
             IoPayload::Binary(bytes) => {
                 if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
                     Some(inner.to_vec())
                 } else if matches!(
-                    crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes).await,
+                    crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes),
                     crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High | crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::Medium
                 ) {
                     Some(bytes.to_vec())
@@ -40,7 +42,7 @@ pub mod derived_composition {
                 }
             }
             IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)
-                .await.ok()
+                .ok()
                 .and_then(|snapshot| semio_framework_plugin::resolve_ready(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot)).ok()),
         }
     }
@@ -88,8 +90,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT_ISO21320;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
-            match zip_wire_bytes_from_payload(payload).await {
-                Some(bytes) => check_iso21320_wire_conformance(&bytes).await,
+            match zip_wire_bytes_from_payload(payload) {
+                Some(bytes) => check_iso21320_wire_conformance(&bytes),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.zip.iso21320.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -104,7 +106,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<ZipIso21320Validator>)
     }
 
@@ -116,8 +119,9 @@ pub mod derived_composition {
     /// registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
     /// how `✳️any`'s own entry is registered.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -129,7 +133,8 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        async fn raw_zip_with_flags(flags: u16, version_needed: u16) -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn raw_zip_with_flags(flags: u16, version_needed: u16) -> Vec<u8> {
             let data = b"payload";
             let crc = crate::artifacts::zip::standards::v2_0::subsets::any::io::crc32(data);
             let name = b"secret.bin";

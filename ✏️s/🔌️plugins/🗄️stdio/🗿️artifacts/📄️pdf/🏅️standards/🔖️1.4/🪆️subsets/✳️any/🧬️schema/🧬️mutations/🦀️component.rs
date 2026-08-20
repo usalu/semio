@@ -30,14 +30,15 @@ pub enum PdfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub async fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
-    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -49,7 +50,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
     async fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
-            PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
         }).await
     }
 
@@ -107,7 +108,8 @@ mod tests {
     use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
     use protocol::MutationDiff;
 
-    async fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
         PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width, height, text: text.into() } }
     }
 

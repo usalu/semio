@@ -7,5 +7,7 @@ pub const TOUCHED_PATHS: &[&str] = &["document/extensions"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GltfChangeDocumentExtensionDataPayload { pub data: Option<GltfJson> }
-pub async fn validate(payload: &GltfChangeDocumentExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.data == base.document.extensions { return Err(reject("gltf.mutation.no-observable-change", "document/extensions", "value already has this value")); } Ok(()) }
-pub async fn apply(payload: &GltfChangeDocumentExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions = payload.data.clone(); Ok(next) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfChangeDocumentExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.data == base.document.extensions { return Err(reject("gltf.mutation.no-observable-change", "document/extensions", "value already has this value")); } Ok(()) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfChangeDocumentExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions = payload.data.clone(); Ok(next) }

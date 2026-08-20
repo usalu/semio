@@ -8,5 +8,7 @@ pub const ID: &str = "s.stdio.gltf.mutation.create-texture.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/textures"];
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
 pub struct GltfCreateTexturePayload { pub position: usize }
-pub async fn validate(payload: &GltfCreateTexturePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.position > base.document.textures.len() { return Err(reject("gltf.mutation.insert-out-of-range", "document/textures", "position must be within the collection")); }   Ok(()) }
-pub async fn apply(payload: &GltfCreateTexturePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); repair(&mut next.document, GltfTopLevelFamily::Textures, &Change::Insert(payload.position))?; next.document.textures.insert(payload.position, GltfTexture::default()); Ok(next) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfCreateTexturePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.position > base.document.textures.len() { return Err(reject("gltf.mutation.insert-out-of-range", "document/textures", "position must be within the collection")); }   Ok(()) }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfCreateTexturePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); repair(&mut next.document, GltfTopLevelFamily::Textures, &Change::Insert(payload.position))?; next.document.textures.insert(payload.position, GltfTexture::default()); Ok(next) }

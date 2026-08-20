@@ -187,7 +187,7 @@ impl<'a> Lexer<'a> {
         }
         let text = std::str::from_utf8(&self.data[start..self.pos]).unwrap_or("0");
         if is_real {
-            PdfDecimal::parse(text).await.map(PdfObject::Real).map_err(PdfEngineError::Malformed)
+            PdfDecimal::parse(text).map(PdfObject::Real).map_err(PdfEngineError::Malformed)
         } else {
             text.parse::<i64>().map(PdfObject::Int).map_err(|error| PdfEngineError::Malformed(format!("invalid PDF integer {text:?}: {error}")))
         }
@@ -715,7 +715,7 @@ async fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
 pub async fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
     let filters: Vec<String> = match dict.iter().find(|e| e.key == "Filter").map(|e| &e.value) {
         Some(PdfObject::Name(n)) => vec![n.clone()],
-        Some(PdfObject::Array(a)) => a.iter().filter_map(|o| semio_framework_plugin::resolve_ready(o.as_name()).map(|s| s.to_string())).collect(),
+        Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_name().map(|s| s.to_string())).collect(),
         _ => Vec::new(),
     };
     let mut data = raw.to_vec();
@@ -850,7 +850,7 @@ async fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, 
     };
     let (decoded, _) = decode_stream(&dict, &raw).await?;
     let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().await.unwrap_or(0).max(0) as usize, a[1].as_i64().await.unwrap_or(0).max(0) as usize, a[2].as_i64().await.unwrap_or(0).max(0) as usize],
+        Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
         _ => return malformed("xref stream missing /W").await,
     };
     let size = dict_ref_i64(&dict, "Size").await.unwrap_or(0);
@@ -938,7 +938,7 @@ async fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
             // Reconstruct a minimal trailer: find an object with /Type /Catalog to use as Root.
             for (num, (id, off)) in &scanned {
                 if let Ok((_, obj)) = parse_indirect_at(data, *off).await {
-                    if obj.dict_get("Type").await.and_then(|v| v.as_name()) == Some("Catalog") {
+                    if obj.dict_get("Type").and_then(|v| v.as_name()) == Some("Catalog") {
                         trailer = vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(*id) }];
                         let _ = num;
                         break;
@@ -1421,8 +1421,8 @@ async fn hex_to_unicode_string(hex: &str) -> Option<String> {
 /// default (documented scope cut — StandardEncoding's upper range isn't assumed without more
 /// info, so unmapped codes there stay U+FFFD rather than guessing).
 async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> FontDecoder {
-    let is_type0 = font_dict.dict_get("Subtype").await.and_then(|v| v.as_name()) == Some("Type0");
-    if let Some(tu) = font_dict.dict_get("ToUnicode").await {
+    let is_type0 = font_dict.dict_get("Subtype").and_then(|v| v.as_name()) == Some("Type0");
+    if let Some(tu) = font_dict.dict_get("ToUnicode") {
         let stream = match tu {
             PdfObject::Ref(r) => resolve(r.num),
             other => Some(other.clone()),
@@ -1437,13 +1437,13 @@ async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) 
     for code in 0x20u32..=0x7E {
         fd.chars.insert(code, (code as u8 as char).to_string());
     }
-    let encoding = font_dict.dict_get("Encoding").await.map(|v| match v {
+    let encoding = font_dict.dict_get("Encoding").map(|v| match v {
         PdfObject::Ref(r) => resolve(r.num).unwrap_or(PdfObject::Null),
         other => other.clone(),
     });
     let (base_name, differences) = match &encoding {
         Some(PdfObject::Name(n)) => (Some(n.clone()), None),
-        Some(d @ PdfObject::Dict(_)) => (d.dict_get("BaseEncoding").await.and_then(|v| v.as_name()).map(|s| s.to_string()), d.dict_get("Differences").await.and_then(|v| v.as_array()).map(|a| a.to_vec())),
+        Some(d @ PdfObject::Dict(_)) => (d.dict_get("BaseEncoding").and_then(|v| v.as_name()).map(|s| s.to_string()), d.dict_get("Differences").and_then(|v| v.as_array()).map(|a| a.to_vec())),
         _ => (None, None),
     };
     if base_name.as_deref() == Some("WinAnsiEncoding") || (base_name.is_none() && differences.is_none()) {
@@ -1554,7 +1554,7 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
                         Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number().await {
                             Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
                             Ok(PdfObject::Real(real)) => {
-                                if real.to_f64().await.is_some() {
+                                if real.to_f64().is_some() {
                                     arr.push(ContentOperand::Num);
                                 }
                             }
@@ -1571,7 +1571,7 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
             c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number().await {
                 Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
                 Ok(PdfObject::Real(r)) => {
-                    if r.to_f64().await.is_some() {
+                    if r.to_f64().is_some() {
                         operands.push(ContentOperand::Num);
                     }
                 }
@@ -1667,11 +1667,11 @@ struct Inherited {
 }
 
 async fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
-    let a = v.as_array().await?;
+    let a = v.as_array()?;
     if a.len() < 4 {
         return None;
     }
-    Some([a[0].as_f64().await?, a[1].as_f64().await?, a[2].as_f64().await?, a[3].as_f64().await?])
+    Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?, a[3].as_f64()?])
 }
 
 /// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
@@ -1683,7 +1683,7 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
     }
     let Some(node) = resolve(node_ref.num) else { return };
     let mut here = inherited.clone();
-    if let Some(r) = node.dict_get("Resources").await {
+    if let Some(r) = node.dict_get("Resources") {
         // 🔗️ `/Resources` is very commonly an indirect reference to a shared dict (as in the
         // bachelor-thesis fixture) -- must resolve it here, not just clone the `Ref` object,
         // or every downstream `dict_get("Font")` silently sees a non-dict and finds nothing.
@@ -1693,18 +1693,18 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
         };
         here.resources = Some(resolved);
     }
-    if let Some(mb) = node.dict_get("MediaBox").await.and_then(as_box) {
+    if let Some(mb) = node.dict_get("MediaBox").and_then(as_box) {
         here.media_box = Some(mb);
     }
-    if let Some(cb) = node.dict_get("CropBox").await.and_then(as_box) {
+    if let Some(cb) = node.dict_get("CropBox").and_then(as_box) {
         here.crop_box = Some(cb);
     }
-    if let Some(rot) = node.dict_get("Rotate").await.and_then(|v| v.as_i64()) {
+    if let Some(rot) = node.dict_get("Rotate").and_then(|v| v.as_i64()) {
         here.rotate = rot as i32;
     }
 
-    let is_pages = node.dict_get("Type").await.and_then(|v| v.as_name()) == Some("Pages");
-    let kids = node.dict_get("Kids").await.and_then(|v| v.as_array());
+    let is_pages = node.dict_get("Type").and_then(|v| v.as_name()) == Some("Pages");
+    let kids = node.dict_get("Kids").and_then(|v| v.as_array());
     if is_pages || kids.is_some() {
         if let Some(kids) = kids {
             for kid in kids.to_vec() {
@@ -1719,7 +1719,7 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
     let media_box = here.media_box.unwrap_or([0.0, 0.0, 612.0, 792.0]);
     let resources = here.resources.clone().unwrap_or(PdfObject::Dict(Vec::new()));
     let mut text = String::new();
-    if let Some(contents) = node.dict_get("Contents").await {
+    if let Some(contents) = node.dict_get("Contents") {
         let refs: Vec<ObjRef> = match contents {
             PdfObject::Ref(r) => vec![*r],
             PdfObject::Array(a) => a.iter().filter_map(|o| o.as_ref()).collect(),
@@ -1776,10 +1776,10 @@ pub async fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     let mut pages = Vec::new();
     if let Some(root_ref) = root_ref {
         if let Some(root) = resolve(root_ref.num) {
-            if root.dict_get("Encrypt").await.is_some() {
+            if root.dict_get("Encrypt").is_some() {
                 return Err(PdfEngineError::Unsupported("/Encrypt present on /Root".into()));
             }
-            if let Some(pages_ref) = root.dict_get("Pages").await.and_then(|v| v.as_ref()) {
+            if let Some(pages_ref) = root.dict_get("Pages").and_then(|v| v.as_ref()) {
                 let mut visited = HashSet::new();
                 walk_page_tree(pages_ref, &mut resolve, &Inherited::default(), &mut visited, &mut pages);
             }
@@ -1793,12 +1793,12 @@ pub async fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         .and_then(|e| e.value.as_ref())
         .and_then(|r| resolve(r.num))
         .map(|d| PdfInfo {
-            title: semio_framework_plugin::resolve_ready(d.dict_get("Title")).and_then(pdf_string_to_text),
-            author: semio_framework_plugin::resolve_ready(d.dict_get("Author")).and_then(pdf_string_to_text),
-            subject: semio_framework_plugin::resolve_ready(d.dict_get("Subject")).and_then(pdf_string_to_text),
-            keywords: semio_framework_plugin::resolve_ready(d.dict_get("Keywords")).and_then(pdf_string_to_text),
-            creator: semio_framework_plugin::resolve_ready(d.dict_get("Creator")).and_then(pdf_string_to_text),
-            producer: semio_framework_plugin::resolve_ready(d.dict_get("Producer")).and_then(pdf_string_to_text),
+            title: d.dict_get("Title").and_then(pdf_string_to_text),
+            author: d.dict_get("Author").and_then(pdf_string_to_text),
+            subject: d.dict_get("Subject").and_then(pdf_string_to_text),
+            keywords: d.dict_get("Keywords").and_then(pdf_string_to_text),
+            creator: d.dict_get("Creator").and_then(pdf_string_to_text),
+            producer: d.dict_get("Producer").and_then(pdf_string_to_text),
         })
         .unwrap_or_default();
 

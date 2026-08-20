@@ -12,17 +12,19 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 /// ✅️️ `true` iff `indices` is non-empty, strictly ascending, and every consecutive pair differs by
 /// exactly 1 (a contiguous run) -- shared by this triad's `diff` and `↩️inverse/🦀️component.rs`'s
 /// own reverse construction (via `ungroup`, which always emits a genuinely contiguous run).
-pub(crate) async fn is_contiguous_ascending(indices: &[usize]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn is_contiguous_ascending(indices: &[usize]) -> bool {
     !indices.is_empty() && indices.windows(2).all(|w| w[1] == w[0] + 1)
 }
 //#endregion 🔖️ContiguousCheck
 
 //#region 🔖️Diff
-pub async fn diff(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     if !is_contiguous_ascending(&payload.indices) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Indices for group in layer #{} are empty or not a contiguous ascending run.", payload.parent.layer), [payload.parent.layer.to_string()]).await;
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Indices for group in layer #{} are empty or not a contiguous ascending run.", payload.parent.layer), [payload.parent.layer.to_string()]);
     }
-    match node_at(base, &payload.parent).await {
+    match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) if payload.indices.iter().all(|&i| i < children.len()) => {
             let grouped: Vec<DrawNode> = payload.indices.iter().map(|&i| children[i].clone()).collect();
             let new_group = DrawNode::Group { transform: payload.transform, children: grouped };

@@ -64,7 +64,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_drawing_invariants(&snapshot).await,
+                Some(snapshot) => check_drawing_invariants(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_drawing.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDrawingValidator: payload did not decode as a SemioDrawingSnapshot".to_string())],
             }
         }
@@ -72,7 +72,8 @@ pub mod derived_composition {
 
     /// 🔎️ Real referential-invariant checks over `SemioDrawingSnapshot`'s own collections (no
     /// cross-artifact lookups needed -- both invariants are internal to this subset).
-    pub async fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_layer_ids = std::collections::HashSet::new();
@@ -82,7 +83,8 @@ pub mod derived_composition {
             }
         }
 
-        async fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<dsl::Diagnostic>) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<dsl::Diagnostic>) {
             match node {
                 DrawNode::Path { style: Some(name), .. } | DrawNode::Text { style: Some(name), .. } => {
                     if !style_names.contains(name.as_str()) {
@@ -106,7 +108,8 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioDrawingValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -118,7 +121,8 @@ pub mod derived_composition {
     /// honestly text-only bridge (this codec's own snapshot never exposes decoded content-stream
     /// vector ops) — see each pair's own leaf doc comment for the full rationale.
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    async fn io_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES
             .get_or_init(|| {
                 vec![
@@ -137,21 +141,23 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and (W4) its
     /// semio↔format io bridges. Called from this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::semio_drawing_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioDrawingSnapshot, crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation>(
             crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::inferences::semio_drawing_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::drawing::schema::inferences::semio_drawing_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 

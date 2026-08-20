@@ -1,0 +1,2 @@
+[pass 1] candidate sites=0 skipped=0
+  fixpoint reached

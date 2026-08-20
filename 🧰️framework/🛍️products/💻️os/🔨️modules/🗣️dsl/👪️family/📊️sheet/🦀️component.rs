@@ -96,7 +96,7 @@ async fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) 
 /// @emoji 🔌️ Parses one standalone trace line: `name = expr -> value`.
 pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
 
     let name_token = tokens.first().filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| TextError::new("expected a trace name", TextSpan::at(1, 1)))?;
     let name = name_token.text.as_str().to_string();
@@ -108,7 +108,7 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let arrow_index = find_arrow_after(&tokens, equals_index).await.ok_or_else(|| TextError::new("expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
     let expr_start = tokens[equals_index].byte_range.1 as usize;
     let expr_end = tokens[arrow_index].byte_range.0 as usize;
-    let expr = parse_expr_text(text[expr_start..expr_end].trim()).await?;
+    let expr = parse_expr_text(text[expr_start..expr_end].trim())?;
 
     let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| {
         TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1)))
@@ -149,28 +149,28 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn evaluates_a_load_combination_formula() {
-        let expr = parse_expr_text("1.35*G + 1.5*Q").await.expect("parse_expr_text");
+        let expr = parse_expr_text("1.35*G + 1.5*Q").expect("parse_expr_text");
         let value = evaluate(&expr, &env(&[("G", 100.0), ("Q", 50.0)]).await).expect("evaluate");
         assert!((value - 210.0).abs() < 1e-9, "got {value}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn evaluates_min_max_abs_sqrt() {
-        assert_eq!(evaluate(&parse_expr_text("min(3, 5)").await.unwrap(), &env(&[]).await), Ok(3.0));
-        assert_eq!(evaluate(&parse_expr_text("max(3, 5)").await.unwrap(), &env(&[]).await), Ok(5.0));
-        assert_eq!(evaluate(&parse_expr_text("abs(0-4)").await.unwrap(), &env(&[]).await), Ok(4.0));
-        assert_eq!(evaluate(&parse_expr_text("sqrt(9)").await.unwrap(), &env(&[]).await), Ok(3.0));
+        assert_eq!(evaluate(&parse_expr_text("min(3, 5)").unwrap(), &env(&[]).await), Ok(3.0));
+        assert_eq!(evaluate(&parse_expr_text("max(3, 5)").unwrap(), &env(&[]).await), Ok(5.0));
+        assert_eq!(evaluate(&parse_expr_text("abs(0-4)").unwrap(), &env(&[]).await), Ok(4.0));
+        assert_eq!(evaluate(&parse_expr_text("sqrt(9)").unwrap(), &env(&[]).await), Ok(3.0));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn unknown_variable_and_function_are_diagnosed_not_panicked() {
-        assert_eq!(evaluate(&parse_expr_text("z").await.unwrap(), &env(&[]).await), Err(EvalError::UnknownVariable("z".to_string())));
-        assert_eq!(evaluate(&parse_expr_text("frobnicate(1)").await.unwrap(), &env(&[]).await), Err(EvalError::UnknownFunction("frobnicate".to_string(), 1)));
+        assert_eq!(evaluate(&parse_expr_text("z").unwrap(), &env(&[]).await), Err(EvalError::UnknownVariable("z".to_string())));
+        assert_eq!(evaluate(&parse_expr_text("frobnicate(1)").unwrap(), &env(&[]).await), Err(EvalError::UnknownFunction("frobnicate".to_string(), 1)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn division_by_zero_is_diagnosed() {
-        assert_eq!(evaluate(&parse_expr_text("1/0").await.unwrap(), &env(&[]).await), Err(EvalError::DivisionByZero));
+        assert_eq!(evaluate(&parse_expr_text("1/0").unwrap(), &env(&[]).await), Err(EvalError::DivisionByZero));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -207,7 +207,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-sheet.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-sheet.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
         assert_eq!(grammar.id, "family-sheet");
         assert!(grammar.productions.len() > 10, "family-sheet should cover qty, assign, expr, and eng-record");
     }

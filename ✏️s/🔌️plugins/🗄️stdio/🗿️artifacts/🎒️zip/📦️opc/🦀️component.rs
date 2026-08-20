@@ -54,23 +54,28 @@ const RELATIONSHIPS_NS: &str = "http://schemas.openxmlformats.org/package/2006/r
 /// (e.g. `word/document.xml`, `xl/workbook.xml`, `ppt/presentation.xml`).
 pub const REL_TYPE_OFFICE_DOCUMENT: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
 
-async fn xml_attr(name: &str, value: &str) -> XmlAttr {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_attr(name: &str, value: &str) -> XmlAttr {
     XmlAttr { name: name.into(), value: value.into() }
 }
 
-async fn xml_elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs, children }
 }
 
-async fn opc_escape_text(value: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn opc_escape_text(value: &str) -> String {
     value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
-async fn opc_escape_attr(value: &str) -> String {
-    opc_escape_text(value).await.replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn opc_escape_attr(value: &str) -> String {
+    opc_escape_text(value).replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
 }
 
-async fn opc_node_to_text(node: &XmlNode, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn opc_node_to_text(node: &XmlNode, out: &mut String) {
     match node {
         XmlNode::Text { text } => out.push_str(&opc_escape_text(text)),
         XmlNode::CData { text } => {
@@ -118,9 +123,10 @@ async fn opc_node_to_text(node: &XmlNode, out: &mut String) {
 }
 
 /// 📝️ Deterministically materializes logical OPC XML using the compact ECMA-376 convention.
-pub async fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
     if doc.doctype.is_some() {
-        return xml_document_to_text(doc).await;
+        return xml_document_to_text(doc);
     }
     let mut out = String::new();
     if let Some(declaration) = &doc.declaration {
@@ -177,7 +183,8 @@ impl OpcContentTypes {
     /// 🔎️ Resolves the content type for `part_path` (no leading `/`): override by exact part
     /// name first, else default by extension. `None` when neither applies — the caller decides
     /// whether that is fatal.
-    pub async fn resolve(&self, part_path: &str) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn resolve(&self, part_path: &str) -> Option<&str> {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some((_, ct)) = self.overrides.iter().find(|(p, _)| *p == part_name) {
             return Some(ct);
@@ -187,7 +194,8 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Override` entry for `part_path`.
-    pub async fn set_override(&mut self, part_path: &str, content_type: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_override(&mut self, part_path: &str, content_type: &str) {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some(existing) = self.overrides.iter_mut().find(|(p, _)| *p == part_name) {
             existing.1 = content_type.to_string();
@@ -197,7 +205,8 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Default` entry for `extension` (case-insensitive, no dot).
-    pub async fn set_default(&mut self, extension: &str, content_type: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_default(&mut self, extension: &str, content_type: &str) {
         let ext = extension.to_ascii_lowercase();
         if let Some(existing) = self.defaults.iter_mut().find(|(e, _)| *e == ext) {
             existing.1 = content_type.to_string();
@@ -206,23 +215,25 @@ impl OpcContentTypes {
         }
     }
 
-    async fn to_xml(&self) -> XmlDocument {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn to_xml(&self) -> XmlDocument {
         let mut children = Vec::with_capacity(self.defaults.len() + self.overrides.len());
         for (ext, ct) in &self.defaults {
-            children.push(xml_elem("Default", vec![xml_attr("Extension", ext).await, xml_attr("ContentType", ct).await], vec![]));
+            children.push(xml_elem("Default", vec![xml_attr("Extension", ext), xml_attr("ContentType", ct)], vec![]));
         }
         for (part, ct) in &self.overrides {
-            children.push(xml_elem("Override", vec![xml_attr("PartName", part).await, xml_attr("ContentType", ct).await], vec![]));
+            children.push(xml_elem("Override", vec![xml_attr("PartName", part), xml_attr("ContentType", ct)], vec![]));
         }
         XmlDocument {
             prolog: Vec::new(),
-            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS).await], children).await),
+            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
             doctype: None,
             declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
         }
     }
 
-    async fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
         let root = doc.root.as_ref().ok_or(OpcError::MissingContentTypes)?;
         let XmlNode::Element { name, children, .. } = root else {
             return Err(OpcError::MalformedContentTypes("root is not an element".into()));
@@ -235,13 +246,13 @@ impl OpcContentTypes {
             let XmlNode::Element { name, attrs, .. } = child else { continue };
             match name.as_str() {
                 "Default" => {
-                    let ext = find_attr(attrs, "Extension").await.ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
-                    let ct = find_attr(attrs, "ContentType").await.ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
+                    let ext = find_attr(attrs, "Extension").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
+                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
                     out.defaults.push((ext.to_ascii_lowercase(), ct.to_string()));
                 }
                 "Override" => {
-                    let part = find_attr(attrs, "PartName").await.ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
-                    let ct = find_attr(attrs, "ContentType").await.ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
+                    let part = find_attr(attrs, "PartName").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
+                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
                     out.overrides.push((part.to_string(), ct.to_string()));
                 }
                 _ => {}
@@ -251,7 +262,8 @@ impl OpcContentTypes {
     }
 }
 
-async fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 //#endregion 🔖️ContentTypes
@@ -277,7 +289,8 @@ pub struct OpcRelationship {
 
 /// 📍 The `*.rels` part path that carries `owner`'s relationships (`""` = package root ->
 /// `_rels/.rels`; `"word/document.xml"` -> `"word/_rels/document.xml.rels"`).
-async fn rels_part_path_for(owner: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rels_part_path_for(owner: &str) -> String {
     if owner.is_empty() {
         "_rels/.rels".into()
     } else if let Some(slash) = owner.rfind('/') {
@@ -290,7 +303,8 @@ async fn rels_part_path_for(owner: &str) -> String {
 /// 📍 Inverse of `rels_part_path_for`: recovers the owner part path from a `*.rels` part path.
 /// `None` when `path` isn't shaped like a rels part at all (should never happen for a
 /// conformant package, but never silently misattributed either).
-async fn owner_for_rels_path(path: &str) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn owner_for_rels_path(path: &str) -> Option<String> {
     let file = path.rsplit('/').next()?;
     let name = file.strip_suffix(".rels")?;
     let dir = &path[..path.len() - file.len()];
@@ -302,7 +316,8 @@ async fn owner_for_rels_path(path: &str) -> Option<String> {
 /// 🧭️ Resolves a relationship `Target` against the directory of its owner part (OPC §9.3:
 /// relative targets are resolved relative to the *source part's* base URI, not the package
 /// root). A leading `/` is package-root-absolute.
-pub async fn resolve_relationship_target(owner: &str, target: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn resolve_relationship_target(owner: &str, target: &str) -> String {
     if let Some(stripped) = target.strip_prefix('/') {
         return stripped.to_string();
     }
@@ -310,12 +325,13 @@ pub async fn resolve_relationship_target(owner: &str, target: &str) -> String {
         Some(slash) => &owner[..=slash],
         None => "",
     };
-    normalize_path(&format!("{base_dir}{target}")).await
+    normalize_path(&format!("{base_dir}{target}"))
 }
 
 /// 🧹️ Collapses `./` and `../` segments in a `/`-joined path (no filesystem access — pure
 /// string logic, since OPC part paths are always package-internal).
-async fn normalize_path(path: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize_path(path: &str) -> String {
     let mut out: Vec<&str> = Vec::new();
     for seg in path.split('/') {
         match seg {
@@ -329,7 +345,8 @@ async fn normalize_path(path: &str) -> String {
     out.join("/")
 }
 
-async fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
     let children = rels
         .iter()
         .map(|r| {
@@ -342,13 +359,14 @@ async fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
         .collect();
     XmlDocument {
         prolog: Vec::new(),
-        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS).await], children).await),
+        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
         doctype: None,
         declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
     }
 }
 
-async fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelationship>, OpcError> {
     let malformed = |detail: String| OpcError::MalformedRelationships { part: part.into(), detail };
     let root = doc.root.as_ref().ok_or_else(|| malformed("empty document".into()))?;
     let XmlNode::Element { children, .. } = root else {
@@ -360,10 +378,10 @@ async fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<Opc
         if name != "Relationship" {
             continue;
         }
-        let id = find_attr(attrs, "Id").await.ok_or_else(|| malformed("<Relationship> missing Id".into()))?.to_string();
-        let rel_type = find_attr(attrs, "Type").await.ok_or_else(|| malformed("<Relationship> missing Type".into()))?.to_string();
-        let target = find_attr(attrs, "Target").await.ok_or_else(|| malformed("<Relationship> missing Target".into()))?.to_string();
-        let target_mode = match find_attr(attrs, "TargetMode").await {
+        let id = find_attr(attrs, "Id").ok_or_else(|| malformed("<Relationship> missing Id".into()))?.to_string();
+        let rel_type = find_attr(attrs, "Type").ok_or_else(|| malformed("<Relationship> missing Type".into()))?.to_string();
+        let target = find_attr(attrs, "Target").ok_or_else(|| malformed("<Relationship> missing Target".into()))?.to_string();
+        let target_mode = match find_attr(attrs, "TargetMode") {
             Some("External") => OpcTargetMode::External,
             _ => OpcTargetMode::Internal,
         };
@@ -395,22 +413,26 @@ pub struct OpcPackage {
 impl OpcPackage {
     /// 🌱️ An empty package (no parts, no content types, no relationships) — callers building a
     /// fresh document from scratch start here and add parts/relationships/content-types.
-    pub async fn empty() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn empty() -> Self {
         Self::default()
     }
 
-    pub async fn part(&self, path: &str) -> Option<&OpcPart> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn part(&self, path: &str) -> Option<&OpcPart> {
         let p = path.trim_start_matches('/');
         self.parts.iter().find(|part| part.path == p)
     }
 
-    pub async fn part_bytes(&self, path: &str) -> Option<&[u8]> {
-        self.part(path).await.map(|p| p.bytes.as_slice())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn part_bytes(&self, path: &str) -> Option<&[u8]> {
+        self.part(path).map(|p| p.bytes.as_slice())
     }
 
     /// ✍️ Inserts or replaces a content part, keeping its `[Content_Types].xml` `Override` in
     /// sync in the same call — the two can never drift apart through this API.
-    pub async fn set_part(&mut self, path: &str, content_type: &str, bytes: Vec<u8>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_part(&mut self, path: &str, content_type: &str, bytes: Vec<u8>) {
         let p = path.trim_start_matches('/').to_string();
         self.content_types.set_override(&p, content_type);
         if let Some(existing) = self.parts.iter_mut().find(|part| part.path == p) {
@@ -421,33 +443,37 @@ impl OpcPackage {
         }
     }
 
-    pub async fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
         self.relationships.get(owner).map(|v| v.as_slice()).unwrap_or(&[])
     }
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
-    pub async fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
         self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal });
     }
 
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
     /// an absolute part path. `None` when no such relationship exists.
-    pub async fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
-        let rel = self.relationships_for(owner).await.iter().find(|r| r.rel_type == rel_type)?;
-        Some(resolve_relationship_target(owner, &rel.target).await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
+        let rel = self.relationships_for(owner).iter().find(|r| r.rel_type == rel_type)?;
+        Some(resolve_relationship_target(owner, &rel.target))
     }
 }
 
 /// 📦️ Decode OPC container bytes (a real zip archive) into a typed, lossless `OpcPackage`.
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
-pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| OpcError::Zip(e.to_string()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
-    let ct_doc = xml_document_from_text(&ct_text).await.map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
-    let content_types = OpcContentTypes::from_xml(&ct_doc).await?;
+    let ct_doc = xml_document_from_text(&ct_text).map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
+    let content_types = OpcContentTypes::from_xml(&ct_doc)?;
 
     let mut parts = Vec::new();
     let mut relationships: HashMap<String, Vec<OpcRelationship>> = HashMap::new();
@@ -458,13 +484,13 @@ pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
         }
         if entry.name.ends_with(".rels") {
             let text = String::from_utf8(entry.data.clone()).map_err(|_| OpcError::MalformedRelationships { part: entry.name.clone(), detail: "not valid utf-8".into() })?;
-            let doc = xml_document_from_text(&text).await.map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
-            let rels = relationships_from_xml(&doc, &entry.name).await?;
-            let owner = owner_for_rels_path(&entry.name).await.ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
+            let doc = xml_document_from_text(&text).map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
+            let rels = relationships_from_xml(&doc, &entry.name)?;
+            let owner = owner_for_rels_path(&entry.name).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
             relationships.insert(owner, rels);
             continue;
         }
-        let content_type = content_types.resolve(&entry.name).await.ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
+        let content_type = content_types.resolve(&entry.name).ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 
@@ -477,21 +503,23 @@ pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
 /// codec. The generic OPC writer chooses one deterministic, path-sorted logical normal form;
 /// format serializers that define a standard-specific member sequence call the same writer with
 /// their semantic path-order policy.
-pub async fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         paths.sort();
         if let Some(index) = paths.iter().position(|path| path == CONTENT_TYPES_PART) {
             let content_types = paths.remove(index);
             paths.insert(0, content_types);
         }
-    }).await
+    })
 }
 
 /// 📦️ Re-encode an OPC package with metadata entries first and every remaining entry in the
 /// package's authoritative part order. This is the lossless OOXML path: central-directory order
 /// is preserved by `decode_opc`, and an untouched package can therefore be emitted without a
 /// semantic part-order rewrite.
-pub(crate) async fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         let mut ordered = Vec::with_capacity(paths.len());
         let mut take = |path: String| {
@@ -516,12 +544,13 @@ pub(crate) async fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Ve
         paths.sort();
         ordered.extend(paths.drain(..));
         *paths = ordered;
-    }).await
+    })
 }
 
-pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
     let mut payloads = HashMap::<String, Vec<u8>>::new();
-    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml()).await;
+    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
 
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
@@ -532,8 +561,8 @@ pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnO
             continue;
         }
         let path = rels_part_path_for(owner);
-        let text = xml_document_to_opc_text(&relationships_to_xml(rels)).await;
-        payloads.insert(path.await, text.into_bytes());
+        let text = xml_document_to_opc_text(&relationships_to_xml(rels));
+        payloads.insert(path, text.into_bytes());
     }
 
     for part in &pkg.parts {
@@ -549,14 +578,15 @@ pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnO
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).await.map_err(|e| OpcError::Zip(e.to_string()))
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
 /// `[Content_Types].xml` entry — real OOXML disambiguation from a plain zip peeks part names
 /// (docx/xlsx/pptx callers inspect `word/`/`xl/`/`ppt/`-prefixed parts on top of this).
-pub async fn sniff_opc_bytes(data: &[u8]) -> bool {
-    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await else { return false };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_opc_bytes(data: &[u8]) -> bool {
+    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data) else { return false };
     zip.entries.iter().any(|e| e.name == CONTENT_TYPES_PART)
 }
 //#endregion 🔖️Package
@@ -566,7 +596,8 @@ pub async fn sniff_opc_bytes(data: &[u8]) -> bool {
 mod tests {
     use super::*;
 
-    async fn sample_package() -> OpcPackage {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_package() -> OpcPackage {
         let mut pkg = OpcPackage::empty();
         pkg.content_types.set_default("rels", RELS_CONTENT_TYPE);
         pkg.content_types.set_default("xml", "application/xml");

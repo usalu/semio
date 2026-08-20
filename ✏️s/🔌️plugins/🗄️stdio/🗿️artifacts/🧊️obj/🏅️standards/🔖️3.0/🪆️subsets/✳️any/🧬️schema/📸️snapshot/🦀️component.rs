@@ -202,7 +202,7 @@ impl store::ArtifactDsl for ObjSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::obj::engine::decode_obj(body).await.map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::obj::engine::decode_obj(body).map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = crate::artifacts::obj::engine::encode_obj(self);
@@ -214,7 +214,7 @@ impl store::ArtifactDsl for ObjSnapshot {
 impl store::ArtifactPack for ObjSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::obj::engine::encode_obj(self).await.into_bytes();
+        let raw = crate::artifacts::obj::engine::encode_obj(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -225,7 +225,7 @@ impl store::ArtifactPack for ObjSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::obj::engine::decode_obj(&text).await.map_err(store::PackError::Schema)
+        crate::artifacts::obj::engine::decode_obj(&text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -52,12 +52,23 @@ impl PatchTracker {
     /// 🩹️ `Event::PatchAck` handling — no-op today (the reconciler already advanced its revision
     /// optimistically in `diff()`); kept as a real entry point so a future ack-then-advance scheme
     /// doesn't need a new method name.
-    pub fn mark_ack(&self, _surface: &str, _revision: ui_contract::UiRevision) {}
+    pub fn mark_ack(&self, _surface: &str, _revision: u64) {}
+
+    /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): the revision `ui_runtime::is_stale_intent`
+    /// compares an incoming `UiIntent` against — reads through `SurfaceReconciler::snapshot`, the
+    /// only accessor its landed API exposes for this (matching `ui_runtime`'s own
+    /// `SurfaceSlot::current_revision` idiom, `🦀️transaction.rs:82-88`, which the same gap note
+    /// leaves as a registrar-request for a cheaper accessor). A surface never yet observed reads as
+    /// revision 0 — nothing has been sent to be stale against, so `is_stale_intent` never rejects it.
+    pub fn revision(&self, surface: &str) -> ui_contract::UiRevision {
+        self.reconcilers.borrow().get(surface).map(|reconciler| reconciler.snapshot().revision).unwrap_or_default()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_ui_runtime::TreeNode;
 
     fn leaf(key: &str, text: &str) -> ComponentTree {
         ComponentTree::new(TreeNode::new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from(text), emphasize: None, data_attributes: None })))
@@ -85,6 +96,19 @@ mod tests {
         let patch = tracker.diff("main", &leaf("root", "b")).expect("a changed tree must be dirty");
         assert_eq!(patch.base_revision, ui_contract::UiRevision(1));
         assert_eq!(patch.revision, ui_contract::UiRevision(2));
+    }
+
+    /// 🎯️ M1: `revision()` is the accessor `⚛️reactor::poll`'s intent-batching loop guards every
+    /// `UiIntent` against — a never-observed surface reads 0, and it tracks `diff()`'s own revision
+    /// exactly, with no separate bookkeeping to drift.
+    #[test]
+    fn revision_reads_zero_for_a_never_observed_surface_and_tracks_diff_afterwards() {
+        let tracker = PatchTracker::new();
+        assert_eq!(tracker.revision("main"), ui_contract::UiRevision(0));
+        tracker.diff("main", &leaf("root", "a"));
+        assert_eq!(tracker.revision("main"), ui_contract::UiRevision(1));
+        tracker.diff("main", &leaf("root", "b"));
+        assert_eq!(tracker.revision("main"), ui_contract::UiRevision(2));
     }
 
     #[test]

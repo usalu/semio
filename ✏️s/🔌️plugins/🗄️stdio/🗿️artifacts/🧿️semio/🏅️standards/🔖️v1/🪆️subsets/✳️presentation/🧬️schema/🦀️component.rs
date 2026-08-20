@@ -29,13 +29,16 @@ impl Default for SemioPresentationArtifact {
 }
 
 impl SemioPresentationArtifact {
-    pub async fn to_snapshot(&self) -> SemioPresentationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioPresentationSnapshot {
         SemioPresentationSnapshot { schema: self.schema.clone(), masters: self.masters.clone(), layouts: self.layouts.clone(), slides: self.slides.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioPresentationSnapshot) -> Self {
         Self { schema: snapshot.schema, masters: snapshot.masters, layouts: snapshot.layouts, slides: snapshot.slides }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioPresentationSnapshot) {
         self.schema = snapshot.schema;
         self.masters = snapshot.masters;
         self.layouts = snapshot.layouts;
@@ -43,7 +46,8 @@ impl SemioPresentationArtifact {
     }
 }
 
-pub async fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.presentation",
         artifact: schema::FacetLeaves {
@@ -106,7 +110,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_presentation_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -234,7 +238,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SlideMaster;
 
-        async fn sample() -> SemioPresentationSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn sample() -> SemioPresentationSnapshot {
             SemioPresentationSnapshot { masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }], ..Default::default() }
         }
 

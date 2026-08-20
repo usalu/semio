@@ -25,7 +25,8 @@ pub struct ZipEntries {
 /// compressed sizes); `contentDigest` folds every entry's `(name, data)` pair, in archive order,
 /// through `std`'s own `DefaultHasher` (same std-only, no-external-crate reasoning
 /// `🏠️home/🆔digest` and `🔋️model/🗃entries` already established for a single scalar digest).
-pub async fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
     let mut hasher = DefaultHasher::new();
     let mut total_uncompressed_size: u64 = 0;
     for entry in &snapshot.entries {
@@ -49,7 +50,8 @@ mod tests {
     use super::*;
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
 
-    async fn entry(name: &str, data: &[u8]) -> ZipEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn entry(name: &str, data: &[u8]) -> ZipEntry {
         ZipEntry { name: name.into(), data: data.to_vec(), ..ZipEntry::default() }
     }
 

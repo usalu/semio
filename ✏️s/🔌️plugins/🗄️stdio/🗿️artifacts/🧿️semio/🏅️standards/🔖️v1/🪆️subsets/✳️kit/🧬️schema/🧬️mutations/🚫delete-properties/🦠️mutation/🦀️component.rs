@@ -13,10 +13,10 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for DeleteProper
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "properties", kind: "delete-properties", record: "DeletedProperties" };
 
     async fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         "Delete properties child".to_string()

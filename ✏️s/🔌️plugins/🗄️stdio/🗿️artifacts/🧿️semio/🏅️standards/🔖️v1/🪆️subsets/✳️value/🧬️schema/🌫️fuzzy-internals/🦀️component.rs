@@ -47,11 +47,13 @@ pub type FuzzyResult<T> = Result<T, FuzzyError>;
 // #endregion 🔖️FuzzyError
 
 // #region 🔖️Helpers
-async fn clamp01(x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn clamp01(x: f64) -> f64 {
     x.clamp(0.0, 1.0)
 }
 
-async fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
     if n == 0 {
         return Vec::new();
     }
@@ -62,7 +64,8 @@ async fn linspace(min: f64, max: f64, n: usize) -> Vec<f64> {
     (0..n).map(|i| min + step * i as f64).collect()
 }
 
-async fn argmax(values: &[f64]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn argmax(values: &[f64]) -> usize {
     values.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).map_or(0, |(i, _)| i)
 }
 // #endregion 🔖️Helpers
@@ -81,35 +84,43 @@ pub enum MembershipFunction {
 }
 
 impl MembershipFunction {
-    pub async fn triangular(a: f64, b: f64, c: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self::Triangular { a, b, c }
     }
 
-    pub async fn trapezoidal(a: f64, b: f64, c: f64, d: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn trapezoidal(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self::Trapezoidal { a, b, c, d }
     }
 
-    pub async fn gaussian(mean: f64, sigma: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn gaussian(mean: f64, sigma: f64) -> Self {
         Self::Gaussian { mean, sigma: sigma.max(1e-12) }
     }
 
-    pub async fn generalized_bell(a: f64, b: f64, c: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn generalized_bell(a: f64, b: f64, c: f64) -> Self {
         Self::GeneralizedBell { a: a.max(1e-12), b: b.max(1e-6), c }
     }
 
-    pub async fn sigmoid(a: f64, c: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sigmoid(a: f64, c: f64) -> Self {
         Self::Sigmoid { a, c }
     }
 
-    pub async fn singleton(value: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn singleton(value: f64) -> Self {
         Self::Singleton { value }
     }
 
-    pub async fn piecewise_linear(knots: Vec<(f64, f64)>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn piecewise_linear(knots: Vec<(f64, f64)>) -> Self {
         Self::PiecewiseLinear { knots }
     }
 
-    pub async fn eval(&self, x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, x: f64) -> f64 {
         match self {
             Self::Triangular { a, b, c } => {
                 if x <= *a || x >= *c {
@@ -185,7 +196,8 @@ impl MembershipFunction {
         }
     }
 
-    pub async fn parameters(&self) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn parameters(&self) -> Vec<f64> {
         match self {
             Self::Triangular { a, b, c } => vec![*a, *b, *c],
             Self::Trapezoidal { a, b, c, d } => vec![*a, *b, *c, *d],
@@ -197,7 +209,8 @@ impl MembershipFunction {
         }
     }
 
-    pub async fn set_parameters(&mut self, params: &[f64]) -> FuzzyResult<()> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_parameters(&mut self, params: &[f64]) -> FuzzyResult<()> {
         match self {
             Self::Triangular { a, b, c } => {
                 if params.len() != 3 {
@@ -257,7 +270,8 @@ impl MembershipFunction {
         Ok(())
     }
 
-    pub async fn support_min(&self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn support_min(&self) -> f64 {
         match self {
             Self::Triangular { a, .. } | Self::Trapezoidal { a, .. } => *a,
             Self::Gaussian { mean, sigma } => mean - 4.0 * sigma,
@@ -268,7 +282,8 @@ impl MembershipFunction {
         }
     }
 
-    pub async fn support_max(&self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn support_max(&self) -> f64 {
         match self {
             Self::Triangular { c, .. } => *c,
             Self::Trapezoidal { d, .. } => *d,
@@ -291,12 +306,14 @@ pub struct FuzzySet {
 }
 
 impl FuzzySet {
-    pub async fn new(name: impl Into<String>, mf: MembershipFunction) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(name: impl Into<String>, mf: MembershipFunction) -> Self {
         Self { name: name.into(), mf }
     }
 
-    pub async fn grade(&self, x: f64) -> f64 {
-        clamp01(self.mf.eval(x).await).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn grade(&self, x: f64) -> f64 {
+        clamp01(self.mf.eval(x))
     }
 }
 
@@ -309,24 +326,27 @@ pub struct IntervalType2Set {
 }
 
 impl IntervalType2Set {
-    pub async fn new(name: impl Into<String>, lower: MembershipFunction, upper: MembershipFunction) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(name: impl Into<String>, lower: MembershipFunction, upper: MembershipFunction) -> Self {
         Self { name: name.into(), lower, upper }
     }
 
-    pub async fn grade_interval(&self, x: f64) -> (f64, f64) {
-        let lo = clamp01(self.lower.eval(x).await);
-        let hi = clamp01(self.upper.eval(x).await.max(lo.await));
-        (lo.await, hi.await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn grade_interval(&self, x: f64) -> (f64, f64) {
+        let lo = clamp01(self.lower.eval(x));
+        let hi = clamp01(self.upper.eval(x).max(lo));
+        (lo, hi)
     }
 
-    pub async fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
         if universe.is_empty() {
             return 0.0;
         }
         let mut num = 0.0;
         let mut den = 0.0;
         for &x in universe {
-            let (lo, hi) = self.grade_interval(x).await;
+            let (lo, hi) = self.grade_interval(x);
             let mu = 0.5 * (lo + hi);
             num += x * mu;
             den += mu;
@@ -348,17 +368,19 @@ pub struct IntuitionisticSet {
 }
 
 impl IntuitionisticSet {
-    pub async fn new(name: impl Into<String>, membership: MembershipFunction, non_membership: MembershipFunction) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(name: impl Into<String>, membership: MembershipFunction, non_membership: MembershipFunction) -> Self {
         Self { name: name.into(), membership, non_membership }
     }
 
-    pub async fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
-        let mu = clamp01(self.membership.eval(x).await);
-        let nu = clamp01(self.non_membership.eval(x).await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
+        let mu = clamp01(self.membership.eval(x));
+        let nu = clamp01(self.non_membership.eval(x));
         if mu + nu > 1.0 + 1e-9 {
             return Err(FuzzyError::InvalidIntuitionistic);
         }
-        Ok((mu.await, nu.await, 1.0 - mu - nu))
+        Ok((mu, nu, 1.0 - mu - nu))
     }
 }
 // #endregion 🔖️FuzzySet
@@ -374,18 +396,19 @@ pub enum TNorm {
 }
 
 impl TNorm {
-    pub async fn apply(self, a: f64, b: f64) -> f64 {
-        let a = clamp01(a).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(self, a: f64, b: f64) -> f64 {
+        let a = clamp01(a);
         let b = clamp01(b);
         match self {
-            Self::Min => a.min(b.await),
+            Self::Min => a.min(b),
             Self::Product => a * b,
             Self::Lukasiewicz => (a + b - 1.0).max(0.0),
             Self::Drastic => {
                 if b == 1.0 {
                     a
                 } else if a == 1.0 {
-                    b.await
+                    b
                 } else {
                     0.0
                 }
@@ -393,7 +416,8 @@ impl TNorm {
         }
     }
 
-    pub async fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(1.0, |acc, v| self.apply(acc, v))
     }
 }
@@ -408,24 +432,26 @@ pub enum TConorm {
 }
 
 impl TConorm {
-    pub async fn apply(self, a: f64, b: f64) -> f64 {
-        let a = clamp01(a).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(self, a: f64, b: f64) -> f64 {
+        let a = clamp01(a);
         let b = clamp01(b);
         match self {
-            Self::Max => a.max(b.await),
+            Self::Max => a.max(b),
             Self::ProbSum => a + b - a * b,
             Self::Lukasiewicz => (a + b).min(1.0),
             Self::NilpotentMax => {
                 if a + b < 1.0 {
                     0.0
                 } else {
-                    a.max(b.await)
+                    a.max(b)
                 }
             }
         }
     }
 
-    pub async fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(0.0, |acc, v| self.apply(acc, v))
     }
 }
@@ -440,8 +466,9 @@ pub enum Hedge {
 }
 
 impl Hedge {
-    pub async fn apply(self, mu: f64) -> f64 {
-        let mu = clamp01(mu).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(self, mu: f64) -> f64 {
+        let mu = clamp01(mu);
         match self {
             Self::Very => mu * mu,
             Self::Somewhat => mu.sqrt(),
@@ -451,16 +478,19 @@ impl Hedge {
     }
 }
 
-pub async fn complement(mu: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn complement(mu: f64) -> f64 {
     1.0 - clamp01(mu)
 }
 
-pub async fn concentration(mu: f64) -> f64 {
-    clamp01(mu).await.powi(2)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn concentration(mu: f64) -> f64 {
+    clamp01(mu).powi(2)
 }
 
-pub async fn dilation(mu: f64) -> f64 {
-    clamp01(mu).await.sqrt()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dilation(mu: f64) -> f64 {
+    clamp01(mu).sqrt()
 }
 // #endregion 🔖️TNormTConorm
 
@@ -474,11 +504,13 @@ pub struct FuzzyNumber {
 }
 
 impl FuzzyNumber {
-    pub async fn triangular(a: f64, b: f64, c: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self { a, b, c }
     }
 
-    pub async fn alpha_cut(&self, alpha: f64) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn alpha_cut(&self, alpha: f64) -> (f64, f64) {
         let alpha = clamp01(alpha);
         if alpha <= 0.0 {
             return (self.b, self.b);
@@ -488,12 +520,13 @@ impl FuzzyNumber {
         (left.min(right), left.max(right))
     }
 
-    pub async fn defuzzify_centroid(&self, samples: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn defuzzify_centroid(&self, samples: usize) -> f64 {
         let mut num = 0.0;
         let mut den = 0.0;
         for i in 0..samples {
             let x = self.a + (self.c - self.a) * i as f64 / (samples - 1).max(1) as f64;
-            let mu = MembershipFunction::triangular(self.a, self.b, self.c).await.eval(x);
+            let mu = MembershipFunction::triangular(self.a, self.b, self.c).eval(x);
             num += x * mu;
             den += mu;
         }
@@ -505,16 +538,19 @@ impl FuzzyNumber {
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add used pervasively as a plain method by fuzzy arithmetic callers")]
-    pub async fn add(self, other: Self) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add(self, other: Self) -> Self {
         Self { a: self.a + other.a, b: self.b + other.b, c: self.c + other.c }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics sub used pervasively as a plain method by fuzzy arithmetic callers")]
-    pub async fn sub(self, other: Self) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sub(self, other: Self) -> Self {
         Self { a: self.a - other.c, b: self.b - other.b, c: self.c - other.a }
     }
 
-    pub async fn scale(self, k: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn scale(self, k: f64) -> Self {
         if k >= 0.0 {
             Self { a: self.a * k, b: self.b * k, c: self.c * k }
         } else {
@@ -523,13 +559,15 @@ impl FuzzyNumber {
     }
 }
 
-pub async fn fuzzy_add(a: FuzzyNumber, b: FuzzyNumber) -> FuzzyNumber {
-    a.add(b).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fuzzy_add(a: FuzzyNumber, b: FuzzyNumber) -> FuzzyNumber {
+    a.add(b)
 }
 
-pub async fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f64) {
-    let (al, ar) = a.alpha_cut(alpha).await;
-    let (bl, br) = b.alpha_cut(alpha).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f64) {
+    let (al, ar) = a.alpha_cut(alpha);
+    let (bl, br) = b.alpha_cut(alpha);
     let candidates = [al * bl, al * br, ar * bl, ar * br];
     (candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max))
 }
@@ -543,26 +581,30 @@ pub struct FuzzyRelation {
 }
 
 impl FuzzyRelation {
-    pub async fn new(rows: usize, cols: usize) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(rows: usize, cols: usize) -> Self {
         Self { values: vec![vec![0.0; cols]; rows] }
     }
 
-    pub async fn set(&mut self, row: usize, col: usize, value: f64) {
-        self.values[row][col] = clamp01(value).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set(&mut self, row: usize, col: usize, value: f64) {
+        self.values[row][col] = clamp01(value);
     }
 
-    pub async fn get(&self, row: usize, col: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get(&self, row: usize, col: usize) -> f64 {
         self.values[row][col]
     }
 
-    pub async fn compose_max_min(&self, other: &Self) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose_max_min(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
         }
         let rows = self.values.len();
         let cols = other.values[0].len();
         let inner = other.values.len();
-        let mut out = Self::new(rows, cols).await;
+        let mut out = Self::new(rows, cols);
         for i in 0..rows {
             for j in 0..cols {
                 let mut best = 0.0_f64;
@@ -575,14 +617,15 @@ impl FuzzyRelation {
         Ok(out)
     }
 
-    pub async fn compose_max_product(&self, other: &Self) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose_max_product(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
         }
         let rows = self.values.len();
         let cols = other.values[0].len();
         let inner = other.values.len();
-        let mut out = Self::new(rows, cols).await;
+        let mut out = Self::new(rows, cols);
         for i in 0..rows {
             for j in 0..cols {
                 let mut best = 0.0_f64;
@@ -606,24 +649,28 @@ pub struct PossibilityMeasure {
 }
 
 impl PossibilityMeasure {
-    pub async fn new(universe: Vec<f64>, membership: Vec<f64>) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(universe: Vec<f64>, membership: Vec<f64>) -> FuzzyResult<Self> {
         if universe.len() != membership.len() || universe.is_empty() {
             return Err(FuzzyError::InvalidDomain("possibility universe".into()));
         }
         Ok(Self { universe, membership: membership.into_iter().map(clamp01).collect() })
     }
 
-    pub async fn possibility(&self, predicate: impl Fn(f64) -> bool) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn possibility(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         self.universe.iter().zip(self.membership.iter()).filter(|(x, _)| predicate(**x)).map(|(_, mu)| *mu).fold(0.0, f64::max)
     }
 
-    pub async fn necessity(&self, predicate: impl Fn(f64) -> bool) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn necessity(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         1.0 - self.possibility(|x| !predicate(x))
     }
 
-    pub async fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
         let max_score = scores.iter().copied().fold(0.0_f64, f64::max).max(1e-12);
-        Self::new(universe, scores.into_iter().map(|s| s / max_score).collect()).await
+        Self::new(universe, scores.into_iter().map(|s| s / max_score).collect())
     }
 }
 // #endregion 🔖️PossibilityTheory
@@ -638,22 +685,26 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub async fn new(min: f64, max: f64, n: usize) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(min: f64, max: f64, n: usize) -> FuzzyResult<Self> {
         if min >= max || n == 0 {
             return Err(FuzzyError::InvalidDomain("universe bounds".into()));
         }
-        Ok(Self { min, max, samples: linspace(min, max, n).await })
+        Ok(Self { min, max, samples: linspace(min, max, n) })
     }
 
-    pub async fn sample(&self, index: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sample(&self, index: usize) -> f64 {
         self.samples[index]
     }
 
-    pub async fn len(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn len(&self) -> usize {
         self.samples.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.samples.is_empty()
     }
 }
@@ -669,15 +720,18 @@ pub struct LinguisticVariable {
 }
 
 impl LinguisticVariable {
-    pub async fn new(name: impl Into<String>, universe: Universe, terms: Vec<FuzzySet>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(name: impl Into<String>, universe: Universe, terms: Vec<FuzzySet>) -> Self {
         Self { name: name.into(), universe, terms }
     }
 
-    pub async fn fuzzify(&self, x: f64) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fuzzify(&self, x: f64) -> Vec<f64> {
         self.terms.iter().map(|t| t.grade(x)).collect()
     }
 
-    pub async fn term_index(&self, name: &str) -> Option<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn term_index(&self, name: &str) -> Option<usize> {
         self.terms.iter().position(|t| t.name == name)
     }
 }
@@ -713,7 +767,8 @@ pub struct Rule {
 }
 
 impl Rule {
-    pub async fn firing_strength(&self, inputs: &[LinguisticVariable], values: &[f64], tnorm: TNorm) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn firing_strength(&self, inputs: &[LinguisticVariable], values: &[f64], tnorm: TNorm) -> f64 {
         let strengths: Vec<f64> = self
             .antecedents
             .iter()
@@ -733,11 +788,13 @@ pub struct RuleBase {
 }
 
 impl RuleBase {
-    pub async fn new(rules: Vec<Rule>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(rules: Vec<Rule>) -> Self {
         Self { rules }
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.rules.is_empty()
     }
 }
@@ -757,7 +814,8 @@ pub enum Defuzzifier {
 }
 
 impl Defuzzifier {
-    pub async fn apply(&self, universe: &Universe, membership: &[f64], rule_heights: Option<&[f64]>, rule_values: Option<&[f64]>) -> FuzzyResult<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, universe: &Universe, membership: &[f64], rule_heights: Option<&[f64]>, rule_values: Option<&[f64]>) -> FuzzyResult<f64> {
         if universe.samples.is_empty() || membership.is_empty() {
             return Err(FuzzyError::EmptyUniverse);
         }
@@ -811,7 +869,7 @@ impl Defuzzifier {
             Self::Height => {
                 let heights = rule_heights.ok_or_else(|| FuzzyError::DimensionMismatch("height defuzz needs rule heights".into()))?;
                 let values = rule_values.ok_or_else(|| FuzzyError::DimensionMismatch("height defuzz needs rule values".into()))?;
-                Self::WeightedAverage.apply(universe, membership, Some(heights), Some(values)).await
+                Self::WeightedAverage.apply(universe, membership, Some(heights), Some(values))
             }
         }
     }
@@ -862,17 +920,18 @@ pub struct MimoSystem {
 }
 
 impl MimoSystem {
-    pub async fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Explanation)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Explanation)> {
         if values.len() != self.inputs.len() {
             return Err(FuzzyError::DimensionMismatch("input count".into()));
         }
-        if self.rules.is_empty().await {
+        if self.rules.is_empty() {
             return Err(FuzzyError::EmptyRuleBase);
         }
         let mut outputs = vec![0.0; self.outputs.len()];
         let mut traces = Vec::new();
         for (out_idx, output_var) in self.outputs.iter().enumerate() {
-            let (value, out_traces) = self.infer_output(out_idx, output_var, values).await?;
+            let (value, out_traces) = self.infer_output(out_idx, output_var, values)?;
             outputs[out_idx] = value;
             traces.extend(out_traces);
         }
@@ -880,8 +939,9 @@ impl MimoSystem {
         Ok((outputs.clone(), Explanation { model: self.model, input_values: values.to_vec(), output_values: outputs, traces, defuzzifier: self.defuzzifier, rationale }))
     }
 
-    async fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
-        let mut aggregated = vec![0.0; output_var.universe.len().await];
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
+        let mut aggregated = vec![0.0; output_var.universe.len()];
         let mut traces = Vec::new();
         let mut sugeno_num = 0.0;
         let mut sugeno_den = 0.0;
@@ -895,18 +955,18 @@ impl MimoSystem {
             match (&self.model, &rule.consequent) {
                 (InferenceModel::Mamdani | InferenceModel::Hybrid, Consequent::Mamdani { output, term }) if *output == out_idx => {
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let mu = output_var.terms[*term].grade(*x).await.min(activation.await);
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu).await;
+                        let mu = output_var.terms[*term].grade(*x).min(activation);
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu);
                     }
-                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation.await, description: format!("Mamdani rule {} clipped consequent", rule.id) });
+                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation, description: format!("Mamdani rule {} clipped consequent", rule.id) });
                 }
                 (InferenceModel::Larsen | InferenceModel::Hybrid, Consequent::Mamdani { output, term }) if *output == out_idx => {
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let base = output_var.terms[*term].grade(*x).await;
-                        let mu = if base <= 1e-12 { 0.0 } else { (activation * base / base.max(activation.await)).min(1.0) };
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu.min(base * activation)).await;
+                        let base = output_var.terms[*term].grade(*x);
+                        let mu = if base <= 1e-12 { 0.0 } else { (activation * base / base.max(activation)).min(1.0) };
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu.min(base * activation));
                     }
-                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation.await, description: format!("Larsen rule {} scaled consequent", rule.id) });
+                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation, description: format!("Larsen rule {} scaled consequent", rule.id) });
                 }
                 (InferenceModel::Sugeno | InferenceModel::Hybrid, Consequent::SugenoConstant { output, value }) if *output == out_idx => {
                     sugeno_num += activation * value;
@@ -930,18 +990,18 @@ impl MimoSystem {
                 }
                 (InferenceModel::Tsukamoto | InferenceModel::Hybrid, Consequent::Tsukamoto { output, term }) if *output == out_idx => {
                     let term_mf = &output_var.terms[*term].mf;
-                    let crisp = tsukamoto_inverse(term_mf, activation.await);
+                    let crisp = tsukamoto_inverse(term_mf, activation);
                     sugeno_num += activation * crisp;
                     sugeno_den += activation;
                     heights.push(activation);
-                    rule_values.push(crisp.await);
+                    rule_values.push(crisp);
                     traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation * crisp, description: format!("Tsukamoto inverse -> {:.3}", crisp) });
                 }
                 (_, Consequent::SoftConstraint { output, term, preference }) if *output == out_idx => {
                     let pref = preference.max(0.0);
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let mu = output_var.terms[*term].grade(*x).await.min(activation * pref);
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu).await;
+                        let mu = output_var.terms[*term].grade(*x).min(activation * pref);
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu);
                     }
                     traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation * pref, description: format!("soft constraint preference {:.3}", pref) });
                 }
@@ -953,13 +1013,13 @@ impl MimoSystem {
                 if sugeno_den.abs() < 1e-12 {
                     return Err(FuzzyError::NoFiredRules);
                 }
-                Defuzzifier::WeightedAverage.apply(&output_var.universe, &aggregated, Some(&heights), Some(&rule_values)).await?
+                Defuzzifier::WeightedAverage.apply(&output_var.universe, &aggregated, Some(&heights), Some(&rule_values))?
             }
             InferenceModel::Mamdani | InferenceModel::Larsen | InferenceModel::Hybrid => {
                 if aggregated.iter().sum::<f64>() < 1e-12 && sugeno_den > 1e-12 {
                     sugeno_num / sugeno_den
                 } else {
-                    self.defuzzifier.apply(&output_var.universe, &aggregated, None, None).await?
+                    self.defuzzifier.apply(&output_var.universe, &aggregated, None, None)?
                 }
             }
         };
@@ -967,10 +1027,11 @@ impl MimoSystem {
     }
 }
 
-async fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
     let alpha = clamp01(alpha);
     if alpha <= 0.0 {
-        return mf.support_min().await;
+        return mf.support_min();
     }
     let min = mf.support_min();
     let max = mf.support_max();
@@ -994,15 +1055,17 @@ pub struct HierarchicalSystem {
 }
 
 impl HierarchicalSystem {
-    pub async fn new(layers: Vec<MimoSystem>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(layers: Vec<MimoSystem>) -> Self {
         Self { layers }
     }
 
-    pub async fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Vec<Explanation>)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Vec<Explanation>)> {
         let mut current = values.to_vec();
         let mut explanations = Vec::new();
         for layer in &self.layers {
-            let (out, explanation) = layer.infer(&current).await?;
+            let (out, explanation) = layer.infer(&current)?;
             explanations.push(explanation);
             current = out;
         }
@@ -1020,21 +1083,23 @@ pub struct AdaptiveMembership {
 }
 
 impl AdaptiveMembership {
-    pub async fn new(mf: MembershipFunction, learning_rate: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(mf: MembershipFunction, learning_rate: f64) -> Self {
         Self { mf, learning_rate }
     }
 
-    pub async fn fit(&mut self, samples: &[(f64, f64)], epochs: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fit(&mut self, samples: &[(f64, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
             loss = 0.0;
-            let mut grads = vec![0.0; self.mf.parameters().await.len()];
+            let mut grads = vec![0.0; self.mf.parameters().len()];
             for &(x, target) in samples {
                 let pred = self.mf.eval(x);
                 let err = pred - clamp01(target);
                 loss += err * err;
                 let eps = 1e-4;
-                let params = self.mf.parameters().await;
+                let params = self.mf.parameters();
                 for (i, g) in grads.iter_mut().enumerate().take(params.len()) {
                     let mut p = params.clone();
                     p[i] += eps;
@@ -1044,7 +1109,7 @@ impl AdaptiveMembership {
                     *g += err * (plus - pred) / eps;
                 }
             }
-            let mut params = self.mf.parameters().await;
+            let mut params = self.mf.parameters();
             for (p, g) in params.iter_mut().zip(grads.iter()) {
                 *p -= self.learning_rate * g / samples.len().max(1) as f64;
             }
@@ -1067,13 +1132,15 @@ pub struct Anfis {
 }
 
 impl Anfis {
-    pub async fn new(input_count: usize, rules_per_input: usize, input_ranges: &[(f64, f64)]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(input_count: usize, rules_per_input: usize, input_ranges: &[(f64, f64)]) -> Self {
         let rule_count = rules_per_input.pow(input_count as u32);
         let mut premise_centers = vec![vec![0.0; input_count]; rule_count];
         let mut premise_widths = vec![vec![1.0; input_count]; rule_count];
         let mut idx = 0usize;
         let steps: Vec<Vec<f64>> = input_ranges.iter().map(|(lo, hi)| linspace(*lo, *hi, rules_per_input)).collect();
-        async fn recurse(input_count: usize, steps: &[Vec<f64>], path: &mut Vec<usize>, idx: &mut usize, centers: &mut [Vec<f64>], widths: &mut [Vec<f64>], ranges: &[(f64, f64)]) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn recurse(input_count: usize, steps: &[Vec<f64>], path: &mut Vec<usize>, idx: &mut usize, centers: &mut [Vec<f64>], widths: &mut [Vec<f64>], ranges: &[(f64, f64)]) {
             if path.len() == input_count {
                 for (j, &s) in path.iter().enumerate() {
                     centers[*idx][j] = steps[j][s];
@@ -1094,12 +1161,14 @@ impl Anfis {
         Self { input_count, rules_per_input, premise_centers, premise_widths, consequent_coeffs }
     }
 
-    pub async fn rule_count(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rule_count(&self) -> usize {
         self.consequent_coeffs.len()
     }
 
-    async fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
-        (0..self.rule_count().await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
+        (0..self.rule_count())
             .map(|r| {
                 (0..self.input_count)
                     .map(|j| {
@@ -1112,8 +1181,9 @@ impl Anfis {
             .collect()
     }
 
-    pub async fn forward(&self, x: &[f64]) -> f64 {
-        let w = self.firing_strengths(x).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn forward(&self, x: &[f64]) -> f64 {
+        let w = self.firing_strengths(x);
         let den: f64 = w.iter().sum();
         if den < 1e-12 {
             return 0.0;
@@ -1129,57 +1199,60 @@ impl Anfis {
         num / den
     }
 
-    pub async fn fit_hybrid(&mut self, data: &[(Vec<f64>, f64)], epochs: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fit_hybrid(&mut self, data: &[(Vec<f64>, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
             self.fit_consequents(data);
-            loss = self.fit_premises(data).await;
+            loss = self.fit_premises(data);
         }
         loss
     }
 
-    async fn fit_consequents(&mut self, data: &[(Vec<f64>, f64)]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fit_consequents(&mut self, data: &[(Vec<f64>, f64)]) {
         let n = data.len();
         let r = self.rule_count();
         let p = self.input_count + 1;
-        let mut ata = MatD::zeros(r * p, r * p).await;
-        let mut atb = VecD::zeros(r * p).await;
+        let mut ata = MatD::zeros(r * p, r * p);
+        let mut atb = VecD::zeros(r * p);
         for (x, y) in data {
-            let w = self.firing_strengths(x).await;
+            let w = self.firing_strengths(x);
             let den: f64 = w.iter().sum();
             if den < 1e-12 {
                 continue;
             }
-            for i in 0..r.await {
+            for i in 0..r {
                 let wi = w[i] / den;
                 let mut row = vec![wi];
                 row.extend(x.iter().map(|&xj| wi * xj));
                 for a in 0..p {
                     for b in 0..p {
-                        ata.add_at(i * p + a, i * p + b, row[a] * row[b]).await;
+                        ata.add_at(i * p + a, i * p + b, row[a] * row[b]);
                     }
-                    atb.add_at(i * p + a, row[a] * *y).await;
+                    atb.add_at(i * p + a, row[a] * *y);
                 }
             }
         }
-        if let Some(sol) = ata.lu_solve(&atb).await {
-            for i in 0..r.await {
+        if let Some(sol) = ata.lu_solve(&atb) {
+            for i in 0..r {
                 for j in 0..p {
-                    self.consequent_coeffs[i][j] = sol.get(i * p + j).await;
+                    self.consequent_coeffs[i][j] = sol.get(i * p + j);
                 }
             }
         }
         let _ = n;
     }
 
-    async fn fit_premises(&mut self, data: &[(Vec<f64>, f64)]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fit_premises(&mut self, data: &[(Vec<f64>, f64)]) -> f64 {
         let mut loss = 0.0;
         let lr = 0.01;
         for (x, y) in data {
             let pred = self.forward(x);
             let err = pred - y;
             loss += err * err;
-            for r in 0..self.rule_count().await {
+            for r in 0..self.rule_count() {
                 for j in 0..self.input_count {
                     let sigma = self.premise_widths[r][j].max(1e-6);
                     let z = (x[j] - self.premise_centers[r][j]) / sigma;
@@ -1196,7 +1269,8 @@ impl Anfis {
 
 // #region 🔖️RuleLearning
 /// 🌱️ Wang–Mendel rule induction from input-output samples.
-pub async fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &LinguisticVariable, data: &[(Vec<f64>, f64)], model: InferenceModel) -> RuleBase {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &LinguisticVariable, data: &[(Vec<f64>, f64)], model: InferenceModel) -> RuleBase {
     let mut rules = Vec::new();
     for (idx, (x, y)) in data.iter().enumerate() {
         let mut antecedents = Vec::new();
@@ -1209,27 +1283,29 @@ pub async fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &Linguisti
         let out_term = argmax(&out_grades);
         let consequent = match model {
             InferenceModel::Sugeno => Consequent::SugenoConstant { output: 0, value: *y },
-            InferenceModel::Tsukamoto => Consequent::Tsukamoto { output: 0, term: out_term.await },
-            _ => Consequent::Mamdani { output: 0, term: out_term.await },
+            InferenceModel::Tsukamoto => Consequent::Tsukamoto { output: 0, term: out_term },
+            _ => Consequent::Mamdani { output: 0, term: out_term },
         };
         rules.push(Rule { id: idx, antecedents, consequent, weight: 1.0, confidence: 1.0 });
     }
-    RuleBase::new(rules).await
+    RuleBase::new(rules)
 }
 
 /// 🧹️ Prune rules with activation support or weight below thresholds.
-pub async fn prune_rules(rules: RuleBase, min_weight: f64, min_confidence: f64) -> RuleBase {
-    RuleBase::new(rules.rules.into_iter().filter(|r| r.weight >= min_weight && r.confidence >= min_confidence).collect()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn prune_rules(rules: RuleBase, min_weight: f64, min_confidence: f64) -> RuleBase {
+    RuleBase::new(rules.rules.into_iter().filter(|r| r.weight >= min_weight && r.confidence >= min_confidence).collect())
 }
 
 /// 🎯️ Re-weight rules by empirical fit quality on a dataset.
-pub async fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec<f64>)]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec<f64>)]) {
     let mut confidences = Vec::new();
     for rule in &system.rules.rules {
         let mut err = 0.0;
         let mut n = 0.0;
         for (x, y) in data {
-            if let Ok((pred, _)) = system.infer(x).await {
+            if let Ok((pred, _)) = system.infer(x) {
                 for (p, t) in pred.iter().zip(y.iter()) {
                     err += (p - t).abs();
                     n += 1.0;
@@ -1244,7 +1320,8 @@ pub async fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec
 }
 
 /// 🌱️ Subtractive clustering seed centers for rule generation.
-pub async fn subtractive_cluster_centers(data: &[Vec<f64>], ra: f64, accept_ratio: f64, reject_ratio: f64) -> Vec<Vec<f64>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn subtractive_cluster_centers(data: &[Vec<f64>], ra: f64, accept_ratio: f64, reject_ratio: f64) -> Vec<Vec<f64>> {
     if data.is_empty() {
         return Vec::new();
     }
@@ -1378,12 +1455,14 @@ pub struct EvolvingFuzzySystem {
 }
 
 impl EvolvingFuzzySystem {
-    pub async fn new(system: MimoSystem, learning_rate: f64, prune_threshold: f64, max_rules: usize) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(system: MimoSystem, learning_rate: f64, prune_threshold: f64, max_rules: usize) -> Self {
         Self { system, learning_rate, prune_threshold, max_rules }
     }
 
-    pub async fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
-        let (pred, mut explanation) = self.system.infer(x).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
+        let (pred, mut explanation) = self.system.infer(x)?;
         for (rule, trace) in self.system.rules.rules.iter_mut().zip(explanation.traces.iter()) {
             rule.weight = (rule.weight + self.learning_rate * trace.activation).clamp(0.0, 1.0);
             for (p, t) in pred.iter().zip(y.iter()) {
@@ -1391,7 +1470,7 @@ impl EvolvingFuzzySystem {
                 rule.confidence = (rule.confidence + self.learning_rate * (1.0 - err)).clamp(0.0, 1.0);
             }
         }
-        self.system.rules = prune_rules(self.system.rules.clone(), self.prune_threshold, self.prune_threshold).await;
+        self.system.rules = prune_rules(self.system.rules.clone(), self.prune_threshold, self.prune_threshold);
         if self.system.rules.rules.len() < self.max_rules {
             if let Some(output) = y.first().copied() {
                 let rule = Rule {
@@ -1425,7 +1504,8 @@ pub struct FcmResult {
 }
 
 /// 🎯️ Standard fuzzy c-means clustering.
-pub async fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: f64) -> FuzzyResult<FcmResult> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: f64) -> FuzzyResult<FcmResult> {
     if data.is_empty() || k == 0 {
         return Err(FuzzyError::InvalidDomain("fcm data".into()));
     }
@@ -1475,28 +1555,29 @@ pub async fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize,
 }
 
 /// 🎯️ Gustafson–Kessel fuzzy clustering with adaptive covariance per cluster.
-pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) -> FuzzyResult<FcmResult> {
-    let mut result = fuzzy_c_means(data, k, m, max_iter, 1e-5).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) -> FuzzyResult<FcmResult> {
+    let mut result = fuzzy_c_means(data, k, m, max_iter, 1e-5)?;
     let n = data.len();
     let dim = data[0].len();
     for _ in 0..max_iter {
         let mut covariances = vec![MatD::identity(dim); k];
         for j in 0..k {
-            let mut cov = MatD::zeros(dim, dim).await;
+            let mut cov = MatD::zeros(dim, dim);
             let mut den = 0.0;
             for i in 0..n {
                 let w = result.membership[i][j].powf(m);
                 den += w;
                 for a in 0..dim {
                     for b in 0..dim {
-                        cov.add_at(a, b, w * (data[i][a] - result.centers[j][a]) * (data[i][b] - result.centers[j][b])).await;
+                        cov.add_at(a, b, w * (data[i][a] - result.centers[j][a]) * (data[i][b] - result.centers[j][b]));
                     }
                 }
             }
             if den > 1e-12 {
                 for a in 0..dim {
                     for b in 0..dim {
-                        covariances[j].await.set(a, b, cov.get(a, b).await / den + if a == b { 1e-6 } else { 0.0 });
+                        covariances[j].set(a, b, cov.get(a, b) / den + if a == b { 1e-6 } else { 0.0 });
                     }
                 }
             }
@@ -1507,7 +1588,7 @@ pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usi
                 let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[j][d]).collect();
                 for a in 0..dim {
                     for b in 0..dim {
-                        dist2 += diff[a] * covariances[j].await.get(a, b) * diff[b];
+                        dist2 += diff[a] * covariances[j].get(a, b) * diff[b];
                     }
                 }
                 result.membership[i][j] = 1.0
@@ -1517,7 +1598,7 @@ pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usi
                             let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[c][d]).collect();
                             for a in 0..dim {
                                 for b in 0..dim {
-                                    d2 += diff[a] * semio_framework_plugin::resolve_ready(covariances[c].await.get(a, b)) * diff[b];
+                                    d2 += diff[a] * covariances[c].get(a, b) * diff[b];
                                 }
                             }
                             (dist2.max(1e-12) / d2.max(1e-12)).powf(1.0 / (m - 1.0))
@@ -1538,11 +1619,13 @@ pub struct FuzzyAhp {
 }
 
 impl FuzzyAhp {
-    pub async fn new(matrix: Vec<Vec<FuzzyNumber>>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(matrix: Vec<Vec<FuzzyNumber>>) -> Self {
         Self { matrix }
     }
 
-    pub async fn weights(&self) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn weights(&self) -> Vec<f64> {
         let n = self.matrix.len();
         let mut scores = vec![0.0; n];
         for i in 0..n {
@@ -1570,13 +1653,14 @@ pub struct FuzzyTopsis {
 }
 
 impl FuzzyTopsis {
-    pub async fn rank(&self) -> Vec<(usize, f64)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
         let mut crisp = vec![vec![0.0; n]; m];
         for i in 0..m {
             for j in 0..n {
-                crisp[i][j] = self.decision_matrix[i][j].defuzzify_centroid(32).await;
+                crisp[i][j] = self.decision_matrix[i][j].defuzzify_centroid(32);
             }
         }
         let mut norm = vec![vec![0.0; n]; m];
@@ -1611,7 +1695,8 @@ pub struct FuzzyVikor {
 }
 
 impl FuzzyVikor {
-    pub async fn rank(&self) -> Vec<(usize, f64)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
         let crisp = self.decision_matrix.iter().map(|row| row.iter().map(|cell| cell.defuzzify_centroid(32)).collect::<Vec<_>>()).collect::<Vec<_>>();
@@ -1651,14 +1736,16 @@ pub struct TemporalEvaluator {
 }
 
 impl TemporalEvaluator {
-    pub async fn recently(&self, timestamp: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn recently(&self, timestamp: f64) -> f64 {
         let dt = (self.now - timestamp).max(0.0);
-        clamp01(1.0 - dt / self.recent_window.max(1e-6)).await
+        clamp01(1.0 - dt / self.recent_window.max(1e-6))
     }
 
-    pub async fn frequently(&self, timestamps: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn frequently(&self, timestamps: &[f64]) -> f64 {
         let count = timestamps.iter().filter(|t| (self.now - **t).abs() <= self.frequent_window).count() as f64;
-        clamp01(count / 5.0).await
+        clamp01(count / 5.0)
     }
 }
 
@@ -1670,32 +1757,37 @@ pub struct SpatialEvaluator {
 }
 
 impl SpatialEvaluator {
-    pub async fn near(&self, point: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn near(&self, point: &[f64]) -> f64 {
         let dist2: f64 = self.anchor.iter().zip(point.iter()).map(|(a, p)| (a - p).powi(2)).sum();
-        clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6)).await
+        clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6))
     }
 
-    pub async fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
-        clamp01(1.0 - velocity.abs() / max_speed.max(1e-6)).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
+        clamp01(1.0 - velocity.abs() / max_speed.max(1e-6))
     }
 }
 // #endregion 🔖️TemporalSpatial
 
 // #region 🔖️HybridUncertainty
 /// 🔀️ Map probabilistic scores to fuzzy membership without external Bayesian engines.
-pub async fn probabilistic_to_membership(probability: f64, certainty: f64) -> f64 {
-    clamp01(probability * certainty + 0.5 * (1.0 - certainty)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn probabilistic_to_membership(probability: f64, certainty: f64) -> f64 {
+    clamp01(probability * certainty + 0.5 * (1.0 - certainty))
 }
 
 /// 🔀️ Bridge possibility and fuzzy membership on a shared universe.
-pub async fn possibility_to_membership(possibility: &PossibilityMeasure) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn possibility_to_membership(possibility: &PossibilityMeasure) -> Vec<f64> {
     possibility.membership.clone()
 }
 
 /// 🔀️ Combine fuzzy and possibility evidence via weighted fusion.
-pub async fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 {
     let w = clamp01(fuzzy_weight);
-    clamp01(w * membership + (1.0 - w) * possibility).await
+    clamp01(w * membership + (1.0 - w) * possibility)
 }
 // #endregion 🔖️HybridUncertainty
 
@@ -1710,25 +1802,26 @@ pub struct FanController {
 }
 
 impl FanController {
-    pub async fn from_sensor_data(temps: &[f64], fan_speeds: &[f64]) -> FuzzyResult<Self> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_sensor_data(temps: &[f64], fan_speeds: &[f64]) -> FuzzyResult<Self> {
         let t_min = temps.iter().copied().fold(f64::INFINITY, f64::min);
         let t_max = temps.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let s_max = fan_speeds.iter().copied().fold(0.0_f64, f64::max).max(1.0);
-        let temp_univ = Universe::new(t_min - 1.0, t_max + 1.0, 101).await?;
-        let speed_univ = Universe::new(0.0, s_max * 1.1, 101).await?;
+        let temp_univ = Universe::new(t_min - 1.0, t_max + 1.0, 101)?;
+        let speed_univ = Universe::new(0.0, s_max * 1.1, 101)?;
         let mut low_mf = MembershipFunction::triangular(t_min, t_min, (t_min + t_max) * 0.5);
         let mut high_mf = MembershipFunction::triangular((t_min + t_max) * 0.5, t_max, t_max);
         let low_samples: Vec<(f64, f64)> = temps.iter().map(|&t| (t, if t < (t_min + t_max) * 0.5 { 1.0 } else { 0.0 })).collect();
         let high_samples: Vec<(f64, f64)> = temps.iter().map(|&t| (t, if t >= (t_min + t_max) * 0.5 { 1.0 } else { 0.0 })).collect();
-        let mut low_adapt = AdaptiveMembership::new(low_mf.await, 0.01).await;
-        low_adapt.fit(&low_samples, 20).await;
+        let mut low_adapt = AdaptiveMembership::new(low_mf, 0.01);
+        low_adapt.fit(&low_samples, 20);
         low_mf = low_adapt.mf;
-        let mut high_adapt = AdaptiveMembership::new(high_mf.await, 0.01).await;
-        high_adapt.fit(&high_samples, 20).await;
+        let mut high_adapt = AdaptiveMembership::new(high_mf, 0.01);
+        high_adapt.fit(&high_samples, 20);
         high_mf = high_adapt.mf;
-        let temperature_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", low_mf.await).await, FuzzySet::new("high", high_mf.await).await]);
-        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5).await).await, FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max).await).await]);
-        let sensor_uncertainty = IntervalType2Set::new("temperature_sensor", MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05).await, MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12).await);
+        let temperature_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", low_mf), FuzzySet::new("high", high_mf)]);
+        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5)), FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max))]);
+        let sensor_uncertainty = IntervalType2Set::new("temperature_sensor", MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05), MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12));
         let rules = RuleBase::new(vec![
             Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 1 }, weight: 0.9, confidence: 0.85 },
             Rule { id: 1, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 0.8, confidence: 0.8 },
@@ -1738,11 +1831,12 @@ impl FanController {
         Ok(Self { temperature_var, speed_var, sensor_uncertainty, evolving })
     }
 
-    pub async fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
-        let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
+        let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature);
         let adjusted = 0.5 * (temperature + self.sensor_uncertainty.type_reduced_centroid(&[lo, temperature, hi]));
-        self.evolving.observe(&[adjusted], &[0.0]).await?;
-        let (outputs, explanation) = self.evolving.system.infer(&[adjusted]).await?;
+        self.evolving.observe(&[adjusted], &[0.0])?;
+        let (outputs, explanation) = self.evolving.system.infer(&[adjusted])?;
         Ok((outputs[0], explanation))
     }
 }
@@ -1753,7 +1847,8 @@ impl FanController {
 mod tests {
     use super::*;
 
-    async fn temp_speed_system() -> MimoSystem {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn temp_speed_system() -> MimoSystem {
         let temp_univ = Universe::new(0.0, 40.0, 41).unwrap();
         let speed_univ = Universe::new(0.0, 100.0, 41).unwrap();
         let temp_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 20.0)), FuzzySet::new("high", MembershipFunction::triangular(15.0, 40.0, 40.0))]);

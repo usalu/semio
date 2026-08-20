@@ -1,0 +1,30 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-window-kits:test -- "--reporter=verbose"
+
+> nx run @semio-tech/plugin-window-kits:test --reporter=verbose
+
+> bun ./📜️script.ts test --reporter=verbose
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits
+
+ ✓ |@semio-tech/plugin-window-kits| 📄️document/🟦️component.ts > renderDocument > renders one child per page 2ms
+ ✓ |@semio-tech/plugin-window-kits| 🌳️tree/🟦️component.ts > renderTree > expands nested children recursively 2ms
+ ✓ |@semio-tech/plugin-window-kits| 🧊️mesh/🟦️component.ts > renderMesh > carries the JSON blobs into the world3d scene 1ms
+ ✓ |@semio-tech/plugin-window-kits| 🖼️image/🟦️component.ts > renderImage > builds a base64 data URI from mime + base64 3ms
+ ✓ |@semio-tech/plugin-window-kits| 📊️table/🟦️component.ts > renderTable > serializes columns and rows into the table scene 2ms
+ ✓ |@semio-tech/plugin-window-kits| 📊️table/🟦️component.ts > renderTableRows > stamps a stable row id and omits the actions column when no row has one 1ms
+ ✓ |@semio-tech/plugin-window-kits| 📊️table/🟦️component.ts > renderTableRows > renders row action buttons carrying their dispatchable descriptor 0ms
+ ✓ |@semio-tech/plugin-window-kits| 🎬️media/🟦️component.ts > renderMedia > renders duration, position, and kind as key-value entries 2ms
+
+ Test Files  6 passed (6)
+      Tests  8 passed (8)
+   Start at  16:57:40
+   Duration  167ms (transform 176ms, setup 0ms, import 237ms, tests 23ms, environment 1ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/plugin-window-kits
+
+
+EXIT:0

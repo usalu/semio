@@ -24,7 +24,8 @@ pub struct BcfTopicStats {
 
 /// 🗒️ Computes [`BcfTopicStats`] via one pass over `topics` — see module doc comment for the
 /// exact per-field derivation.
-pub async fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_bcf_topic_stats(snapshot: &BcfSnapshot) -> BcfTopicStats {
     let mut comment_count = 0u32;
     let mut viewpoint_count = 0u32;
     let mut authors: BTreeSet<&str> = BTreeSet::new();
@@ -49,11 +50,13 @@ mod tests {
     use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic, BcfViewpoint};
     use crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA;
 
-    async fn comment(guid: &str, author: &str) -> BcfComment {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn comment(guid: &str, author: &str) -> BcfComment {
         BcfComment { guid: guid.into(), date: "2026-01-01T00:00:00Z".into(), author: author.into(), text: "note".into(), viewpoint_ref: None }
     }
 
-    async fn viewpoint(guid: &str) -> BcfViewpoint {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn viewpoint(guid: &str) -> BcfViewpoint {
         BcfViewpoint { guid: guid.into(), camera: None, components: None, snapshot: None }
     }
 

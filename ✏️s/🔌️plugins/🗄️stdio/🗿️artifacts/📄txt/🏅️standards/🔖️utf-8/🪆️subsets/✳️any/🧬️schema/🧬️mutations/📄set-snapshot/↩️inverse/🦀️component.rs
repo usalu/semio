@@ -3,6 +3,7 @@ use crate::artifacts::txt::TxtSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &TxtSnapshot, mutation: &TxtMutation) -> Vec<TxtMutation> {
-    <TxtMutation as Mutation<TxtSnapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &TxtSnapshot, mutation: &TxtMutation) -> Vec<TxtMutation> {
+    <TxtMutation as Mutation<TxtSnapshot>>::inverse(mutation, base)
 }

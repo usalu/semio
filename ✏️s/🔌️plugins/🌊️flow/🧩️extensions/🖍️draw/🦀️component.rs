@@ -7,11 +7,11 @@ use flow_extension_sdk::with_drawing_kernel as with_kernel;
 
 // #region 🔖️Helpers
 
-async fn map_kernel_error(error: DrawingError) -> EvalError {
+fn map_kernel_error(error: DrawingError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
-async fn kind_label(kind: flow_extension_sdk::DrawingKind) -> &'static str {
+fn kind_label(kind: flow_extension_sdk::DrawingKind) -> &'static str {
     match kind {
         flow_extension_sdk::DrawingKind::Rect => "rect",
         flow_extension_sdk::DrawingKind::Ellipse => "ellipse",
@@ -24,28 +24,28 @@ async fn kind_label(kind: flow_extension_sdk::DrawingKind) -> &'static str {
     }
 }
 
-async fn drawing_dict(kernel: &DrawingStore, handle: &DrawingHandle) -> Result<Dictionary, EvalError> {
+fn drawing_dict(kernel: &DrawingStore, handle: &DrawingHandle) -> Result<Dictionary, EvalError> {
     let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
     Ok(Dictionary::with_schema("draw.drawing").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
 
-async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+fn read_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_drawing(input: &Dictionary, key: &str) -> Result<DrawingHandle, EvalError> {
+fn read_drawing(input: &Dictionary, key: &str) -> Result<DrawingHandle, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     let handle = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).ok_or_else(|| EvalError::MissingInput(format!("{key}.handle")))?;
     Ok(DrawingHandle(handle.to_string()))
 }
 
-async fn read_point_list(input: &Dictionary, key: &str) -> Result<Vec<Vec2>, EvalError> {
+fn read_point_list(input: &Dictionary, key: &str) -> Result<Vec<Vec2>, EvalError> {
     let list = input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse().ok()).collect();
     indices.sort_unstable();
@@ -58,7 +58,7 @@ async fn read_point_list(input: &Dictionary, key: &str) -> Result<Vec<Vec2>, Eva
         .collect()
 }
 
-async fn read_rgba(input: &Dictionary, key: &str) -> Result<[f64; 4], EvalError> {
+fn read_rgba(input: &Dictionary, key: &str) -> Result<[f64; 4], EvalError> {
     Ok([
         read_channel_number(input, &format!("{key}R")).unwrap_or(0.0),
         read_channel_number(input, &format!("{key}G")).unwrap_or(0.0),
@@ -67,23 +67,23 @@ async fn read_rgba(input: &Dictionary, key: &str) -> Result<[f64; 4], EvalError>
     ])
 }
 
-async fn number_channel(id: &str, operator_id: &str, default: f64) -> ChannelSpec {
+fn number_channel(id: &str, operator_id: &str, default: f64) -> ChannelSpec {
     ChannelSpec::number_default(id, default, &[operator_id])
 }
 
-async fn drawing_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn drawing_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::requires(id, &[operator_id])
 }
 
-async fn list_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn list_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::list(id, &[operator_id])
 }
 
-async fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn text_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::text_default(id, "", &[operator_id])
 }
 
-async fn out_drawing(full_name: &str) -> ChannelSpec {
+fn out_drawing(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("D", "Drw", "draw.drawing", full_name)
 }
 
@@ -91,7 +91,7 @@ async fn out_drawing(full_name: &str) -> ChannelSpec {
     clippy::too_many_arguments,
     reason = "positional operator-metadata builder mirroring this file's registration table shape (id/name/abbr/icon/summary/inputs/outputs/group columns); restructuring into a params struct would only churn call sites with no behavior change"
 )]
-async fn operator_info(id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>, group: &[&str]) -> OperatorInfo {
+fn operator_info(id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
         extension: "draw".into(),
@@ -106,7 +106,7 @@ async fn operator_info(id: &str, name: &str, abbr: &str, icon: &str, summary: &s
     }
 }
 
-async fn drawing_schema() -> Schema {
+fn drawing_schema() -> Schema {
     Schema {
         id: "draw.drawing".into(),
         module: "draw".into(),
@@ -118,7 +118,7 @@ async fn drawing_schema() -> Schema {
 }
 
 #[cfg(any(test, feature = "component-guest"))]
-async fn module_registry() -> Registry {
+fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -128,7 +128,7 @@ async fn module_registry() -> Registry {
 // #region 🔖️ShapeMutations
 struct ShapeRect;
 impl Operator for ShapeRect {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
             let y = read_channel_number(input, "y")?;
@@ -142,7 +142,7 @@ impl Operator for ShapeRect {
 
 struct ShapeEllipse;
 impl Operator for ShapeEllipse {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let cx = read_channel_number(input, "cx")?;
             let cy = read_channel_number(input, "cy")?;
@@ -156,7 +156,7 @@ impl Operator for ShapeEllipse {
 
 struct ShapeCircle;
 impl Operator for ShapeCircle {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let cx = read_channel_number(input, "cx")?;
             let cy = read_channel_number(input, "cy")?;
@@ -169,7 +169,7 @@ impl Operator for ShapeCircle {
 
 struct ShapeLine;
 impl Operator for ShapeLine {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x1 = read_channel_number(input, "x1")?;
             let y1 = read_channel_number(input, "y1")?;
@@ -183,7 +183,7 @@ impl Operator for ShapeLine {
 
 struct ShapePolygon;
 impl Operator for ShapePolygon {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
             let handle = block_on(k.polygon(&points)).map_err(map_kernel_error)?;
@@ -196,7 +196,7 @@ impl Operator for ShapePolygon {
 // #region 🔖️PathMutations
 struct PathPolyline;
 impl Operator for PathPolyline {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
             let handle = block_on(k.polyline_path(&points)).map_err(map_kernel_error)?;
@@ -207,7 +207,7 @@ impl Operator for PathPolyline {
 
 struct PathRect;
 impl Operator for PathRect {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
             let y = read_channel_number(input, "y")?;
@@ -223,7 +223,7 @@ impl Operator for PathRect {
 // #region 🔖️StyleMutations
 struct StyleFill;
 impl Operator for StyleFill {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let color = read_rgba(input, "color")?;
@@ -235,7 +235,7 @@ impl Operator for StyleFill {
 
 struct StyleStroke;
 impl Operator for StyleStroke {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let color = read_rgba(input, "color")?;
@@ -251,7 +251,7 @@ impl Operator for StyleStroke {
 // #region 🔖️XformMutations
 struct XformTranslate;
 impl Operator for XformTranslate {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let dx = read_channel_number(input, "dx")?;
@@ -264,7 +264,7 @@ impl Operator for XformTranslate {
 
 struct XformRotate;
 impl Operator for XformRotate {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let angle = read_channel_number(input, "angle")?;
@@ -276,7 +276,7 @@ impl Operator for XformRotate {
 
 struct XformScale;
 impl Operator for XformScale {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let sx = read_channel_number(input, "sx")?;
@@ -291,7 +291,7 @@ impl Operator for XformScale {
 // #region 🔖️GroupMutations
 struct GroupMerge;
 impl Operator for GroupMerge {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
@@ -305,7 +305,7 @@ impl Operator for GroupMerge {
 // #region 🔖️BoolMutations
 struct BoolUnion;
 impl Operator for BoolUnion {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
@@ -317,7 +317,7 @@ impl Operator for BoolUnion {
 
 struct BoolDifference;
 impl Operator for BoolDifference {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
@@ -329,7 +329,7 @@ impl Operator for BoolDifference {
 
 struct BoolIntersection;
 impl Operator for BoolIntersection {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
@@ -343,7 +343,7 @@ impl Operator for BoolIntersection {
 // #region 🔖️TextMutations
 struct DrawText;
 impl Operator for DrawText {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let x = read_channel_number(input, "x")?;
             let y = read_channel_number(input, "y")?;
@@ -359,7 +359,7 @@ impl Operator for DrawText {
 // #region 🔖️GradientMutations
 struct GradientLinear;
 impl Operator for GradientLinear {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let x1 = read_channel_number(input, "x1")?;
@@ -377,7 +377,7 @@ impl Operator for GradientLinear {
 // #region 🔖️ClipMutations
 struct ClipApply;
 impl Operator for ClipApply {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let target = read_drawing(input, "target")?;
             let clip = read_drawing(input, "clip")?;
@@ -389,7 +389,7 @@ impl Operator for ClipApply {
 // #endregion 🔖️ClipMutations
 
 /// 📦️ Registers all draw operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     registry.register_schema(drawing_schema());
     let shape = &["Shapes"];
     let paths = &["Paths"];
@@ -644,7 +644,7 @@ mod tests {
         retain_drawing_handles, trace_bitmap_json,
     };
 
-    async fn number_dictionary(value: f64) -> Dictionary {
+    fn number_dictionary(value: f64) -> Dictionary {
         Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
     }
 
@@ -653,11 +653,11 @@ mod tests {
     /// (which purges every handle outside its live set) can dispose it mid-test.
     static KERNEL_TEST_LOCK: std::sync::RwLock<()> = std::sync::RwLock::new(());
 
-    async fn kernel_read_guard() -> std::sync::RwLockReadGuard<'static, ()> {
+    fn kernel_read_guard() -> std::sync::RwLockReadGuard<'static, ()> {
         KERNEL_TEST_LOCK.read().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    async fn kernel_write_guard() -> std::sync::RwLockWriteGuard<'static, ()> {
+    fn kernel_write_guard() -> std::sync::RwLockWriteGuard<'static, ()> {
         KERNEL_TEST_LOCK.write().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
@@ -724,30 +724,30 @@ mod tests {
         assert!(scene_json.contains("nodes"));
     }
 
-    async fn point_list(points: &[(f64, f64)]) -> Dictionary {
+    fn point_list(points: &[(f64, f64)]) -> Dictionary {
         points
             .iter()
             .enumerate()
             .fold(Dictionary::with_schema("list"), |list, (index, (x, y))| list.insert(index.to_string(), Value::Dictionary(Dictionary::new().insert("x", Value::Atom(Atom::Decimal(*x))).insert("y", Value::Atom(Atom::Decimal(*y))))))
     }
 
-    async fn drawing_handle_of(output: &Dictionary) -> String {
+    fn drawing_handle_of(output: &Dictionary) -> String {
         output.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("handle")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("handle").to_string()
     }
 
-    async fn drawing_kind_of(output: &Dictionary) -> String {
+    fn drawing_kind_of(output: &Dictionary) -> String {
         output.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("kind")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("kind").to_string()
     }
 
-    async fn with_drawing(input: Dictionary, key: &str, handle: &str) -> Dictionary {
+    fn with_drawing(input: Dictionary, key: &str, handle: &str) -> Dictionary {
         input.insert(key, Value::Dictionary(Dictionary::new().insert("handle", Value::Atom(Atom::String(handle.to_string())))))
     }
 
-    async fn drawing_input(key: &str, handle: &str) -> Dictionary {
+    fn drawing_input(key: &str, handle: &str) -> Dictionary {
         with_drawing(Dictionary::new(), key, handle)
     }
 
-    async fn make_rect(x: f64, y: f64, width: f64, height: f64) -> String {
+    fn make_rect(x: f64, y: f64, width: f64, height: f64) -> String {
         let input = Dictionary::new()
             .insert("x", Value::Dictionary(number_dictionary(x)))
             .insert("y", Value::Dictionary(number_dictionary(y)))
@@ -1134,7 +1134,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let extension_id = "draw";
         let label = "Draw";
         let icon_id = "draw";
@@ -1148,21 +1148,25 @@ mod extension_guest {
         topic_payload
     }
 
-    async fn bundle() -> ExtensionBundle {
+    // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
+    // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+    // path_scope); bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request.
+    // See R9.
+    fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        ExtensionBundle::new("draw", "Draw", "0.1.0")
-            .extends("flow")
-            .mode(ExecutionMode::Linked)
-            .contributes_topic("flow.extension", flow_topic_payload)
-            .contributes_topic("flow.extension", procedural3d_topic_payload)
-            .handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-                })?;
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            })
+        let bundle = ExtensionBundle::new("draw", "Draw", "0.1.0").extends("flow");
+        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
+                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
+            })?;
+            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+        }))
     }
 
     semio_framework_plugin::extension_exports!(bundle);

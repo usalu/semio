@@ -12,23 +12,26 @@ pub struct GltfBindSceneRootNodeDiff {
     pub position: usize,
     pub touched_paths: Vec<String>,
 }
-pub async fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeDiff, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
     Ok(GltfBindSceneRootNodeDiff { scene: payload.scene, node: payload.node, position: payload.position, touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, payload.position)] })
 }
-pub async fn apply(base: &GltfSnapshot, diff: &GltfBindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(base: &GltfSnapshot, diff: &GltfBindSceneRootNodeDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/scenes/{}/nodes/{}", diff.scene, diff.position);
     if diff.touched_paths.len() != 1 || diff.touched_paths[0] != path {
-        return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its root coordinates").await);
+        return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its root coordinates"));
     }
     let scene = base.document.scenes.get(diff.scene).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/scenes", "scene is absent"))?;
     if diff.position > scene.nodes.len() || scene.nodes.contains(&diff.node) || base.document.nodes.get(diff.node).is_none() {
-        return Err(reject("gltf.mutation.stale-diff", format!("document/scenes/{}/nodes/{}", diff.scene, diff.position), "scene, position, or node identity is stale").await);
+        return Err(reject("gltf.mutation.stale-diff", format!("document/scenes/{}/nodes/{}", diff.scene, diff.position), "scene, position, or node identity is stale"));
     }
     let mut next = base.clone();
     next.document.scenes[diff.scene].nodes.insert(diff.position, diff.node);
     Ok(next)
 }
-pub async fn encode(diff: &GltfBindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode(diff: &GltfBindSceneRootNodeDiff) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(diff)
 }

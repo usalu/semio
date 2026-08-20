@@ -86,9 +86,10 @@ pub enum SemioCadMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
 /// applied.
-pub async fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
-    let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
+    let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -99,18 +100,18 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
     async fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioCadMutation::NoMutation => SemioCadDiff::default(),
-            SemioCadMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioCadMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioCadMutation::AddLayer { layer } => SemioCadDiff { layers: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![layer.clone()] }), blocks: None, entities: None },
             SemioCadMutation::RemoveLayer { name } => SemioCadDiff { layers: Some(NamedTripleDiff { removed: vec![name.clone()], modified: Vec::new(), added: Vec::new() }), blocks: None, entities: None },
-            SemioCadMutation::SetLayer { name, color_index, line_type, visible } => wrap_layer_diff(name, CadLayerDiff { color_index: *color_index, line_type: line_type.clone(), visible: *visible }).await,
+            SemioCadMutation::SetLayer { name, color_index, line_type, visible } => wrap_layer_diff(name, CadLayerDiff { color_index: *color_index, line_type: line_type.clone(), visible: *visible }),
             SemioCadMutation::AddBlock { block } => SemioCadDiff { layers: None, blocks: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![block.clone()] }), entities: None },
             SemioCadMutation::RemoveBlock { name } => SemioCadDiff { layers: None, blocks: Some(NamedTripleDiff { removed: vec![name.clone()], modified: Vec::new(), added: Vec::new() }), entities: None },
-            SemioCadMutation::SetBlockBasePoint { name, base_point } => wrap_block_diff(name, CadBlockDiff { base_point: Some(*base_point), entities: None }).await,
+            SemioCadMutation::SetBlockBasePoint { name, base_point } => wrap_block_diff(name, CadBlockDiff { base_point: Some(*base_point), entities: None }),
             SemioCadMutation::AddEntity { entity } => SemioCadDiff { layers: None, blocks: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) },
             SemioCadMutation::RemoveEntity { handle } => SemioCadDiff { layers: None, blocks: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) },
-            SemioCadMutation::SetEntityLayer { handle, layer } => wrap_entity_diff(handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }).await,
-            SemioCadMutation::SetEntityGeometry { handle, entity } => wrap_entity_diff(handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }).await,
-            SemioCadMutation::AddBlockEntity { block_name, entity } => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) }).await,
+            SemioCadMutation::SetEntityLayer { handle, layer } => wrap_entity_diff(handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
+            SemioCadMutation::SetEntityGeometry { handle, entity } => wrap_entity_diff(handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
+            SemioCadMutation::AddBlockEntity { block_name, entity } => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) }),
             SemioCadMutation::RemoveBlockEntity { block_name, handle } => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) }),
             SemioCadMutation::SetBlockEntityLayer { block_name, handle, layer } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
             SemioCadMutation::SetBlockEntityGeometry { block_name, handle, entity } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
@@ -122,46 +123,46 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
             SemioCadMutation::NoMutation => vec![SemioCadMutation::NoMutation],
             SemioCadMutation::SetSnapshot { .. } => vec![SemioCadMutation::SetSnapshot { snapshot: base.clone() }],
             SemioCadMutation::AddLayer { layer } => vec![SemioCadMutation::RemoveLayer { name: layer.name.clone() }],
-            SemioCadMutation::RemoveLayer { name } => match find_layer(base, name).await {
+            SemioCadMutation::RemoveLayer { name } => match find_layer(base, name) {
                 Some(l) => vec![SemioCadMutation::AddLayer { layer: l.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetLayer { name, color_index, line_type, visible } => match find_layer(base, name).await {
+            SemioCadMutation::SetLayer { name, color_index, line_type, visible } => match find_layer(base, name) {
                 Some(l) => vec![SemioCadMutation::SetLayer { name: name.clone(), color_index: color_index.as_ref().map(|_| l.color_index), line_type: line_type.as_ref().map(|_| l.line_type.clone()), visible: visible.as_ref().map(|_| l.visible) }],
                 None => vec![SemioCadMutation::NoMutation],
             },
             SemioCadMutation::AddBlock { block } => vec![SemioCadMutation::RemoveBlock { name: block.name.clone() }],
-            SemioCadMutation::RemoveBlock { name } => match find_block(base, name).await {
+            SemioCadMutation::RemoveBlock { name } => match find_block(base, name) {
                 Some(b) => vec![SemioCadMutation::AddBlock { block: b.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetBlockBasePoint { name, .. } => match find_block(base, name).await {
+            SemioCadMutation::SetBlockBasePoint { name, .. } => match find_block(base, name) {
                 Some(b) => vec![SemioCadMutation::SetBlockBasePoint { name: name.clone(), base_point: b.base_point }],
                 None => vec![SemioCadMutation::NoMutation],
             },
             SemioCadMutation::AddEntity { entity } => vec![SemioCadMutation::RemoveEntity { handle: entity.handle.clone() }],
-            SemioCadMutation::RemoveEntity { handle } => match find_entity(base, handle).await {
+            SemioCadMutation::RemoveEntity { handle } => match find_entity(base, handle) {
                 Some(e) => vec![SemioCadMutation::AddEntity { entity: e.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetEntityLayer { handle, .. } => match find_entity(base, handle).await {
+            SemioCadMutation::SetEntityLayer { handle, .. } => match find_entity(base, handle) {
                 Some(e) => vec![SemioCadMutation::SetEntityLayer { handle: handle.clone(), layer: e.layer.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetEntityGeometry { handle, .. } => match find_entity(base, handle).await {
+            SemioCadMutation::SetEntityGeometry { handle, .. } => match find_entity(base, handle) {
                 Some(e) => vec![SemioCadMutation::SetEntityGeometry { handle: handle.clone(), entity: e.entity.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
             SemioCadMutation::AddBlockEntity { block_name, entity } => vec![SemioCadMutation::RemoveBlockEntity { block_name: block_name.clone(), handle: entity.handle.clone() }],
-            SemioCadMutation::RemoveBlockEntity { block_name, handle } => match find_block_entity(base, block_name, handle).await {
+            SemioCadMutation::RemoveBlockEntity { block_name, handle } => match find_block_entity(base, block_name, handle) {
                 Some(e) => vec![SemioCadMutation::AddBlockEntity { block_name: block_name.clone(), entity: e.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetBlockEntityLayer { block_name, handle, .. } => match find_block_entity(base, block_name, handle).await {
+            SemioCadMutation::SetBlockEntityLayer { block_name, handle, .. } => match find_block_entity(base, block_name, handle) {
                 Some(e) => vec![SemioCadMutation::SetBlockEntityLayer { block_name: block_name.clone(), handle: handle.clone(), layer: e.layer.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
-            SemioCadMutation::SetBlockEntityGeometry { block_name, handle, .. } => match find_block_entity(base, block_name, handle).await {
+            SemioCadMutation::SetBlockEntityGeometry { block_name, handle, .. } => match find_block_entity(base, block_name, handle) {
                 Some(e) => vec![SemioCadMutation::SetBlockEntityGeometry { block_name: block_name.clone(), handle: handle.clone(), entity: e.entity.clone() }],
                 None => vec![SemioCadMutation::NoMutation],
             },
@@ -169,17 +170,21 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
     }
 }
 
-async fn find_layer<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadLayer> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_layer<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadLayer> {
     base.layers.iter().find(|l| l.name == name)
 }
-async fn find_block<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_block<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadBlock> {
     base.blocks.iter().find(|b| b.name == name)
 }
-async fn find_entity<'a>(base: &'a SemioCadSnapshot, handle: &str) -> Option<&'a CadEntityRecord> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_entity<'a>(base: &'a SemioCadSnapshot, handle: &str) -> Option<&'a CadEntityRecord> {
     base.entities.iter().find(|e| e.handle == handle)
 }
-async fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &str) -> Option<&'a CadEntityRecord> {
-    find_block(base, block_name).await?.entities.iter().find(|e| e.handle == handle)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &str) -> Option<&'a CadEntityRecord> {
+    find_block(base, block_name)?.entities.iter().find(|e| e.handle == handle)
 }
 //#endregion 🔖️MutationTrait
 
@@ -188,16 +193,19 @@ async fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, han
 /// (`enc_str`/`enc_layer`/`enc_block`/`enc_entity`/`encode_option`/...) rather than duplicating
 /// them, same pattern `BcfMutation` established. Grammar: `keyword arg=value ...`
 /// (space-separated), one match arm per variant.
-async fn enc_cad_snapshot(s: &SemioCadSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_cad_snapshot(s: &SemioCadSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_list(&s.layers, enc_layer), enc_list(&s.blocks, enc_block), enc_list(&s.entities, enc_entity_record))
 }
-async fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, layers, blocks, entities] = parts.as_slice() else { return Err(format!("cad snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioCadSnapshot { schema: dec_str(schema).await?, layers: dec_list(layers, dec_layer).await?, blocks: dec_list(blocks, dec_block).await?, entities: dec_list(entities, dec_entity_record).await? })
+    Ok(SemioCadSnapshot { schema: dec_str(schema)?, layers: dec_list(layers, dec_layer)?, blocks: dec_list(blocks, dec_block)?, entities: dec_list(entities, dec_entity_record)? })
 }
 
-async fn print_cad_mutation(m: &SemioCadMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_cad_mutation(m: &SemioCadMutation) -> String {
     match m {
         SemioCadMutation::NoMutation => "no-mutation".to_string(),
         SemioCadMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_cad_snapshot(snapshot)),
@@ -224,7 +232,8 @@ async fn print_cad_mutation(m: &SemioCadMutation) -> String {
     }
 }
 
-async fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioCadMutation::NoMutation);
     }
@@ -232,36 +241,36 @@ async fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("cad mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("cad mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioCadMutation::SetSnapshot { snapshot: dec_cad_snapshot(arg("snapshot")?).await? }),
-        "add-layer" => Ok(SemioCadMutation::AddLayer { layer: dec_layer(arg("layer")?).await? }),
-        "remove-layer" => Ok(SemioCadMutation::RemoveLayer { name: dec_str(arg("name")?).await? }),
+        "set-snapshot" => Ok(SemioCadMutation::SetSnapshot { snapshot: dec_cad_snapshot(arg("snapshot")?)? }),
+        "add-layer" => Ok(SemioCadMutation::AddLayer { layer: dec_layer(arg("layer")?)? }),
+        "remove-layer" => Ok(SemioCadMutation::RemoveLayer { name: dec_str(arg("name")?)? }),
         "set-layer" => Ok(SemioCadMutation::SetLayer {
-            name: dec_str(arg("name")?).await?,
-            color_index: decode_option(arg("color-index")?, |v| v.parse::<i32>().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
-            line_type: decode_option(arg("line-type")?, dec_str).await?,
-            visible: decode_option(arg("visible")?, |v| Ok(v == "1")).await?,
+            name: dec_str(arg("name")?)?,
+            color_index: decode_option(arg("color-index")?, |v| v.parse::<i32>().map_err(|e: std::num::ParseIntError| e.to_string()))?,
+            line_type: decode_option(arg("line-type")?, dec_str)?,
+            visible: decode_option(arg("visible")?, |v| Ok(v == "1"))?,
         }),
-        "add-block" => Ok(SemioCadMutation::AddBlock { block: dec_block(arg("block")?).await? }),
-        "remove-block" => Ok(SemioCadMutation::RemoveBlock { name: dec_str(arg("name")?).await? }),
-        "set-block-base-point" => Ok(SemioCadMutation::SetBlockBasePoint { name: dec_str(arg("name")?).await?, base_point: dec_point2(arg("base-point")?).await? }),
-        "add-entity" => Ok(SemioCadMutation::AddEntity { entity: dec_entity_record(arg("entity")?).await? }),
-        "remove-entity" => Ok(SemioCadMutation::RemoveEntity { handle: dec_str(arg("handle")?).await? }),
-        "set-entity-layer" => Ok(SemioCadMutation::SetEntityLayer { handle: dec_str(arg("handle")?).await?, layer: dec_str(arg("layer")?).await? }),
-        "set-entity-geometry" => Ok(SemioCadMutation::SetEntityGeometry { handle: dec_str(arg("handle")?).await?, entity: dec_entity(arg("entity")?).await? }),
-        "add-block-entity" => Ok(SemioCadMutation::AddBlockEntity { block_name: dec_str(arg("block-name")?).await?, entity: dec_entity_record(arg("entity")?).await? }),
-        "remove-block-entity" => Ok(SemioCadMutation::RemoveBlockEntity { block_name: dec_str(arg("block-name")?).await?, handle: dec_str(arg("handle")?).await? }),
-        "set-block-entity-layer" => Ok(SemioCadMutation::SetBlockEntityLayer { block_name: dec_str(arg("block-name")?).await?, handle: dec_str(arg("handle")?).await?, layer: dec_str(arg("layer")?).await? }),
-        "set-block-entity-geometry" => Ok(SemioCadMutation::SetBlockEntityGeometry { block_name: dec_str(arg("block-name")?).await?, handle: dec_str(arg("handle")?).await?, entity: dec_entity(arg("entity")?).await? }),
+        "add-block" => Ok(SemioCadMutation::AddBlock { block: dec_block(arg("block")?)? }),
+        "remove-block" => Ok(SemioCadMutation::RemoveBlock { name: dec_str(arg("name")?)? }),
+        "set-block-base-point" => Ok(SemioCadMutation::SetBlockBasePoint { name: dec_str(arg("name")?)?, base_point: dec_point2(arg("base-point")?)? }),
+        "add-entity" => Ok(SemioCadMutation::AddEntity { entity: dec_entity_record(arg("entity")?)? }),
+        "remove-entity" => Ok(SemioCadMutation::RemoveEntity { handle: dec_str(arg("handle")?)? }),
+        "set-entity-layer" => Ok(SemioCadMutation::SetEntityLayer { handle: dec_str(arg("handle")?)?, layer: dec_str(arg("layer")?)? }),
+        "set-entity-geometry" => Ok(SemioCadMutation::SetEntityGeometry { handle: dec_str(arg("handle")?)?, entity: dec_entity(arg("entity")?)? }),
+        "add-block-entity" => Ok(SemioCadMutation::AddBlockEntity { block_name: dec_str(arg("block-name")?)?, entity: dec_entity_record(arg("entity")?)? }),
+        "remove-block-entity" => Ok(SemioCadMutation::RemoveBlockEntity { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)? }),
+        "set-block-entity-layer" => Ok(SemioCadMutation::SetBlockEntityLayer { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)?, layer: dec_str(arg("layer")?)? }),
+        "set-block-entity-geometry" => Ok(SemioCadMutation::SetBlockEntityGeometry { block_name: dec_str(arg("block-name")?)?, handle: dec_str(arg("handle")?)?, entity: dec_entity(arg("entity")?)? }),
         other => Err(format!("cad mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioCadMutation {
     async fn print_op(&self) -> String {
-        print_cad_mutation(self).await
+        print_cad_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_cad_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_cad_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -285,7 +294,8 @@ const OP_KEYWORDS: [&str; 16] = [
     "set-block-entity-layer",
     "set-block-entity-geometry",
 ];
-async fn variant_ordinal(m: &SemioCadMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioCadMutation) -> u8 {
     match m {
         SemioCadMutation::NoMutation => 0,
         SemioCadMutation::SetSnapshot { .. } => 1,
@@ -308,8 +318,9 @@ async fn variant_ordinal(m: &SemioCadMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_cad_mutation` (empty for `no-mutation`) —
 /// the binary frame's `tag` byte already carries the keyword, so the text keyword itself is
 /// redundant in the binary payload.
-async fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
-    match print_cad_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
+    match print_cad_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -324,8 +335,8 @@ async fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 impl OpBinary for SemioCadMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_cad_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_cad_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -351,7 +362,8 @@ impl OpBinary for SemioCadMutation {
 /// of the 9 `CadEntity` kinds) — single source of truth for this facet's own tests AND
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-async fn fixture() -> SemioCadSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fixture() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
@@ -365,7 +377,8 @@ async fn fixture() -> SemioCadSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioCadMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
     let base = fixture();
     vec![
         SemioCadMutation::NoMutation,

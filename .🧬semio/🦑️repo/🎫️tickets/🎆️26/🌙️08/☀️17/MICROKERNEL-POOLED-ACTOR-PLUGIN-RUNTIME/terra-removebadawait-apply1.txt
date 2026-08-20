@@ -1,0 +1,14 @@
+[pass 1] errors=12077 bad-await=2948 out-of-scope=0
+  removed 2624
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs: span at 3642 is b'parse_doctype(value)', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs: span at 3604 is b'semio_framework_plugin::resolve_ready(parse_doctype(value))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 46092 is b'fields.as_slice()', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 46054 is b'semio_framework_plugin::resolve_ready(fields.as_slice())', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 45333 is b"split_top_level(strip_brackets(rest)?, ',')", not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 45295 is b"semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(rest)?, ','))", not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 6442 is b'CsvFieldDiff::between(b, o)', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs: span at 6404 is b'semio_framework_plugin::resolve_ready(CsvFieldDiff::between(b, o))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs: span at 4011 is b'value.as_list()', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs: span at 3973 is b'semio_framework_plugin::resolve_ready(value.as_list())', not b'await'
+[pass 2] errors=0 bad-await=0 out-of-scope=0
+  fixpoint reached

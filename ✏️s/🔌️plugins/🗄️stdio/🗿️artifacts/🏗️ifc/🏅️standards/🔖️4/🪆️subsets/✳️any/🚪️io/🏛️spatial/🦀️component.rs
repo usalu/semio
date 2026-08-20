@@ -34,11 +34,13 @@ impl Default for Mat4 {
 }
 
 impl Mat4 {
-    pub async fn identity() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn identity() -> Self {
         Mat4([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
     }
     /// ✖️ `self * other` (self applied after other — i.e. `self` is the outer/parent transform).
-    pub async fn mul(&self, other: &Mat4) -> Mat4 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mul(&self, other: &Mat4) -> Mat4 {
         let (a, b) = (&self.0, &other.0);
         let mut out = [[0.0; 4]; 4];
         for i in 0..4 {
@@ -48,7 +50,8 @@ impl Mat4 {
         }
         Mat4(out)
     }
-    pub async fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
         let m = &self.0;
         [m[0][0] * p[0] + m[0][1] * p[1] + m[0][2] * p[2] + m[0][3], m[1][0] * p[0] + m[1][1] * p[1] + m[1][2] * p[2] + m[1][3], m[2][0] * p[0] + m[2][1] * p[1] + m[2][2] * p[2] + m[2][3]]
     }
@@ -82,13 +85,16 @@ pub struct SpatialAnalysis {
 //#endregion 🔖️Model
 
 //#region 🔖️ArgHelpers
-async fn arg_ref(args: &[Part21Value], idx: usize) -> Option<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arg_ref(args: &[Part21Value], idx: usize) -> Option<u64> {
     args.get(idx).and_then(Part21Value::as_ref_id)
 }
-async fn arg_refs(args: &[Part21Value], idx: usize) -> Vec<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arg_refs(args: &[Part21Value], idx: usize) -> Vec<u64> {
     args.get(idx).and_then(Part21Value::as_list).map(|items| items.iter().filter_map(Part21Value::as_ref_id).collect()).unwrap_or_default()
 }
-async fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
     args.get(idx).and_then(Part21Value::as_str).map(str::to_string)
 }
 //#endregion 🔖️ArgHelpers
@@ -96,18 +102,19 @@ async fn arg_str(args: &[Part21Value], idx: usize) -> Option<String> {
 //#region 🔖️SpatialTree
 /// 🔗️ Builds parent->children edges from both relationship kinds — `IfcRelAggregates`
 /// (project→site→building→storey) and `IfcRelContainedInSpatialStructure` (storey→elements).
-async fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
     let mut children: HashMap<u64, Vec<u64>> = HashMap::new();
     for rel in doc.by_type("IFCRELAGGREGATES") {
         if let Some(args) = rel.entity("IFCRELAGGREGATES") {
-            if let Some(parent) = arg_ref(args, 4).await {
+            if let Some(parent) = arg_ref(args, 4) {
                 children.entry(parent).or_default().extend(arg_refs(args, 5));
             }
         }
     }
     for rel in doc.by_type("IFCRELCONTAINEDINSPATIALSTRUCTURE") {
         if let Some(args) = rel.entity("IFCRELCONTAINEDINSPATIALSTRUCTURE") {
-            if let Some(parent) = arg_ref(args, 5).await {
+            if let Some(parent) = arg_ref(args, 5) {
                 children.entry(parent).or_default().extend(arg_refs(args, 4));
             }
         }
@@ -118,123 +125,137 @@ async fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
 /// 🌳️ Recursively builds a `SpatialNode` — `IfcRoot`'s `Name` is always attribute index 2 and
 /// `IfcProduct`'s `ObjectPlacement` is always index 5, regardless of which concrete entity type
 /// (both are supertype attributes declared before any subtype-specific ones).
-async fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64>>, seen: &mut HashSet<u64>) -> Option<SpatialNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64>>, seen: &mut HashSet<u64>) -> Option<SpatialNode> {
     if !seen.insert(id) {
         return None; // cycle guard: never revisit the same instance
     }
-    let inst = doc.instance(id).await?;
-    let (ifc_type, args) = inst.primary().await?;
-    let name = arg_str(args, 2).await.filter(|n| !n.is_empty());
+    let inst = doc.instance(id)?;
+    let (ifc_type, args) = inst.primary()?;
+    let name = arg_str(args, 2).filter(|n| !n.is_empty());
     let object_placement = arg_ref(args, 5);
-    let children = children_map.get(&id).into_iter().flatten().filter_map(|&kid| semio_framework_plugin::resolve_ready(build_node(doc, kid, children_map, seen))).collect();
+    let children = children_map.get(&id).into_iter().flatten().filter_map(|&kid| build_node(doc, kid, children_map, seen)).collect();
     Some(SpatialNode { id, ifc_type: ifc_type.to_string(), name, object_placement, children })
 }
 //#endregion 🔖️SpatialTree
 
 //#region 🔖️Placements
-async fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
-    let args = doc.instance(id).await?.entity("IFCCARTESIANPOINT").await?;
-    let coords = args.first()?.as_list().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
+    let args = doc.instance(id)?.entity("IFCCARTESIANPOINT")?;
+    let coords = args.first()?.as_list()?;
     Some([coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
-async fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
-    let args = doc.instance(id).await?.entity("IFCDIRECTION").await?;
-    let r = args.first()?.as_list().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
+    let args = doc.instance(id)?.entity("IFCDIRECTION")?;
+    let r = args.first()?.as_list()?;
     Some([r.first().and_then(Part21Value::as_real).unwrap_or(0.0), r.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), r.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
-async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
-async fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
-async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
-async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
-async fn norm3(a: [f64; 3]) -> f64 {
-    dot3(a, a).await.sqrt()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn norm3(a: [f64; 3]) -> f64 {
+    dot3(a, a).sqrt()
 }
-async fn normalize3(a: [f64; 3]) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
     if n < 1e-12 {
         a
     } else {
-        scale3(a, 1.0 / n).await
+        scale3(a, 1.0 / n)
     }
 }
 
 /// 🧭️ Builds a local transform from an `IfcAxis2Placement3D` (Location + optional Axis=local Z,
 /// RefDirection=local X hint) via Gram-Schmidt, matching the pre-verified scratch algorithm.
-async fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Option<[f64; 3]>) -> Mat4 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Option<[f64; 3]>) -> Mat4 {
     let z = normalize3(axis_z.unwrap_or([0.0, 0.0, 1.0]));
     let x_hint = ref_x.unwrap_or([1.0, 0.0, 0.0]);
-    let x_proj = sub3(x_hint, scale3(z.await, dot3(x_hint, z.await).await).await);
-    let x = if norm3(x_proj.await) < 1e-9 {
+    let x_proj = sub3(x_hint, scale3(z, dot3(x_hint, z)));
+    let x = if norm3(x_proj) < 1e-9 {
         let fallback = if z[0].abs() < 0.9 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
-        normalize3(sub3(fallback, scale3(z.await, dot3(fallback, z.await).await).await).await)
+        normalize3(sub3(fallback, scale3(z, dot3(fallback, z))))
     } else {
-        normalize3(x_proj.await)
+        normalize3(x_proj)
     };
-    let y = cross3(z.await, x);
+    let y = cross3(z, x);
     Mat4([[x[0], y[0], z[0], location[0]], [x[1], y[1], z[1], location[1]], [x[2], y[2], z[2], location[2]], [0.0, 0.0, 0.0, 1.0]])
 }
 
-async fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
-    let args = doc.instance(id).await?.entity("IFCAXIS2PLACEMENT3D").await?;
-    let location = cartesian_point(doc, arg_ref(args, 0).await?).await?;
-    let axis_z = arg_ref(args, 1).await.and_then(|r| direction(doc, r));
-    let ref_x = arg_ref(args, 2).await.and_then(|r| direction(doc, r));
-    Some(build_axis2placement(location, axis_z, ref_x).await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
+    let args = doc.instance(id)?.entity("IFCAXIS2PLACEMENT3D")?;
+    let location = cartesian_point(doc, arg_ref(args, 0)?)?;
+    let axis_z = arg_ref(args, 1).and_then(|r| direction(doc, r));
+    let ref_x = arg_ref(args, 2).and_then(|r| direction(doc, r));
+    Some(build_axis2placement(location, axis_z, ref_x))
 }
 
-async fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
     if let Some(m) = memo.get(&id) {
         return m.clone();
     }
     if visiting.contains(&id) {
         issues.push(format!("cyclic IfcLocalPlacement chain detected at #{id}"));
-        return Mat4::identity().await;
+        return Mat4::identity();
     }
     visiting.push(id);
     let result = resolve_placement_inner(doc, id, memo, visiting, issues);
     visiting.pop();
     memo.insert(id, result.clone());
-    result.await
+    result
 }
 
 /// ➡️ `world = parent_world * local` — parent transforms local's coordinate frame (proven the
 /// correct order, not `local * parent`, by the standalone scratch binary's order-discriminator case).
-async fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
-    let Some(inst) = doc.instance(id).await else {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
+    let Some(inst) = doc.instance(id) else {
         issues.push(format!("missing instance #{id}"));
-        return Mat4::identity().await;
+        return Mat4::identity();
     };
-    let Some(args) = inst.entity("IFCLOCALPLACEMENT").await else {
+    let Some(args) = inst.entity("IFCLOCALPLACEMENT") else {
         issues.push(format!("#{id} is not an IFCLOCALPLACEMENT"));
-        return Mat4::identity().await;
+        return Mat4::identity();
     };
     let rel_to = arg_ref(args, 0);
-    let Some(rel_placement_ref) = arg_ref(args, 1).await else {
+    let Some(rel_placement_ref) = arg_ref(args, 1) else {
         issues.push(format!("#{id} missing RelativePlacement"));
-        return Mat4::identity().await;
+        return Mat4::identity();
     };
-    let Some(local) = axis2placement3d_matrix(doc, rel_placement_ref).await else {
+    let Some(local) = axis2placement3d_matrix(doc, rel_placement_ref) else {
         issues.push(format!("#{id} could not resolve RelativePlacement geometry"));
-        return Mat4::identity().await;
+        return Mat4::identity();
     };
-    let parent = match rel_to.await {
-        Some(parent_id) => resolve_placement(doc, parent_id, memo, visiting, issues).await,
-        None => Mat4::identity().await,
+    let parent = match rel_to {
+        Some(parent_id) => resolve_placement(doc, parent_id, memo, visiting, issues),
+        None => Mat4::identity(),
     };
-    parent.mul(&local).await
+    parent.mul(&local)
 }
 
-async fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<String>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<String>) {
     let mut memo = HashMap::new();
     let mut visiting = Vec::new();
     let mut issues = Vec::new();
@@ -246,25 +267,28 @@ async fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Ve
 //#endregion 🔖️Placements
 
 //#region 🔖️PropertySets
-async fn single_value_property(doc: &Part21Document, id: u64) -> Option<PropertyValue> {
-    let args = doc.instance(id).await?.entity("IFCPROPERTYSINGLEVALUE").await?;
-    let name = arg_str(args, 0).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn single_value_property(doc: &Part21Document, id: u64) -> Option<PropertyValue> {
+    let args = doc.instance(id)?.entity("IFCPROPERTYSINGLEVALUE")?;
+    let name = arg_str(args, 0)?;
     let value = args.get(2)?.clone();
     Some(PropertyValue { name, value })
 }
 
-async fn property_set(doc: &Part21Document, id: u64) -> Option<PropertySet> {
-    let args = doc.instance(id).await?.entity("IFCPROPERTYSET").await?;
-    let name = arg_str(args, 2).await.unwrap_or_default();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn property_set(doc: &Part21Document, id: u64) -> Option<PropertySet> {
+    let args = doc.instance(id)?.entity("IFCPROPERTYSET")?;
+    let name = arg_str(args, 2).unwrap_or_default();
     let properties = arg_refs(args, 4).into_iter().filter_map(|pid| single_value_property(doc, pid)).collect();
     Some(PropertySet { id, name, properties })
 }
 
-async fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<PropertySet>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<PropertySet>> {
     let mut out: HashMap<u64, Vec<PropertySet>> = HashMap::new();
     for rel in doc.by_type("IFCRELDEFINESBYPROPERTIES") {
         let Some(args) = rel.entity("IFCRELDEFINESBYPROPERTIES") else { continue };
-        let Some(pset) = arg_ref(args, 5).await.and_then(|pid| property_set(doc, pid)) else { continue };
+        let Some(pset) = arg_ref(args, 5).and_then(|pid| property_set(doc, pid)) else { continue };
         for obj in arg_refs(args, 4) {
             out.entry(obj).or_default().push(pset.clone());
         }
@@ -275,11 +299,12 @@ async fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<Propert
 
 //#region 🔖️Analyze
 /// 🧐️ Full spatial-structure + placement + property-set analysis of an IFC4 document.
-pub async fn analyze_spatial(doc: &Part21Document) -> SpatialAnalysis {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn analyze_spatial(doc: &Part21Document) -> SpatialAnalysis {
     let children_map = collect_children(doc);
     let mut seen = HashSet::new();
     let roots: Vec<SpatialNode> = doc.by_type("IFCPROJECT").filter_map(|p| build_node(doc, p.id, &children_map, &mut seen)).collect();
-    let (placements, mut issues) = compute_all_placements(doc).await;
+    let (placements, mut issues) = compute_all_placements(doc);
     let property_sets = compute_property_sets(doc);
     if roots.is_empty() && doc.by_type("IFCPROJECT").next().is_none() && !doc.instances.is_empty() {
         issues.push("no IFCPROJECT root found".into());
@@ -296,7 +321,8 @@ mod tests {
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#40,$);\n#40=IFCAXIS2PLACEMENT3D(#42,$,$);\n#42=IFCCARTESIANPOINT((0.,0.,0.));\n#11=IFCUNITASSIGNMENT((#41));\n#41=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#3=IFCSITE('gid-site',#2,'Demo Site',$,$,#50,$,$,.ELEMENT.,$,$,$,$,$);\n#50=IFCLOCALPLACEMENT($,#51);\n#51=IFCAXIS2PLACEMENT3D(#42,$,$);\n#4=IFCBUILDING('gid-building',#2,'Demo Building',$,$,#60,$,$,.ELEMENT.,$,$,$);\n#60=IFCLOCALPLACEMENT(#50,#61);\n#61=IFCAXIS2PLACEMENT3D(#62,$,$);\n#62=IFCCARTESIANPOINT((0.,0.,10.));\n#5=IFCBUILDINGSTOREY('gid-storey',#2,'Ground Floor',$,$,#70,$,$,.ELEMENT.,3.);\n#70=IFCLOCALPLACEMENT(#60,#71);\n#71=IFCAXIS2PLACEMENT3D(#72,$,$);\n#72=IFCCARTESIANPOINT((0.,0.,0.));\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\n#80=IFCLOCALPLACEMENT(#70,#81);\n#81=IFCAXIS2PLACEMENT3D(#82,$,$);\n#82=IFCCARTESIANPOINT((1.,2.,0.));\n#100=IFCRELAGGREGATES('agg-1',#2,$,$,#1,(#3));\n#101=IFCRELAGGREGATES('agg-2',#2,$,$,#3,(#4));\n#102=IFCRELAGGREGATES('agg-3',#2,$,$,#4,(#5));\n#103=IFCRELCONTAINEDINSPATIALSTRUCTURE('cont-1',#2,$,$,(#6),#5);\n#200=IFCPROPERTYSET('pset-1',#2,'Pset_WallCommon',$,(#201));\n#201=IFCPROPERTYSINGLEVALUE('IsExternal',$,IFCBOOLEAN(.T.),$);\n#202=IFCRELDEFINESBYPROPERTIES('rel-1',#2,$,$,(#6),#200);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    async fn fixture_doc() -> Part21Document {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture_doc() -> Part21Document {
         parse_part21(FIXTURE).expect("parse ifc fixture")
     }
 

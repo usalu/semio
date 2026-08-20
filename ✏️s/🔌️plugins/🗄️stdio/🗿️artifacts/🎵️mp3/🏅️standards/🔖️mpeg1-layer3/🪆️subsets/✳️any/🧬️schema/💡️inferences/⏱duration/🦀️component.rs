@@ -24,7 +24,8 @@ pub struct Mp3Duration {
 /// (`version_id == 0 | 2`, the halved-rate LSF extension). `layer == 0` is the header's own
 /// reserved value — honestly contributes `0` (not fabricated), matching how a real decoder would
 /// reject the frame rather than guess a duration for it.
-async fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
     match layer {
         3 => 384,
         2 => 1152,
@@ -41,7 +42,8 @@ async fn samples_per_frame(version_id: u8, layer: u8) -> u32 {
 /// `channelCount` reads the FIRST frame's `channel_mode` (`3` = mono ⇒ `1` channel, anything else
 /// ⇒ `2`) — `0` when there are no frames at all (an honest "unknown", never a fabricated stereo
 /// guess).
-pub async fn compute_mp3_duration(snapshot: &Mp3Snapshot) -> Mp3Duration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_mp3_duration(snapshot: &Mp3Snapshot) -> Mp3Duration {
     let duration_seconds: f64 = snapshot
         .frames
         .iter()
@@ -69,7 +71,8 @@ mod tests {
     use super::*;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader};
 
-    async fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8) -> Mp3Frame {
         Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id, layer, protection_bit: true, bitrate_index: 9, sample_rate_index, padding: false, private_bit: false, channel_mode, mode_extension: 0, copyright: false, original: false, emphasis: 0 },
             payload: Vec::new(),

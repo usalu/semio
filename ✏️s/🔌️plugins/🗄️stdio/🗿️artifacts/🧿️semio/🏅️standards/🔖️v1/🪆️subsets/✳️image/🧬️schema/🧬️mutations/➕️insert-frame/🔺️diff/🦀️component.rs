@@ -6,7 +6,8 @@ use protocol::Mutation;
 /// 🔺️ Diff helper for insert-frame — an `index` past the end of `base.frames` is
 /// `mutation.clamped` (Warning, non-empty diff): the frame is still inserted, at the clamped
 /// (append) position.
-pub async fn diff(base: &SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> protocol::MutationOutcome<SemioImageDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(base: &SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> protocol::MutationOutcome<SemioImageDiff> {
     let clamped = index.min(base.frames.len());
     let outcome = Mutation::diff(&SemioImageMutation::InsertFrame { index: clamped, frame }, base);
     if clamped == index {

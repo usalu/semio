@@ -28,10 +28,12 @@ pub enum TxtEditorCommand {
 /// 🔤️ Hand-rolled hex codec — `OpText::print_op` must be one line, and `ReplaceText` carries
 /// arbitrary multi-line/UTF-8 text, so every byte is hex-escaped rather than attempting a
 /// space/newline escaping scheme.
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
-async fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
     if text.len() % 2 != 0 {
         return Err("odd-length hex string".into());
     }
@@ -45,7 +47,7 @@ impl protocol::OpText for TxtEditorCommand {
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let hex = line.strip_prefix("replace-text text=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
-        let bytes = hex_decode(hex).await.map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
+        let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
         let text = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
         Ok(TxtEditorCommand::ReplaceText { text })
     }
@@ -66,7 +68,8 @@ impl protocol::OpBinary for TxtEditorCommand {
 /// 🧮️ Splits a plain `\n`-joined buffer into `(lines, trailing_newline)`. The document's existing
 /// `line_ending` convention is preserved rather than re-detected — a plain-text window edit never
 /// carries `\r\n` metadata worth trusting.
-async fn split_text(text: &str) -> (Vec<String>, bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_text(text: &str) -> (Vec<String>, bool) {
     if text.is_empty() {
         return (Vec::new(), false);
     }
@@ -110,14 +113,14 @@ impl ArtifactEditor for TxtEditor {
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let TxtEditorCommand::ReplaceText { text } = command;
-        let (lines, trailing_newline) = split_text(text).await;
+        let (lines, trailing_newline) = split_text(text);
         let snapshot = TxtSnapshot { schema: doc.snapshot.schema.clone(), lines, trailing_newline, line_ending: doc.snapshot.line_ending };
         Ok(Emit { artifact_mutations: vec![TxtMutation::SetSnapshot { snapshot }], description: Some("Replace text".into()), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -125,14 +128,15 @@ impl ArtifactEditor for TxtEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TXT_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "txt"])
-        .await.icon_id("type")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::TXT_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "stdio", "txt"])
+        .icon_id("type")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::TXT_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

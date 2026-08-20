@@ -22,23 +22,26 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::pdf17ua::create_pdf17_ua_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Pages", "Seiten"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Pages", "Seiten"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 📄️ Real `PdfSnapshot -> UiNode`: one summary line per page (see module doc comment for what `page.text` honestly is and is not).
-async fn page_summary(index: usize, page: &PdfPage) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn page_summary(index: usize, page: &PdfPage) -> String {
     let media = page.media_box;
     let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
     let text = if page.text.is_empty() { "(no extracted or authored text)".to_string() } else { page.text.clone() };
     format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
 }
 
-pub async fn render(document: &PdfSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &PdfSnapshot) -> UiNode {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages }).await
+    DocumentWindowKit::render(&DocumentView { pages })
 }
 //#endregion 🔖️Render
 

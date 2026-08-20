@@ -6,12 +6,13 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &RemoveRow, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &RemoveRow, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if payload.index >= base.rows.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.index), [payload.index.to_string()]).await;
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.index), [payload.index.to_string()]);
     }
     let mut rows = base.rows.clone();
     rows.remove(payload.index);
-    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) }).await
+    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) })
 }
 //#endregion 🔖️Diff

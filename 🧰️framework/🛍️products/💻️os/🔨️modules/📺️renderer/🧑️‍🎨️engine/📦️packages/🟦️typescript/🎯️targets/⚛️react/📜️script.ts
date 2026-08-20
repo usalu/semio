@@ -2,12 +2,18 @@
 /** @emoji 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     runVitest(this.root, rest, "🧪️vitest.config.ts");
+  }
+}
+
+class TypecheckScript extends BundleScript {
+  run(segments: string[]): void {
+    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
   }
 }
 
@@ -62,6 +68,6 @@ class LintScript extends BundleScript {
 }
 //#endregion 🔖️LintScript
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("lint", LintScript).register("typecheck", TypecheckScript);
 
 await runBundleScriptMain(router, import.meta.url);

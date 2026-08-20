@@ -5,15 +5,18 @@ use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 
 /// 📥 Parse obj text into a ObjSnapshot.
-pub async fn deserialize(from: &TxtSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    crate::artifacts::obj::engine::decode_obj(&from.to_body()).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn deserialize(from: &TxtSnapshot) -> Result<ObjSnapshot, store::TextError> {
+    crate::artifacts::obj::engine::decode_obj(&from.to_body()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then obj.
-pub async fn deserialize_text(text: &str) -> Result<ObjSnapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn deserialize_text(text: &str) -> Result<ObjSnapshot, store::TextError> {
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }
 //#endregion 🔖️Codec

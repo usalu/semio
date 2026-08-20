@@ -62,7 +62,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_brep_referential_integrity(&snapshot).await,
+                Some(snapshot) => check_brep_referential_integrity(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_brep.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioBrepValidator: payload did not decode as a SemioBrepSnapshot".to_string())],
             }
         }
@@ -70,7 +70,8 @@ pub mod derived_composition {
 
     /// 🔗️ Real cross-collection referential-invariant check — dangling ids are reported as errors, not
     /// silently ignored (nothing here is decode-only anymore).
-    pub async fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<dsl::Diagnostic> {
         let vertex_ids: HashSet<&str> = snapshot.vertices.iter().map(|v| v.id.as_str()).collect();
         let edge_ids: HashSet<&str> = snapshot.edges.iter().map(|e| e.id.as_str()).collect();
         let loop_ids: HashSet<&str> = snapshot.loops.iter().map(|l| l.id.as_str()).collect();
@@ -125,7 +126,8 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioBrepValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -133,28 +135,31 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(
             crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_bridge_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_bridge_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.brep.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor());
     }
 
     /// 🌉️ W4 semio↔step bridge — one deserializer entry (writes brep, reads step) + one serializer
     /// entry (writes step, reads brep) give all 4 `IoKey`s via `register_composer_entries`'s own
     /// symmetric import/export insertion (see its doc comment) — no separate reverse registration
     /// needed.
-    async fn io_bridge_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioBrepFromStep>(), serializer_entry_of::<SemioBrepToStep>()]).as_slice()
     }
@@ -167,7 +172,8 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
 
-        async fn valid_snapshot() -> SemioBrepSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn valid_snapshot() -> SemioBrepSnapshot {
             let mut s = SemioBrepSnapshot::default();
             s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3::default() }];
             s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];

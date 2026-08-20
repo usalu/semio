@@ -18,7 +18,8 @@ pub mod derived_construction {
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real `/GTS_PDFX` OutputIntent (same shape `✳️x` seeds) plus
     /// a minimal `/DPartRoot` → `/DParts` → one `/DPart` node carrying `/DPM`.
-    async fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -55,17 +56,20 @@ pub mod derived_construction {
 
     impl PdfVtBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an output-condition identifier up front.
-        pub async fn new(output_condition: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(output_condition.into()).await }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(output_condition: impl Into<String>) -> Self {
+            Self { snapshot: seeded_snapshot(output_condition.into()) }
         }
 
-        pub async fn add_page(mut self, page: PdfPage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub async fn set_info(mut self, info: PdfInfo) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -77,7 +81,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new("FOGRA39").await
+            Self::new("FOGRA39")
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -94,7 +98,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -156,50 +160,57 @@ pub mod derived_analysis {
     pub const CODE_DPART_ROOT: &str = "stdio.pdf.vt.missing-dpartroot";
     pub const CODE_DPM: &str = "stdio.pdf.vt.dpart-missing-dpm";
 
-    async fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
-    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
+            PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🌳️ Real, recursive walk of the `/DPartRoot`/`/DParts` tree (ISO 16612-2 §6.2): each DPart
     /// node may itself carry a nested `/DParts` array. Returns the refs of every DPart node reachable
     /// from the root that lacks a `/DPM` metadata dict key. `visited` guards against a malformed
     /// document with a reference cycle.
-    async fn dparts_missing_dpm(objects: &[PdfIndirectObject], node: &PdfObject, visited: &mut Vec<ObjRef>, out: &mut Vec<ObjRef>) {
-        let Some(dparts) = node.dict_get("DParts").await.and_then(|v| v.as_array()) else { return };
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dparts_missing_dpm(objects: &[PdfIndirectObject], node: &PdfObject, visited: &mut Vec<ObjRef>, out: &mut Vec<ObjRef>) {
+        let Some(dparts) = node.dict_get("DParts").and_then(|v| v.as_array()) else { return };
         for item in dparts {
             let PdfObject::Ref(r) = item else { continue };
             if visited.contains(r) {
                 continue;
             }
             visited.push(*r);
-            let Some(resolved) = resolve_ref(objects, *r).await else { continue };
-            if resolved.dict_get("DPM").await.is_none() {
+            let Some(resolved) = resolve_ref(objects, *r) else { continue };
+            if resolved.dict_get("DPM").is_none() {
                 out.push(*r);
             }
             dparts_missing_dpm(objects, resolved, visited, out);
         }
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -207,21 +218,22 @@ pub mod derived_analysis {
     /// `PdfSnapshot`: the full ISO 15930-7 (PDF/X-4) check suite (`✳️x::check_x_conformance`) plus
     /// VT's own `/DPartRoot`/`/DPM` checks. Shared single source of truth used by `PdfVtComposer`,
     /// `PdfVtBuilder`, and `PdfVtValidator`.
-    pub async fn check_vt_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_vt_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
-        let mut out = check_x_conformance(snapshot).await;
-        let Some(catalog) = find_catalog(objects).await else {
-            out.push(hard(CODE_DPART_ROOT, "no /Type /Catalog object found -- cannot verify /DPartRoot".into()).await);
+        let mut out = check_x_conformance(snapshot);
+        let Some(catalog) = find_catalog(objects) else {
+            out.push(hard(CODE_DPART_ROOT, "no /Type /Catalog object found -- cannot verify /DPartRoot".into()));
             return out;
         };
-        match catalog.dict_get("DPartRoot").await.and_then(|v| resolve_item(objects, v)) {
-            None => out.push(hard(CODE_DPART_ROOT, "/Root carries no /DPartRoot key -- ISO 16612-2's variable-data partitioning mechanism is entirely absent".into()).await),
+        match catalog.dict_get("DPartRoot").and_then(|v| resolve_item(objects, v)) {
+            None => out.push(hard(CODE_DPART_ROOT, "/Root carries no /DPartRoot key -- ISO 16612-2's variable-data partitioning mechanism is entirely absent".into())),
             Some(root) => {
                 let mut visited = Vec::new();
                 let mut missing = Vec::new();
                 dparts_missing_dpm(objects, root, &mut visited, &mut missing);
                 for r in missing {
-                    out.push(soft(CODE_DPM, format!("DPart node {} {} R has no /DPM metadata dict -- ISO 16612-2 expects per-part metadata", r.num, r.gen)).await);
+                    out.push(soft(CODE_DPM, format!("DPart node {} {} R has no /DPM metadata dict -- ISO 16612-2 expects per-part metadata", r.num, r.gen)));
                 }
             }
         }
@@ -245,7 +257,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_vt_conformance(snapshot).await;
+                let checks = check_vt_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -260,7 +272,8 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        async fn conforming_x_objects() -> Vec<PdfIndirectObject> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_x_objects() -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },

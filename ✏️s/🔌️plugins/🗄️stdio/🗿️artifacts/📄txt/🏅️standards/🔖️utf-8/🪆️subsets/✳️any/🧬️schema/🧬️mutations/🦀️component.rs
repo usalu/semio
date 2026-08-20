@@ -49,14 +49,15 @@ pub enum TxtMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
 /// applied once, returned once.
-pub async fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
-    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
+    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -68,7 +69,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
     async fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TxtMutation::NoMutation => TxtDiff::default(),
-            TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             TxtMutation::SetTrailingNewline { value } => {
                 if base.trailing_newline == *value {
                     TxtDiff::default()
@@ -169,11 +170,13 @@ mod tests {
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    async fn base() -> TxtSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base() -> TxtSnapshot {
         TxtSnapshot { lines: vec!["a".into(), "b".into(), "c".into()], trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() }
     }
 
-    async fn all_variants(b: &TxtSnapshot) -> Vec<TxtMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn all_variants(b: &TxtSnapshot) -> Vec<TxtMutation> {
         vec![
             TxtMutation::NoMutation,
             TxtMutation::SetSnapshot { snapshot: TxtSnapshot { lines: vec!["z".into()], trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() } },

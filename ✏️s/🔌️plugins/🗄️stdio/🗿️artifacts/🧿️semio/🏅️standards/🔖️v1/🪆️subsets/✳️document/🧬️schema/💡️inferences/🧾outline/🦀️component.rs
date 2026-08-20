@@ -29,13 +29,15 @@ pub struct SemioDocumentOutline {
 
 /// 🔤️ Concatenates a run of `DocRun`s' literal text (formatting is ignored — this is a plain-text
 /// flattening, not a re-render).
-async fn run_text(runs: &[DocRun]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn run_text(runs: &[DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join(" ")
 }
 
 /// 🌳️ Recursively walks `block`, appending every `Heading` encountered to `headings`, adding to
 /// `block_count`, and appending flattened text to `word_source`.
-async fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     *block_count += 1;
     match block {
         DocBlock::Heading { level, runs, .. } => {
@@ -78,7 +80,8 @@ async fn walk_block(block: &DocBlock, headings: &mut Vec<SemioDocumentHeadingEnt
 }
 
 /// 🧾️ Computes [`SemioDocumentOutline`] via a recursive walk of `blocks` — see module doc comment.
-pub async fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> SemioDocumentOutline {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> SemioDocumentOutline {
     let mut section_outline = Vec::new();
     let mut block_count = 0u32;
     let mut word_source = String::new();

@@ -21,7 +21,8 @@ pub struct SemioObjectComposition {
 }
 
 /// 🧩️ Computes [`SemioObjectComposition`] — pure, total, O(1).
-pub async fn compute_semio_object_composition(snapshot: &SemioObjectSnapshot) -> SemioObjectComposition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_object_composition(snapshot: &SemioObjectSnapshot) -> SemioObjectComposition {
     SemioObjectComposition { has_brep: snapshot.brep.is_some(), has_mesh: snapshot.mesh.is_some(), has_properties: snapshot.properties.is_some(), position: snapshot.transform.translation }
 }
 //#endregion 🔖️Composition
@@ -34,13 +35,15 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA;
 
-    async fn dialect(subset: &str) -> store::os_io::ArtifactDialect {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dialect(subset: &str) -> store::os_io::ArtifactDialect {
         store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() }
     }
 
     /// 🌱 A hand-built, non-identity, fully-populated object: all three child handles present, a
     /// non-origin translation — exercises every field of the census at once.
-    async fn populated() -> SemioObjectSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioObjectSnapshot {
         SemioObjectSnapshot {
             schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
             transform: SemioTransform { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },

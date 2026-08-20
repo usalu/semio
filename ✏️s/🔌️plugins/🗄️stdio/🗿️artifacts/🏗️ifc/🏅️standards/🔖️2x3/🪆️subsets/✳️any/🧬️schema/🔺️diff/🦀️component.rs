@@ -44,23 +44,24 @@ pub struct Ifc2x3Diff {
     pub instance_order: Option<Vec<u64>>,
 }
 
-async fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApplyResult<()> {
     let mut base_ids = BTreeSet::new();
     for instance in &base.document.instances {
         if !base_ids.insert(instance.id) {
-            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").await.at(["instances", &instance.id.to_string()]).await);
+            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").at(["instances", &instance.id.to_string()]));
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed_instances {
         if !base_ids.contains(&id) || !removed.insert(id) {
-            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").await.at(["instances", &id.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").at(["instances", &id.to_string()]));
         }
     }
     let mut upserted = BTreeSet::new();
     for instance in &diff.upserted_instances {
         if removed.contains(&instance.id) || !upserted.insert(instance.id) {
-            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").await.at(["instances", &instance.id.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").at(["instances", &instance.id.to_string()]));
         }
     }
     let mut final_ids = base_ids;
@@ -72,18 +73,19 @@ async fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Mutat
         let mut ordered = BTreeSet::new();
         for &id in order {
             if !final_ids.contains(&id) || !ordered.insert(id) {
-                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").await.at(["instanceOrder", &id.to_string()]).await);
+                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &id.to_string()]));
             }
         }
         if ordered != final_ids {
             let missing = final_ids.difference(&ordered).next().copied().unwrap_or_default();
-            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").await.at(["instanceOrder", &missing.to_string()]).await);
+            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &missing.to_string()]));
         }
     }
     Ok(())
 }
 
-async fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
     let mut document = base.document.clone();
     if let Some(header) = &diff.header {
         document.header = header.clone();
@@ -113,8 +115,8 @@ async fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -
 
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
     async fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
-        validate_ifc2x3_diff(self, base).await?;
-        Ok(apply_ifc2x3_diff_unchecked(self, base).await)
+        validate_ifc2x3_diff(self, base)?;
+        Ok(apply_ifc2x3_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
@@ -195,16 +197,20 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
 }
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-pub async fn diff_set_snapshot(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> Ifc2x3Diff {
-    Ifc2x3Diff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> Ifc2x3Diff {
+    Ifc2x3Diff::between(base, snapshot)
 }
-pub async fn diff_upsert_instance(instance: &Part21Instance) -> Ifc2x3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_upsert_instance(instance: &Part21Instance) -> Ifc2x3Diff {
     Ifc2x3Diff { upserted_instances: vec![instance.clone()], ..Default::default() }
 }
-pub async fn diff_remove_instance(id: u64) -> Ifc2x3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_instance(id: u64) -> Ifc2x3Diff {
     Ifc2x3Diff { removed_instances: vec![id], ..Default::default() }
 }
-pub async fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
     Ifc2x3Diff { header: Some(header.clone()), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -222,31 +228,37 @@ pub async fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
 /// per this dialect's per-file convention, `pub(crate)` so the mutations sibling can reuse rather
 /// than duplicating a second time (same intra-artifact-reuse split `4`'s own files use).
 //#region 🔖️TextPrimitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     let mut encoded = String::with_capacity(bytes.len() * 2);
     hex_encode_into(bytes, &mut encoded);
     encoded
 }
-async fn hex_encode_into(bytes: &[u8], encoded: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode_into(bytes: &[u8], encoded: &mut String) {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     for byte in bytes {
         encoded.push(HEX[(byte >> 4) as usize] as char);
         encoded.push(HEX[(byte & 0x0f) as usize] as char);
     }
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&preamble.producer),
@@ -267,47 +279,53 @@ pub(crate) async fn enc_edm_preamble(preamble: &Ifc2x3EdmPreamble) -> String {
         enc_str(&preamble.options)
     )
 }
-pub(crate) async fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
-    let fields = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
+    let fields = split_top_level(strip_brackets(s)?, ',');
     let [producer, module, creation_date, host, database, database_version, database_creation_date, schema, model, model_creation_date, header_model, header_model_creation_date, user, group, license, options] = fields.as_slice() else {
         return Err(format!("EDM preamble: expected 16 fields, got {}", fields.len()));
     };
     Ok(Ifc2x3EdmPreamble {
-        producer: dec_str(producer).await?,
-        module: dec_str(module).await?,
-        creation_date: dec_str(creation_date).await?,
-        host: dec_str(host).await?,
-        database: dec_str(database).await?,
-        database_version: dec_str(database_version).await?,
-        database_creation_date: dec_str(database_creation_date).await?,
-        schema: dec_str(schema).await?,
-        model: dec_str(model).await?,
-        model_creation_date: dec_str(model_creation_date).await?,
-        header_model: dec_str(header_model).await?,
-        header_model_creation_date: dec_str(header_model_creation_date).await?,
-        user: dec_str(user).await?,
-        group: dec_str(group).await?,
-        license: dec_str(license).await?,
-        options: dec_str(options).await?,
+        producer: dec_str(producer)?,
+        module: dec_str(module)?,
+        creation_date: dec_str(creation_date)?,
+        host: dec_str(host)?,
+        database: dec_str(database)?,
+        database_version: dec_str(database_version)?,
+        database_creation_date: dec_str(database_creation_date)?,
+        schema: dec_str(schema)?,
+        model: dec_str(model)?,
+        model_creation_date: dec_str(model_creation_date)?,
+        header_model: dec_str(header_model)?,
+        header_model_creation_date: dec_str(header_model_creation_date)?,
+        user: dec_str(user)?,
+        group: dec_str(group)?,
+        license: dec_str(license)?,
+        options: dec_str(options)?,
     })
 }
-pub(crate) async fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
     preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into())
 }
-pub(crate) async fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
-    match split_top_level(strip_brackets(s).await?, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
+    match split_top_level(strip_brackets(s)?, ',').as_slice() {
         ["0"] => Ok(None),
-        ["1", value] => Ok(Some(dec_edm_preamble(value).await?)),
+        ["1", value] => Ok(Some(dec_edm_preamble(value)?)),
         _ => Err(format!("optional EDM preamble: invalid payload {s:?}")),
     }
 }
-async fn parse_u64(s: &str) -> Result<u64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     split_top_level_iter(s, sep).collect()
 }
-async fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> {
     let separator = sep as u8;
     let mut depth = 0i32;
     let mut start = 0usize;
@@ -334,7 +352,8 @@ async fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &str> 
         Some(&s[start..])
     })
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 //#endregion 🔖️TextPrimitives
@@ -344,15 +363,18 @@ pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
 /// same convention the text primitives above use) — reuses `store::pack_rt::write_varint_u64`/
 /// `store::ByteReader` rather than reinventing varint encode/decode. `pub(crate)` so the mutations
 /// sibling can reuse these too.
-pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
     for value in [
         &preamble.producer,
         &preamble.module,
@@ -374,30 +396,32 @@ pub(crate) async fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut
         write_str_bin(out, value);
     }
 }
-pub(crate) async fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
     Ok(Ifc2x3EdmPreamble {
-        producer: read_str_bin(reader).await?,
-        module: read_str_bin(reader).await?,
-        creation_date: read_str_bin(reader).await?,
-        host: read_str_bin(reader).await?,
-        database: read_str_bin(reader).await?,
-        database_version: read_str_bin(reader).await?,
-        database_creation_date: read_str_bin(reader).await?,
-        schema: read_str_bin(reader).await?,
-        model: read_str_bin(reader).await?,
-        model_creation_date: read_str_bin(reader).await?,
-        header_model: read_str_bin(reader).await?,
-        header_model_creation_date: read_str_bin(reader).await?,
-        user: read_str_bin(reader).await?,
-        group: read_str_bin(reader).await?,
-        license: read_str_bin(reader).await?,
-        options: read_str_bin(reader).await?,
+        producer: read_str_bin(reader)?,
+        module: read_str_bin(reader)?,
+        creation_date: read_str_bin(reader)?,
+        host: read_str_bin(reader)?,
+        database: read_str_bin(reader)?,
+        database_version: read_str_bin(reader)?,
+        database_creation_date: read_str_bin(reader)?,
+        schema: read_str_bin(reader)?,
+        model: read_str_bin(reader)?,
+        model_creation_date: read_str_bin(reader)?,
+        header_model: read_str_bin(reader)?,
+        header_model_creation_date: read_str_bin(reader)?,
+        user: read_str_bin(reader)?,
+        group: read_str_bin(reader)?,
+        license: read_str_bin(reader)?,
+        options: read_str_bin(reader)?,
     })
 }
 /// ➡️ Zigzag-encodes `value` into `store::pack_rt::write_varint_u64`'s unsigned domain — own local
 /// copy (`store::pack_rt` only ships the unsigned writer; the read side's zigzag decode is already
 /// built into `store::ByteReader::read_varint_i64`), same convention `4`'s own diff module uses.
-async fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     let zigzag = ((value << 1) ^ (value >> 63)) as u64;
     store::pack_rt::write_varint_u64(out, zigzag);
 }
@@ -410,7 +434,8 @@ async fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 /// exactly, same isomorphic 9-variant shape): `U`=Unset, `D`=Derived, `I[n]`=Int, `R[n]`=Real
 /// (Rust's `Display`/`FromStr` for `f64` round-trip exactly), `S[hex]`=Str, `E[hex]`=Enum,
 /// `F[n]`=Ref, `A[v,v,...]`=List, `T[hex,[v,v,...]]`=Typed.
-async fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
     match v {
         Part21Value::Unset => out.push('U'),
         Part21Value::Derived => out.push('D'),
@@ -447,7 +472,8 @@ async fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
         }
     }
 }
-async fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
     for (index, value) in values.iter().enumerate() {
         if index != 0 {
             out.push(',');
@@ -455,7 +481,8 @@ async fn enc_part21_values_into(values: &[Part21Value], out: &mut String) {
         enc_part21_value_into(value, out);
     }
 }
-pub(crate) async fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
     if s == "U" {
         return Ok(Part21Value::Unset);
     }
@@ -466,38 +493,41 @@ pub(crate) async fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
         return Err("part21 value: empty token".to_string());
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "I" => Ok(Part21Value::Int(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
-        "R" => Ok(Part21Value::Real(Part21Decimal::parse(inner).await?)),
-        "S" => Ok(Part21Value::Str(dec_str(inner).await?)),
-        "E" => Ok(Part21Value::Enum(dec_str(inner).await?)),
+        "R" => Ok(Part21Value::Real(Part21Decimal::parse(inner)?)),
+        "S" => Ok(Part21Value::Str(dec_str(inner)?)),
+        "E" => Ok(Part21Value::Enum(dec_str(inner)?)),
         "F" => Ok(Part21Value::Ref(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {
             let items = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect::<Result<Vec<_>, String>>()?;
             Ok(Part21Value::List(items))
         }
         "T" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [name, items_s] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
-            let items = split_top_level(strip_brackets(items_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect::<Result<Vec<_>, String>>()?;
-            Ok(Part21Value::Typed(dec_str(name).await?, items))
+            let items = split_top_level(strip_brackets(items_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect::<Result<Vec<_>, String>>()?;
+            Ok(Part21Value::Typed(dec_str(name)?, items))
         }
         other => Err(format!("part21 value: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_part21_value_list(vs: &[Part21Value]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_value_list(vs: &[Part21Value]) -> String {
     let mut out = String::new();
     enc_part21_value_list_into(vs, &mut out);
     out
 }
-async fn enc_part21_value_list_into(vs: &[Part21Value], out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_part21_value_list_into(vs: &[Part21Value], out: &mut String) {
     out.push('[');
     enc_part21_values_into(vs, out);
     out.push(']');
 }
-pub(crate) async fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect()
 }
 
 //#region 🔖️Part21ValueBinaryCodecs
@@ -508,7 +538,8 @@ pub(crate) async fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, S
 /// binary all the way down, no opaque tail needed (`Part21Value` itself is fully flat/
 /// spec-expressible per variant, only the top-level `Ifc2x3Diff`/`Ifc2x3Mutation` frames stop at
 /// this recursion's OWN entry point rather than an opaque byte chain).
-pub(crate) async fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
     match v {
         Part21Value::Unset => out.push(0),
         Part21Value::Derived => out.push(1),
@@ -552,43 +583,46 @@ pub(crate) async fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Value, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Value, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(Part21Value::Unset),
         1 => Ok(Part21Value::Derived),
-        2 => Ok(Part21Value::Int(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
+        2 => Ok(Part21Value::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
         3 => {
-            let negative = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-            let coefficient = read_str_bin(reader).await?;
-            let scale = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-            let exponent = match reader.read_u8().await.map_err(|e| e.to_string())? {
+            let negative = reader.read_u8().map_err(|e| e.to_string())? != 0;
+            let coefficient = read_str_bin(reader)?;
+            let scale = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+            let exponent = match reader.read_u8().map_err(|e| e.to_string())? {
                 0 => None,
-                1 => Some(reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32),
+                1 => Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32),
                 tag => return Err(format!("Part21Decimal exponent presence: unknown tag {tag}")),
             };
             Ok(Part21Value::Real(Part21Decimal { negative, coefficient, scale, exponent }))
         }
-        4 => Ok(Part21Value::Str(read_str_bin(reader).await?)),
-        5 => Ok(Part21Value::Enum(read_str_bin(reader).await?)),
-        6 => Ok(Part21Value::Ref(reader.read_varint_u64().await.map_err(|e| e.to_string())?)),
-        7 => Ok(Part21Value::List(dec_part21_value_list_bin(reader).await?)),
+        4 => Ok(Part21Value::Str(read_str_bin(reader)?)),
+        5 => Ok(Part21Value::Enum(read_str_bin(reader)?)),
+        6 => Ok(Part21Value::Ref(reader.read_varint_u64().map_err(|e| e.to_string())?)),
+        7 => Ok(Part21Value::List(dec_part21_value_list_bin(reader)?)),
         8 => {
-            let name = read_str_bin(reader).await?;
-            let items = dec_part21_value_list_bin(reader).await?;
+            let name = read_str_bin(reader)?;
+            let items = dec_part21_value_list_bin(reader)?;
             Ok(Part21Value::Typed(name, items))
         }
         other => Err(format!("part21 value binary: unknown tag {other}")),
     }
 }
-pub(crate) async fn enc_part21_value_list_bin(vs: &[Part21Value], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_value_list_bin(vs: &[Part21Value], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, vs.len() as u64);
     for v in vs {
         enc_part21_value_bin(v, out);
     }
 }
-pub(crate) async fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Value>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Value>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_value_bin(reader)).collect()
 }
 //#endregion 🔖️Part21ValueBinaryCodecs
@@ -598,23 +632,27 @@ pub(crate) async fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>
 /// 📦️ `[fileDescriptionList,fileNameList,fileSchemaList]` — three self-bracketed
 /// `part21-value-list`s, matching `4`'s own `enc_ifc_header` positional shape exactly (both
 /// standards' HEADER record is the same 3-tuple-of-raw-value-list Part-21 shape).
-pub(crate) async fn enc_part21_header(h: &Part21Header) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_header(h: &Part21Header) -> String {
     format!("[{},{},{}]", enc_part21_value_list(&h.file_description), enc_part21_value_list(&h.file_name), enc_part21_value_list(&h.file_schema))
 }
-pub(crate) async fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("part21 header: expected 3 fields, got {}", parts.len())) };
-    Ok(Part21Header { file_description: dec_part21_value_list(fd).await?, file_name: dec_part21_value_list(fname).await?, file_schema: dec_part21_value_list(fs).await? })
+    Ok(Part21Header { file_description: dec_part21_value_list(fd)?, file_name: dec_part21_value_list(fname)?, file_schema: dec_part21_value_list(fs)? })
 }
-pub(crate) async fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
     enc_part21_value_list_bin(&h.file_description, out);
     enc_part21_value_list_bin(&h.file_name, out);
     enc_part21_value_list_bin(&h.file_schema, out);
 }
-pub(crate) async fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
-    let file_description = dec_part21_value_list_bin(reader).await?;
-    let file_name = dec_part21_value_list_bin(reader).await?;
-    let file_schema = dec_part21_value_list_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
+    let file_description = dec_part21_value_list_bin(reader)?;
+    let file_name = dec_part21_value_list_bin(reader)?;
+    let file_schema = dec_part21_value_list_bin(reader)?;
     Ok(Part21Header { file_description, file_name, file_schema })
 }
 
@@ -623,12 +661,14 @@ pub(crate) async fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) ->
 /// 10303-21 §4.2) — same shape `4`'s own snapshot grammar's `instance-body = entity-record |
 /// "(" entity-record+ ")"` recognizes at the exchange-file level, restated here for the diff/op
 /// wire's own positional codec. Each entity is `[hexname,[args]]`.
-pub(crate) async fn enc_part21_instance(inst: &Part21Instance) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_instance(inst: &Part21Instance) -> String {
     let mut out = String::new();
     enc_part21_instance_into(inst, &mut out);
     out
 }
-async fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
     out.push('[');
     write!(out, "{}", inst.id).expect("writing to String");
     out.push_str(",[");
@@ -644,25 +684,27 @@ async fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) {
     }
     out.push_str("]]");
 }
-pub(crate) async fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [id_s, entities_s] = parts.as_slice() else {
         return Err(format!("part21 instance: expected 2 fields, got {}", parts.len()));
     };
-    let entities_inner = strip_brackets(entities_s).await?;
+    let entities_inner = strip_brackets(entities_s)?;
     let entities = split_top_level_iter(entities_inner, ',')
         .filter(|s| !s.is_empty())
         .map(|entry| {
-            let e = semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(entry)?, ','));
+            let e = split_top_level(strip_brackets(entry)?, ',');
             let [name, args] = e.as_slice() else {
                 return Err(format!("part21 entity: expected 2 fields, got {}", e.len()));
             };
             Ok((dec_str(name)?, dec_part21_value_list(args)?))
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(Part21Instance { id: parse_u64(id_s).await?, entities })
+    Ok(Part21Instance { id: parse_u64(id_s)?, entities })
 }
-pub(crate) async fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, inst.id);
     store::pack_rt::write_varint_u64(out, inst.entities.len() as u64);
     for (name, args) in &inst.entities {
@@ -670,18 +712,20 @@ pub(crate) async fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec
         enc_part21_value_list_bin(args, out);
     }
 }
-pub(crate) async fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
-    let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
+    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let name = read_str_bin(reader).await?;
-        let args = dec_part21_value_list_bin(reader).await?;
+        let name = read_str_bin(reader)?;
+        let args = dec_part21_value_list_bin(reader)?;
         entities.push((name, args));
     }
     Ok(Part21Instance { id, entities })
 }
-pub(crate) async fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
     out.push('[');
     for (index, instance) in list.iter().enumerate() {
         if index != 0 {
@@ -691,17 +735,20 @@ pub(crate) async fn enc_instance_list_into(list: &[Part21Instance], out: &mut St
     }
     out.push(']');
 }
-pub(crate) async fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
-    split_top_level_iter(strip_brackets(s).await?, ',').filter(|s| !s.is_empty()).map(dec_part21_instance).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
+    split_top_level_iter(strip_brackets(s)?, ',').filter(|s| !s.is_empty()).map(dec_part21_instance).collect()
 }
-pub(crate) async fn enc_instance_list_bin(list: &[Part21Instance], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_instance_list_bin(list: &[Part21Instance], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for inst in list {
         enc_part21_instance_bin(inst, out);
     }
 }
-pub(crate) async fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Instance>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Instance>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_instance_bin(reader)).collect()
 }
 //#endregion 🔖️HeaderInstanceCodecs
@@ -710,7 +757,8 @@ pub(crate) async fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) ->
 /// 🔖️ One line of space-separated `key=value` tokens, only the CHANGED top-level fields present,
 /// in declared field order (`schema`/`header`/`removed`/`upserted`) — matching `4`'s own
 /// `print_ifc_diff` shape exactly.
-async fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     let mut out = String::new();
     let separate = |out: &mut String| {
         if !out.is_empty() {
@@ -761,24 +809,25 @@ async fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     }
     out
 }
-async fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
     let mut d = Ifc2x3Diff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("schema=") {
-            d.schema = Some(dec_str(rest).await?);
+            d.schema = Some(dec_str(rest)?);
         } else if let Some(rest) = token.strip_prefix("header=") {
-            d.header = Some(dec_part21_header(rest).await?);
+            d.header = Some(dec_part21_header(rest)?);
         } else if let Some(rest) = token.strip_prefix("removed=") {
-            d.removed_instances = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
+            d.removed_instances = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = token.strip_prefix("upserted=") {
-            d.upserted_instances = dec_instance_list(rest).await?;
+            d.upserted_instances = dec_instance_list(rest)?;
         } else if let Some(rest) = token.strip_prefix("edm-preamble=") {
-            d.edm_preamble = Some(dec_optional_edm_preamble(rest).await?);
+            d.edm_preamble = Some(dec_optional_edm_preamble(rest)?);
         } else if let Some(rest) = token.strip_prefix("instance-order=") {
-            d.instance_order = Some(split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|value| !value.is_empty()).map(parse_u64).collect::<Result<Vec<_>, _>>()?);
+            d.instance_order = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|value| !value.is_empty()).map(parse_u64).collect::<Result<Vec<_>, _>>()?);
         } else {
             return Err(format!("ifc2x3 diff: unknown token {token:?}"));
         }
@@ -788,10 +837,10 @@ async fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
 
 impl protocol::DiffCodec for Ifc2x3Diff {
     async fn print_diff(&self) -> String {
-        print_ifc2x3_diff(self).await
+        print_ifc2x3_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc2x3_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_ifc2x3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ REAL binary frame (`format u8 | flags u8 | field payloads...`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -853,8 +902,8 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         if flags & !0b0011_1111 != 0 {
             return Err(malformed("diff flags", 1, "unknown flag bits".into()));
         }
-        let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).await.map_err(|e| malformed("diff schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).await.map_err(|e| malformed("diff header", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).map_err(|e| malformed("diff schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).map_err(|e| malformed("diff header", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let removed_instances = if flags & 4 != 0 {
             let count = reader.read_varint_u64().await.map_err(|e| malformed("diff removed count", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             let mut v = Vec::with_capacity(count as usize);
@@ -865,11 +914,11 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         } else {
             Vec::new()
         };
-        let upserted_instances = if flags & 8 != 0 { dec_instance_list_bin(&mut reader).await.map_err(|e| malformed("diff upserted", semio_framework_plugin::resolve_ready(reader.position()), e))? } else { Vec::new() };
+        let upserted_instances = if flags & 8 != 0 { dec_instance_list_bin(&mut reader).map_err(|e| malformed("diff upserted", semio_framework_plugin::resolve_ready(reader.position()), e))? } else { Vec::new() };
         let edm_preamble = if flags & 16 != 0 {
             Some(match reader.read_u8().await.map_err(|e| malformed("diff EDM preamble presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? {
                 0 => None,
-                1 => Some(dec_edm_preamble_bin(&mut reader).await.map_err(|e| malformed("diff EDM preamble", semio_framework_plugin::resolve_ready(reader.position()), e))?),
+                1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|e| malformed("diff EDM preamble", semio_framework_plugin::resolve_ready(reader.position()), e))?),
                 tag => return Err(malformed("diff EDM preamble presence", reader.position().await, format!("unknown tag {tag}"))),
             })
         } else {
@@ -900,7 +949,8 @@ impl protocol::DiffCodec for Ifc2x3Diff {
 /// `between()` result exercising every top-level field (schema/header/removed/upserted, incl. a
 /// COMPLEX instance and every `Part21Value` tag), and its reverse direction.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     let a = crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot();
     let mut b = a.clone();
     b.schema = "stdio.ifc.2x3.v2".into();
@@ -932,11 +982,13 @@ mod tests {
     }
     use crate::artifacts::step::engine::part21::Part21Value;
 
-    async fn inst(id: u64, name: &str) -> Part21Instance {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
     }
 
-    async fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
         let document = crate::artifacts::step::engine::part21::Part21Document { header, instances };
         Ifc2x3Snapshot { schema: schema.into(), document, edm_preamble: None }
     }

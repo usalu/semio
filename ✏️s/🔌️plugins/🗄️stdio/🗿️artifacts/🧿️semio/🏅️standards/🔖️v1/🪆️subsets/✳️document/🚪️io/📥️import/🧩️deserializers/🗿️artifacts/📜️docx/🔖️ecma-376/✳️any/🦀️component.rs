@@ -26,22 +26,26 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 /// ✍️ `DocxRun` -> `DocRun`: text + the 3 boolean flags both models share. `size`/`font`/`color`/
 /// `link` have no `DocxRun` source field (docx keeps them, if present, inside
 /// `extra_run_properties` raw XML) so they stay `None`.
-pub(crate) async fn map_run(run: &DocxRun) -> DocRun {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn map_run(run: &DocxRun) -> DocRun {
     DocRun { text: run.text.clone(), style: RunStyle { bold: run.bold, italic: run.italic, underline: run.underline, size: None, font: None, color: None, link: None } }
 }
 
-async fn map_paragraph(p: &DocxParagraph) -> DocBlock {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_paragraph(p: &DocxParagraph) -> DocBlock {
     DocBlock::Paragraph { style_id: p.style.clone(), runs: p.runs.iter().map(map_run).collect() }
 }
 
-async fn map_table(t: &DocxTable) -> DocBlock {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_table(t: &DocxTable) -> DocBlock {
     DocBlock::Table { rows: t.rows.iter().map(|row| DocTableRow { cells: row.cells.iter().map(|cell| DocTableCell { blocks: cell.blocks.iter().map(map_block).collect() }).collect() }).collect() }
 }
 
-async fn map_block(block: &DocxBlock) -> DocBlock {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_block(block: &DocxBlock) -> DocBlock {
     match block {
-        DocxBlock::Paragraph(p) => map_paragraph(p).await,
-        DocxBlock::Table(t) => map_table(t).await,
+        DocxBlock::Paragraph(p) => map_paragraph(p),
+        DocxBlock::Table(t) => map_table(t),
     }
 }
 //#endregion 🔖️FieldMapping
@@ -73,7 +77,8 @@ mod tests {
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
     use crate::artifacts::zip::opc::OpcPackage;
 
-    pub(crate) async fn sample_docx() -> DocxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn sample_docx() -> DocxSnapshot {
         DocxSnapshot::from_parts(
             OpcPackage::default(),
             DocxDocument {

@@ -25,19 +25,23 @@ impl Default for SemioAnimationArtifact {
 }
 
 impl SemioAnimationArtifact {
-    pub async fn to_snapshot(&self) -> SemioAnimationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioAnimationSnapshot {
         SemioAnimationSnapshot { schema: self.schema.clone(), timelines: self.timelines.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioAnimationSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioAnimationSnapshot) -> Self {
         Self { schema: snapshot.schema, timelines: snapshot.timelines }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioAnimationSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioAnimationSnapshot) {
         self.schema = snapshot.schema;
         self.timelines = snapshot.timelines;
     }
 }
 
-pub async fn semio_animation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_animation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.animation",
         artifact: schema::FacetLeaves {
@@ -100,7 +104,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_animation_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioAnimationDiff as protocol::MutationDiff<SemioAnimationSnapshot>>::apply(&diff, &self.snapshot).await?;

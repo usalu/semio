@@ -30,11 +30,11 @@ impl<T> Default for Arena<T> {
 }
 
 impl<T> Arena<T> {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
-    pub async fn insert(&mut self, value: T) -> NodeId {
+    pub fn insert(&mut self, value: T) -> NodeId {
         match self.free_head {
             Some(index) => {
                 let (generation, next_free) = match &self.slots[index as usize] {
@@ -53,7 +53,7 @@ impl<T> Arena<T> {
         }
     }
 
-    pub async fn remove(&mut self, id: NodeId) -> Option<T> {
+    pub fn remove(&mut self, id: NodeId) -> Option<T> {
         let slot = self.slots.get_mut(id.index as usize)?;
         match slot {
             Slot::Occupied { generation, .. } if *generation == id.generation => {
@@ -70,26 +70,26 @@ impl<T> Arena<T> {
         }
     }
 
-    pub async fn get(&self, id: NodeId) -> Option<&T> {
+    pub fn get(&self, id: NodeId) -> Option<&T> {
         match self.slots.get(id.index as usize)? {
             Slot::Occupied { generation, value } if *generation == id.generation => Some(value),
             _ => None,
         }
     }
 
-    pub async fn get_mut(&mut self, id: NodeId) -> Option<&mut T> {
+    pub fn get_mut(&mut self, id: NodeId) -> Option<&mut T> {
         match self.slots.get_mut(id.index as usize)? {
             Slot::Occupied { generation, value } if *generation == id.generation => Some(value),
             _ => None,
         }
     }
 
-    pub async fn contains(&self, id: NodeId) -> bool {
+    pub fn contains(&self, id: NodeId) -> bool {
         self.get(id).is_some()
     }
 
     /// 🚶️ Iterates every live `(NodeId, &T)` pair; freed slots are skipped.
-    pub async fn iter(&self) -> impl Iterator<Item = (NodeId, &T)> {
+    pub fn iter(&self) -> impl Iterator<Item = (NodeId, &T)> {
         self.slots.iter().enumerate().filter_map(|(index, slot)| match slot {
             Slot::Occupied { generation, value } => Some((NodeId { index: index as u32, generation: *generation }, value)),
             Slot::Free { .. } => None,
@@ -102,14 +102,14 @@ mod tests {
     use super::*;
 
     #[test]
-    async fn insert_and_get_round_trip() {
+    fn insert_and_get_round_trip() {
         let mut arena = Arena::new();
         let id = arena.insert(42);
         assert_eq!(arena.get(id), Some(&42));
     }
 
     #[test]
-    async fn remove_invalidates_the_old_node_id() {
+    fn remove_invalidates_the_old_node_id() {
         let mut arena = Arena::new();
         let id = arena.insert(1);
         assert_eq!(arena.remove(id), Some(1));
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    async fn reused_slot_bumps_generation_so_old_id_does_not_alias_new_value() {
+    fn reused_slot_bumps_generation_so_old_id_does_not_alias_new_value() {
         let mut arena = Arena::new();
         let a = arena.insert(1);
         arena.remove(a);
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    async fn iterates_over_live_slots_only() {
+    fn iterates_over_live_slots_only() {
         let mut arena = Arena::new();
         let a = arena.insert(10);
         let b = arena.insert(20);

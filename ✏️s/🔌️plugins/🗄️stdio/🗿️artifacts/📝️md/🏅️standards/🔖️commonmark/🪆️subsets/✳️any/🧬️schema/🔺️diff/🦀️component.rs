@@ -181,16 +181,18 @@ pub enum MdBlocksLeafDiff {
 /// document root) into a full `MdDiff`, nesting through `MdBlockModified`/`MdListItemModified`
 /// chains from the root down to that depth. `path == []` addresses the top-level `blocks`
 /// directly.
-pub async fn diff_at_path(path: &[MdPathStep], index: usize, leaf: MdBlocksLeafDiff) -> MdDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_at_path(path: &[MdPathStep], index: usize, leaf: MdBlocksLeafDiff) -> MdDiff {
     let inner = match leaf {
         MdBlocksLeafDiff::Modified(diff) => MdBlocksDiff { removed: Vec::new(), modified: vec![MdBlockModified { index, diff }], added: Vec::new() },
         MdBlocksLeafDiff::Added(block) => MdBlocksDiff { removed: Vec::new(), modified: Vec::new(), added: vec![MdBlockAdded { index, item: block }] },
         MdBlocksLeafDiff::Removed => MdBlocksDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() },
     };
-    MdDiff { blocks: Some(wrap_blocks_diff(path, inner).await) }
+    MdDiff { blocks: Some(wrap_blocks_diff(path, inner)) }
 }
 
-async fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksDiff {
     let mut current = inner;
     for step in path.iter().rev() {
         current = match step {
@@ -213,7 +215,8 @@ async fn wrap_blocks_diff(path: &[MdPathStep], inner: MdBlocksDiff) -> MdBlocksD
 /// 🔎️ Walks `path` from `blocks`, returning the addressed container (the `Vec<MdBlock>` the
 /// final `index` of a path-carrying mutation lives in). Graceful `None` on any out-of-range index
 /// or kind mismatch (e.g. `ListItem` step into a non-`List` block), never a panic.
-pub async fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Option<&'a [MdBlock]> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Option<&'a [MdBlock]> {
     let mut current = blocks;
     for step in path {
         current = match step {
@@ -235,11 +238,11 @@ pub async fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) 
 impl MutationDiff<MdSnapshot> for MdDiff {
     async fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
         if let Some(blocks) = &self.blocks {
-            validate_md_blocks(&base.blocks, blocks).await?;
+            validate_md_blocks(&base.blocks, blocks)?;
         }
         let mut next = base.clone();
         if let Some(bd) = &self.blocks {
-            next.blocks = apply_blocks_diff(&next.blocks, bd).await;
+            next.blocks = apply_blocks_diff(&next.blocks, bd);
         }
         Ok(next)
     }
@@ -248,60 +251,63 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_blocks_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_blocks_diff(a, b)),
         };
     }
 }
 
-async fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown block removal is missing or duplicated").await.at(["blocks", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown block removal is missing or duplicated").at(["blocks", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").await.at(["blocks", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").at(["blocks", "modified"]));
         }
-        Box::pin(validate_md_block(&base[entry.index], &entry.diff)).await?;
+        Box::pin(validate_md_block(&base[entry.index], &entry.diff))?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown block addition index is invalid or duplicated").await.at(["blocks", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown block addition index is invalid or duplicated").at(["blocks", "added"]));
         }
     }
     Ok(())
 }
 
-async fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown list-item removal is missing or duplicated").await.at(["items", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown list-item removal is missing or duplicated").at(["items", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").await.at(["items", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").at(["items", "modified"]));
         }
-        Box::pin(validate_md_blocks(&base[entry.index], &entry.diff)).await?;
+        Box::pin(validate_md_blocks(&base[entry.index], &entry.diff))?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown list-item addition index is invalid or duplicated").await.at(["items", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown list-item addition index is invalid or duplicated").at(["items", "added"]));
         }
     }
     Ok(())
 }
 
-async fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<()> {
     match (base, diff) {
         (_, MdBlockDiff::Replace { .. })
         | (MdBlock::Heading { .. }, MdBlockDiff::Heading { .. })
@@ -309,20 +315,21 @@ async fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyR
         | (MdBlock::CodeBlock { .. }, MdBlockDiff::CodeBlock { .. })
         | (MdBlock::HtmlBlock { .. }, MdBlockDiff::HtmlBlock { .. })
         | (MdBlock::ThematicBreak, MdBlockDiff::ThematicBreak) => Ok(()),
-        (MdBlock::List { items, .. }, MdBlockDiff::List { items: Some(items_diff), .. }) => Box::pin(validate_md_list_items(items, items_diff)).await,
+        (MdBlock::List { items, .. }, MdBlockDiff::List { items: Some(items_diff), .. }) => Box::pin(validate_md_list_items(items, items_diff)),
         (MdBlock::List { .. }, MdBlockDiff::List { items: None, .. }) => Ok(()),
-        (MdBlock::BlockQuote { blocks }, MdBlockDiff::BlockQuote { blocks: Some(blocks_diff) }) => validate_md_blocks(blocks, blocks_diff).await,
+        (MdBlock::BlockQuote { blocks }, MdBlockDiff::BlockQuote { blocks: Some(blocks_diff) }) => validate_md_blocks(blocks, blocks_diff),
         (MdBlock::BlockQuote { .. }, MdBlockDiff::BlockQuote { blocks: None }) => Ok(()),
-        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block diff kind does not match its target").await.at(["blocks"]).await),
+        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block diff kind does not match its target").at(["blocks"])),
     }
 }
 
-async fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
     let mut slots: Vec<Option<MdBlock>> = blocks.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(b)) = slots.get(m.index) {
             let patched = apply_block_diff(b, &m.diff);
-            slots[m.index] = Some(Box::pin(patched).await);
+            slots[m.index] = Some(Box::pin(patched));
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -343,7 +350,8 @@ async fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlo
     out
 }
 
-async fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
     match diff {
         MdBlockDiff::Replace { block: replacement } => replacement.clone(),
         MdBlockDiff::Heading { level, inlines } => match block {
@@ -366,7 +374,7 @@ async fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
         MdBlockDiff::BlockQuote { blocks } => match block {
             MdBlock::BlockQuote { blocks: b } => MdBlock::BlockQuote {
                 blocks: match blocks {
-                    Some(d) => Box::pin(apply_blocks_diff(b, d)).await,
+                    Some(d) => Box::pin(apply_blocks_diff(b, d)),
                     None => b.clone(),
                 },
             },
@@ -378,7 +386,7 @@ async fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
                 start: start.clone().unwrap_or(*s),
                 tight: tight.unwrap_or(*t),
                 items: match items {
-                    Some(d) => apply_list_items_diff(it, d).await,
+                    Some(d) => apply_list_items_diff(it, d),
                     None => it.clone(),
                 },
             },
@@ -387,12 +395,13 @@ async fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
     }
 }
 
-async fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<Vec<MdBlock>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<Vec<MdBlock>> {
     let mut slots: Vec<Option<Vec<MdBlock>>> = items.iter().cloned().map(Some).collect();
     for m in &diff.modified {
         if let Some(Some(b)) = slots.get(m.index) {
             let patched = apply_blocks_diff(b, &m.diff);
-            slots[m.index] = Some(patched.await);
+            slots[m.index] = Some(patched);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -421,7 +430,7 @@ impl DiffAlgebra<MdSnapshot> for MdDiff {
     }
 
     async fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
-        MdDiff { blocks: between_blocks(&base.blocks, &other.blocks).await }
+        MdDiff { blocks: between_blocks(&base.blocks, &other.blocks) }
     }
 
     async fn is_empty(&self) -> bool {
@@ -429,13 +438,14 @@ impl DiffAlgebra<MdSnapshot> for MdDiff {
     }
 }
 
-async fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocksDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_blocks.get(m.index) {
             let next_index = transform_block_index(m.index, &diff.removed, &diff.added);
-            modified.push(MdBlockModified { index: next_index.await, diff: inverse_block_diff(Some(original), &m.diff).await });
+            modified.push(MdBlockModified { index: next_index, diff: inverse_block_diff(Some(original), &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -448,7 +458,8 @@ async fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> Md
     MdBlocksDiff { removed, modified, added }
 }
 
-async fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockDiff {
     let fallback = || MdBlockDiff::Replace { block: current.cloned().unwrap_or(MdBlock::Paragraph { inlines: Vec::new() }) };
     match diff {
         MdBlockDiff::Replace { .. } => fallback(),
@@ -488,13 +499,14 @@ async fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> Md
     }
 }
 
-async fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MdListItemsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MdListItemsDiff {
     let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_item_index(m.index, &diff.removed, &diff.added);
-            modified.push(MdListItemModified { index: next_index.await, diff: inverse_blocks_diff(original, &m.diff).await });
+            modified.push(MdListItemModified { index: next_index, diff: inverse_blocks_diff(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -507,12 +519,13 @@ async fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItems
     MdListItemsDiff { removed, modified, added }
 }
 
-async fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = Box::pin(between_block(&base[i], &other[i])).await {
+            if let Some(d) = Box::pin(between_block(&base[i], &other[i])) {
                 modified.push(MdBlockModified { index: i, diff: d });
             }
         }
@@ -526,7 +539,8 @@ async fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksD
     }
 }
 
-async fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
     if base == other {
         return None;
     }
@@ -550,12 +564,12 @@ async fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
             }
         }
         (MdBlock::ThematicBreak, MdBlock::ThematicBreak) => None,
-        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => Box::pin(between_blocks(bb, ob)).await.map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
+        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => Box::pin(between_blocks(bb, ob)).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
         (MdBlock::List { ordered: bo, start: bs, tight: bt, items: bi }, MdBlock::List { ordered: oo, start: os, tight: ot, items: oi }) => {
             let ordered = if bo != oo { Some(*oo) } else { None };
             let start = if bs != os { Some(*os) } else { None };
             let tight = if bt != ot { Some(*ot) } else { None };
-            let items = between_list_items(bi, oi).await;
+            let items = between_list_items(bi, oi);
             if ordered.is_none() && start.is_none() && tight.is_none() && items.is_none() {
                 None
             } else {
@@ -568,12 +582,13 @@ async fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
 
 /// 🧮️ Naive positional item diff, same recipe-specified rule as `between_blocks`/xml's
 /// `between_children`: pairwise `0..min(len)`, base tail removed, other tail added.
-async fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<MdListItemsDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Option<MdListItemsDiff> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = between_blocks(&base[i], &other[i]).await {
+            if let Some(d) = between_blocks(&base[i], &other[i]) {
                 modified.push(MdListItemModified { index: i, diff: d });
             }
         }
@@ -593,7 +608,8 @@ async fn between_list_items(base: &[Vec<MdBlock>], other: &[Vec<MdBlock>]) -> Op
 /// over `d1`'s removed/added). `transform_block_index`/`simulate_block_mid_origins` mirror xml's
 /// `transform_index`/`simulate_mid_origins` exactly, retyped for `MdBlockAdded`; the `*_item_*`
 /// variants below are the same algorithm again for the `List.items` collection.
-async fn transform_block_index(idx: usize, removed: &[usize], added: &[MdBlockAdded]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_block_index(idx: usize, removed: &[usize], added: &[MdBlockAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -614,7 +630,8 @@ enum BlockOrigin {
     Added(usize),
 }
 
-async fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlockAdded]) -> Vec<BlockOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &[MdBlockAdded]) -> Vec<BlockOrigin> {
     let mut mid: Vec<BlockOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(BlockOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -625,10 +642,11 @@ async fn simulate_block_mid_origins(base_len: usize, removed: &[usize], added: &
     mid
 }
 
-async fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     match (a, b) {
         (_, MdBlockDiff::Replace { block }) => MdBlockDiff::Replace { block },
-        (MdBlockDiff::Replace { block }, b) => MdBlockDiff::Replace { block: apply_block_diff(&block, &b).await },
+        (MdBlockDiff::Replace { block }, b) => MdBlockDiff::Replace { block: apply_block_diff(&block, &b) },
         (MdBlockDiff::Heading { level: la, inlines: ia }, MdBlockDiff::Heading { level: lb, inlines: ib }) => MdBlockDiff::Heading { level: lb.or(la), inlines: ib.or(ia) },
         (MdBlockDiff::Paragraph { inlines: ia }, MdBlockDiff::Paragraph { inlines: ib }) => MdBlockDiff::Paragraph { inlines: ib.or(ia) },
         (MdBlockDiff::CodeBlock { info: ia, literal: la }, MdBlockDiff::CodeBlock { info: ib, literal: lb }) => MdBlockDiff::CodeBlock { info: ib.or(ia), literal: lb.or(la) },
@@ -638,7 +656,7 @@ async fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             blocks: match (ba, bb) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(Box::pin(absorb_blocks_diff(x, y)).await),
+                (Some(x), Some(y)) => Some(Box::pin(absorb_blocks_diff(x, y))),
             },
         },
         (MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia }, MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib }) => MdBlockDiff::List {
@@ -648,7 +666,7 @@ async fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             items: match (ia, ib) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(absorb_list_items_diff(x, y).await),
+                (Some(x), Some(y)) => Some(absorb_list_items_diff(x, y)),
             },
         },
         // 🛡️ Kind-mismatched arms (should not arise outside a prior `Replace`, handled above) --
@@ -657,7 +675,8 @@ async fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
     }
 }
 
-async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -670,7 +689,7 @@ async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff 
         base_len += 1;
     }
 
-    let mid = simulate_block_mid_origins(base_len, &d1.removed, &d1.added).await;
+    let mid = simulate_block_mid_origins(base_len, &d1.removed, &d1.added);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -698,7 +717,7 @@ async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff 
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = Box::pin(absorb_block_diff(existing.diff.clone(), m2.diff.clone())).await,
+                    Some(existing) => existing.diff = Box::pin(absorb_block_diff(existing.diff.clone(), m2.diff.clone())),
                     None => modified.push(MdBlockModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -707,7 +726,7 @@ async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff 
                     continue;
                 }
                 if let Some(add) = working_added.get_mut(*k) {
-                    add.item = apply_block_diff(&add.item, &m2.diff).await;
+                    add.item = apply_block_diff(&add.item, &m2.diff);
                 }
             }
             None => {}
@@ -720,7 +739,7 @@ async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff 
             continue;
         }
         let final_index = transform_block_index(add.index, &d2.removed, &d2.added);
-        added.push(MdBlockAdded { index: final_index.await, item: add.item });
+        added.push(MdBlockAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -730,7 +749,8 @@ async fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff 
     MdBlocksDiff { removed, modified, added }
 }
 
-async fn transform_item_index(idx: usize, removed: &[usize], added: &[MdListItemAdded]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_item_index(idx: usize, removed: &[usize], added: &[MdListItemAdded]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -751,7 +771,8 @@ enum ItemOrigin {
     Added(usize),
 }
 
-async fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdListItemAdded]) -> Vec<ItemOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdListItemAdded]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -762,7 +783,8 @@ async fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[
     mid
 }
 
-async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListItemsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListItemsDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
@@ -775,7 +797,7 @@ async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdL
         base_len += 1;
     }
 
-    let mid = simulate_item_mid_origins(base_len, &d1.removed, &d1.added).await;
+    let mid = simulate_item_mid_origins(base_len, &d1.removed, &d1.added);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -803,7 +825,7 @@ async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdL
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_blocks_diff(existing.diff.clone(), m2.diff.clone()).await,
+                    Some(existing) => existing.diff = absorb_blocks_diff(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(MdListItemModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -812,7 +834,7 @@ async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdL
                     continue;
                 }
                 if let Some(add) = working_added.get_mut(*k) {
-                    add.item = apply_blocks_diff(&add.item, &m2.diff).await;
+                    add.item = apply_blocks_diff(&add.item, &m2.diff);
                 }
             }
             None => {}
@@ -825,7 +847,7 @@ async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdL
             continue;
         }
         let final_index = transform_item_index(add.index, &d2.removed, &d2.added);
-        added.push(MdListItemAdded { index: final_index.await, item: add.item });
+        added.push(MdListItemAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -839,8 +861,9 @@ async fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdL
 //#region 🔖️SetSnapshot
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<MdSnapshot>` full-replace slot -- this IS `MdDiff::between`.
-pub async fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
-    MdDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
+    MdDiff::between(base, next)
 }
 //#endregion 🔖️SetSnapshot
 
@@ -881,32 +904,39 @@ pub async fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
 /// bracket-depth invariant `encode_option`'s `"[1,{value}]"` wrapping already gives every OTHER
 /// triple-in-triple embedding in this file for free.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn enc_bool(b: bool) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
         "0"
     }
 }
-pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
@@ -914,7 +944,8 @@ pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
     }
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -935,18 +966,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -961,21 +995,26 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint encode/
 /// decode. `pub(crate)` so the mutations sibling can reuse these rather than duplicating them a
 /// second time in that file (same intra-artifact-reuse split the TEXT codec primitives above use).
-pub(crate) async fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
-pub(crate) async fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
-pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -984,8 +1023,9 @@ pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc:
         }
     }
 }
-pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -993,7 +1033,8 @@ pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: 
 }
 /// 🏳️ Tri-state `Option<Option<T>>` binary wrapper (`MdBlockDiff::List.start`/`CodeBlock.info`) —
 /// `0`=unchanged (`None`), `1`=cleared (`Some(None)`), `2`=set (`Some(Some(v))`).
-pub(crate) async fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(None) => out.push(1),
@@ -1003,8 +1044,9 @@ pub(crate) async fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option
         }
     }
 }
-pub(crate) async fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(dec(reader)?))),
@@ -1015,7 +1057,8 @@ pub(crate) async fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec
 
 //#region 🔖️InlineCodec
 /// 🌳 `MdInline`, tag range A-I (see file doc comment) — order matches its declaration.
-pub(crate) async fn enc_inline(n: &MdInline) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_inline(n: &MdInline) -> String {
     match n {
         MdInline::Text { text } => format!("A[{}]", enc_str(text)),
         MdInline::Emphasis { inlines } => format!("B[{}]", enc_inline_list(inlines)),
@@ -1032,42 +1075,46 @@ pub(crate) async fn enc_inline(n: &MdInline) -> String {
         MdInline::HtmlInline { raw } => format!("I[{}]", enc_str(raw)),
     }
 }
-pub(crate) async fn dec_inline(s: &str) -> Result<MdInline, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_inline(s: &str) -> Result<MdInline, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
-        "A" => Ok(MdInline::Text { text: dec_str(inner).await? }),
-        "B" => Ok(MdInline::Emphasis { inlines: dec_inline_list(inner).await? }),
-        "C" => Ok(MdInline::Strong { inlines: dec_inline_list(inner).await? }),
-        "D" => Ok(MdInline::Code { literal: dec_str(inner).await? }),
+        "A" => Ok(MdInline::Text { text: dec_str(inner)? }),
+        "B" => Ok(MdInline::Emphasis { inlines: dec_inline_list(inner)? }),
+        "C" => Ok(MdInline::Strong { inlines: dec_inline_list(inner)? }),
+        "D" => Ok(MdInline::Code { literal: dec_str(inner)? }),
         "E" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [text, url, title] = parts.as_slice() else { return Err(format!("inline link: expected 3 fields, got {}", parts.len())) };
-            Ok(MdInline::Link { text: dec_inline_list(text).await?, url: dec_str(url).await?, title: decode_option(title, dec_str).await? })
+            Ok(MdInline::Link { text: dec_inline_list(text)?, url: dec_str(url)?, title: decode_option(title, dec_str)? })
         }
         "F" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [alt, url, title] = parts.as_slice() else { return Err(format!("inline image: expected 3 fields, got {}", parts.len())) };
-            Ok(MdInline::Image { alt: dec_str(alt).await?, url: dec_str(url).await?, title: decode_option(title, dec_str).await? })
+            Ok(MdInline::Image { alt: dec_str(alt)?, url: dec_str(url)?, title: decode_option(title, dec_str)? })
         }
         "G" => Ok(MdInline::SoftBreak),
         "H" => Ok(MdInline::HardBreak),
-        "I" => Ok(MdInline::HtmlInline { raw: dec_str(inner).await? }),
+        "I" => Ok(MdInline::HtmlInline { raw: dec_str(inner)? }),
         other => Err(format!("inline: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_inline_list(list: &[MdInline]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_inline_list(list: &[MdInline]) -> String {
     format!("[{}]", list.iter().map(enc_inline).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_inline).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_inline).collect()
 }
 
 //#region 🔖️InlineBinaryCodec
 /// 🧪️ P2-FG1: real recursive binary twin of [`enc_inline`]/[`dec_inline`] above — same 0-8
 /// ordinal order as the text codec's `A`-`I` tag range, backing the upgraded `OpBinary`/`DiffCodec`
 /// frames (`../../🧬️mutations/🦀️component.rs`, `#region 🔖️TopLevel` below).
-pub(crate) async fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
     match n {
         MdInline::Text { text } => {
             out.push(0);
@@ -1105,39 +1152,42 @@ pub(crate) async fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(MdInline::Text { text: read_str_bin(reader).await? }),
-        1 => Ok(MdInline::Emphasis { inlines: dec_inline_list_bin(reader).await? }),
-        2 => Ok(MdInline::Strong { inlines: dec_inline_list_bin(reader).await? }),
-        3 => Ok(MdInline::Code { literal: read_str_bin(reader).await? }),
+        0 => Ok(MdInline::Text { text: read_str_bin(reader)? }),
+        1 => Ok(MdInline::Emphasis { inlines: dec_inline_list_bin(reader)? }),
+        2 => Ok(MdInline::Strong { inlines: dec_inline_list_bin(reader)? }),
+        3 => Ok(MdInline::Code { literal: read_str_bin(reader)? }),
         4 => {
-            let text = dec_inline_list_bin(reader).await?;
-            let url = read_str_bin(reader).await?;
-            let title = read_option_bin(reader, read_str_bin).await?;
+            let text = dec_inline_list_bin(reader)?;
+            let url = read_str_bin(reader)?;
+            let title = read_option_bin(reader, read_str_bin)?;
             Ok(MdInline::Link { text, url, title })
         }
         5 => {
-            let alt = read_str_bin(reader).await?;
-            let url = read_str_bin(reader).await?;
-            let title = read_option_bin(reader, read_str_bin).await?;
+            let alt = read_str_bin(reader)?;
+            let url = read_str_bin(reader)?;
+            let title = read_option_bin(reader, read_str_bin)?;
             Ok(MdInline::Image { alt, url, title })
         }
         6 => Ok(MdInline::SoftBreak),
         7 => Ok(MdInline::HardBreak),
-        8 => Ok(MdInline::HtmlInline { raw: read_str_bin(reader).await? }),
+        8 => Ok(MdInline::HtmlInline { raw: read_str_bin(reader)? }),
         other => Err(format!("inline binary: unknown tag {other}")),
     }
 }
-pub(crate) async fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for n in list {
         enc_inline_bin(n, out);
     }
 }
-pub(crate) async fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_inline_bin(reader)).collect()
 }
 //#endregion 🔖️InlineBinaryCodec
@@ -1145,7 +1195,8 @@ pub(crate) async fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> R
 
 //#region 🔖️BlockCodec
 /// 🧱 `MdBlock`, tag range J-P (see file doc comment) — order matches its declaration.
-pub(crate) async fn enc_block(b: &MdBlock) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block(b: &MdBlock) -> String {
     match b {
         MdBlock::Heading { level, inlines } => format!("J[{},{}]", level, enc_inline_list(inlines)),
         MdBlock::Paragraph { inlines } => format!("K[{}]", enc_inline_list(inlines)),
@@ -1156,49 +1207,55 @@ pub(crate) async fn enc_block(b: &MdBlock) -> String {
         MdBlock::HtmlBlock { raw } => format!("P[{}]", enc_str(raw)),
     }
 }
-pub(crate) async fn dec_block(s: &str) -> Result<MdBlock, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "J" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [level, inlines] = parts.as_slice() else { return Err(format!("heading: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlock::Heading { level: level.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, inlines: dec_inline_list(inlines).await? })
+            Ok(MdBlock::Heading { level: level.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, inlines: dec_inline_list(inlines)? })
         }
-        "K" => Ok(MdBlock::Paragraph { inlines: dec_inline_list(inner).await? }),
+        "K" => Ok(MdBlock::Paragraph { inlines: dec_inline_list(inner)? }),
         "L" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [ordered, start, tight, items] = parts.as_slice() else { return Err(format!("list: expected 4 fields, got {}", parts.len())) };
-            Ok(MdBlock::List { ordered: dec_bool(ordered).await?, start: decode_option(start, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, tight: dec_bool(tight).await?, items: dec_item_list(items).await? })
+            Ok(MdBlock::List { ordered: dec_bool(ordered)?, start: decode_option(start, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, tight: dec_bool(tight)?, items: dec_item_list(items)? })
         }
         "M" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [info, literal] = parts.as_slice() else { return Err(format!("code block: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlock::CodeBlock { info: decode_option(info, dec_str).await?, literal: dec_str(literal).await? })
+            Ok(MdBlock::CodeBlock { info: decode_option(info, dec_str)?, literal: dec_str(literal)? })
         }
-        "N" => Ok(MdBlock::BlockQuote { blocks: dec_block_list(inner).await? }),
+        "N" => Ok(MdBlock::BlockQuote { blocks: dec_block_list(inner)? }),
         "O" => Ok(MdBlock::ThematicBreak),
-        "P" => Ok(MdBlock::HtmlBlock { raw: dec_str(inner).await? }),
+        "P" => Ok(MdBlock::HtmlBlock { raw: dec_str(inner)? }),
         other => Err(format!("block: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_block_list(list: &[MdBlock]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_list(list: &[MdBlock]) -> String {
     format!("[{}]", list.iter().map(enc_block).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect()
 }
-pub(crate) async fn enc_item_list(items: &[Vec<MdBlock>]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_item_list(items: &[Vec<MdBlock>]) -> String {
     format!("[{}]", items.iter().map(|item| enc_block_list(item)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_item_list(s: &str) -> Result<Vec<Vec<MdBlock>>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block_list).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_item_list(s: &str) -> Result<Vec<Vec<MdBlock>>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block_list).collect()
 }
 
 //#region 🔖️BlockBinaryCodec
 /// 🧪️ P2-FG1: real recursive binary twin of [`enc_block`]/[`dec_block`] above — same 0-6 ordinal
 /// order as the text codec's `J`-`P` tag range.
-pub(crate) async fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
     match b {
         MdBlock::Heading { level, inlines } => {
             out.push(0);
@@ -1232,51 +1289,56 @@ pub(crate) async fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let level = reader.read_u8().await.map_err(|e| e.to_string())?;
-            let inlines = dec_inline_list_bin(reader).await?;
+            let level = reader.read_u8().map_err(|e| e.to_string())?;
+            let inlines = dec_inline_list_bin(reader)?;
             Ok(MdBlock::Heading { level, inlines })
         }
-        1 => Ok(MdBlock::Paragraph { inlines: dec_inline_list_bin(reader).await? }),
+        1 => Ok(MdBlock::Paragraph { inlines: dec_inline_list_bin(reader)? }),
         2 => {
-            let ordered = read_bool_bin(reader).await?;
-            let start = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32)).await?;
-            let tight = read_bool_bin(reader).await?;
-            let items = dec_item_list_bin(reader).await?;
+            let ordered = read_bool_bin(reader)?;
+            let start = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32))?;
+            let tight = read_bool_bin(reader)?;
+            let items = dec_item_list_bin(reader)?;
             Ok(MdBlock::List { ordered, start, tight, items })
         }
         3 => {
-            let info = read_option_bin(reader, read_str_bin).await?;
-            let literal = read_str_bin(reader).await?;
+            let info = read_option_bin(reader, read_str_bin)?;
+            let literal = read_str_bin(reader)?;
             Ok(MdBlock::CodeBlock { info, literal })
         }
-        4 => Ok(MdBlock::BlockQuote { blocks: dec_block_list_bin(reader).await? }),
+        4 => Ok(MdBlock::BlockQuote { blocks: dec_block_list_bin(reader)? }),
         5 => Ok(MdBlock::ThematicBreak),
-        6 => Ok(MdBlock::HtmlBlock { raw: read_str_bin(reader).await? }),
+        6 => Ok(MdBlock::HtmlBlock { raw: read_str_bin(reader)? }),
         other => Err(format!("block binary: unknown tag {other}")),
     }
 }
-pub(crate) async fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for b in list {
         enc_block_bin(b, out);
     }
 }
-pub(crate) async fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_bin(reader)).collect()
 }
-pub(crate) async fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items {
         enc_block_list_bin(item, out);
     }
 }
-pub(crate) async fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_list_bin(reader)).collect()
 }
 //#endregion 🔖️BlockBinaryCodec
@@ -1285,7 +1347,8 @@ pub(crate) async fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Res
 //#region 🔖️DiffValueCodecs
 /// 🌳 `MdBlockDiff`, tag range Q-X (see file doc comment) — order matches its declaration, `X` =
 /// `Replace` (the kind-change fallback, mirrors `SvgNodeDiff::Replace`'s `R`).
-pub(crate) async fn enc_block_diff(d: &MdBlockDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
     match d {
         MdBlockDiff::Heading { level, inlines } => {
             format!("Q[{},{}]", encode_option(level, |v| v.to_string()), encode_option(inlines, |v| enc_inline_list(v)))
@@ -1305,52 +1368,55 @@ pub(crate) async fn enc_block_diff(d: &MdBlockDiff) -> String {
         MdBlockDiff::Replace { block } => format!("X[{}]", enc_block(block)),
     }
 }
-pub(crate) async fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_diff(s: &str) -> Result<MdBlockDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "Q" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [level, inlines] = parts.as_slice() else { return Err(format!("heading diff: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlockDiff::Heading { level: decode_option(level, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, inlines: decode_option(inlines, dec_inline_list).await? })
+            Ok(MdBlockDiff::Heading { level: decode_option(level, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, inlines: decode_option(inlines, dec_inline_list)? })
         }
-        "R" => Ok(MdBlockDiff::Paragraph { inlines: decode_option(inner, dec_inline_list).await? }),
+        "R" => Ok(MdBlockDiff::Paragraph { inlines: decode_option(inner, dec_inline_list)? }),
         "S" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [ordered, start, tight, items] = parts.as_slice() else { return Err(format!("list diff: expected 4 fields, got {}", parts.len())) };
             Ok(MdBlockDiff::List {
-                ordered: decode_option(ordered, dec_bool).await?,
-                start: decode_option(start, |v| decode_option(v, |x| x.parse().map_err(|e: std::num::ParseIntError| e.to_string()))).await?,
-                tight: decode_option(tight, dec_bool).await?,
-                items: decode_option(items, dec_list_items_diff).await?,
+                ordered: decode_option(ordered, dec_bool)?,
+                start: decode_option(start, |v| decode_option(v, |x| x.parse().map_err(|e: std::num::ParseIntError| e.to_string())))?,
+                tight: decode_option(tight, dec_bool)?,
+                items: decode_option(items, dec_list_items_diff)?,
             })
         }
         "T" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [info, literal] = parts.as_slice() else { return Err(format!("code block diff: expected 2 fields, got {}", parts.len())) };
-            Ok(MdBlockDiff::CodeBlock { info: decode_option(info, |v| decode_option(v, dec_str)).await?, literal: decode_option(literal, dec_str).await? })
+            Ok(MdBlockDiff::CodeBlock { info: decode_option(info, |v| decode_option(v, dec_str))?, literal: decode_option(literal, dec_str)? })
         }
-        "U" => Ok(MdBlockDiff::BlockQuote { blocks: decode_option(inner, dec_blocks_diff).await? }),
+        "U" => Ok(MdBlockDiff::BlockQuote { blocks: decode_option(inner, dec_blocks_diff)? }),
         "V" => Ok(MdBlockDiff::ThematicBreak),
-        "W" => Ok(MdBlockDiff::HtmlBlock { raw: decode_option(inner, dec_str).await? }),
-        "X" => Ok(MdBlockDiff::Replace { block: dec_block(inner).await? }),
+        "W" => Ok(MdBlockDiff::HtmlBlock { raw: decode_option(inner, dec_str)? }),
+        "X" => Ok(MdBlockDiff::Replace { block: dec_block(inner)? }),
         other => Err(format!("block diff: unknown tag {other:?}")),
     }
 }
 
 /// 🌳 `MdBlocksDiff` (BARE triple, no tag) — reused verbatim by `MdDiff.blocks`, `BlockQuote.blocks`,
 /// and (via `MdListItemsDiff`) a `List` item's own content.
-async fn enc_blocks_diff(d: &MdBlocksDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_blocks_diff(d: &MdBlocksDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_block_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_block(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("blocks diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1358,7 +1424,7 @@ async fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
             Ok(MdBlockModified { index: parse_usize(idx)?, diff: dec_block_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1373,17 +1439,19 @@ async fn dec_blocks_diff(body: &str) -> Result<MdBlocksDiff, String> {
 /// `modified` entries wrap their nested `MdBlocksDiff` in an EXTRA bracket pair (`{}:[{}]`, not
 /// `{}:{}`) — see the region doc comment's "one structural device worth flagging" note for why a
 /// bare triple embedded directly (not via `encode_option` or a tag-prefixed enum) needs it.
-async fn enc_list_items_diff(d: &MdListItemsDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_list_items_diff(d: &MdListItemsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:[{}]", m.index, enc_blocks_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_block_list(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("list items diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1391,7 +1459,7 @@ async fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
             Ok(MdListItemModified { index: parse_usize(idx)?, diff: dec_blocks_diff(strip_brackets(rest)?)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1409,7 +1477,8 @@ async fn dec_list_items_diff(body: &str) -> Result<MdListItemsDiff, String> {
 /// `DiffCodec::encode_diff`/`decode_diff` below. `List`/`CodeBlock`'s tri-state fields use
 /// [`write_tristate_bin`]/[`read_tristate_bin`]; every other `Option<T>` field uses the plain
 /// [`write_option_bin`]/[`read_option_bin`] pair.
-pub(crate) async fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
     match d {
         MdBlockDiff::Heading { level, inlines } => {
             out.push(0);
@@ -1447,38 +1516,40 @@ pub(crate) async fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let level = read_option_bin(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).await?;
-            let inlines = read_option_bin(reader, dec_inline_list_bin).await?;
+            let level = read_option_bin(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?;
+            let inlines = read_option_bin(reader, dec_inline_list_bin)?;
             Ok(MdBlockDiff::Heading { level, inlines })
         }
-        1 => Ok(MdBlockDiff::Paragraph { inlines: read_option_bin(reader, dec_inline_list_bin).await? }),
+        1 => Ok(MdBlockDiff::Paragraph { inlines: read_option_bin(reader, dec_inline_list_bin)? }),
         2 => {
-            let ordered = read_option_bin(reader, read_bool_bin).await?;
-            let start = read_tristate_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32)).await?;
-            let tight = read_option_bin(reader, read_bool_bin).await?;
-            let items = read_option_bin(reader, dec_list_items_diff_bin).await?;
+            let ordered = read_option_bin(reader, read_bool_bin)?;
+            let start = read_tristate_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32))?;
+            let tight = read_option_bin(reader, read_bool_bin)?;
+            let items = read_option_bin(reader, dec_list_items_diff_bin)?;
             Ok(MdBlockDiff::List { ordered, start, tight, items })
         }
         3 => {
-            let info = read_tristate_bin(reader, read_str_bin).await?;
-            let literal = read_option_bin(reader, read_str_bin).await?;
+            let info = read_tristate_bin(reader, read_str_bin)?;
+            let literal = read_option_bin(reader, read_str_bin)?;
             Ok(MdBlockDiff::CodeBlock { info, literal })
         }
-        4 => Ok(MdBlockDiff::BlockQuote { blocks: read_option_bin(reader, dec_blocks_diff_bin).await? }),
+        4 => Ok(MdBlockDiff::BlockQuote { blocks: read_option_bin(reader, dec_blocks_diff_bin)? }),
         5 => Ok(MdBlockDiff::ThematicBreak),
-        6 => Ok(MdBlockDiff::HtmlBlock { raw: read_option_bin(reader, read_str_bin).await? }),
-        7 => Ok(MdBlockDiff::Replace { block: dec_block_bin(reader).await? }),
+        6 => Ok(MdBlockDiff::HtmlBlock { raw: read_option_bin(reader, read_str_bin)? }),
+        7 => Ok(MdBlockDiff::Replace { block: dec_block_bin(reader)? }),
         other => Err(format!("block diff binary: unknown tag {other}")),
     }
 }
 
 /// 🌳 `MdBlocksDiff` binary twin of [`enc_blocks_diff`]/[`dec_blocks_diff`] — three varint-counted,
 /// recursively-encoded lists (removed/modified/added), genuinely structured binary.
-pub(crate) async fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for idx in &d.removed {
         store::pack_rt::write_varint_u64(out, *idx as u64);
@@ -1494,24 +1565,25 @@ pub(crate) async fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
         enc_block_bin(&entry.item, out);
     }
 }
-pub(crate) async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let diff = dec_block_diff_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_block_diff_bin(reader)?;
         modified.push(MdBlockModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let item = dec_block_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_block_bin(reader)?;
         added.push(MdBlockAdded { index, item });
     }
     Ok(MdBlocksDiff { removed, modified, added })
@@ -1519,7 +1591,8 @@ pub(crate) async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> R
 
 /// 🌳 `MdListItemsDiff` binary twin of [`enc_list_items_diff`]/[`dec_list_items_diff`] — same
 /// 3-part shape, `modified.diff` a recursive `MdBlocksDiff`, `added.item` a `Vec<MdBlock>`.
-pub(crate) async fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for idx in &d.removed {
         store::pack_rt::write_varint_u64(out, *idx as u64);
@@ -1535,24 +1608,25 @@ pub(crate) async fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u
         enc_block_list_bin(&entry.item, out);
     }
 }
-pub(crate) async fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let diff = dec_blocks_diff_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let diff = dec_blocks_diff_bin(reader)?;
         modified.push(MdListItemModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let item = dec_block_list_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_block_list_bin(reader)?;
         added.push(MdListItemAdded { index, item });
     }
     Ok(MdListItemsDiff { removed, modified, added })
@@ -1560,21 +1634,23 @@ pub(crate) async fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) 
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-async fn print_md_diff(d: &MdDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_md_diff(d: &MdDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.blocks {
         tokens.push(format!("blocks={}", enc_blocks_diff(v)));
     }
     tokens.join(" ")
 }
-async fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
     let mut d = MdDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("blocks=") {
-            d.blocks = Some(dec_blocks_diff(rest).await?);
+            d.blocks = Some(dec_blocks_diff(rest)?);
         } else {
             return Err(format!("md diff: unknown token {token:?}"));
         }
@@ -1584,10 +1660,10 @@ async fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
 
 impl protocol::DiffCodec for MdDiff {
     async fn print_diff(&self) -> String {
-        print_md_diff(self).await
+        print_md_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_md_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_md_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | has_value u8 | blocks-diff payload`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1604,7 +1680,7 @@ impl protocol::DiffCodec for MdDiff {
         let mut reader = store::ByteReader::new(bytes).await;
         let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
+        let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(MdDiff { blocks })
     }
 }
@@ -1616,7 +1692,8 @@ impl protocol::DiffCodec for MdDiff {
 /// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-async fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
     MdSnapshot { schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
 }
 
@@ -1624,7 +1701,8 @@ async fn demo_snapshot(blocks: Vec<MdBlock>) -> MdSnapshot {
 /// `Link`/`Image`), with `Emphasis`/`Strong` nesting another variant inside themselves so the
 /// recursive `enc_inline_list`/`dec_inline_list` path gets exercised too.
 #[cfg(test)]
-async fn all_inline_kinds() -> Vec<MdInline> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn all_inline_kinds() -> Vec<MdInline> {
     vec![
         MdInline::Text { text: "hi".into() },
         MdInline::Emphasis { inlines: vec![MdInline::Text { text: "em".into() }] },
@@ -1651,7 +1729,8 @@ async fn all_inline_kinds() -> Vec<MdInline> {
 /// show one of {removed-tail, added-tail} per single call. `md_a[6]`/`md_b[6]` are IDENTICAL
 /// (proves an unchanged block correctly produces no diff entry at all).
 #[cfg(test)]
-async fn md_a() -> Vec<MdBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn md_a() -> Vec<MdBlock> {
     vec![
         MdBlock::Heading { level: 1, inlines: vec![MdInline::Text { text: "Intro".into() }] },
         MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one".into() }, MdInline::SoftBreak] },
@@ -1670,7 +1749,8 @@ async fn md_a() -> Vec<MdBlock> {
     ]
 }
 #[cfg(test)]
-async fn md_b() -> Vec<MdBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn md_b() -> Vec<MdBlock> {
     vec![
         MdBlock::Heading { level: 2, inlines: all_inline_kinds() },
         MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "para one CHANGED".into() }] },
@@ -1700,7 +1780,8 @@ async fn md_b() -> Vec<MdBlock> {
 /// (two `ThematicBreak`s are always structurally equal, per that variant's own doc comment) so it
 /// gets one manually-constructed case here instead.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<MdDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
     let a = demo_snapshot(md_a());
     let b = demo_snapshot(md_b());
     let empty = demo_snapshot(Vec::new());

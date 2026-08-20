@@ -3,6 +3,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::S
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-colorspace.
-pub async fn inverse(base: &SemioImageSnapshot, colorspace: SemioColorspace) -> Vec<SemioImageMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &SemioImageSnapshot, colorspace: SemioColorspace) -> Vec<SemioImageMutation> {
     <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetColorspace { colorspace }, base)
 }

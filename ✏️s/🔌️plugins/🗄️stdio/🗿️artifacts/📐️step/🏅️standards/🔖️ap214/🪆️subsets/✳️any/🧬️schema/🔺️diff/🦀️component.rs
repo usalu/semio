@@ -21,13 +21,16 @@ use serde::{Deserialize, Serialize};
 /// `inverse`) — see `🧬️schema-design.md` §Absorb. `excluded_sorted` must be sorted ascending.
 /// Own copy (not imported from gif) per the recipe's specific-code mandate — small and
 /// self-contained enough that duplicating it per artifact is the honest choice, not a defect.
-async fn count_le(sorted: &[usize], x: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -37,8 +40,9 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
 
@@ -48,7 +52,8 @@ async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_s
 /// whole new value). Canonical correctness verified against the plan's 3 mandated cases in this
 /// module's tests.
 #[allow(clippy::too_many_arguments)]
-async fn absorb_indexed_collection<T: Clone, D: Clone>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -77,8 +82,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
-            merged_removed_base.push(base_index.await);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
         }
     }
     merged_removed_base.sort_unstable();
@@ -98,11 +103,11 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -126,7 +131,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -137,7 +143,7 @@ async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modif
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index.await, diff_inverse(d, orig)));
+            inv_modified.push((after_index, diff_inverse(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -182,11 +188,13 @@ pub struct StepArgsDiff {
 }
 
 impl StepArgsDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub async fn between(base: &[StepValue], other: &[StepValue]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[StepValue], other: &[StepValue]) -> Self {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
@@ -199,7 +207,8 @@ impl StepArgsDiff {
         Self { removed, modified, added }
     }
 
-    pub async fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
             next[m.index] = m.value.clone();
@@ -218,7 +227,8 @@ impl StepArgsDiff {
         next
     }
 
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.value)).collect(),
@@ -228,20 +238,21 @@ impl StepArgsDiff {
             other.added.into_iter().map(|a| (a.index, a.value)).collect(),
             |d: &mut StepValue, o: StepValue| *d = o,
             |d: &StepValue, _item: &StepValue| d.clone(),
-        ).await;
+        );
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect();
         self.added = added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect();
     }
 
-    async fn inverse(&self, base_args: &[StepValue]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base_args: &[StepValue]) -> Self {
         let (removed, modified, added) = inverse_indexed_collection(
             &self.removed,
             &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(),
             &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(),
             base_args,
             |_d: &StepValue, item: &StepValue| item.clone(),
-        ).await;
+        );
         Self { removed, modified: modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect() }
     }
 }
@@ -262,22 +273,25 @@ pub struct StepEntityDiff {
 }
 
 impl StepEntityDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    pub async fn between(base: &StepEntity, other: &StepEntity) -> Self {
-        let args_diff = StepArgsDiff::between(&base.args, &other.args).await;
-        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty().await).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &StepEntity, other: &StepEntity) -> Self {
+        let args_diff = StepArgsDiff::between(&base.args, &other.args);
+        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
-    pub async fn apply(&self, base: &StepEntity) -> StepEntity {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &StepEntity) -> StepEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
         }
         if let Some(d) = &self.args {
-            next.args = d.apply(&next.args).await;
+            next.args = d.apply(&next.args);
         }
         if let Some(v) = &self.complex {
             next.complex = v.clone();
@@ -285,16 +299,18 @@ impl StepEntityDiff {
         next
     }
 
-    pub async fn inverse(&self, base: &StepEntity) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &StepEntity) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
         match (&mut self.args, other.args) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -336,11 +352,13 @@ pub struct StepEntitiesDiff {
 }
 
 impl StepEntitiesDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub async fn between(base: &[StepEntity], other: &[StepEntity]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[StepEntity], other: &[StepEntity]) -> Self {
         let base_ids: HashSet<u64> = base.iter().map(|e| e.id).collect();
         let other_ids: HashSet<u64> = other.iter().map(|e| e.id).collect();
 
@@ -349,8 +367,8 @@ impl StepEntitiesDiff {
         let mut modified = Vec::new();
         for be in base {
             if let Some(oe) = other.iter().find(|o| o.id == be.id) {
-                let d = StepEntityDiff::between(be, oe).await;
-                if !d.is_empty().await {
+                let d = StepEntityDiff::between(be, oe);
+                if !d.is_empty() {
                     modified.push(StepEntityModified { id: be.id, diff: d });
                 }
             }
@@ -361,7 +379,8 @@ impl StepEntitiesDiff {
         Self { removed, modified, added }
     }
 
-    pub async fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
         let mut entities: Vec<StepEntity> = base.to_vec();
         if !self.removed.is_empty() {
             let removed: HashSet<u64> = self.removed.iter().copied().collect();
@@ -370,7 +389,7 @@ impl StepEntitiesDiff {
         for m in &self.modified {
             for entity in &mut entities {
                 if entity.id == m.id {
-                    *entity = m.diff.apply(entity).await;
+                    *entity = m.diff.apply(entity);
                 }
             }
         }
@@ -388,7 +407,8 @@ impl StepEntitiesDiff {
 /// zip's names, a `#123` instance number is never reassigned by this recipe's mutation
 /// vocabulary). Structural, total, base-free, sequential-coalesce, same shape as zip's
 /// `absorb_entries` minus the rename machinery.
-async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -> Option<StepEntitiesDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -> Option<StepEntitiesDiff> {
     let (mut d1, d2) = match (d1, d2) {
         (None, None) => return None,
         (Some(d1), None) => return Some(d1),
@@ -430,7 +450,7 @@ async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDi
                 continue; // modified-of-annihilated-add: moot.
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
-                a.entity = dm.diff.apply(&a.entity).await;
+                a.entity = dm.diff.apply(&a.entity);
             }
         } else {
             if merged_removed.contains(&dm.id) {
@@ -447,7 +467,7 @@ async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDi
     merged_added.extend(d2.added);
 
     let merged = StepEntitiesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty().await {
+    if merged.is_empty() {
         None
     } else {
         Some(merged)
@@ -478,22 +498,25 @@ pub struct StepDiff {
 }
 
 impl StepDiff {
-    pub async fn is_empty_diff(&self) -> bool {
-        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true)
     }
 }
 
-async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).await.at(target).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+    MutationApplyError::new(code, message).at(target)
 }
 
-async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index >= base_len || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target).await);
+            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
@@ -501,7 +524,7 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), entry.index.to_string()]);
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target).await);
+            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
     }
     let mut length = base_len - removed.len();
@@ -512,7 +535,7 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target).await);
+            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
         length += 1;
@@ -520,27 +543,28 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
     Ok(())
 }
 
-async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> MutationApplyResult<()> {
     let mut base_by_id = BTreeMap::new();
     for entity in base {
         if base_by_id.insert(entity.id, entity).is_some() {
-            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]).await);
+            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]));
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed {
         if !base_by_id.contains_key(&id) || !removed.insert(id) {
-            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]).await);
+            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         let base_entity = base_by_id.get(&entry.id);
         if base_entity.is_none() || removed.contains(&entry.id) || !modified.insert(entry.id) {
-            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]).await);
+            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
         }
         if let Some(args) = &entry.diff.args {
-            validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()]).await?;
+            validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
         }
     }
     let mut length = base.len() - removed.len();
@@ -550,7 +574,7 @@ async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) ->
     let mut previous = None;
     for entry in additions {
         if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
-            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]).await);
+            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
         }
         previous = Some(entry.index);
         length += 1;
@@ -558,7 +582,8 @@ async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) ->
     Ok(())
 }
 
-async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapshot {
     let mut next = base.clone();
     if let Some(value) = &diff.file_description {
         next.header.file_description = value.clone();
@@ -570,7 +595,7 @@ async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> Step
         next.header.file_schema = value.clone();
     }
     if let Some(value) = &diff.entities {
-        next.entities = value.apply(&next.entities).await;
+        next.entities = value.apply(&next.entities);
     }
     next
 }
@@ -578,9 +603,9 @@ async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> Step
 impl MutationDiff<StepSnapshot> for StepDiff {
     async fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
         if let Some(diff) = &self.entities {
-            validate_entities_diff(&base.entities, diff).await?;
+            validate_entities_diff(&base.entities, diff)?;
         }
-        Ok(apply_step_diff_unchecked(self, base).await)
+        Ok(apply_step_diff_unchecked(self, base))
     }
 
     async fn absorb(&mut self, other: Self) {
@@ -593,7 +618,7 @@ impl MutationDiff<StepSnapshot> for StepDiff {
         if other.file_schema.is_some() {
             self.file_schema = other.file_schema;
         }
-        self.entities = absorb_entities(self.entities.take(), other.entities).await;
+        self.entities = absorb_entities(self.entities.take(), other.entities);
     }
 }
 
@@ -607,23 +632,24 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     }
 
     async fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
-        let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities).await;
+        let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
             file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
             file_schema: (base.header.file_schema != other.header.file_schema).then(|| other.header.file_schema.clone()),
-            entities: (!entities_diff.is_empty().await).then_some(entities_diff),
+            entities: (!entities_diff.is_empty()).then_some(entities_diff),
         }
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
-    <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
+    <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next)
 }
 //#endregion 🔖️Diff
 
@@ -643,29 +669,36 @@ pub async fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> Step
 /// `IndexTransport` region doc comment for the same rationale), reused by `StepMutation`'s
 /// `OpText`/`OpBinary` via `pub(crate)`.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_u64(s: &str) -> Result<u64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -686,18 +719,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -713,21 +749,26 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// reinventing varint encode/decode. `pub(crate)` so the mutations sibling can reuse these rather
 /// than duplicating them a second time in that file (same intra-artifact-reuse split the TEXT
 /// codec primitives above use).
-pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
-pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
-pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().await.map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+    reader.read_f64_le().map_err(|e| e.to_string())
 }
-pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -736,21 +777,24 @@ pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc:
         }
     }
 }
-pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
     }
 }
-pub(crate) async fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for s in list {
         write_str_bin(out, s);
     }
 }
-pub(crate) async fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| read_str_bin(reader)).collect()
 }
 //#endregion 🔖️BinaryPrimitives
@@ -759,7 +803,8 @@ pub(crate) async fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Res
 /// 🔤️ `StepValue` — single-uppercase-letter tag prefix like `enc_xml_node`, one per variant: `U`
 /// Unset, `D` Derived, `I` Integer, `R` Real, `S` String, `E` Enum, `F` reFerence (`R` taken by
 /// Real), `A` Aggregate (recursive list), `T` TypedValue (recursive, name + one wrapped value).
-pub(crate) async fn enc_value(v: &StepValue) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_value(v: &StepValue) -> String {
     match v {
         StepValue::Unset => "U[]".to_string(),
         StepValue::Derived => "D[]".to_string(),
@@ -772,67 +817,75 @@ pub(crate) async fn enc_value(v: &StepValue) -> String {
         StepValue::TypedValue { type_name, value } => format!("T[{},{}]", enc_str(type_name), enc_value(value)),
     }
 }
-pub(crate) async fn dec_value(s: &str) -> Result<StepValue, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_value(s: &str) -> Result<StepValue, String> {
     if s.len() < 3 {
         return Err(format!("step value: too short {s:?}"));
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "U" => Ok(StepValue::Unset),
         "D" => Ok(StepValue::Derived),
         "I" => Ok(StepValue::Integer(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "R" => Ok(StepValue::Real(inner.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?)),
-        "S" => Ok(StepValue::String(dec_str(inner).await?)),
-        "E" => Ok(StepValue::Enum(dec_str(inner).await?)),
+        "S" => Ok(StepValue::String(dec_str(inner)?)),
+        "E" => Ok(StepValue::Enum(dec_str(inner)?)),
         "F" => Ok(StepValue::Reference(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {
             let items = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
             Ok(StepValue::Aggregate(items))
         }
         "T" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [type_name, value] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
-            Ok(StepValue::TypedValue { type_name: dec_str(type_name).await?, value: Box::new(dec_value(value).await?) })
+            Ok(StepValue::TypedValue { type_name: dec_str(type_name)?, value: Box::new(dec_value(value)?) })
         }
         other => Err(format!("step value: unknown tag {other:?}")),
     }
 }
 
-async fn enc_complex(c: &StepComplexType) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_complex(c: &StepComplexType) -> String {
     format!("[{},[{}]]", enc_str(&c.name), c.args.iter().map(enc_value).collect::<Vec<_>>().join(","))
 }
-async fn dec_complex(s: &str) -> Result<StepComplexType, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_complex(s: &str) -> Result<StepComplexType, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args] = parts.as_slice() else { return Err(format!("complex type: expected 2 fields, got {}", parts.len())) };
-    let args = split_top_level(strip_brackets(args).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
-    Ok(StepComplexType { name: dec_str(name).await?, args })
+    let args = split_top_level(strip_brackets(args)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
+    Ok(StepComplexType { name: dec_str(name)?, args })
 }
 
-pub(crate) async fn enc_entity(e: &StepEntity) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_entity(e: &StepEntity) -> String {
     format!("[{},{},[{}],[{}]]", e.id, enc_str(&e.name), e.args.iter().map(enc_value).collect::<Vec<_>>().join(","), e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),)
 }
-pub(crate) async fn dec_entity(s: &str) -> Result<StepEntity, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(StepEntity {
-        id: parse_u64(id).await?,
-        name: dec_str(name).await?,
-        args: split_top_level(strip_brackets(args).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?,
-        complex: split_top_level(strip_brackets(complex).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()?,
+        id: parse_u64(id)?,
+        name: dec_str(name)?,
+        args: split_top_level(strip_brackets(args)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?,
+        complex: split_top_level(strip_brackets(complex)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()?,
     })
 }
 
-pub(crate) async fn enc_file_description(d: &StepFileDescription) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
     format!("[[{}],{}]", d.description.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","), enc_str(&d.implementation_level))
 }
-pub(crate) async fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
-    Ok(StepFileDescription { description: split_top_level(strip_brackets(description).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level).await? })
+    Ok(StepFileDescription { description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level)? })
 }
 
-pub(crate) async fn enc_file_name(f: &StepFileName) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_name(f: &StepFileName) -> String {
     format!(
         "[{},{},[{}],[{}],{},{},{}]",
         enc_str(&f.name),
@@ -844,45 +897,50 @@ pub(crate) async fn enc_file_name(f: &StepFileName) -> String {
         enc_str(&f.authorization),
     )
 }
-pub(crate) async fn dec_file_name(s: &str) -> Result<StepFileName, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, timestamp, author, organization, preprocessor_version, originating_system, authorization] = parts.as_slice() else {
         return Err(format!("file name: expected 7 fields, got {}", parts.len()));
     };
     Ok(StepFileName {
-        name: dec_str(name).await?,
-        timestamp: dec_str(timestamp).await?,
-        author: split_top_level(strip_brackets(author).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        organization: split_top_level(strip_brackets(organization).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        preprocessor_version: dec_str(preprocessor_version).await?,
-        originating_system: dec_str(originating_system).await?,
-        authorization: dec_str(authorization).await?,
+        name: dec_str(name)?,
+        timestamp: dec_str(timestamp)?,
+        author: split_top_level(strip_brackets(author)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        organization: split_top_level(strip_brackets(organization)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        preprocessor_version: dec_str(preprocessor_version)?,
+        originating_system: dec_str(originating_system)?,
+        authorization: dec_str(authorization)?,
     })
 }
 
-pub(crate) async fn enc_file_schema(s: &StepFileSchema) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_schema(s: &StepFileSchema) -> String {
     format!("[{}]", s.schemas.iter().map(|x| enc_str(x)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
-    let schemas = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
+    let schemas = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
     Ok(StepFileSchema { schemas })
 }
 
 /// 📸️ Full `StepSnapshot` codec — needed by `SetSnapshot`'s `OpText`/`OpBinary` (mutations file
 /// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
 /// full-replace slot exists on the diff).
-pub(crate) async fn enc_step_snapshot(s: &StepSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_step_snapshot(s: &StepSnapshot) -> String {
     format!("[{},{},{},{},[{}]]", enc_str(&s.schema), enc_file_description(&s.header.file_description), enc_file_name(&s.header.file_name), enc_file_schema(&s.header.file_schema), s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),)
 }
-pub(crate) async fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, file_description, file_name, file_schema, entities] = parts.as_slice() else {
         return Err(format!("step snapshot: expected 5 fields, got {}", parts.len()));
     };
     Ok(StepSnapshot {
-        schema: dec_str(schema).await?,
-        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description).await?, file_name: dec_file_name(file_name).await?, file_schema: dec_file_schema(file_schema).await? },
-        entities: split_top_level(strip_brackets(entities).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
+        schema: dec_str(schema)?,
+        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
+        entities: split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
     })
 }
 //#endregion 🔖️ValueCodecs
@@ -895,7 +953,8 @@ pub(crate) async fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
 /// `Prim::Ref` protocol-dialect blocker (cited on the sibling `.protocol.semio` files) constrains
 /// only the DECLARATIVE description, never hand-written Rust, which recurses here exactly like
 /// `enc_value`'s own text twin does two regions up.
-pub(crate) async fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
     match v {
         StepValue::Unset => out.push(0),
         StepValue::Derived => out.push(1),
@@ -933,45 +992,49 @@ pub(crate) async fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(StepValue::Unset),
         1 => Ok(StepValue::Derived),
-        2 => Ok(StepValue::Integer(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
-        3 => Ok(StepValue::Real(read_f64_bin(reader).await?)),
-        4 => Ok(StepValue::String(read_str_bin(reader).await?)),
-        5 => Ok(StepValue::Enum(read_str_bin(reader).await?)),
-        6 => Ok(StepValue::Reference(reader.read_varint_u64().await.map_err(|e| e.to_string())?)),
+        2 => Ok(StepValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
+        3 => Ok(StepValue::Real(read_f64_bin(reader)?)),
+        4 => Ok(StepValue::String(read_str_bin(reader)?)),
+        5 => Ok(StepValue::Enum(read_str_bin(reader)?)),
+        6 => Ok(StepValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
         7 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let items = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
             Ok(StepValue::Aggregate(items))
         }
         8 => {
-            let type_name = read_str_bin(reader).await?;
-            let value = Box::new(dec_value_bin(reader).await?);
+            let type_name = read_str_bin(reader)?;
+            let value = Box::new(dec_value_bin(reader)?);
             Ok(StepValue::TypedValue { type_name, value })
         }
         other => Err(format!("step value binary: unknown tag {other}")),
     }
 }
 
-pub(crate) async fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
     write_str_bin(out, &c.name);
     store::pack_rt::write_varint_u64(out, c.args.len() as u64);
     for a in &c.args {
         enc_value_bin(a, out);
     }
 }
-pub(crate) async fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
-    let name = read_str_bin(reader).await?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
+    let name = read_str_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let args = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepComplexType { name, args })
 }
 
-pub(crate) async fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, e.id);
     write_str_bin(out, &e.name);
     store::pack_rt::write_varint_u64(out, e.args.len() as u64);
@@ -983,27 +1046,31 @@ pub(crate) async fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
         enc_complex_bin(c, out);
     }
 }
-pub(crate) async fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
-    let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
-    let name = read_str_bin(reader).await?;
-    let args_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
+    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_bin(reader)?;
+    let args_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let args = (0..args_count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    let complex_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let complex_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let complex = (0..complex_count).map(|_| dec_complex_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepEntity { id, name, args, complex })
 }
 
-pub(crate) async fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
     write_str_list_bin(out, &d.description);
     write_str_bin(out, &d.implementation_level);
 }
-pub(crate) async fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
-    let description = read_str_list_bin(reader).await?;
-    let implementation_level = read_str_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
+    let description = read_str_list_bin(reader)?;
+    let implementation_level = read_str_bin(reader)?;
     Ok(StepFileDescription { description, implementation_level })
 }
 
-pub(crate) async fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
     write_str_bin(out, &f.name);
     write_str_bin(out, &f.timestamp);
     write_str_list_bin(out, &f.author);
@@ -1012,30 +1079,34 @@ pub(crate) async fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
     write_str_bin(out, &f.originating_system);
     write_str_bin(out, &f.authorization);
 }
-pub(crate) async fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
     Ok(StepFileName {
-        name: read_str_bin(reader).await?,
-        timestamp: read_str_bin(reader).await?,
-        author: read_str_list_bin(reader).await?,
-        organization: read_str_list_bin(reader).await?,
-        preprocessor_version: read_str_bin(reader).await?,
-        originating_system: read_str_bin(reader).await?,
-        authorization: read_str_bin(reader).await?,
+        name: read_str_bin(reader)?,
+        timestamp: read_str_bin(reader)?,
+        author: read_str_list_bin(reader)?,
+        organization: read_str_list_bin(reader)?,
+        preprocessor_version: read_str_bin(reader)?,
+        originating_system: read_str_bin(reader)?,
+        authorization: read_str_bin(reader)?,
     })
 }
 
-pub(crate) async fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
     write_str_list_bin(out, &s.schemas);
 }
-pub(crate) async fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
-    Ok(StepFileSchema { schemas: read_str_list_bin(reader).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
+    Ok(StepFileSchema { schemas: read_str_list_bin(reader)? })
 }
 
 /// 📸️ Full `StepSnapshot` binary codec — needed by `SetSnapshot`'s `OpBinary` (mutations file
 /// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
 /// full-replace slot exists on the diff), same split [`enc_step_snapshot`]/[`dec_step_snapshot`]
 /// (the TEXT twin) uses.
-pub(crate) async fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_file_description_bin(&s.header.file_description, out);
     enc_file_name_bin(&s.header.file_name, out);
@@ -1045,29 +1116,32 @@ pub(crate) async fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
         enc_entity_bin(e, out);
     }
 }
-pub(crate) async fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
-    let schema = read_str_bin(reader).await?;
-    let file_description = dec_file_description_bin(reader).await?;
-    let file_name = dec_file_name_bin(reader).await?;
-    let file_schema = dec_file_schema_bin(reader).await?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
+    let schema = read_str_bin(reader)?;
+    let file_description = dec_file_description_bin(reader)?;
+    let file_name = dec_file_name_bin(reader)?;
+    let file_schema = dec_file_schema_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepSnapshot { schema, header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
 }
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_args_diff(d: &StepArgsDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_args_diff(d: &StepArgsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_value(&m.value))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_value(&a.value))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("args diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1075,7 +1149,7 @@ async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
             Ok(StepArgModified { index: parse_usize(idx)?, value: dec_value(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1086,30 +1160,34 @@ async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
     Ok(StepArgsDiff { removed, modified, added })
 }
 
-async fn enc_entity_diff(d: &StepEntityDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_entity_diff(d: &StepEntityDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.args, enc_args_diff), encode_option(&d.complex, |v| format!("[{}]", v.iter().map(enc_complex).collect::<Vec<_>>().join(","))),)
 }
-async fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, args, complex] = parts.as_slice() else { return Err(format!("entity diff: expected 3 fields, got {}", parts.len())) };
     Ok(StepEntityDiff {
-        name: decode_option(name, dec_str).await?,
-        args: decode_option(args, dec_args_diff).await?,
-        complex: decode_option(complex, |v| split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()).await?,
+        name: decode_option(name, dec_str)?,
+        args: decode_option(args, dec_args_diff)?,
+        complex: decode_option(complex, |v| split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>())?,
     })
 }
 
-async fn enc_entities_diff(d: &StepEntitiesDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_entities_diff(d: &StepEntitiesDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_entity_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_entity(&a.entity))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1117,7 +1195,7 @@ async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
             Ok(StepEntityModified { id: parse_u64(id)?, diff: dec_entity_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1133,7 +1211,8 @@ async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
 /// 🧪️ P2-FG1: real recursive binary twins of [`enc_args_diff`]/[`enc_entity_diff`]/
 /// [`enc_entities_diff`] — same three-section (removed/modified/added) collection-triple shape,
 /// backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
-pub(crate) async fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for i in &d.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -1149,30 +1228,32 @@ pub(crate) async fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
         enc_value_bin(&a.value, out);
     }
 }
-pub(crate) async fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let value = dec_value_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader)?;
         modified.push(StepArgModified { index, value });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let value = dec_value_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader)?;
         added.push(StepArgAdded { index, value });
     }
     Ok(StepArgsDiff { removed, modified, added })
 }
 
-pub(crate) async fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, o| write_str_bin(o, v));
     write_option_bin(out, &d.args, |v, o| enc_args_diff_bin(v, o));
     write_option_bin(out, &d.complex, |v, o| {
@@ -1182,17 +1263,19 @@ pub(crate) async fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
         }
     });
 }
-pub(crate) async fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
-    let name = read_option_bin(reader, read_str_bin).await?;
-    let args = read_option_bin(reader, dec_args_diff_bin).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
+    let name = read_option_bin(reader, read_str_bin)?;
+    let args = read_option_bin(reader, dec_args_diff_bin)?;
     let complex = read_option_bin(reader, |r| {
         let count = semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())?;
         (0..count).map(|_| dec_complex_bin(r)).collect::<Result<Vec<_>, String>>()
-    }).await?;
+    })?;
     Ok(StepEntityDiff { name, args, complex })
 }
 
-pub(crate) async fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
     for id in &d.removed {
         store::pack_rt::write_varint_u64(out, *id);
@@ -1208,24 +1291,25 @@ pub(crate) async fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8
         enc_entity_bin(&a.entity, out);
     }
 }
-pub(crate) async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())?);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
-        let diff = dec_entity_diff_bin(reader).await?;
+        let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let diff = dec_entity_diff_bin(reader)?;
         modified.push(StepEntityModified { id, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-        let entity = dec_entity_bin(reader).await?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let entity = dec_entity_bin(reader)?;
         added.push(StepEntityAdded { index, entity });
     }
     Ok(StepEntitiesDiff { removed, modified, added })
@@ -1233,7 +1317,8 @@ pub(crate) async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) ->
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-async fn print_step_diff(d: &StepDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_step_diff(d: &StepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.file_description {
         tokens.push(format!("file-description={}", enc_file_description(v)));
@@ -1249,20 +1334,21 @@ async fn print_step_diff(d: &StepDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
     let mut d = StepDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("file-description=") {
-            d.file_description = Some(dec_file_description(rest).await?);
+            d.file_description = Some(dec_file_description(rest)?);
         } else if let Some(rest) = token.strip_prefix("file-name=") {
-            d.file_name = Some(dec_file_name(rest).await?);
+            d.file_name = Some(dec_file_name(rest)?);
         } else if let Some(rest) = token.strip_prefix("file-schema=") {
-            d.file_schema = Some(dec_file_schema(rest).await?);
+            d.file_schema = Some(dec_file_schema(rest)?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
-            d.entities = Some(dec_entities_diff(rest).await?);
+            d.entities = Some(dec_entities_diff(rest)?);
         } else {
             return Err(format!("step diff: unknown token {token:?}"));
         }
@@ -1272,10 +1358,10 @@ async fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
 
 impl protocol::DiffCodec for StepDiff {
     async fn print_diff(&self) -> String {
-        print_step_diff(self).await
+        print_step_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_step_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_step_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | present-field payloads`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1306,10 +1392,10 @@ impl protocol::DiffCodec for StepDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).await.map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).await.map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).await.map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).await.map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(StepDiff { file_description, file_name, file_schema, entities })
     }
 }
@@ -1322,7 +1408,8 @@ impl protocol::DiffCodec for StepDiff {
 /// `between()` result exercising every top-level field plus all three `entities`/`args`
 /// collection-triple flavors and `StepEntityDiff.complex`, and its reverse direction.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<StepDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
     let a = crate::artifacts::step::engine::demo_step_snapshot();
     let mut b = a.clone();
     b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
@@ -1354,11 +1441,13 @@ mod tests {
     use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 
-    async fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
     }
 
-    async fn base_snapshot() -> StepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> StepSnapshot {
         StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {
@@ -1561,11 +1650,13 @@ mod handcrafted_diff_codec_tests {
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
     use protocol::DiffCodec;
 
-    async fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
         StepEntity { id, name: name.into(), args, complex: Vec::new() }
     }
 
-    async fn snapshot() -> StepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot() -> StepSnapshot {
         StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
             header: StepHeader {

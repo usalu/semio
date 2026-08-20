@@ -24,8 +24,9 @@ impl Default for DwgStructure {
 }
 
 /// 🗂️ Computes [`DwgStructure`] from standard logical drawing concepts.
-pub async fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
-    let entities = snapshot.drawing.entities().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_dwg_structure(snapshot: &DwgSnapshot) -> DwgStructure {
+    let entities = snapshot.drawing.entities();
     DwgStructure {
         layer_count: snapshot.drawing.layers.len() as u32,
         entity_count: entities.len() as u32,

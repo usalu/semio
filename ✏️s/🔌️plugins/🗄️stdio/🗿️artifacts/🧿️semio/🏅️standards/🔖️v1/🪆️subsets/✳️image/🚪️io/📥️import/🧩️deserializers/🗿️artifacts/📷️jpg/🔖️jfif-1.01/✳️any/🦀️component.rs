@@ -56,7 +56,8 @@ impl ArtifactDeserializer for SemioImageFromJpg {
 mod tests {
     use super::*;
 
-    async fn sample_jpg() -> JpgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_jpg() -> JpgSnapshot {
         JpgSnapshot { width: 2, height: 1, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], other_segments: vec![JpgSegment { marker: COM_MARKER, data: b"semio fixture".to_vec() }], ..JpgSnapshot::default() }
     }
 

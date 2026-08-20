@@ -1645,6 +1645,17 @@ export interface ActivationManifestEntry {
   readonly caps: readonly ShardCapabilityGrant[];
 }
 
+/** 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of
+ * `semio_framework_actor::intersect_capabilities` (`🎭️actor/🦀️component.rs`) — an extension must
+ * never hold a capability its host plugin lacks. Matched by `ShardCapabilityGrant.id` (this file's
+ * capability-name field, the web counterpart of the Rust `CapabilityGrant.capability` string); a
+ * requested grant survives only when `granted` already carries one with the same `id`. An actual
+ * intersection, not "grant what was asked for" — the result is always a subset of `requested`. */
+export function intersectCapabilityGrants(granted: readonly ShardCapabilityGrant[], requested: readonly ShardCapabilityGrant[]): readonly ShardCapabilityGrant[] {
+  const grantedIds = new Set(granted.map((grant) => grant.id));
+  return requested.filter((request) => grantedIds.has(request.id));
+}
+
 /** 🪶️ GUESTSLIM (design-runtime.md §3): the typst default font set, fetched ONCE and reused across
  * every actor this registry activates — same fetch-once/reuse contract the deleted
  * `guestSlimAssetsForModule` had (`📇️registry/📜️script.ts`'s `ensureGuestSlimTypstFontsAsset` served
@@ -1783,6 +1794,22 @@ export class ActivationRegistry {
    * this registry's mirror of the native `RuntimeActorId.generation` field, out of band since this
    * class's `actorId` is a plain caller-minted string. */
   private readonly actorGeneration = new Map<string, number>();
+  /** 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of the
+   * native `ExtensionIndex` — every registered extension's `pluginId`, grouped by its parent plugin
+   * id (`PluginCatalogTarget.dependsOn[0]`, guaranteed == `extends` by the same builder assertion the
+   * native descriptor pipeline enforces at build time). Stores IDs, not manifest snapshots —
+   * `activateExtensionsOf` looks the manifest up FRESH from `manifests` at activation time, the same
+   * way `activate()` itself already resolves the parent's own manifest, so a `registerManifest` call
+   * that updates an extension's entry after `registerCatalog` (e.g. once a real capability broker
+   * starts populating `caps`) is honoured rather than shadowed by a stale copy. Populated by
+   * `registerCatalog`; a bare `registerManifest` call (no catalog) leaves this empty, so a manually-
+   * seeded manifest never cascades — matching `registerManifest`'s own pre-existing "manifest-only,
+   * no side effects" contract exactly. */
+  private readonly extensionsByParent = new Map<string, string[]>();
+  /** 🧩️ parent actorId → the child actorIds `activateExtensionsOf` minted for it — the cascade
+   * topology `suspend`/`resume`/`cancel` walk (leaves-first for suspend/cancel, parent-first for
+   * resume — see each method's own doc). */
+  private readonly extensionChildren = new Map<string, string[]>();
   private readonly shardClient: ShardClient;
   private readonly defaultBudget: ShardBudget;
   private readonly maxResidentActors: number;
@@ -1829,10 +1856,19 @@ export class ActivationRegistry {
   }
 
   /** 📖️ Seeds every plugin + extension row from a `PluginCatalog` (build-time descriptors) — no
-   * worker/module is touched until `activate()` for one of these ids actually runs. */
+   * worker/module is touched until `activate()` for one of these ids actually runs. Also indexes
+   * every extension by its parent (`extensionsByParent`) so `activate()`'s cascade has something to
+   * walk — descriptor-driven, zero special-casing per target. */
   registerCatalog(catalog: PluginCatalog): void {
     for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId, target.wasmOut), caps: [] });
-    for (const target of catalog.extensions) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut), caps: [] });
+    for (const target of catalog.extensions) {
+      this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut), caps: [] });
+      const parentId = target.dependsOn?.[0];
+      if (!parentId) continue;
+      const siblings = this.extensionsByParent.get(parentId) ?? [];
+      siblings.push(target.pluginId);
+      this.extensionsByParent.set(parentId, siblings);
+    }
   }
 
   manifestFor(pluginId: string): ActivationManifestEntry | undefined {
@@ -1864,7 +1900,8 @@ export class ActivationRegistry {
   }
 
   //#region ▶️Activate
-  /** ▶️ `events::activation-event` → `Kernel::activate`. */
+  /** ▶️ `events::activation-event` → `Kernel::activate`. Cascades to every registered extension of
+   * `pluginId` — see `activateExtensionsOf`. */
   async activate(pluginId: string, actorId: string, _reason: ActivationReason): Promise<void> {
     const manifest = this.manifests.get(pluginId);
     if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
@@ -1872,6 +1909,49 @@ export class ActivationRegistry {
     const assets = await this.loadAssets(manifest.moduleUrl);
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
     this.markResident(actorId, pluginId);
+    await this.activateExtensionsOf(pluginId, actorId);
+  }
+
+  /** 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the cascade half of
+   * `activate` — `design-unified.md` §M6's web mirror, "per-extension `shardClient.activate` with
+   * parent affinity, local link records, symmetric cascade." Every registered extension whose
+   * descriptor names `pluginId` as its parent (`registerCatalog`'s own `extensionsByParent` index)
+   * activates alongside it under a deterministic child actorId, `caps` scoped to
+   * {@link intersectCapabilityGrants} of the parent's own granted set against the extension's
+   * request. Best-effort per extension (one broken extension must not fail the parent's own
+   * `activate()` call) — logs and continues, matching this class's existing `evictForMemoryPressure`/
+   * `loadAssets` failure posture elsewhere.
+   *
+   * 🕳️ Honest gap, not worked around: `ShardClient.activate` has no pinned-shard/worker-affinity
+   * parameter (its own `assignShard` is a private least-loaded placement, mirroring the native
+   * `ShardTable::pin`) — every extension lands on whichever shard `ShardClient` picks, not
+   * necessarily the parent's own. A lease-request for a small additive `ShardClient.activate`
+   * overload is open against `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts` (out of this
+   * packet's `path_scope`); see this ticket's report. The cascade LINK (`extensionChildren`), and
+   * therefore zero-orphan teardown via `suspend`/`cancel`, is unaffected by this gap. */
+  private async activateExtensionsOf(pluginId: string, parentActorId: string): Promise<void> {
+    const extensionIds = this.extensionsByParent.get(pluginId);
+    if (!extensionIds || extensionIds.length === 0) return;
+    const parentCaps = this.manifests.get(pluginId)?.caps ?? [];
+    const children: string[] = [];
+    for (const extensionId of extensionIds) {
+      const manifest = this.manifests.get(extensionId);
+      if (!manifest) {
+        console.warn(`[DEBUG] ActivationRegistry: extension ${extensionId} of ${pluginId} has no registered manifest, skipping`);
+        continue;
+      }
+      const childActorId = `${parentActorId}::${extensionId}`;
+      try {
+        const scopedCaps = intersectCapabilityGrants(parentCaps, manifest.caps);
+        const assets = await this.loadAssets(manifest.moduleUrl);
+        await this.shardClient.activate(childActorId, manifest.moduleUrl, scopedCaps, this.defaultBudget, assets);
+        this.markResident(childActorId, extensionId);
+        children.push(childActorId);
+      } catch (error) {
+        console.warn(`[DEBUG] ActivationRegistry: extension ${extensionId} of ${pluginId} failed to activate`, error);
+      }
+    }
+    if (children.length > 0) this.extensionChildren.set(parentActorId, children);
   }
   //#endregion ▶️Activate
 
@@ -1919,13 +1999,38 @@ export class ActivationRegistry {
    * dead/disposed instance mid-suspend. */
   async suspend(actorId: string): Promise<void> {
     if (!this.resident.has(actorId)) return;
+    // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): `cancelQueued` MUST
+    // stay the first synchronous action after the residency check, before any `await` — this
+    // method's own pre-existing doc comment ("cancels every turn still queued... FIRST,
+    // synchronously, before the checkpoint/dispose round trip even starts") and a real regression
+    // this ordering fixes: an `await` inserted ahead of `cancelQueued` (even one that resolves
+    // immediately, e.g. calling an async fn with nothing to do) yields to the microtask queue at
+    // least once, which is enough for `TurnScheduler`'s own microtask-scheduled pump to dispatch an
+    // already-enqueued turn before `cancelQueued` ever runs — caught by
+    // `ActivationRegistry.suspend cancels queued turns`'s existing test.
     this.turnScheduler.cancelQueued(actorId);
+    // 🧩️ terra-extension-activation: leaves-first — every cascade-activated extension is suspended
+    // (checkpointed) before its parent's own checkpoint/dispose below, so an extension never outlives
+    // its parent's worker-side teardown. `extensionChildren`'s entry is left in place (not deleted)
+    // — `resume` needs it to restore the same children, parent-first, on the way back up.
+    await this.suspendExtensionsOf(actorId);
     const checkpoint = await this.shardClient.checkpoint(actorId);
     this.checkpoints.set(actorId, checkpoint);
     this.shardClient.dispose(actorId);
     this.resident.delete(actorId);
     const index = this.residencyOrder.indexOf(actorId);
     if (index !== -1) this.residencyOrder.splice(index, 1);
+  }
+
+  /** 🧩️ terra-extension-activation: cascade half of `suspend` — every child `activateExtensionsOf`
+   * minted for `parentActorId`, suspended in turn (recursing naturally through each child's own
+   * `suspend`, so a deeper cascade would still work correctly if one ever existed — today an
+   * extension's `dependsOn[0]` always names a plugin, never another extension, so this is exactly
+   * one level). A no-op for a parent with no tracked extensions. */
+  private async suspendExtensionsOf(parentActorId: string): Promise<void> {
+    const children = this.extensionChildren.get(parentActorId);
+    if (!children) return;
+    for (const child of children) await this.suspend(child);
   }
 
   /** 🚑️ Re-activates a suspended actorId and restores its last checkpoint — a plain cold `activate()`
@@ -1941,6 +2046,24 @@ export class ActivationRegistry {
     const checkpoint = this.checkpoints.get(actorId);
     if (checkpoint) await this.shardClient.restore(actorId, checkpoint);
     this.markResident(actorId, pluginId);
+    // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): parent-first restore
+    // — the symmetric direction to `suspend`'s leaves-first teardown (design doc M6: "symmetric
+    // cascade, restore: parent first"). A child's own worker-side instance is only useful once its
+    // parent is running again.
+    await this.resumeExtensionsOf(actorId);
+  }
+
+  /** 🧩️ terra-extension-activation: cascade half of `resume` — every tracked child that was
+   * suspended (has a checkpoint, not currently resident) resumes after its parent. A child never
+   * suspended at all (e.g. it failed to activate in the first place, per `activateExtensionsOf`'s
+   * best-effort policy) has no checkpoint and is correctly skipped rather than cold-activated here —
+   * `activate()` is the only entry point that MINTS a fresh extension cascade. */
+  private async resumeExtensionsOf(parentActorId: string): Promise<void> {
+    const children = this.extensionChildren.get(parentActorId);
+    if (!children) return;
+    for (const child of children) {
+      if (this.checkpoints.has(child) && !this.resident.has(child)) await this.resume(child);
+    }
   }
 
   /** 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the web mirror of native's
@@ -1998,6 +2121,16 @@ export class ActivationRegistry {
    * cancel message. See `📓️terra-T1-report.md` `## honest gaps`. */
   cancel(actorId: string): void {
     if (!this.actorPlugin.has(actorId)) return;
+    // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): leaves-first, and —
+    // unlike `suspend` — PERMANENT: every cascade-activated extension is cancelled before the parent
+    // itself, and the cascade edge is dropped (no checkpoint survives a `cancel`, so there is nothing
+    // for a later `resume` to restore). "A parent kill takes its extensions down" (design doc M6's
+    // own acceptance wording) is exactly this recursion.
+    const children = this.extensionChildren.get(actorId);
+    if (children) {
+      for (const child of children) this.cancel(child);
+      this.extensionChildren.delete(actorId);
+    }
     this.turnScheduler.teardownActor(actorId);
     this.actorGeneration.delete(actorId);
     this.shardClient.dispose(actorId);
@@ -2233,6 +2366,117 @@ if (import.meta.vitest) {
       expect(registry.runtimeMetricsActorRows()).toEqual([]);
     });
   });
+
+  //#region 🧪️ExtensionCascadeTests
+  /** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): a minimal `PluginCatalog`
+   * with ONE plugin (`p1`) and ONE extension (`p1-ext`) whose `dependsOn: ["p1"]` names it as the
+   * parent — exactly the shape `registerCatalog`'s own `extensionsByParent` index groups by. */
+  function catalogWithOneExtension(): PluginCatalog {
+    return {
+      plugins: [{ pluginId: "p1", wasmOut: "p1.wasm", role: "plugin", contributes: [], consumes: [] }],
+      extensions: [{ pluginId: "p1-ext", wasmOut: "p1-ext.wasm", role: "extension", contributes: [], consumes: [], dependsOn: ["p1"] }],
+      hosts: [],
+      playgrounds: [],
+      moduleUrl: (pluginId, wasmOut) => `https://x/${pluginId}/${wasmOut}`,
+      extensionModuleUrl: (pluginId, wasmOut) => `https://x/ext/${pluginId}/${wasmOut}`,
+    };
+  }
+
+  describe("intersectCapabilityGrants", () => {
+    it("keeps only requested grants the parent's own granted set also carries, matched by id", () => {
+      const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
+      const granted = [grant("fs.read"), grant("net.fetch")];
+      const requested = [grant("fs.read"), grant("fs.admin")];
+      expect(intersectCapabilityGrants(granted, requested).map((g) => g.id)).toEqual(["fs.read"]);
+    });
+
+    it("is empty when the parent holds nothing, never escalates an ungranted request", () => {
+      const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
+      expect(intersectCapabilityGrants([], [grant("fs.admin")])).toEqual([]);
+    });
+  });
+
+  describe("ActivationRegistry extension cascade (registerCatalog)", () => {
+    it("activate() cascades to every registered extension of the plugin, under a deterministic child actorId", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerCatalog(catalogWithOneExtension());
+
+      await registry.activate("p1", "actor-1", "manual");
+
+      expect(registry.isResident("actor-1")).toBe(true);
+      expect(registry.isResident("actor-1::p1-ext")).toBe(true);
+      const rows = registry.runtimeMetricsActorRows();
+      expect(rows).toContainEqual({ actorId: "actor-1", pluginId: "p1", resident: true, shard: 0 });
+      expect(rows).toContainEqual({ actorId: "actor-1::p1-ext", pluginId: "p1-ext", resident: true, shard: 0 });
+    });
+
+    it("a plugin with no registered extensions activates with no cascade side effects", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+
+      await registry.activate("p1", "actor-1", "manual");
+
+      expect(registry.runtimeMetricsActorRows()).toEqual([{ actorId: "actor-1", pluginId: "p1", resident: true, shard: 0 }]);
+    });
+
+    it("suspend() cascades leaves-first, resume() cascades parent-first — zero orphans either way", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerCatalog(catalogWithOneExtension());
+      await registry.activate("p1", "actor-1", "manual");
+
+      await registry.suspend("actor-1");
+      expect(registry.isResident("actor-1")).toBe(false);
+      expect(registry.isResident("actor-1::p1-ext")).toBe(false);
+      // still tracked (suspended, not cancelled) — resume must find both again.
+      expect(registry.runtimeMetricsActorRows().map((r) => r.actorId).sort()).toEqual(["actor-1", "actor-1::p1-ext"]);
+
+      await registry.resume("actor-1");
+      expect(registry.isResident("actor-1")).toBe(true);
+      expect(registry.isResident("actor-1::p1-ext")).toBe(true);
+    });
+
+    it("cancel() on the parent takes its extension down too — permanently, zero orphans", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerCatalog(catalogWithOneExtension());
+      await registry.activate("p1", "actor-1", "manual");
+
+      registry.cancel("actor-1");
+
+      expect(registry.runtimeMetricsActorRows()).toEqual([]);
+      await expect(registry.resume("actor-1")).rejects.toThrow(/unknown actor/);
+      await expect(registry.resume("actor-1::p1-ext")).rejects.toThrow(/unknown actor/);
+    });
+
+    it("scopes an extension's activated caps to the intersection with its parent's own granted set", async () => {
+      const shardClient = fakeShardClient();
+      const sentCaps = new Map<string, readonly ShardCapabilityGrant[]>();
+      const worker = createAutoReplyWorker();
+      const originalPostMessage = worker.postMessage;
+      worker.postMessage = (message) => {
+        const msg = message as { readonly kind?: string; readonly actorId?: string; readonly caps?: readonly ShardCapabilityGrant[] };
+        if (msg.kind === "activate" && msg.actorId) sentCaps.set(msg.actorId, msg.caps ?? []);
+        originalPostMessage(message);
+      };
+      const client = new ShardClient({ shardCount: 1, createWorker: () => worker });
+      const registry = new ActivationRegistry({ shardClient: client, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerCatalog(catalogWithOneExtension());
+      const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
+      // Override the parent's manifest (registerCatalog seeds `caps: []`) so there is something real
+      // to intersect against, and the extension's own manifest with a request that only PARTIALLY
+      // overlaps — `fs.read` must survive, `fs.admin` must not, the parent never held it.
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1/p1.wasm", caps: [grant("fs.read")] });
+      registry.registerManifest({ pluginId: "p1-ext", moduleUrl: "https://x/ext/p1-ext/p1-ext.wasm", caps: [grant("fs.read"), grant("fs.admin")] });
+
+      await registry.activate("p1", "actor-1", "manual");
+
+      expect(sentCaps.get("actor-1::p1-ext")?.map((g) => g.id)).toEqual(["fs.read"]);
+    });
+  });
+  //#endregion 🧪️ExtensionCascadeTests
 
   //#region 🧪️TurnDispatchTests
   describe("ActivationRegistry.enqueueTurn lane priority", () => {

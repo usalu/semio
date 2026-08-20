@@ -23,13 +23,15 @@ pub struct GltfAdjacencyIndicators {
 pub struct GltfAdjacencyInference;
 
 impl GltfAdjacencyInference {
-    pub(crate) async fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
-        number_of_contacts::infer_pair(pair).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
+        number_of_contacts::infer_pair(pair)
     }
 
-    pub(crate) async fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
-        indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology).await;
-        indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
+        indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology);
+        indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology);
     }
 }
 
@@ -37,14 +39,14 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAdjacencyInference {
     type Output = GltfAdjacencyIndicators;
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output { number_of_contacts: number_of_contacts::infer(context).await, contact_graph_degree: contact_graph_degree::infer(context).await, connected_components: connected_components::infer(context).await }
+        Self::Output { number_of_contacts: number_of_contacts::infer(context), contact_graph_degree: contact_graph_degree::infer(context), connected_components: connected_components::infer(context) }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            number_of_contacts: number_of_contacts::unavailable_measure(diagnostic_ids).await,
-            contact_graph_degree: contact_graph_degree::unavailable_measure(diagnostic_ids).await,
-            connected_components: connected_components::unavailable_measure(diagnostic_ids).await,
+            number_of_contacts: number_of_contacts::unavailable_measure(diagnostic_ids),
+            contact_graph_degree: contact_graph_degree::unavailable_measure(diagnostic_ids),
+            connected_components: connected_components::unavailable_measure(diagnostic_ids),
         }
     }
 }

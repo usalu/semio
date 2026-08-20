@@ -28,7 +28,7 @@ pub struct SemioModelInference {
 
 impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
     async fn infer(snapshot: &SemioModelSnapshot) -> Self {
-        Self { bounds: compute_semio_model_bounds(snapshot).await }
+        Self { bounds: compute_semio_model_bounds(snapshot) }
     }
 }
 
@@ -68,7 +68,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::model
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_model_artifact_schema_descriptor`'s registration.
-pub async fn semio_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.model.inference",
         inference: schema::FacetLeaves {

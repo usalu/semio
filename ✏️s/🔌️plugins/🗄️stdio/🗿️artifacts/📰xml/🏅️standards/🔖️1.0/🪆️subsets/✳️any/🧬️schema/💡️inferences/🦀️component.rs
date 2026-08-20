@@ -24,7 +24,7 @@ pub struct XmlInference {
 
 impl protocol::Inference<XmlSnapshot> for XmlInference {
     async fn infer(snapshot: &XmlSnapshot) -> Self {
-        Self { outline: XmlOutline::compute(snapshot).await }
+        Self { outline: XmlOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::xml::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.xml.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `xml_artifact_schema_descriptor`'s registration.
-pub async fn xml_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xml_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.xml.inference",
         inference: schema::FacetLeaves {

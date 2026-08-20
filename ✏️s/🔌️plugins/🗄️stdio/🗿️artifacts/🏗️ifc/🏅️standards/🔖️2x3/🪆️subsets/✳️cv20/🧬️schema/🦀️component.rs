@@ -14,8 +14,9 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
-    async fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
-        diagnostics.extend(outcome.messages().await.iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
             span: dsl::TextSpan::at(1, 1),
@@ -30,7 +31,8 @@ pub mod derived_construction {
     const UNITS_ID: u64 = 20;
     const PROJECT_ID: u64 = 1;
 
-    async fn seeded_document() -> Part21Document {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [CoordinationView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
@@ -69,14 +71,16 @@ pub mod derived_construction {
     impl Ifc2x3Cv20BuilderConstruction {
         /// ➕ The recommended entry point: always produces a document with `IFC2X3`/`CoordinationView`
         /// header and a real project+units pair.
-        pub async fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document().await, edm_preamble: None }, diagnostics: Vec::new() }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
 
         /// 🧱️ Adds a product instance of `type_name` (must be one of the geometry-bearing product
         /// types this MVD checks), always wiring `ObjectPlacement` (attribute index 5) to the seeded
         /// `IFCLOCALPLACEMENT`.
-        pub async fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
             let instance = Part21Instance {
                 id,
                 entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
@@ -102,7 +106,7 @@ pub mod derived_construction {
         /// `Ifc2x3Cv20BuilderConstruction::new()`'s seeded document rather than a truly empty (non-conforming)
         /// one, since `build()` requires conformance regardless.
         async fn empty() -> Self {
-            Self::new().await
+            Self::new()
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -191,18 +195,22 @@ pub mod derived_analysis {
     /// module doc comment for why this is a proxy list, not the full `IfcProduct` hierarchy).
     const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &["IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY"];
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| semio_framework_plugin::resolve_ready(v.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
+        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
 
-    async fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
         snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
     //#endregion 🔖️Shared
@@ -212,7 +220,8 @@ pub mod derived_analysis {
     /// already-decoded `Ifc2x3Snapshot`. Shared single source of truth: `Ifc2x3Cv20Composer::compose`
     /// hard-gates on this pre-serialization, `Ifc2x3Cv20Builder::build` hard-gates on it too, and the
     /// registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub async fn check_cv20_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_cv20_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         if !declares_schema(snapshot, "IFC2X3") {
@@ -270,7 +279,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_cv20_conformance(snapshot).await;
+                let checks = check_cv20_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -287,7 +296,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        async fn header(view: &str) -> Part21Header {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn header(view: &str) -> Part21Header {
             Part21Header {
                 file_description: vec![Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]), Part21Value::Str("2;1".into())],
                 file_name: vec![],
@@ -295,7 +305,8 @@ pub mod derived_analysis {
             }
         }
 
-        async fn conforming_snapshot() -> Ifc2x3Snapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_snapshot() -> Ifc2x3Snapshot {
             let placement = Part21Instance { id: 10, entities: vec![("IFCLOCALPLACEMENT".into(), vec![])] };
             let project = Part21Instance {
                 id: 1,

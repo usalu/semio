@@ -31,7 +31,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 
 //#region 🔖️OtherGroupCodes
-async fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
     codes
         .iter()
         .find(|(c, _)| *c == code)
@@ -42,7 +43,8 @@ async fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
         })
         .unwrap_or(0.0)
 }
-async fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {
     codes
         .iter()
         .find(|(c, _)| *c == code)
@@ -56,27 +58,30 @@ async fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {
 /// 🌙️ This bridge's own convention for a raw-retained `ELLIPSE` (R12 has no typed variant — see
 /// module doc): 10/20 center, 11/21 major-axis endpoint RELATIVE to center, 40 ratio, 41/42
 /// start/end param.
-async fn ellipse_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
-    let center = SemioPoint2 { x: code_f64(group_codes, 10).await, y: code_f64(group_codes, 20).await };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ellipse_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
+    let center = SemioPoint2 { x: code_f64(group_codes, 10), y: code_f64(group_codes, 20) };
     let major_axis_end = SemioPoint2 { x: center.x + code_f64(group_codes, 11), y: center.y + code_f64(group_codes, 21) };
-    CadEntity::Ellipse { center, major_axis_end, ratio: code_f64(group_codes, 40).await, start_param: code_f64(group_codes, 41).await, end_param: code_f64(group_codes, 42).await }
+    CadEntity::Ellipse { center, major_axis_end, ratio: code_f64(group_codes, 40), start_param: code_f64(group_codes, 41), end_param: code_f64(group_codes, 42) }
 }
 
 /// 📏️ This bridge's own convention for a raw-retained `DIMENSION` (R12's own typed group-code
 /// table is complex/derived — see module doc): 10/20 definition point, 11/21 text position, 42
 /// measurement, 1 text override.
-async fn dimension_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dimension_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
     CadEntity::Dimension {
-        def_point: SemioPoint2 { x: code_f64(group_codes, 10).await, y: code_f64(group_codes, 20).await },
-        text_position: SemioPoint2 { x: code_f64(group_codes, 11).await, y: code_f64(group_codes, 21).await },
-        measurement: code_f64(group_codes, 42).await,
-        text: code_str(group_codes, 1).await,
+        def_point: SemioPoint2 { x: code_f64(group_codes, 10), y: code_f64(group_codes, 20) },
+        text_position: SemioPoint2 { x: code_f64(group_codes, 11), y: code_f64(group_codes, 21) },
+        measurement: code_f64(group_codes, 42),
+        text: code_str(group_codes, 1),
     }
 }
 //#endregion 🔖️OtherGroupCodes
 
 //#region 🔖️EntityMap
-async fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
     match e {
         DxfEntity::Line { start, end, .. } => Some(CadEntity::Line { a: SemioPoint2 { x: start[0], y: start[1] }, b: SemioPoint2 { x: end[0], y: end[1] } }),
         DxfEntity::Circle { center, radius, .. } => Some(CadEntity::Circle { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius }),
@@ -92,13 +97,14 @@ async fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
         DxfEntity::Insert { block_name, position, scale, rotation, .. } => {
             Some(CadEntity::Insert { block_name: block_name.clone(), insertion_point: SemioPoint2 { x: position[0], y: position[1] }, scale: SemioPoint2 { x: scale[0], y: scale[1] }, rotation: *rotation })
         }
-        DxfEntity::Other { kind, group_codes } if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes).await),
-        DxfEntity::Other { kind, group_codes } if kind == "DIMENSION" => Some(dimension_from_other(group_codes).await),
+        DxfEntity::Other { kind, group_codes } if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes)),
+        DxfEntity::Other { kind, group_codes } if kind == "DIMENSION" => Some(dimension_from_other(group_codes)),
         DxfEntity::Other { .. } => None,
     }
 }
 
-async fn dxf_entity_layer(e: &DxfEntity) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dxf_entity_layer(e: &DxfEntity) -> String {
     match e {
         DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
             layer.clone()
@@ -107,20 +113,23 @@ async fn dxf_entity_layer(e: &DxfEntity) -> String {
     }
 }
 
-async fn records_from_entities(entities: &[DxfEntity], handle_prefix: &str) -> Vec<CadEntityRecord> {
-    entities.iter().enumerate().filter_map(|(i, e)| semio_framework_plugin::resolve_ready(cad_entity_from_dxf(e)).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity })).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn records_from_entities(entities: &[DxfEntity], handle_prefix: &str) -> Vec<CadEntityRecord> {
+    entities.iter().enumerate().filter_map(|(i, e)| cad_entity_from_dxf(e).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity })).collect()
 }
 //#endregion 🔖️EntityMap
 
 //#region 🔖️LayerBlockMap
 /// 🚦️ DXF `LAYER` flags bit 0 = frozen (AutoCAD DXF R12 group 70 convention) — the closest real
 /// on-disk signal to `CadLayer.visible`.
-async fn cad_layer_from_dxf(l: &DxfLayer) -> CadLayer {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cad_layer_from_dxf(l: &DxfLayer) -> CadLayer {
     CadLayer { name: l.name.clone(), color_index: l.color, line_type: l.linetype.clone(), visible: (l.flags & 1) == 0 }
 }
 
-async fn cad_block_from_dxf(b: &DxfBlock) -> CadBlock {
-    CadBlock { name: b.name.clone(), base_point: SemioPoint2 { x: b.base_point[0], y: b.base_point[1] }, entities: records_from_entities(&b.entities, &format!("B{}#", b.name)).await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cad_block_from_dxf(b: &DxfBlock) -> CadBlock {
+    CadBlock { name: b.name.clone(), base_point: SemioPoint2 { x: b.base_point[0], y: b.base_point[1] }, entities: records_from_entities(&b.entities, &format!("B{}#", b.name)) }
 }
 //#endregion 🔖️LayerBlockMap
 
@@ -138,7 +147,7 @@ impl ArtifactDeserializer for SemioCadFromDxf {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: from.tables.layers.iter().map(cad_layer_from_dxf).collect(),
             blocks: from.blocks.iter().map(cad_block_from_dxf).collect(),
-            entities: records_from_entities(&from.entities, "E").await,
+            entities: records_from_entities(&from.entities, "E"),
         })
     }
 }
@@ -149,7 +158,8 @@ impl ArtifactDeserializer for SemioCadFromDxf {
 mod tests {
     use super::*;
 
-    async fn sample_dxf() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_dxf() -> DxfSnapshot {
         DxfSnapshot {
             tables: crate::artifacts::dxf::schema::snapshot::DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }], ..Default::default() },
             blocks: vec![DxfBlock { name: "door".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],

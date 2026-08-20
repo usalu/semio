@@ -23,7 +23,8 @@ pub struct SemioTextProfile {
 }
 
 /// 📊️ Computes [`SemioTextProfile`] — pure, total, O(runs + marks).
-pub async fn compute_semio_text_profile(snapshot: &SemioTextSnapshot) -> SemioTextProfile {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_text_profile(snapshot: &SemioTextSnapshot) -> SemioTextProfile {
     let mut word_count = 0u32;
     let mut char_count = 0u32;
     let mut mark_count = 0u32;
@@ -47,7 +48,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
-    async fn populated() -> SemioTextSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioTextSnapshot {
         SemioTextSnapshot {
             schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
             runs: vec![

@@ -18,7 +18,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 7] = ["insertRun", "removeRun", "editRun", "changeRunLanguage", "reorderRuns", "addMark", "removeMark"];
 
-async fn variant_ordinal(m: &SemioTextMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioTextMutation) -> u8 {
     match m {
         SemioTextMutation::InsertRun(_) => 0,
         SemioTextMutation::RemoveRun(_) => 1,
@@ -32,9 +33,10 @@ async fn variant_ordinal(m: &SemioTextMutation) -> u8 {
 
 /// ✂️ Just the argument tail of `print_op` — the binary frame's `tag` byte already carries the
 /// keyword, so the text keyword itself (and its `:` separator) is redundant in the binary payload.
-async fn print_op_args(m: &SemioTextMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_op_args(m: &SemioTextMutation) -> String {
     use protocol::OpText;
-    match m.print_op().await.split_once(':') {
+    match m.print_op().split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -43,8 +45,8 @@ async fn print_op_args(m: &SemioTextMutation) -> String {
 impl protocol::OpBinary for SemioTextMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_op_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {

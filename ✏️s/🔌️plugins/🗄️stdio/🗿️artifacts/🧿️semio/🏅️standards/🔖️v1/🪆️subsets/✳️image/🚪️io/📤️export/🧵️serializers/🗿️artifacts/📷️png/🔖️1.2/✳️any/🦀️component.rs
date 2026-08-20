@@ -23,7 +23,8 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-async fn colorspace_to_png(c: SemioColorspace) -> PngColorType {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn colorspace_to_png(c: SemioColorspace) -> PngColorType {
     match c {
         SemioColorspace::Grayscale => PngColorType::Grayscale,
         SemioColorspace::Rgb => PngColorType::Rgb,
@@ -60,7 +61,7 @@ impl ArtifactSerializer for SemioImageToPng {
             width: from.width,
             height: from.height,
             bit_depth: 8,
-            color_type: colorspace_to_png(from.colorspace).await,
+            color_type: colorspace_to_png(from.colorspace),
             interlace: false,
             pixels: frame.rgba8.clone(),
             text_chunks,
@@ -77,7 +78,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
 
-    async fn sample_semio() -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioImageSnapshot {
         SemioImageSnapshot {
             width: 2,
             height: 1,

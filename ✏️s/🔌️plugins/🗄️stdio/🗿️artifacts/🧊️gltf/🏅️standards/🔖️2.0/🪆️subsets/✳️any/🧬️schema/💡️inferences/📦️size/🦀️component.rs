@@ -38,25 +38,25 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSizeInference {
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
-            overall_size: overall_size::infer(context).await,
-            axis_aligned_bounds: axis_aligned_bounds::infer(context).await,
-            oriented_bounds: oriented_bounds::infer(context).await,
-            bounding_box_dimensions: bounding_box_dimensions::infer(context).await,
-            characteristic_length: characteristic_length::infer(context).await,
-            footprint_area: footprint_area::infer(context).await,
-            projected_area: projected_area::infer(context).await,
+            overall_size: overall_size::infer(context),
+            axis_aligned_bounds: axis_aligned_bounds::infer(context),
+            oriented_bounds: oriented_bounds::infer(context),
+            bounding_box_dimensions: bounding_box_dimensions::infer(context),
+            characteristic_length: characteristic_length::infer(context),
+            footprint_area: footprint_area::infer(context),
+            projected_area: projected_area::infer(context),
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            overall_size: overall_size::unavailable_measure(diagnostic_ids).await,
-            axis_aligned_bounds: axis_aligned_bounds::unavailable_measure(diagnostic_ids).await,
-            oriented_bounds: oriented_bounds::unavailable_measure(diagnostic_ids).await,
-            bounding_box_dimensions: bounding_box_dimensions::unavailable_measure(diagnostic_ids).await,
-            characteristic_length: characteristic_length::unavailable_measure(diagnostic_ids).await,
-            footprint_area: footprint_area::unavailable_measure(diagnostic_ids).await,
-            projected_area: projected_area::unavailable_measure(diagnostic_ids).await,
+            overall_size: overall_size::unavailable_measure(diagnostic_ids),
+            axis_aligned_bounds: axis_aligned_bounds::unavailable_measure(diagnostic_ids),
+            oriented_bounds: oriented_bounds::unavailable_measure(diagnostic_ids),
+            bounding_box_dimensions: bounding_box_dimensions::unavailable_measure(diagnostic_ids),
+            characteristic_length: characteristic_length::unavailable_measure(diagnostic_ids),
+            footprint_area: footprint_area::unavailable_measure(diagnostic_ids),
+            projected_area: projected_area::unavailable_measure(diagnostic_ids),
         }
     }
 }

@@ -16,7 +16,7 @@ use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 use crate::wgpu::theme::Rgba;
 
-async fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
+fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
     if step <= 0.0 {
         return value;
     }
@@ -24,7 +24,7 @@ async fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
-pub(crate) async fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let track_y = bounds.y + bounds.h * 0.5;
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     ctx.draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], dim(ctx.theme.separator), 2.0);

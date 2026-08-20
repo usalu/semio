@@ -64,14 +64,16 @@ impl fmt::Display for GltfInferenceTextError {
 
 impl std::error::Error for GltfInferenceTextError {}
 
-pub async fn encode_gltf_inference_leaf_text(value: &GltfInferenceLeafEnvelope) -> Result<String, GltfInferenceTextError> {
-    validate_leaf_id(&value.id).await?;
-    let payload = canonical_json_bytes(value).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_gltf_inference_leaf_text(value: &GltfInferenceLeafEnvelope) -> Result<String, GltfInferenceTextError> {
+    validate_leaf_id(&value.id)?;
+    let payload = canonical_json_bytes(value)?;
     let payload = String::from_utf8(payload).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
     Ok(format!("schema {}\nversion {GLTF_INFERENCE_LEAF_ENVELOPE_VERSION}\nlength {}\nchecksum {:08x}\n{payload}", value.id, payload.len(), crc32_iso_hdlc(payload.as_bytes())))
 }
 
-pub async fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafEnvelope, GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafEnvelope, GltfInferenceTextError> {
     if input.contains('\r') {
         return Err(GltfInferenceTextError::CarriageReturn);
     }
@@ -81,8 +83,8 @@ pub async fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenc
         expected: "schema <canonical-leaf-id>".into(),
         actual: input.lines().next().unwrap_or_default().into(),
     })?;
-    validate_leaf_id(schema).await?;
-    check_header(2, parts.next(), &format!("version {GLTF_INFERENCE_LEAF_ENVELOPE_VERSION}")).await?;
+    validate_leaf_id(schema)?;
+    check_header(2, parts.next(), &format!("version {GLTF_INFERENCE_LEAF_ENVELOPE_VERSION}"))?;
     let length_line = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?;
     let checksum_line = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?;
     let payload = parts.next().ok_or(GltfInferenceTextError::MissingPayload)?.as_bytes();
@@ -101,24 +103,26 @@ pub async fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenc
     let checksum = u32::from_str_radix(checksum_text, 16).map_err(|_| GltfInferenceTextError::ChecksumSyntax(checksum_text.into()))?;
     let actual_checksum = crc32_iso_hdlc(payload);
     if checksum != actual_checksum {
-        return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum.await });
+        return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum });
     }
     let value: GltfInferenceLeafEnvelope = serde_json::from_slice(payload).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
     if value.id != schema {
         return Err(GltfInferenceTextError::Header { line: 1, expected: format!("schema {}", value.id), actual: format!("schema {schema}") });
     }
-    validate_leaf_id(&value.id).await?;
-    if canonical_json_bytes(&value).await? != payload {
+    validate_leaf_id(&value.id)?;
+    if canonical_json_bytes(&value)? != payload {
         return Err(GltfInferenceTextError::NonCanonical);
     }
     Ok(value)
 }
 
-async fn validate_leaf_id(id: &str) -> Result<(), GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_leaf_id(id: &str) -> Result<(), GltfInferenceTextError> {
     GLTF_INFERENCE_FIELDS.iter().any(|field| field.id == id).then_some(()).ok_or_else(|| GltfInferenceTextError::UnknownLeafId(id.into()))
 }
 
-async fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), GltfInferenceTextError> {
     let actual = actual.ok_or(GltfInferenceTextError::MissingPayload)?;
     if actual != expected {
         return Err(GltfInferenceTextError::Header { line, expected: expected.into(), actual: actual.into() });
@@ -126,18 +130,20 @@ async fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<
     Ok(())
 }
 
-pub(crate) async fn canonical_json_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn canonical_json_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
     let value = serde_json::to_value(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
     let mut output = String::new();
-    write_canonical_json(&value, &mut output).await?;
+    write_canonical_json(&value, &mut output)?;
     Ok(output.into_bytes())
 }
 
-async fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfInferenceTextError> {
     match value {
         Value::Null => output.push_str("null"),
         Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-        Value::Number(value) => output.push_str(&canonical_number(value).await?),
+        Value::Number(value) => output.push_str(&canonical_number(value)?),
         Value::String(value) => output.push_str(&serde_json::to_string(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?),
         Value::Array(values) => {
             output.push('[');
@@ -145,7 +151,7 @@ async fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), 
                 if index != 0 {
                     output.push(',');
                 }
-                write_canonical_json(value, output).await?;
+                write_canonical_json(value, output)?;
             }
             output.push(']');
         }
@@ -159,7 +165,7 @@ async fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), 
                 }
                 output.push_str(&serde_json::to_string(key).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?);
                 output.push(':');
-                write_canonical_json(value, output).await?;
+                write_canonical_json(value, output)?;
             }
             output.push('}');
         }
@@ -167,11 +173,13 @@ async fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), 
     Ok(())
 }
 
-async fn utf16_cmp(left: &str, right: &str) -> Ordering {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn utf16_cmp(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
 }
 
-async fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
     if let Some(value) = value.as_i64() {
         return Ok(value.to_string());
     }
@@ -210,7 +218,8 @@ async fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInfe
     Ok(result)
 }
 
-pub(crate) async fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
     let mut crc = u32::MAX;
     for byte in bytes {
         crc ^= u32::from(*byte);

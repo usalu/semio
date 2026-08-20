@@ -19,24 +19,30 @@ pub struct GltfDeleteSceneDescriptorAdapter {
     pub inspect_inverse: fn(&[u8]) -> Result<Vec<String>, GltfTopLevelMutationRejection>,
 }
 pub const DESCRIPTOR: GltfDeleteSceneDescriptorAdapter = GltfDeleteSceneDescriptorAdapter { command_id: mutation::ID, version: 1, derive, apply_diff, apply_inverse, inspect_diff, inspect_inverse };
-async fn decode<T: DeserializeOwned>(bytes: &[u8], path: &str) -> Result<T, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode<T: DeserializeOwned>(bytes: &[u8], path: &str) -> Result<T, GltfTopLevelMutationRejection> {
     serde_json::from_slice(bytes).map_err(|error| reject("gltf.mutation.decode-failed", path, error.to_string()))
 }
-pub async fn derive(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfDeleteSceneLeafPlan, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn derive(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfDeleteSceneLeafPlan, GltfTopLevelMutationRejection> {
     let payload = decode::<mutation::GltfDeleteScenePayload>(bytes, "payload")?;
     let forward = diff::derive(base, payload.index)?;
     let reverse = inverse::derive(base, payload.index)?;
     Ok(GltfDeleteSceneLeafPlan { diff_payload: diff::encode(&forward)?, inverse_payload: inverse::encode(&reverse)?, touched_paths: forward.touched_paths })
 }
-pub async fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     diff::apply(&decode::<diff::GltfDeleteSceneDiff>(bytes, "diff")?, base)
 }
-pub async fn apply_inverse(bytes: &[u8], after: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_inverse(bytes: &[u8], after: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     inverse::apply(&decode::<inverse::GltfDeleteSceneInverse>(bytes, "inverse")?, after)
 }
-pub async fn inspect_diff(bytes: &[u8]) -> Result<Vec<String>, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inspect_diff(bytes: &[u8]) -> Result<Vec<String>, GltfTopLevelMutationRejection> {
     Ok(decode::<diff::GltfDeleteSceneDiff>(bytes, "diff")?.touched_paths)
 }
-pub async fn inspect_inverse(bytes: &[u8]) -> Result<Vec<String>, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inspect_inverse(bytes: &[u8]) -> Result<Vec<String>, GltfTopLevelMutationRejection> {
     Ok(decode::<inverse::GltfDeleteSceneInverse>(bytes, "inverse")?.touched_paths)
 }

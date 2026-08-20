@@ -55,34 +55,36 @@ pub struct BinaryDiff {
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
     async fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
-        validate_binary_diff(self, base).await?;
-        Ok(apply_binary_diff_unchecked(self, base).await)
+        validate_binary_diff(self, base)?;
+        Ok(apply_binary_diff_unchecked(self, base))
     }
 
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
     async fn absorb(&mut self, other: Self) {
-        self.splices = absorb_splices(&self.splices, &other.splices).await;
+        self.splices = absorb_splices(&self.splices, &other.splices);
     }
 }
 
-async fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::MutationApplyResult<()> {
     let mut previous = None;
     for (position, splice) in diff.splices.iter().enumerate() {
         if splice.offset > base.bytes.len() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "byte splice offset is outside the base buffer").await);
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "byte splice offset is outside the base buffer"));
         }
         if splice.remove_len > base.bytes.len() - splice.offset {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-range", "byte splice removal exceeds the base buffer").await);
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-range", "byte splice removal exceeds the base buffer"));
         }
         if previous == Some(splice.offset) || diff.splices[..position].iter().any(|prior| prior.offset == splice.offset) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "byte splice offset is repeated").await);
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "byte splice offset is repeated"));
         }
         previous = Some(splice.offset);
     }
     Ok(())
 }
 
-async fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
     let mut bytes = base.bytes.clone();
     let mut splices = diff.splices.clone();
     splices.sort_by(|a, b| b.offset.cmp(&a.offset));
@@ -136,7 +138,8 @@ enum Lbl {
     New(u8),
 }
 
-async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: std::collections::HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -151,7 +154,8 @@ async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, L
 /// 🗑️ All BASE-relative indices removed by a splice list (order-independent; each splice's
 /// range is always relative to the shared base, never to a prior splice's result in the same
 /// list -- that's the whole point of `apply`'s descending-offset processing order).
-async fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
     let mut out = Vec::new();
     for s in splices {
         for i in s.offset..(s.offset + s.remove_len) {
@@ -169,7 +173,8 @@ async fn splice_removed_indices(splices: &[ByteSplice]) -> Vec<usize> {
 /// `Vec::splice` calls accumulate. Using bare `offset + k` here silently reorders sibling
 /// inserts within one absorbed diff whenever it has ≥2 splices (caught by fuzz-testing in the
 /// scratch crate this diff's tests were validated against — see `deviations` in the F1 report).
-async fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
     let mut sorted: Vec<&ByteSplice> = splices.iter().collect();
     sorted.sort_by_key(|s| s.offset);
     let mut out = Vec::new();
@@ -188,7 +193,8 @@ async fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
 /// splice list, simulated exactly like the line-diff case (per-byte instead of per-line
 /// labels), then the resulting label array is run-length-encoded back into a minimal ordered
 /// `ByteSplice` list.
-async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
     // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched.
@@ -198,7 +204,7 @@ async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice>
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_removed = splice_removed_indices(d1);
     let d1_added = splice_added_targets(d1);
-    let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added).await;
+    let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added);
     while mid_labels.len() < l1 {
         mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, tail-appended
     }
@@ -235,8 +241,9 @@ async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice>
 //#endregion 🔖️Diff
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-pub async fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
-    BinaryDiff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
+    BinaryDiff::between(base, snapshot)
 }
 
 /// 🧪️ P2-P3: representative `BinaryDiff` cases (empty, single-splice, multi-splice incl. a
@@ -244,7 +251,8 @@ pub async fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot)
 /// roundtrip_law` below AND the new `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests in `⚙️engine/🦀️component.rs`, per CLAUDE.md (no duplicated literal case lists).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<BinaryDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<BinaryDiff> {
     vec![
         BinaryDiff::default(),
         BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },

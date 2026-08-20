@@ -115,23 +115,26 @@ pub mod derived_analysis {
     /// ± the largest integer magnitude exactly representable as an IEEE-754 double (2^53 - 1).
     const MAX_SAFE_INTEGER_MAGNITUDE: i128 = 9_007_199_254_740_991;
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🔁️ Recursive scan: every object's member names, checked for duplicates independently at each
     /// nesting level (a duplicate at a nested object doesn't affect its ancestors' own uniqueness).
-    async fn scan_duplicate_members(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_duplicate_members(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
             JsonValue::Object { members } => {
                 let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
                 for member in members {
                     if !seen.insert(member.key.as_str()) {
-                        out.push(hard(CODE_DUPLICATE_MEMBER, format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object", member.key)).await);
+                        out.push(hard(CODE_DUPLICATE_MEMBER, format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object", member.key)));
                     }
                     scan_duplicate_members(&member.value, out);
                 }
@@ -147,23 +150,25 @@ pub mod derived_analysis {
 
     /// 🔢️ Is this number lexeme an integer (no fractional part, no exponent)? Per RFC8259's grammar,
     /// `.`/`e`/`E` only ever appear in the fraction/exponent parts.
-    async fn is_integer_lexeme(lexeme: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_integer_lexeme(lexeme: &str) -> bool {
         !lexeme.contains('.') && !lexeme.contains('e') && !lexeme.contains('E')
     }
 
     /// 🔁️ Recursive scan: every integer number's magnitude against RFC 7493 §2.2's ±(2^53-1) safe
     /// bound, using the ORIGINAL LEXEME (never a lossy `f64` parse) so arbitrary-precision integers
     /// are checked exactly.
-    async fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
-            JsonValue::Number { lexeme } if is_integer_lexeme(lexeme).await => match lexeme.parse::<i128>() {
+            JsonValue::Number { lexeme } if is_integer_lexeme(lexeme) => match lexeme.parse::<i128>() {
                 Ok(n) if n.unsigned_abs() > MAX_SAFE_INTEGER_MAGNITUDE as u128 => {
-                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} exceeds ±(2^53-1) = ±{MAX_SAFE_INTEGER_MAGNITUDE} and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")).await);
+                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} exceeds ±(2^53-1) = ±{MAX_SAFE_INTEGER_MAGNITUDE} and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")));
                 }
                 Ok(_) => {}
                 Err(_) => {
                     // Too large even for i128 -- definitely exceeds the much smaller 2^53-1 bound.
-                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} is far larger than ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")).await);
+                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} is far larger than ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")));
                 }
             },
             JsonValue::Number { .. } => {}
@@ -184,17 +189,19 @@ pub mod derived_analysis {
     /// 🚫️ A Unicode noncharacter per the Unicode Standard: the last two code points of every plane
     /// (`cp & 0xFFFE == 0xFFFE` covers U+FFFE/U+FFFF, U+1FFFE/U+1FFFF, ..., U+10FFFE/U+10FFFF) plus
     /// the reserved BMP range U+FDD0-U+FDEF.
-    async fn is_unicode_noncharacter(c: char) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_unicode_noncharacter(c: char) -> bool {
         let cp = c as u32;
         (cp & 0xFFFE) == 0xFFFE || (0xFDD0..=0xFDEF).contains(&cp)
     }
 
     /// 🔁️ Recursive scan: every string value for embedded Unicode noncharacters.
-    async fn scan_noncharacter_strings(value: &JsonValue, out: &mut Vec<Diagnostic>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_noncharacter_strings(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
             JsonValue::String { value: s } => {
                 if s.chars().any(is_unicode_noncharacter) {
-                    out.push(soft(CODE_STRING_NONCHARACTER, format!("string {s:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")).await);
+                    out.push(soft(CODE_STRING_NONCHARACTER, format!("string {s:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));
                 }
             }
             JsonValue::Object { members } => {
@@ -215,7 +222,8 @@ pub mod derived_analysis {
     /// single source of truth: `JsonIJsonComposer::compose` hard-gates on this (pre-serialization,
     /// authoritative), `JsonIJsonBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
-    pub async fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !matches!(snapshot.value, JsonValue::Object { .. } | JsonValue::Array { .. }) {
             out.push(soft(CODE_TOP_LEVEL_SCALAR, "top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));
@@ -245,7 +253,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_i_json_conformance(snapshot).await;
+                let checks = check_i_json_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -261,11 +269,13 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonMember;
 
-        async fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
             JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
         }
 
-        async fn snapshot(value: JsonValue) -> JsonSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn snapshot(value: JsonValue) -> JsonSnapshot {
             JsonSnapshot { value, ..JsonSnapshot::default() }
         }
 

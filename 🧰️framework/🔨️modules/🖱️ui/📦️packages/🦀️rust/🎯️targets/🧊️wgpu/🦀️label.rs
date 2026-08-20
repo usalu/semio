@@ -18,11 +18,11 @@ pub struct Label(String);
 impl Label {
     /// 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
     /// string literal here is a gate violation (see the Rust twin of `uiDataLabel`'s TS lint).
-    pub async fn data(value: impl Into<String>) -> Self {
+    pub fn data(value: impl Into<String>) -> Self {
         Self(value.into())
     }
 
-    pub async fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 
@@ -62,13 +62,13 @@ impl LabelText {
         Self(text)
     }
 
-    pub async fn as_str(self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         self.0
     }
 
     /// 🧵️ Named-placeholder runtime fill, e.g. `labels.selected_count.fill(&[("count", &n.to_string())])`
     /// — substitution, not `format!`, so word order never has to match across locales.
-    pub async fn fill(self, args: &[(&str, &str)]) -> Label {
+    pub fn fill(self, args: &[(&str, &str)]) -> Label {
         let mut out = self.0.to_string();
         for (name, value) in args {
             out = out.replace(&format!("{{{name}}}"), value);

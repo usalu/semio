@@ -14,15 +14,17 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::csv::create_csv_viewer`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `CsvSnapshot -> UiNode` read: header row (if any) supplies column labels, every
 /// remaining record is one read-only row — no mutation, no selection state.
-pub async fn render(document: &CsvSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &CsvSnapshot) -> UiNode {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
@@ -30,7 +32,7 @@ pub async fn render(document: &CsvSnapshot) -> UiNode {
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
     let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows }).await
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

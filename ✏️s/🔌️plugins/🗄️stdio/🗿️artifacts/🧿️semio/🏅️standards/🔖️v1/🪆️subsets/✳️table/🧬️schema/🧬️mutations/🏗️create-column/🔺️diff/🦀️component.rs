@@ -10,9 +10,10 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{S
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if base.columns.iter().any(|c| c.name == payload.name) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]).await;
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]);
     }
     let mut columns = base.columns.clone();
     let at = payload.index.unwrap_or(columns.len()).min(columns.len());
@@ -24,6 +25,6 @@ pub async fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol
         row.cells.insert(pos, SemioValue::Null);
     }
 
-    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) }).await
+    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) })
 }
 //#endregion 🔖️Diff

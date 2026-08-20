@@ -208,7 +208,7 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
         diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-position-accessor-type".into(), message: "POSITION must use FLOAT VEC3".into(), paths: vec![format!("accessors/{position_accessor}")] });
         return None;
     }
-    let decoded = match semio_framework_plugin::resolve_ready(crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, position_accessor)) {
+    let decoded = match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, position_accessor) {
         Ok(x) if x.components.len() % 3 == 0 => x,
         Ok(_) => return None,
         Err(message) => {
@@ -235,7 +235,7 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
             });
             continue;
         }
-        match semio_framework_plugin::resolve_ready(crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor)) {
+        match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
             Ok(delta) if delta.components.len() == local.len() * 3 => {
                 for (p, d) in local.iter_mut().zip(delta.components.chunks_exact(3)) {
                     *p = add(*p, mul([d[0], d[1], d[2]], weight));
@@ -266,7 +266,7 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
             diagnostics.push(GltfDiagnostic { id, severity: GltfSeverity::Error, code: "invalid-index-accessor-type".into(), message: "indices must use unsigned SCALAR components".into(), paths: vec![format!("accessors/{accessor}")] });
             return None;
         }
-        match semio_framework_plugin::resolve_ready(crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor)) {
+        match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
             Ok(v) => v.components.iter().filter_map(|x| if x.is_finite() && *x >= 0.0 && x.fract() == 0.0 { Some(*x as usize) } else { None }).collect(),
             Err(message) => {
                 let id = format!("gltf-geometry-{}", diagnostics.len());

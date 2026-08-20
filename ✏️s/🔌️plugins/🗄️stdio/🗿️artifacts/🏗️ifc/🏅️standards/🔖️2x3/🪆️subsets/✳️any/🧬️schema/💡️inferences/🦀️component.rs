@@ -27,7 +27,7 @@ pub struct Ifc2x3Inference {
 
 impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
     async fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
-        Self { bounds: compute_ifc2x3_bounds(snapshot).await }
+        Self { bounds: compute_ifc2x3_bounds(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::ifc::standards::v2x3::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `ifc2x3_artifact_schema_descriptor`'s registration.
-pub async fn ifc2x3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ifc2x3_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ifc.2x3.inference",
         inference: schema::FacetLeaves {

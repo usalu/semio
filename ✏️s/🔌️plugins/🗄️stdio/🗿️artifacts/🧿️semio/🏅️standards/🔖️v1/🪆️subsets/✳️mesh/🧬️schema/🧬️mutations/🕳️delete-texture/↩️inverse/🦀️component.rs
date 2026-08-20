@@ -6,7 +6,8 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{c
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &DeleteTexture, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &DeleteTexture, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
     let Some(pos) = base.textures.iter().position(|t| t.id == payload.id) else {
         return Vec::new();
     };

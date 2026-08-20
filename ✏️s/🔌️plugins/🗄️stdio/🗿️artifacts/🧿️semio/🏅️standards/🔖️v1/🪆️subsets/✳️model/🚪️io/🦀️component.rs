@@ -56,7 +56,8 @@ pub mod derived_composition {
     /// 🔎️ Dangling-reference diagnostics for a decoded snapshot — split out from `validate()` so it's
     /// directly unit-testable against a typed `SemioModelSnapshot` (not just through the `IoPayload`
     /// wire boundary).
-    pub async fn semio_model_referential_diagnostics(snapshot: &SemioModelSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn semio_model_referential_diagnostics(snapshot: &SemioModelSnapshot) -> Vec<dsl::Diagnostic> {
         let spatial_ids: HashSet<&str> = snapshot.spatial.iter().map(|n| n.id.as_str()).collect();
         let element_ids: HashSet<&str> = snapshot.elements.iter().map(|e| e.id.as_str()).collect();
         let mut diagnostics = Vec::new();
@@ -100,14 +101,15 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => semio_model_referential_diagnostics(&snapshot).await,
+                Some(snapshot) => semio_model_referential_diagnostics(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_model.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioModelValidator: payload did not decode as a SemioModelSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioModelValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -115,21 +117,23 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioModelSnapshot, crate::artifacts::semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation>(
             crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_bridge_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_bridge_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::model::schema::inferences::semio_model_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::model::schema::inferences::semio_model_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -139,7 +143,8 @@ pub mod derived_composition {
     /// deserializer writing `model`/reading `<format>` also gives `<format>`-exports-to-`model`; its
     /// mirror serializer gives the other two) — four `IoKey`s per (subset, format) pair from these two
     /// rows, no hand-written reverse registration needed.
-    async fn io_bridge_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
             .get_or_init(|| {
@@ -161,7 +166,8 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
         use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
 
-        async fn clean_snapshot() -> SemioModelSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn clean_snapshot() -> SemioModelSnapshot {
             SemioModelSnapshot {
                 schema: SemioModelSnapshot::default().schema,
                 spatial: vec![SpatialNode { id: "s1".into(), kind: SpatialKind::Site, name: "Site".into(), parent_id: None, placement: SemioTransform::identity() }],

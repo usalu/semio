@@ -53,61 +53,69 @@ pub struct NurbsCurve3 {
 }
 
 impl Curve3 {
-    pub async fn domain(&self) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn domain(&self) -> (f64, f64) {
         match self {
             Curve3::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => (0.0, std::f64::consts::TAU),
-            Curve3::Nurbs { knots, .. } => knots.domain().await,
+            Curve3::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    pub async fn is_periodic(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_periodic(&self) -> bool {
         matches!(self, Curve3::Circle { .. } | Curve3::Ellipse { .. })
     }
-    pub async fn period(&self) -> Option<f64> {
-        if self.is_periodic().await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn period(&self) -> Option<f64> {
+        if self.is_periodic() {
             Some(std::f64::consts::TAU)
         } else {
             None
         }
     }
-    pub async fn eval(&self, t: f64) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, t: f64) -> Pnt3 {
         match self {
             Curve3::Line { origin, dir } => *origin + *dir * t,
-            Curve3::Circle { frame, radius } => frame.to_world(Pnt3::new(radius * t.cos(), radius * t.sin(), 0.0).await).await,
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world(Pnt3::new(major_radius * t.cos(), minor_radius * t.sin(), 0.0).await).await,
-            Curve3::Nurbs { knots, controls, weights } => eval_nurbs_curve(knots, controls, weights, t).await,
+            Curve3::Circle { frame, radius } => frame.to_world(Pnt3::new(radius * t.cos(), radius * t.sin(), 0.0)),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world(Pnt3::new(major_radius * t.cos(), minor_radius * t.sin(), 0.0)),
+            Curve3::Nurbs { knots, controls, weights } => eval_nurbs_curve(knots, controls, weights, t),
         }
     }
     /// 🌀️ First derivative `dC/dt`.
-    pub async fn d1(&self, t: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn d1(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { dir, .. } => *dir,
-            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0).await).await,
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0).await).await,
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 1).await,
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0)),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0)),
+            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 1),
         }
     }
     /// 🌀️ Second derivative `d²C/dt²`.
-    pub async fn d2(&self, t: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn d2(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { .. } => Vec3::ZERO,
-            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0).await).await,
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0).await).await,
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2).await,
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0)),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0)),
+            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2),
         }
     }
-    pub async fn tangent(&self, t: f64) -> Option<Vec3> {
-        self.d1(t).await.normalized().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tangent(&self, t: f64) -> Option<Vec3> {
+        self.d1(t).normalized()
     }
     /// 🌀️ Signed curvature magnitude `|C' × C''| / |C'|³` (the standard space-curve formula).
-    pub async fn curvature(&self, t: f64) -> f64 {
-        let d1 = self.d1(t).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn curvature(&self, t: f64) -> f64 {
+        let d1 = self.d1(t);
         let d2 = self.d2(t);
-        let speed = d1.norm().await;
+        let speed = d1.norm();
         if speed <= f64::EPSILON {
             return 0.0;
         }
-        d1.cross(d2.await).await.norm() / speed.powi(3)
+        d1.cross(d2).norm() / speed.powi(3)
     }
     /// 🌀️ An exact rational-NURBS representation over `domain` (required for [`Curve3::Line`],
     /// whose natural domain is unbounded). Arcs longer than 120° are split into equal spans of
@@ -117,40 +125,43 @@ impl Curve3 {
     /// quadratic circle/ellipse representation, its *own* parametrization is not angle-linear
     /// except at those breakpoints (a well-known property of the construction, not an
     /// approximation: every point it produces still lies exactly on the circle/ellipse).
-    pub async fn to_nurbs(&self, domain: (f64, f64)) -> NurbsCurve3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_nurbs(&self, domain: (f64, f64)) -> NurbsCurve3 {
         match self {
             Curve3::Line { origin, dir } => {
                 let p0 = *origin + *dir * domain.0;
                 let p1 = *origin + *dir * domain.1;
-                NurbsCurve3 { knots: KnotVector::new(vec![domain.0, domain.0, domain.1, domain.1], 1, 2).await.unwrap(), controls: vec![p0, p1], weights: vec![1.0, 1.0] }
+                NurbsCurve3 { knots: KnotVector::new(vec![domain.0, domain.0, domain.1, domain.1], 1, 2).unwrap(), controls: vec![p0, p1], weights: vec![1.0, 1.0] }
             }
-            Curve3::Circle { frame, radius } => arc_to_nurbs(frame, *radius, *radius, domain).await,
-            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs(frame, *major_radius, *minor_radius, domain).await,
+            Curve3::Circle { frame, radius } => arc_to_nurbs(frame, *radius, *radius, domain),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs(frame, *major_radius, *minor_radius, domain),
             Curve3::Nurbs { knots, controls, weights } => NurbsCurve3 { knots: knots.clone(), controls: controls.clone(), weights: weights.clone() },
         }
     }
 }
 
-async fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f64) -> Pnt3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64], t: f64) -> Pnt3 {
     let hx: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.x * w).collect();
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let hz: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.z * w).collect();
     let w = de_boor(knots, weights, t);
-    Pnt3::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w, de_boor(knots, &hz, t) / w).await
+    Pnt3::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w, de_boor(knots, &hz, t) / w)
 }
 
 /// 🌀️ Central-difference derivative — used for NURBS curves as a robust, simple stand-in until a
 /// dedicated rational-derivative (de Boor `A_k(u)` recurrence) implementation is needed; accurate
 /// to ~1e-6, adequate for tangent/curvature use but not for tight Newton iterations on NURBS,
 /// which should prefer analytic curves or accept the extra refinement step.
-async fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
     let h = 1e-4;
     match order {
         1 => (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h)),
         2 => {
-            let a = curve.eval(t + h).await.to_vec();
-            let b = curve.eval(t).await.to_vec();
-            let c = curve.eval(t - h).await.to_vec();
+            let a = curve.eval(t + h).to_vec();
+            let b = curve.eval(t).to_vec();
+            let c = curve.eval(t - h).to_vec();
             (a - b * 2.0 + c) * (1.0 / (h * h))
         }
         _ => Vec3::ZERO,
@@ -160,7 +171,8 @@ async fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
 /// 🌀️ Converts a circular/elliptical arc over `domain` into an exact rational-quadratic NURBS,
 /// splitting into `⌈span / 120°⌉` equal-angle spans (the standard well-conditioned construction:
 /// each span's middle control point sits at `radius / cos(half-span)` with weight `cos(half-span)`).
-async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)) -> NurbsCurve3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)) -> NurbsCurve3 {
     let span = domain.1 - domain.0;
     let max_span = std::f64::consts::TAU / 3.0; // 120 degrees
     let n_spans = (span.abs() / max_span).ceil().max(1.0) as usize;
@@ -178,12 +190,12 @@ async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64
         let p2 = local_point(a1, 1.0);
         let p1 = local_point(mid, 1.0 / w1);
         if span_i == 0 {
-            controls.push(frame.to_world(p0.await));
+            controls.push(frame.to_world(p0));
             weights.push(1.0);
         }
-        controls.push(frame.to_world(p1.await));
+        controls.push(frame.to_world(p1));
         weights.push(w1);
-        controls.push(frame.to_world(p2.await));
+        controls.push(frame.to_world(p2));
         weights.push(1.0);
     }
     let mut knots = vec![domain.0, domain.0, domain.0];
@@ -195,7 +207,7 @@ async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64
     knots.push(domain.1);
     knots.push(domain.1);
     knots.push(domain.1);
-    NurbsCurve3 { knots: KnotVector::new(knots, 2, controls.len()).await.unwrap(), controls, weights }
+    NurbsCurve3 { knots: KnotVector::new(knots, 2, controls.len()).unwrap(), controls, weights }
 }
 
 // #endregion 🔖️Curve3
@@ -212,31 +224,34 @@ pub enum Curve2 {
 }
 
 impl Curve2 {
-    pub async fn domain(&self) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn domain(&self) -> (f64, f64) {
         match self {
             Curve2::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve2::Circle { .. } | Curve2::Ellipse { .. } => (0.0, std::f64::consts::TAU),
-            Curve2::Nurbs { knots, .. } => knots.domain().await,
+            Curve2::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    pub async fn eval(&self, t: f64) -> Pnt2 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, t: f64) -> Pnt2 {
         match self {
             Curve2::Line { origin, dir } => *origin + *dir * t,
-            Curve2::Circle { center, radius } => *center + Vec2::new(radius * t.cos(), radius * t.sin()).await,
+            Curve2::Circle { center, radius } => *center + Vec2::new(radius * t.cos(), radius * t.sin()),
             Curve2::Ellipse { center, x_axis, major_radius, minor_radius } => {
-                let x = x_axis.normalized().await.unwrap_or(Vec2::new(1.0, 0.0).await);
+                let x = x_axis.normalized().unwrap_or(Vec2::new(1.0, 0.0));
                 let y = x.perp();
                 *center + x * (major_radius * t.cos()) + y * (minor_radius * t.sin())
             }
-            Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t).await,
+            Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t),
         }
     }
-    pub async fn d1(&self, t: f64) -> Vec2 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn d1(&self, t: f64) -> Vec2 {
         match self {
             Curve2::Line { dir, .. } => *dir,
-            Curve2::Circle { radius, .. } => Vec2::new(-radius * t.sin(), radius * t.cos()).await,
+            Curve2::Circle { radius, .. } => Vec2::new(-radius * t.sin(), radius * t.cos()),
             Curve2::Ellipse { x_axis, major_radius, minor_radius, .. } => {
-                let x = x_axis.normalized().await.unwrap_or(Vec2::new(1.0, 0.0).await);
+                let x = x_axis.normalized().unwrap_or(Vec2::new(1.0, 0.0));
                 let y = x.perp();
                 x * (-major_radius * t.sin()) + y * (minor_radius * t.cos())
             }
@@ -248,11 +263,12 @@ impl Curve2 {
     }
 }
 
-async fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64], t: f64) -> Pnt2 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64], t: f64) -> Pnt2 {
     let hx: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.x * w).collect();
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let w = de_boor(knots, weights, t);
-    Pnt2::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w).await
+    Pnt2::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w)
 }
 
 // #endregion 🔖️Curve2
@@ -262,11 +278,13 @@ async fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64
 mod tests {
     use super::*;
 
-    async fn fd_d1(curve: &Curve3, t: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fd_d1(curve: &Curve3, t: f64) -> Vec3 {
         let h = 1e-6;
         (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h))
     }
-    async fn fd_d2(curve: &Curve3, t: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fd_d2(curve: &Curve3, t: f64) -> Vec3 {
         let h = 1e-4;
         let a = curve.eval(t + h).to_vec();
         let b = curve.eval(t).to_vec();
@@ -331,7 +349,8 @@ mod tests {
     /// agrees with the original at `domain.0`/`domain.1` — NOT pointwise parameter equality
     /// in between, since the standard construction is not angle-linear except at breakpoints
     /// (confirmed by hand + a standalone check: see phase-2 scope note).
-    async fn assert_nurbs_traces_circle(nurbs: &NurbsCurve3, frame: &Frame3, radius: f64, domain: (f64, f64), samples: usize) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_nurbs_traces_circle(nurbs: &NurbsCurve3, frame: &Frame3, radius: f64, domain: (f64, f64), samples: usize) {
         for i in 0..=samples {
             let t = domain.0 + (domain.1 - domain.0) * (i as f64 / samples as f64);
             let p = eval_nurbs_curve(&nurbs.knots, &nurbs.controls, &nurbs.weights, t);

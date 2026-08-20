@@ -51,7 +51,8 @@ pub mod derived_composition {
     /// must resolve to a real `layouts` entry, and `masters`/`layouts` ids must each be unique (both
     /// collections are name-keyed in the diff facet — a duplicate id would silently corrupt any future
     /// `between()`/`apply()` on this snapshot). Real structural checks, not a decode-only stub.
-    pub async fn check_presentation_referential_integrity(snapshot: &SemioPresentationSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_presentation_referential_integrity(snapshot: &SemioPresentationSnapshot) -> Vec<Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_master_ids = std::collections::HashSet::new();
@@ -89,14 +90,15 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_presentation_referential_integrity(&snapshot).await,
+                Some(snapshot) => check_presentation_referential_integrity(&snapshot),
                 None => vec![Diagnostic::error("stdio.semio_presentation.validate-decode-failed", TextSpan::at(1, 1), "SemioPresentationValidator: payload did not decode as a SemioPresentationSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioPresentationValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -106,7 +108,8 @@ pub mod derived_composition {
     /// one `serializer_entry_of` (semio -> pptx); `register_composer_entries` derives all 4 `IoKey`s
     /// from these 2 rows (see `document`'s own composer for the fuller doc comment on this mechanism).
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    async fn io_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioPresentationFromPptx>(), serializer_entry_of::<SemioPresentationToPptx>()])
     }
     //#endregion 🔖️IoEntries
@@ -114,21 +117,23 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioPresentationSnapshot, crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
             crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.presentation.inference`'s facet leaves into the OS-wide
     /// inference catalog — sibling to `register_artifact_schema_descriptor` above (separate
     /// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -139,7 +144,8 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
-        async fn clean_snapshot() -> SemioPresentationSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn clean_snapshot() -> SemioPresentationSnapshot {
             SemioPresentationSnapshot {
                 schema: "s.stdio.semio.presentation".into(),
                 masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }],

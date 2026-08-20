@@ -53,7 +53,8 @@ pub mod derived_composition {
     /// 🔎️ Real referential-invariant checks over an already-decoded snapshot — factored out so the
     /// composer (if it ever gains a pre-serialization hard gate, pdf `✳️a`-style) and this validator's
     /// post-hoc wire recheck can share one implementation.
-    pub async fn check_flow_referential_invariants(snapshot: &SemioFlowSnapshot) -> Vec<dsl::Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_flow_referential_invariants(snapshot: &SemioFlowSnapshot) -> Vec<dsl::Diagnostic> {
         let mut diagnostics = Vec::new();
         let mut seen_node_ids = std::collections::HashSet::new();
         for node in &snapshot.nodes {
@@ -84,14 +85,15 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_flow_referential_invariants(&snapshot).await,
+                Some(snapshot) => check_flow_referential_invariants(&snapshot),
                 None => vec![dsl::Diagnostic::error("stdio.semio_flow.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string())],
             }
         }
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioFlowValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -101,7 +103,8 @@ pub mod derived_composition {
     /// `serializer_entry_of` (semio -> json), lossless (see `document`'s own composer for the fuller
     /// doc comment on how `register_composer_entries` derives all 4 `IoKey`s from these 2 rows).
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    async fn io_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioFlowFromJson>(), serializer_entry_of::<SemioFlowToJson>()])
     }
     //#endregion 🔖️IoEntries
@@ -109,21 +112,23 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// flow<->json io bridge row. Called from this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(
             crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -135,10 +140,12 @@ pub mod derived_composition {
         use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef};
         use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
-        async fn node(id: &str) -> FlowNode {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn node(id: &str) -> FlowNode {
             FlowNode { id: id.into(), kind: "k".into(), label: "L".into(), params: Vec::new(), position: SemioPoint2::default() }
         }
-        async fn edge(id: &str, from: &str, to: &str) -> FlowEdge {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn edge(id: &str, from: &str, to: &str) -> FlowEdge {
             FlowEdge { id: id.into(), from: PortRef { node: from.into(), port: "out".into() }, to: PortRef { node: to.into(), port: "in".into() }, kind: "data".into() }
         }
 

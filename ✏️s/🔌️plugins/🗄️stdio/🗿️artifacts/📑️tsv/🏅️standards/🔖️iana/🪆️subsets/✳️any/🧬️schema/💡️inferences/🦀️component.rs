@@ -24,7 +24,7 @@ pub struct TsvInference {
 
 impl protocol::Inference<TsvSnapshot> for TsvInference {
     async fn infer(snapshot: &TsvSnapshot) -> Self {
-        Self { outline: TsvOutline::compute(snapshot).await }
+        Self { outline: TsvOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::tsv::standards::iana::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `tsv_artifact_schema_descriptor`'s registration.
-pub async fn tsv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn tsv_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.tsv.inference",
         inference: schema::FacetLeaves {

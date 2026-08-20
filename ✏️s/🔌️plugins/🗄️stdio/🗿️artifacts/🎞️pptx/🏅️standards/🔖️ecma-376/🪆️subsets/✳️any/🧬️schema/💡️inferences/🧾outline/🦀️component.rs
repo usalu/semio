@@ -18,7 +18,8 @@ pub struct PptxOutline {
     pub word_count: u32,
 }
 
-async fn shape_word_count(shape: &PptxShape) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shape_word_count(shape: &PptxShape) -> u32 {
     let text_frame = match shape {
         PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => text_frame,
         PptxShape::Picture { .. } | PptxShape::Other { .. } => return 0,
@@ -27,7 +28,8 @@ async fn shape_word_count(shape: &PptxShape) -> u32 {
 }
 
 impl PptxOutline {
-    pub async fn compute(snapshot: &PptxSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &PptxSnapshot) -> Self {
         let slide_count = snapshot.presentation.slides.len() as u32;
         let mut shape_count = 0u32;
         let mut word_count = 0u32;

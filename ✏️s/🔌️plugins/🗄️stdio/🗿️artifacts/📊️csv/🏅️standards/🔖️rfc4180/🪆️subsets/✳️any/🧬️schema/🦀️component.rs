@@ -31,17 +31,20 @@ impl Default for CsvArtifact {
 
 impl CsvArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> CsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> CsvSnapshot {
         CsvSnapshot { schema: self.schema.clone(), has_header: self.has_header, records: self.records.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: CsvSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
         Self { schema: snapshot.schema, has_header: snapshot.has_header, records: snapshot.records }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
         self.has_header = snapshot.has_header;
         self.records = snapshot.records;
@@ -51,7 +54,8 @@ impl CsvArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.csv`.
-pub async fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn csv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.csv",
         artifact: schema::FacetLeaves {
@@ -116,7 +120,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <CsvDiff as protocol::MutationDiff<CsvSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -155,12 +159,13 @@ pub mod derived_analysis {
     /// 🔍 CSV has no magic bytes — sniff by checking that a real RFC4180 parse of the
     /// first few lines yields a consistent field count across records (a strong tabular
     /// signal) and that at least one delimiter/quote is actually present.
-    async fn looks_like_csv(text: &str) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_csv(text: &str) -> IoConfidence {
         let sample: String = text.lines().take(20).collect::<Vec<_>>().join("\n");
         if sample.trim().is_empty() {
             return IoConfidence::Low;
         }
-        let snapshot = crate::artifacts::csv::schema::snapshot::decode_csv_with(&sample, false).await;
+        let snapshot = crate::artifacts::csv::schema::snapshot::decode_csv_with(&sample, false);
         if snapshot.records.is_empty() {
             return IoConfidence::Low;
         }
@@ -188,15 +193,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_csv(body).await
+                    looks_like_csv(body)
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_csv(&text).await,
+                        Ok(text) => looks_like_csv(&text),
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_csv(text).await,
+                        Ok(text) => looks_like_csv(text),
                         Err(_) => IoConfidence::Low,
                     },
                 },

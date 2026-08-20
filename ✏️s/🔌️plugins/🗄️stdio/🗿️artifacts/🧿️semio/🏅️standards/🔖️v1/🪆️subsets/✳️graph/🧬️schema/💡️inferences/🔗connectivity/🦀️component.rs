@@ -41,17 +41,18 @@ pub struct SemioGraphNodeConnectivity {
 /// 🏗️ Builds an `UndirectedGraph` from the snapshot's `nodes`/`edges`, plus the id-value → `NodeId`
 /// lookup needed to translate back. Node ids are assigned in `nodes` array order — deterministic
 /// because that order is itself the persisted snapshot order, never a `HashMap` iteration order.
-async fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap<String, NodeId>) {
-    let mut graph = UndirectedGraph::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap<String, NodeId>) {
+    let mut graph = UndirectedGraph::new();
     let mut id_of: BTreeMap<String, NodeId> = BTreeMap::new();
     for (index, node) in snapshot.nodes.iter().enumerate() {
         let id = index as NodeId;
         id_of.insert(node.id.value.clone(), id);
-        graph.add_node_with_id(id, PropertyBag::new()).await;
+        graph.add_node_with_id(id, PropertyBag::new());
     }
     for edge in &snapshot.edges {
         if let (Some(&u), Some(&v)) = (id_of.get(&edge.source.value), id_of.get(&edge.target.value)) {
-            graph.add_edge(u, v).await;
+            graph.add_edge(u, v);
         }
     }
     (graph, id_of)
@@ -61,7 +62,8 @@ async fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BT
 /// `dfs_preorder_nodes` seeded from the lowest-numbered unvisited node — deterministic because
 /// `graph.nodes()` order follows insertion order (== `nodes` array order) and the seed scan always
 /// picks the smallest remaining `NodeId`.
-async fn component_of(graph: &UndirectedGraph) -> BTreeMap<NodeId, u32> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn component_of(graph: &UndirectedGraph) -> BTreeMap<NodeId, u32> {
     let mut component: BTreeMap<NodeId, u32> = BTreeMap::new();
     let mut next_component: u32 = 0;
     let mut all_ids: Vec<NodeId> = graph.nodes().collect();
@@ -114,12 +116,12 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     }
 
     async fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let (graph, id_of) = build_undirected(snapshot).await;
+        let (graph, id_of) = build_undirected(snapshot);
         let Some(&id) = id_of.get(key.as_str()) else {
             return SemioGraphNodeConnectivity::default();
         };
         let degree = graph.degree(id) as u32;
-        let component = component_of(&graph).await.get(&id).copied().unwrap_or(0);
+        let component = component_of(&graph).get(&id).copied().unwrap_or(0);
         SemioGraphNodeConnectivity { degree, component }
     }
 }
@@ -132,16 +134,19 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn node(id: &str) -> SemioGraphNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(id: &str) -> SemioGraphNode {
         SemioGraphNode { id: GraphNodeId::new(id), kind: "task".into(), label: id.into(), position: Default::default(), ports: Vec::new(), properties: Vec::new() }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
         SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flows-to".into(), label: id.into() }
     }
 
     /// 🔀️ Two disjoint components: `a-b` (2 nodes, 1 edge each) and `c` (isolated).
-    async fn two_component_snapshot() -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_component_snapshot() -> SemioGraphSnapshot {
         SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b"), node("c")], edges: vec![edge("e1", "a", "b")] }
     }
 

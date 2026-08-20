@@ -44,7 +44,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor().await);
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
             crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
@@ -55,7 +55,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor().await);
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -105,25 +105,25 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 //#region 🔖️Stbl
 /// 📥️ `stts` (moved from remodel's `parse_stts`) → `(sample_count, delta)*` run-length pairs.
 async fn parse_stts(payload: &[u8]) -> Result<Vec<(u32, u32)>, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push((r.u32_be().await.map_err(|e| e.to_string())?, r.u32_be().await.map_err(|e| e.to_string())?));
+        out.push((r.u32_be().map_err(|e| e.to_string())?, r.u32_be().map_err(|e| e.to_string())?));
     }
     Ok(out)
 }
 
 async fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, String> {
-    let mut r = ByteReader::new(payload).await;
-    let version = r.u8().await.map_err(|e| e.to_string())?;
-    r.skip(3).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let sample_count = r.u32_be().await.map_err(|e| e.to_string())?;
-        let raw = r.u32_be().await.map_err(|e| e.to_string())?;
+        let sample_count = r.u32_be().map_err(|e| e.to_string())?;
+        let raw = r.u32_be().map_err(|e| e.to_string())?;
         let offset = if version == 1 { i64::from(raw as i32) } else { i64::from(raw) };
         out.push((sample_count, offset));
     }
@@ -131,12 +131,12 @@ async fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, String> {
 }
 
 async fn parse_stsc(payload: &[u8]) -> Result<Vec<(u32, u32, u32)>, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push((r.u32_be().await.map_err(|e| e.to_string())?, r.u32_be().await.map_err(|e| e.to_string())?, r.u32_be().await.map_err(|e| e.to_string())?));
+        out.push((r.u32_be().map_err(|e| e.to_string())?, r.u32_be().map_err(|e| e.to_string())?, r.u32_be().map_err(|e| e.to_string())?));
     }
     Ok(out)
 }
@@ -167,49 +167,49 @@ impl SampleSizes {
 }
 
 async fn parse_stsz(payload: &[u8]) -> Result<SampleSizes, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let sample_size = r.u32_be().await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let sample_size = r.u32_be().map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     if sample_size != 0 {
         return Ok(SampleSizes::Uniform { size: sample_size, count });
     }
     let mut sizes = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        sizes.push(r.u32_be().await.map_err(|e| e.to_string())?);
+        sizes.push(r.u32_be().map_err(|e| e.to_string())?);
     }
     Ok(SampleSizes::PerSample(sizes))
 }
 
 async fn parse_stco(payload: &[u8]) -> Result<Vec<u64>, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(u64::from(r.u32_be().await.map_err(|e| e.to_string())?));
+        out.push(u64::from(r.u32_be().map_err(|e| e.to_string())?));
     }
     Ok(out)
 }
 
 async fn parse_co64(payload: &[u8]) -> Result<Vec<u64>, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(r.u64_be().await.map_err(|e| e.to_string())?);
+        out.push(r.u64_be().map_err(|e| e.to_string())?);
     }
     Ok(out)
 }
 
 async fn parse_stss(payload: &[u8]) -> Result<Vec<u32>, String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(4).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(r.u32_be().await.map_err(|e| e.to_string())?);
+        out.push(r.u32_be().map_err(|e| e.to_string())?);
     }
     Ok(out)
 }
@@ -306,138 +306,138 @@ async fn run_length_encode_i64(values: &[i64]) -> Vec<(u32, i64)> {
 //#region 🔖️Tkhd
 async fn read_time(reader: &mut ByteReader<'_>, version: u8) -> Result<u64, String> {
     if version == 1 {
-        reader.u64_be().await.map_err(|error| error.to_string())
+        reader.u64_be().map_err(|error| error.to_string())
     } else {
-        reader.u32_be().await.map(u64::from).map_err(|error| error.to_string())
+        reader.u32_be().map(u64::from).map_err(|error| error.to_string())
     }
 }
 
 async fn parse_tkhd(payload: &[u8]) -> Result<(u32, Mp4TrackMetadata), String> {
-    let mut r = ByteReader::new(payload).await;
-    let version = r.u8().await.map_err(|e| e.to_string())?;
-    let flags_bytes = r.take(3).await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    let flags_bytes = r.take(3).map_err(|e| e.to_string())?;
     let flags = u32::from_be_bytes([0, flags_bytes[0], flags_bytes[1], flags_bytes[2]]);
     let creation_time = read_time(&mut r, version).await?;
     let modification_time = read_time(&mut r, version).await?;
-    let track_id = r.u32_be().await.map_err(|e| e.to_string())?;
-    r.skip(4).await.map_err(|e| e.to_string())?;
+    let track_id = r.u32_be().map_err(|e| e.to_string())?;
+    r.skip(4).map_err(|e| e.to_string())?;
     let duration = read_time(&mut r, version).await?;
-    r.skip(8).await.map_err(|e| e.to_string())?;
-    let layer = r.u16_be().await.map_err(|e| e.to_string())? as i16;
-    let alternate_group = r.u16_be().await.map_err(|e| e.to_string())? as i16;
-    let volume = r.u16_be().await.map_err(|e| e.to_string())? as i16;
-    r.skip(2).await.map_err(|e| e.to_string())?;
+    r.skip(8).map_err(|e| e.to_string())?;
+    let layer = r.u16_be().map_err(|e| e.to_string())? as i16;
+    let alternate_group = r.u16_be().map_err(|e| e.to_string())? as i16;
+    let volume = r.u16_be().map_err(|e| e.to_string())? as i16;
+    r.skip(2).map_err(|e| e.to_string())?;
     let mut matrix = [0i32; 9];
     for value in &mut matrix {
-        *value = r.i32_be().await.map_err(|e| e.to_string())?;
+        *value = r.i32_be().map_err(|e| e.to_string())?;
     }
     Ok((track_id, Mp4TrackMetadata { flags, creation_time, modification_time, duration, layer, alternate_group, volume, matrix, ..Mp4TrackMetadata::default() }))
 }
 
 async fn parse_mdhd(payload: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<u32, String> {
-    let mut r = ByteReader::new(payload).await;
-    let version = r.u8().await.map_err(|e| e.to_string())?;
-    r.skip(3).await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
     metadata.media_creation_time = read_time(&mut r, version).await?;
     metadata.media_modification_time = read_time(&mut r, version).await?;
-    let timescale = r.u32_be().await.map_err(|e| e.to_string())?;
+    let timescale = r.u32_be().map_err(|e| e.to_string())?;
     metadata.media_duration = read_time(&mut r, version).await?;
-    let packed_language = r.u16_be().await.map_err(|e| e.to_string())?;
+    let packed_language = r.u16_be().map_err(|e| e.to_string())?;
     metadata.language = [10, 5, 0].into_iter().map(|shift| char::from(((packed_language >> shift) & 0x1f) as u8 + 0x60)).collect();
-    metadata.quality = r.u16_be().await.map_err(|e| e.to_string())?;
+    metadata.quality = r.u16_be().map_err(|e| e.to_string())?;
     Ok(timescale)
 }
 
 async fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, Mp4VisualSampleEntry, &[u8]), String> {
-    let mut r = ByteReader::new(payload).await;
-    r.skip(6).await.map_err(|e| e.to_string())?;
-    let data_reference_index = r.u16_be().await.map_err(|e| e.to_string())?;
-    let version = r.u16_be().await.map_err(|e| e.to_string())?;
-    let revision_level = r.u16_be().await.map_err(|e| e.to_string())?;
-    let vendor = r.u32_be().await.map_err(|e| e.to_string())?;
-    let temporal_quality = r.u32_be().await.map_err(|e| e.to_string())?;
-    let spatial_quality = r.u32_be().await.map_err(|e| e.to_string())?;
-    let width = r.u16_be().await.map_err(|e| e.to_string())?;
-    let height = r.u16_be().await.map_err(|e| e.to_string())?;
-    let horizontal_resolution = r.u32_be().await.map_err(|e| e.to_string())?;
-    let vertical_resolution = r.u32_be().await.map_err(|e| e.to_string())?;
-    r.skip(4).await.map_err(|e| e.to_string())?;
-    let frame_count = r.u16_be().await.map_err(|e| e.to_string())?;
-    let compressor = r.take(32).await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    r.skip(6).map_err(|e| e.to_string())?;
+    let data_reference_index = r.u16_be().map_err(|e| e.to_string())?;
+    let version = r.u16_be().map_err(|e| e.to_string())?;
+    let revision_level = r.u16_be().map_err(|e| e.to_string())?;
+    let vendor = r.u32_be().map_err(|e| e.to_string())?;
+    let temporal_quality = r.u32_be().map_err(|e| e.to_string())?;
+    let spatial_quality = r.u32_be().map_err(|e| e.to_string())?;
+    let width = r.u16_be().map_err(|e| e.to_string())?;
+    let height = r.u16_be().map_err(|e| e.to_string())?;
+    let horizontal_resolution = r.u32_be().map_err(|e| e.to_string())?;
+    let vertical_resolution = r.u32_be().map_err(|e| e.to_string())?;
+    r.skip(4).map_err(|e| e.to_string())?;
+    let frame_count = r.u16_be().map_err(|e| e.to_string())?;
+    let compressor = r.take(32).map_err(|e| e.to_string())?;
     let compressor_length = usize::from(compressor[0]).min(31);
     let compressor_name = String::from_utf8_lossy(&compressor[1..1 + compressor_length]).into_owned();
-    let depth = r.u16_be().await.map_err(|e| e.to_string())?;
-    let color_table_id = r.u16_be().await.map_err(|e| e.to_string())? as i16;
+    let depth = r.u16_be().map_err(|e| e.to_string())?;
+    let color_table_id = r.u16_be().map_err(|e| e.to_string())? as i16;
     let visual = Mp4VisualSampleEntry { data_reference_index, version, revision_level, vendor, temporal_quality, spatial_quality, horizontal_resolution, vertical_resolution, frame_count, compressor_name, depth, color_table_id };
-    Ok((width, height, visual, &payload[r.pos().await..]))
+    Ok((width, height, visual, &payload[r.pos()..]))
 }
 
 async fn parse_mvhd(payload: &[u8]) -> Result<Mp4Movie, String> {
-    let mut r = ByteReader::new(payload).await;
-    let version = r.u8().await.map_err(|e| e.to_string())?;
-    r.skip(3).await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(payload);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
     let creation_time = read_time(&mut r, version).await?;
     let modification_time = read_time(&mut r, version).await?;
-    let timescale = r.u32_be().await.map_err(|e| e.to_string())?;
+    let timescale = r.u32_be().map_err(|e| e.to_string())?;
     let duration = read_time(&mut r, version).await?;
-    let rate = r.i32_be().await.map_err(|e| e.to_string())?;
-    let volume = r.u16_be().await.map_err(|e| e.to_string())? as i16;
-    r.skip(10).await.map_err(|e| e.to_string())?;
+    let rate = r.i32_be().map_err(|e| e.to_string())?;
+    let volume = r.u16_be().map_err(|e| e.to_string())? as i16;
+    r.skip(10).map_err(|e| e.to_string())?;
     let mut matrix = [0i32; 9];
     for value in &mut matrix {
-        *value = r.i32_be().await.map_err(|e| e.to_string())?;
+        *value = r.i32_be().map_err(|e| e.to_string())?;
     }
-    r.skip(24).await.map_err(|e| e.to_string())?;
-    let next_track_id = r.u32_be().await.map_err(|e| e.to_string())?;
+    r.skip(24).map_err(|e| e.to_string())?;
+    let next_track_id = r.u32_be().map_err(|e| e.to_string())?;
     Ok(Mp4Movie { creation_time, modification_time, timescale, duration, rate, volume, matrix, next_track_id, title: None, encoder: None })
 }
 
 async fn parse_edit_list(trak: &[u8]) -> Result<Vec<Mp4Edit>, String> {
-    let Some(edts) = find_box(trak, b"edts").await.map_err(|e| e.to_string())? else {
+    let Some(edts) = find_box(trak, b"edts").map_err(|e| e.to_string())? else {
         return Ok(Vec::new());
     };
-    let Some(elst) = find_box(edts, b"elst").await.map_err(|e| e.to_string())? else {
+    let Some(elst) = find_box(edts, b"elst").map_err(|e| e.to_string())? else {
         return Ok(Vec::new());
     };
-    let mut r = ByteReader::new(elst).await;
-    let version = r.u8().await.map_err(|e| e.to_string())?;
-    r.skip(3).await.map_err(|e| e.to_string())?;
-    let count = r.u32_be().await.map_err(|e| e.to_string())?;
+    let mut r = ByteReader::new(elst);
+    let version = r.u8().map_err(|e| e.to_string())?;
+    r.skip(3).map_err(|e| e.to_string())?;
+    let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut edits = Vec::with_capacity(count as usize);
     for _ in 0..count {
         let segment_duration = read_time(&mut r, version).await?;
-        let media_time = if version == 1 { r.u64_be().await.map_err(|e| e.to_string())? as i64 } else { i64::from(r.i32_be().await.map_err(|e| e.to_string())?) };
-        edits.push(Mp4Edit { segment_duration, media_time, media_rate_integer: r.u16_be().await.map_err(|e| e.to_string())? as i16, media_rate_fraction: r.u16_be().await.map_err(|e| e.to_string())? as i16 });
+        let media_time = if version == 1 { r.u64_be().map_err(|e| e.to_string())? as i64 } else { i64::from(r.i32_be().map_err(|e| e.to_string())?) };
+        edits.push(Mp4Edit { segment_duration, media_time, media_rate_integer: r.u16_be().map_err(|e| e.to_string())? as i16, media_rate_fraction: r.u16_be().map_err(|e| e.to_string())? as i16 });
     }
     Ok(edits)
 }
 
 async fn parse_codec_extensions(children: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<(), String> {
-    if let Some(payload) = find_box(children, b"colr").await.map_err(|e| e.to_string())? {
-        let mut r = ByteReader::new(payload).await;
-        let color_type = r.fourcc().await.map_err(|e| e.to_string())?.as_str().await.into_owned();
-        let primaries = r.u16_be().await.map_err(|e| e.to_string())?;
-        let transfer = r.u16_be().await.map_err(|e| e.to_string())?;
-        let matrix = r.u16_be().await.map_err(|e| e.to_string())?;
-        let full_range = if r.remaining().await > 0 { Some(r.u8().await.map_err(|e| e.to_string())? & 0x80 != 0) } else { None };
+    if let Some(payload) = find_box(children, b"colr").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        let color_type = r.fourcc().map_err(|e| e.to_string())?.as_str().into_owned();
+        let primaries = r.u16_be().map_err(|e| e.to_string())?;
+        let transfer = r.u16_be().map_err(|e| e.to_string())?;
+        let matrix = r.u16_be().map_err(|e| e.to_string())?;
+        let full_range = if r.remaining() > 0 { Some(r.u8().map_err(|e| e.to_string())? & 0x80 != 0) } else { None };
         metadata.color = Some(Mp4Color { color_type, primaries, transfer, matrix, full_range });
     }
-    if let Some(payload) = find_box(children, b"pasp").await.map_err(|e| e.to_string())? {
-        let mut r = ByteReader::new(payload).await;
-        metadata.pixel_aspect_ratio = Some(Mp4PixelAspectRatio { horizontal_spacing: r.u32_be().await.map_err(|e| e.to_string())?, vertical_spacing: r.u32_be().await.map_err(|e| e.to_string())? });
+    if let Some(payload) = find_box(children, b"pasp").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        metadata.pixel_aspect_ratio = Some(Mp4PixelAspectRatio { horizontal_spacing: r.u32_be().map_err(|e| e.to_string())?, vertical_spacing: r.u32_be().map_err(|e| e.to_string())? });
     }
-    if let Some(payload) = find_box(children, b"btrt").await.map_err(|e| e.to_string())? {
-        let mut r = ByteReader::new(payload).await;
-        metadata.bitrate = Some(Mp4Bitrate { buffer_size: r.u32_be().await.map_err(|e| e.to_string())?, maximum: r.u32_be().await.map_err(|e| e.to_string())?, average: r.u32_be().await.map_err(|e| e.to_string())? });
+    if let Some(payload) = find_box(children, b"btrt").map_err(|e| e.to_string())? {
+        let mut r = ByteReader::new(payload);
+        metadata.bitrate = Some(Mp4Bitrate { buffer_size: r.u32_be().map_err(|e| e.to_string())?, maximum: r.u32_be().map_err(|e| e.to_string())?, average: r.u32_be().map_err(|e| e.to_string())? });
     }
     Ok(())
 }
 
 async fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<String>, String> {
-    let Some(item) = find_box(ilst, fourcc).await.map_err(|e| e.to_string())? else {
+    let Some(item) = find_box(ilst, fourcc).map_err(|e| e.to_string())? else {
         return Ok(None);
     };
-    let Some(data) = find_box(item, b"data").await.map_err(|e| e.to_string())? else {
+    let Some(data) = find_box(item, b"data").map_err(|e| e.to_string())? else {
         return Ok(None);
     };
     if data.len() < 8 {
@@ -447,16 +447,16 @@ async fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<Str
 }
 
 async fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), String> {
-    let Some(udta) = find_box(moov, b"udta").await.map_err(|e| e.to_string())? else {
+    let Some(udta) = find_box(moov, b"udta").map_err(|e| e.to_string())? else {
         return Ok(());
     };
-    let Some(meta) = find_box(udta, b"meta").await.map_err(|e| e.to_string())? else {
+    let Some(meta) = find_box(udta, b"meta").map_err(|e| e.to_string())? else {
         return Ok(());
     };
     if meta.len() < 4 {
         return Err("MP4 meta box is truncated".into());
     }
-    let Some(ilst) = find_box(&meta[4..], b"ilst").await.map_err(|e| e.to_string())? else {
+    let Some(ilst) = find_box(&meta[4..], b"ilst").map_err(|e| e.to_string())? else {
         return Ok(());
     };
     movie.title = parse_metadata_item(ilst, &[0xa9, b'n', b'a', b'm']).await?;
@@ -473,18 +473,18 @@ async fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), S
 /// out of `mdat` into `Mp4Sample.data` (probe_mp4 never needed the bytes themselves, only
 /// offsets, since remodel's own callers re-read from the source buffer lazily).
 pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
-    let ftyp_payload = require_box(bytes, b"ftyp", "mp4 stream missing ftyp box").await.map_err(|e| e.to_string())?;
-    let mut fr = ByteReader::new(ftyp_payload).await;
-    let major_brand = fr.fourcc().await.map_err(|e| e.to_string())?.as_str().await.into_owned();
-    let minor_version = fr.u32_be().await.map_err(|e| e.to_string())?;
+    let ftyp_payload = require_box(bytes, b"ftyp", "mp4 stream missing ftyp box").map_err(|e| e.to_string())?;
+    let mut fr = ByteReader::new(ftyp_payload);
+    let major_brand = fr.fourcc().map_err(|e| e.to_string())?.as_str().into_owned();
+    let minor_version = fr.u32_be().map_err(|e| e.to_string())?;
     let mut compatible_brands = Vec::new();
-    while fr.remaining().await >= 4 {
-        compatible_brands.push(fr.fourcc().await.map_err(|e| e.to_string())?.as_str().await.into_owned());
+    while fr.remaining() >= 4 {
+        compatible_brands.push(fr.fourcc().map_err(|e| e.to_string())?.as_str().into_owned());
     }
     let ftyp = Mp4Ftyp { major_brand, minor_version, compatible_brands };
 
-    let moov = require_box(bytes, b"moov", "mp4 stream missing moov box").await.map_err(|e| e.to_string())?;
-    let mut movie = parse_mvhd(require_box(moov, b"mvhd", "moov missing mvhd").await.map_err(|e| e.to_string())?).await?;
+    let moov = require_box(bytes, b"moov", "mp4 stream missing moov box").map_err(|e| e.to_string())?;
+    let mut movie = parse_mvhd(require_box(moov, b"mvhd", "moov missing mvhd").map_err(|e| e.to_string())?).await?;
     parse_movie_metadata(moov, &mut movie).await?;
     let mut tracks = Vec::new();
     for item in iter_boxes(bytes) {
@@ -492,7 +492,7 @@ pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
         match &b.kind.0 {
             b"ftyp" | b"mdat" => {}
             b"moov" => {
-                for trak in find_boxes(b.payload, b"trak").await.map_err(|e| e.to_string())? {
+                for trak in find_boxes(b.payload, b"trak").map_err(|e| e.to_string())? {
                     tracks.push(decode_trak(trak, bytes).await?);
                 }
             }
@@ -505,51 +505,51 @@ pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
 
 /// 📥️ Decodes one typed video track and rejects unsupported handler types.
 async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String> {
-    let tkhd = require_box(trak, b"tkhd", "trak missing tkhd").await.map_err(|e| e.to_string())?;
+    let tkhd = require_box(trak, b"tkhd", "trak missing tkhd").map_err(|e| e.to_string())?;
     let (track_id, mut metadata) = parse_tkhd(tkhd).await?;
     metadata.edits = parse_edit_list(trak).await?;
-    let mdia = require_box(trak, b"mdia", "trak missing mdia").await.map_err(|e| e.to_string())?;
-    let hdlr = require_box(mdia, b"hdlr", "mdia missing hdlr").await.map_err(|e| e.to_string())?;
+    let mdia = require_box(trak, b"mdia", "trak missing mdia").map_err(|e| e.to_string())?;
+    let hdlr = require_box(mdia, b"hdlr", "mdia missing hdlr").map_err(|e| e.to_string())?;
     if hdlr.len() < 12 || &hdlr[8..12] != b"vide" {
         return Err("unsupported non-video MP4 track".into());
     }
     if hdlr.len() > 24 {
         metadata.handler_name = String::from_utf8_lossy(&hdlr[24..]).trim_end_matches('\0').to_string();
     }
-    let mdhd = require_box(mdia, b"mdhd", "mdia missing mdhd").await.map_err(|e| e.to_string())?;
+    let mdhd = require_box(mdia, b"mdhd", "mdia missing mdhd").map_err(|e| e.to_string())?;
     let timescale = parse_mdhd(mdhd, &mut metadata).await?;
-    let minf = require_box(mdia, b"minf", "mdia missing minf").await.map_err(|e| e.to_string())?;
-    let stbl = require_box(minf, b"stbl", "minf missing stbl").await.map_err(|e| e.to_string())?;
-    let stsd = require_box(stbl, b"stsd", "stbl missing stsd").await.map_err(|e| e.to_string())?;
+    let minf = require_box(mdia, b"minf", "mdia missing minf").map_err(|e| e.to_string())?;
+    let stbl = require_box(minf, b"stbl", "minf missing stbl").map_err(|e| e.to_string())?;
+    let stsd = require_box(stbl, b"stsd", "stbl missing stsd").map_err(|e| e.to_string())?;
 
-    let mut sr = ByteReader::new(stsd).await;
-    sr.skip(4).await.map_err(|e| e.to_string())?;
-    let entry_count = sr.u32_be().await.map_err(|e| e.to_string())?;
+    let mut sr = ByteReader::new(stsd);
+    sr.skip(4).map_err(|e| e.to_string())?;
+    let entry_count = sr.u32_be().map_err(|e| e.to_string())?;
     if entry_count == 0 {
         return Err("stsd has no sample entries".into());
     }
-    let rest = &stsd[sr.pos().await..];
+    let rest = &stsd[sr.pos()..];
     let first = iter_boxes(rest).next().ok_or("stsd missing sample entry box")?.map_err(|e| e.to_string())?;
     let (width, height, visual, children) = parse_visual_sample_entry(first.payload).await?;
     metadata.visual = visual;
     parse_codec_extensions(children, &mut metadata).await?;
     let codec = if first.kind.0 == *b"avc1" || first.kind.0 == *b"avc3" {
-        let avcc = require_box(children, b"avcC", "avc sample entry missing avcC").await.map_err(|e| e.to_string())?;
-        let (sps, pps, nal_length_size, extension) = h264::parse_avcc_extended(avcc).await.map_err(|e| e.to_string())?;
+        let avcc = require_box(children, b"avcC", "avc sample entry missing avcC").map_err(|e| e.to_string())?;
+        let (sps, pps, nal_length_size, extension) = h264::parse_avcc_extended(avcc).map_err(|e| e.to_string())?;
         Mp4Codec { sps, pps, nal_length_size, extension }
     } else {
         return Err(format!("unsupported MP4 sample entry {}", first.kind.as_str()));
     };
 
-    let stts = require_box(stbl, b"stts", "stbl missing stts").await.map_err(|e| e.to_string())?;
+    let stts = require_box(stbl, b"stts", "stbl missing stts").map_err(|e| e.to_string())?;
     let durations = expand_run_length_u32(&parse_stts(stts).await?).await;
-    let stsc_entries = parse_stsc(require_box(stbl, b"stsc", "stbl missing stsc").await.map_err(|e| e.to_string())?).await?;
-    let sizes = parse_stsz(require_box(stbl, b"stsz", "stbl missing stsz").await.map_err(|e| e.to_string())?).await?;
-    let chunk_offsets = match find_box(stbl, b"stco").await.map_err(|e| e.to_string())? {
+    let stsc_entries = parse_stsc(require_box(stbl, b"stsc", "stbl missing stsc").map_err(|e| e.to_string())?).await?;
+    let sizes = parse_stsz(require_box(stbl, b"stsz", "stbl missing stsz").map_err(|e| e.to_string())?).await?;
+    let chunk_offsets = match find_box(stbl, b"stco").map_err(|e| e.to_string())? {
         Some(p) => parse_stco(p).await?,
-        None => parse_co64(require_box(stbl, b"co64", "stbl missing stco/co64").await.map_err(|e| e.to_string())?).await?,
+        None => parse_co64(require_box(stbl, b"co64", "stbl missing stco/co64").map_err(|e| e.to_string())?).await?,
     };
-    let sync = match find_box(stbl, b"stss").await.map_err(|e| e.to_string())? {
+    let sync = match find_box(stbl, b"stss").map_err(|e| e.to_string())? {
         Some(p) => Some(parse_stss(p).await?),
         None => None,
     };
@@ -557,7 +557,7 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
     if durations.len() != sample_count {
         return Err("stts sample count does not match stsz".into());
     }
-    let cts_offsets: Vec<i64> = match find_box(stbl, b"ctts").await.map_err(|e| e.to_string())? {
+    let cts_offsets: Vec<i64> = match find_box(stbl, b"ctts").map_err(|e| e.to_string())? {
         Some(p) => {
             let expanded = expand_run_length_i64(&parse_ctts(p).await?).await;
             if expanded.len() != sample_count {
@@ -611,7 +611,7 @@ async fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16
     payload.extend_from_slice(&visual.depth.to_be_bytes());
     payload.extend_from_slice(&visual.color_table_id.to_be_bytes());
     payload.extend_from_slice(extra);
-    write_box(codec_fourcc, &payload).await
+    write_box(codec_fourcc, &payload)
 }
 
 async fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
@@ -659,7 +659,7 @@ async fn build_stts(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&count.to_be_bytes());
         payload.extend_from_slice(&delta.to_be_bytes());
     }
-    write_box(b"stts", &payload).await
+    write_box(b"stts", &payload)
 }
 
 async fn build_ctts(track: &Mp4Track) -> Vec<u8> {
@@ -675,7 +675,7 @@ async fn build_ctts(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&count.to_be_bytes());
         payload.extend_from_slice(&(offset as i32 as u32).to_be_bytes());
     }
-    write_box(b"ctts", &payload).await
+    write_box(b"ctts", &payload)
 }
 
 /// ✍️ One chunk per track (all samples together) — adapted from remodel's `mp4_stsc`, which
@@ -704,7 +704,7 @@ async fn build_stsc(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&sample_count.to_be_bytes());
         payload.extend_from_slice(&1u32.to_be_bytes());
     }
-    write_box(b"stsc", &payload).await
+    write_box(b"stsc", &payload)
 }
 
 async fn build_stsz(track: &Mp4Track) -> Vec<u8> {
@@ -721,7 +721,7 @@ async fn build_stsz(track: &Mp4Track) -> Vec<u8> {
             payload.extend_from_slice(&s.to_be_bytes());
         }
     }
-    write_box(b"stsz", &payload).await
+    write_box(b"stsz", &payload)
 }
 
 async fn build_stco(offsets: &[u32]) -> Vec<u8> {
@@ -730,7 +730,7 @@ async fn build_stco(offsets: &[u32]) -> Vec<u8> {
     for offset in offsets {
         payload.extend_from_slice(&offset.to_be_bytes());
     }
-    write_box(b"stco", &payload).await
+    write_box(b"stco", &payload)
 }
 
 async fn build_stss(track: &Mp4Track) -> Vec<u8> {
@@ -743,7 +743,7 @@ async fn build_stss(track: &Mp4Track) -> Vec<u8> {
     for i in indices {
         payload.extend_from_slice(&i.to_be_bytes());
     }
-    write_box(b"stss", &payload).await
+    write_box(b"stss", &payload)
 }
 
 async fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
@@ -752,21 +752,21 @@ async fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
     payload.extend_from_slice(&[0u8; 12]);
     payload.extend_from_slice(track.metadata.handler_name.as_bytes());
     payload.push(0);
-    write_box(b"hdlr", &payload).await
+    write_box(b"hdlr", &payload)
 }
 
 /// ✍️ Real, spec-valid vmhd/dinf/dref — adapted addition (remodel's own fixture muxer omits
 /// these for brevity; a genuinely conformant video `minf` needs them, so this artifact's encoder
 /// adds them for real player/ffprobe compatibility).
 async fn build_vmhd() -> Vec<u8> {
-    write_box(b"vmhd", &[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]).await
+    write_box(b"vmhd", &[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 }
 async fn build_dinf() -> Vec<u8> {
     let url = write_box(b"url ", &[0, 0, 0, 1]);
     let mut dref_payload = vec![0u8; 4];
     dref_payload.extend_from_slice(&1u32.to_be_bytes());
     dref_payload.extend(url);
-    write_box(b"dinf", &write_box(b"dref", &dref_payload)).await
+    write_box(b"dinf", &write_box(b"dref", &dref_payload))
 }
 
 async fn packed_language(language: &str) -> u16 {
@@ -782,7 +782,7 @@ async fn build_mdhd(track: &Mp4Track) -> Vec<u8> {
     payload.extend_from_slice(&(track.metadata.media_duration as u32).to_be_bytes());
     payload.extend_from_slice(&packed_language(&track.metadata.language).await.to_be_bytes());
     payload.extend_from_slice(&track.metadata.quality.to_be_bytes());
-    write_box(b"mdhd", &payload).await
+    write_box(b"mdhd", &payload)
 }
 
 async fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
@@ -802,7 +802,7 @@ async fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
     }
     payload.extend_from_slice(&(track.width << 16).to_be_bytes());
     payload.extend_from_slice(&(track.height << 16).to_be_bytes());
-    write_box(b"tkhd", &payload).await
+    write_box(b"tkhd", &payload)
 }
 
 async fn build_edts(track: &Mp4Track) -> Vec<u8> {
@@ -817,7 +817,7 @@ async fn build_edts(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
         payload.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
     }
-    write_box(b"edts", &write_box(b"elst", &payload)).await
+    write_box(b"edts", &write_box(b"elst", &payload))
 }
 
 async fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
@@ -825,7 +825,7 @@ async fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let stbl = write_box(b"stbl", &build_stbl(track, chunk_offsets));
     let minf = write_box(b"minf", &[build_vmhd(), build_dinf(), stbl].concat());
     let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track), minf].concat());
-    write_box(b"trak", &[tkhd, build_edts(track), mdia].concat()).await
+    write_box(b"trak", &[tkhd, build_edts(track), mdia].concat())
 }
 
 async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
@@ -843,13 +843,13 @@ async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
     }
     payload.extend_from_slice(&[0u8; 24]);
     payload.extend_from_slice(&movie.next_track_id.to_be_bytes());
-    write_box(b"mvhd", &payload).await
+    write_box(b"mvhd", &payload)
 }
 
 async fn build_metadata_item(fourcc: &[u8; 4], value: &str) -> Vec<u8> {
     let mut data = vec![0, 0, 0, 1, 0, 0, 0, 0];
     data.extend_from_slice(value.as_bytes());
-    write_box(fourcc, &write_box(b"data", &data)).await
+    write_box(fourcc, &write_box(b"data", &data))
 }
 
 async fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
@@ -868,8 +868,8 @@ async fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
     handler.extend_from_slice(b"appl");
     handler.extend_from_slice(&[0u8; 8]);
     handler.push(0);
-    let meta_payload = [vec![0u8; 4], write_box(b"hdlr", &handler).await, write_box(b"ilst", &ilst).await].concat();
-    write_box(b"udta", &write_box(b"meta", &meta_payload)).await
+    let meta_payload = [vec![0u8; 4], write_box(b"hdlr", &handler), write_box(b"ilst", &ilst)].concat();
+    write_box(b"udta", &write_box(b"meta", &meta_payload))
 }
 
 async fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
@@ -887,7 +887,7 @@ async fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
         }
         traks.extend(build_trak(track, &chunk_offsets));
     }
-    write_box(b"moov", &[build_mvhd(&snapshot.movie), traks, build_udta(&snapshot.movie)].concat()).await
+    write_box(b"moov", &[build_mvhd(&snapshot.movie), traks, build_udta(&snapshot.movie)].concat())
 }
 
 /// ✍️ Real ISO-BMFF encode from `Mp4Snapshot` (see this module's doc comment for the exact
@@ -910,16 +910,16 @@ pub async fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
         }
         ftyp_payload.extend_from_slice(&b4);
     }
-    let ftyp = write_box(b"ftyp", &ftyp_payload).await;
+    let ftyp = write_box(b"ftyp", &ftyp_payload);
 
     let all_sample_bytes: Vec<u8> = snapshot.tracks.iter().flat_map(|t| t.samples.iter().flat_map(|s| s.data.clone())).collect();
     let mdat = write_box(b"mdat", &all_sample_bytes);
     let measured_moov = build_moov(snapshot, 0).await;
-    let free = write_box(b"free", &[]).await;
+    let free = write_box(b"free", &[]);
     let mdat_data_offset = u32::try_from(ftyp.len() + measured_moov.len() + free.len() + 8).expect("MP4 media offset exceeds stco range");
     let moov = build_moov(snapshot, mdat_data_offset);
 
-    [ftyp, moov.await, free, mdat.await].concat()
+    [ftyp, moov.await, free, mdat].concat()
 }
 //#endregion 🔖️Encode
 

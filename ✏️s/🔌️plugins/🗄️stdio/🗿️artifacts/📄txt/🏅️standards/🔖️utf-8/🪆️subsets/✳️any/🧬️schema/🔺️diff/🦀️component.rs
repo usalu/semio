@@ -58,12 +58,14 @@ pub struct TxtLinesDiff {
 
 impl TxtLinesDiff {
     /// 🕳️ No removed/modified/added entries.
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple to a base line array. See module docs for apply order.
-    pub async fn apply(&self, base: &[String]) -> Vec<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[String]) -> Vec<String> {
         let mut items: Vec<Option<String>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
             if let Some(slot) = items.get_mut(m.index) {
@@ -84,7 +86,8 @@ impl TxtLinesDiff {
     /// 🧭️ State delta between two line arrays: pairwise-by-position over `0..min(len)`
     /// (`modified`), base tail (`removed`), other tail (`added`) -- the recipe's "index keys
     /// pairwise by position" `between` rule.
-    pub async fn between(base: &[String], next: &[String]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[String], next: &[String]) -> Self {
         let min_len = base.len().min(next.len());
         let mut modified = Vec::new();
         for i in 0..min_len {
@@ -115,7 +118,8 @@ enum Lbl {
 /// array: remove the given indices, then insert `added` labels ascending at
 /// `min(index, current_len)`. Mirrors `apply`'s exact algorithm but carries labels, not text, so
 /// it can run without any real snapshot.
-async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) -> Vec<Lbl> {
     let removed_set: HashSet<usize> = removed.iter().copied().collect();
     let mut survivors: Vec<Lbl> = labels.into_iter().enumerate().filter(|(i, _)| !removed_set.contains(i)).map(|(_, l)| l).collect();
     let mut added_sorted = added.to_vec();
@@ -136,7 +140,8 @@ async fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, L
 /// which base indices survived (present ⇒ kept, absent ⇒ `r1 ∪ φ⁻¹(r2)`), which `Added1`
 /// entries survived `d2` (a `d2`-removal of a `d1`-added item "annihilates the add" -- it's
 /// simply absent from the walk, never re-emitted), and each survivor's final position.
-async fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched (a real bug
@@ -147,7 +152,7 @@ async fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added).await;
+    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added);
 
     // 🔍️ Record each label's MID position (before any d2-triggered padding) -- this is exactly
     // the φ(base_index)/mid_index_of(Added1(j)) transport the recipe calls for.
@@ -239,12 +244,12 @@ pub struct TxtDiff {
 impl MutationDiff<TxtSnapshot> for TxtDiff {
     async fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
         if let Some(lines) = &self.lines {
-            validate_txt_lines(base.lines.len(), lines).await?;
+            validate_txt_lines(base.lines.len(), lines)?;
         }
         Ok(TxtSnapshot {
             schema: base.schema.clone(),
             lines: match &self.lines {
-                Some(ld) => ld.apply(&base.lines).await,
+                Some(ld) => ld.apply(&base.lines),
                 None => base.lines.clone(),
             },
             trailing_newline: self.trailing_newline.unwrap_or(base.trailing_newline),
@@ -266,8 +271,8 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
             (Some(l1), None) => Some(l1),
             (None, Some(l2)) => Some(l2),
             (Some(l1), Some(l2)) => {
-                let merged = absorb_pair(&l1, &l2).await;
-                if merged.is_empty().await {
+                let merged = absorb_pair(&l1, &l2);
+                if merged.is_empty() {
                     None
                 } else {
                     Some(merged)
@@ -277,30 +282,31 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
     }
 }
 
-async fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResult<()> {
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").await.at(["lines", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").at(["lines", "removed"]));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").await.at(["lines", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").at(["lines", "removed"]));
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").await.at(["lines", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").at(["lines", "modified"]));
         }
         if !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").await.at(["lines", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").at(["lines", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut additions = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !additions.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").await.at(["lines", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").at(["lines", "added"]));
         }
     }
     Ok(())
@@ -318,8 +324,8 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     async fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
         let trailing_newline = if base.trailing_newline != other.trailing_newline { Some(other.trailing_newline) } else { None };
         let line_ending = if base.line_ending != other.line_ending { Some(other.line_ending) } else { None };
-        let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines).await;
-        let lines = if lines_diff.is_empty().await { None } else { Some(lines_diff) };
+        let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines);
+        let lines = if lines_diff.is_empty() { None } else { Some(lines_diff) };
         TxtDiff { trailing_newline, line_ending, lines }
     }
 
@@ -330,8 +336,9 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation -- no full-replace
 /// slot, same `between` machinery every other mutation's diff ultimately composes from.
-pub async fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
-    TxtDiff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
+    TxtDiff::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 
@@ -340,7 +347,8 @@ pub async fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> Tx
 mod tests {
     use super::*;
 
-    async fn lines(v: &[&str]) -> Vec<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn lines(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()
     }
 

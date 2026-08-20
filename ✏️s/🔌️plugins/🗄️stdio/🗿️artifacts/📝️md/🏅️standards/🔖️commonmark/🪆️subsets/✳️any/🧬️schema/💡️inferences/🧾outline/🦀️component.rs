@@ -31,14 +31,15 @@ pub struct MdOutline {
 /// 🔤️ Flattens a run of inlines into plain text — emphasis/strong/link recurse into their own
 /// inline children, code spans use their literal, images use their alt text, soft/hard breaks
 /// become a single space, raw inline HTML contributes nothing (it isn't prose content).
-async fn inline_text(inlines: &[MdInline]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inline_text(inlines: &[MdInline]) -> String {
     let mut out = String::new();
     for inline in inlines {
         match inline {
             MdInline::Text { text } => out.push_str(text),
-            MdInline::Emphasis { inlines } | MdInline::Strong { inlines } => out.push_str(&Box::pin(inline_text(inlines)).await),
+            MdInline::Emphasis { inlines } | MdInline::Strong { inlines } => out.push_str(&Box::pin(inline_text(inlines))),
             MdInline::Code { literal } => out.push_str(literal),
-            MdInline::Link { text, .. } => out.push_str(&Box::pin(inline_text(text)).await),
+            MdInline::Link { text, .. } => out.push_str(&Box::pin(inline_text(text))),
             MdInline::Image { alt, .. } => out.push_str(alt),
             MdInline::SoftBreak | MdInline::HardBreak => out.push(' '),
             MdInline::HtmlInline { .. } => {}
@@ -49,7 +50,8 @@ async fn inline_text(inlines: &[MdInline]) -> String {
 
 /// 🌳️ Recursively walks `block`, appending every `Heading` encountered to `headings`, adding to
 /// `block_count`, and appending flattened text to `word_source`.
-async fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     *block_count += 1;
     match block {
         MdBlock::Heading { level, inlines } => {
@@ -83,7 +85,8 @@ async fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_c
 }
 
 impl MdOutline {
-    pub async fn compute(snapshot: &MdSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &MdSnapshot) -> Self {
         let mut section_outline = Vec::new();
         let mut block_count = 0u32;
         let mut word_source = String::new();

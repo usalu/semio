@@ -91,7 +91,8 @@ impl protocol::OpBinary for BinaryEditorCommand {
 /// whitespace, then decodes the remaining contiguous hex — same convention
 /// `BinarySnapshot::parse_dsl` already uses. `None` on odd length or an invalid hex digit — the
 /// caller treats that as a documented no-op, never a partial apply.
-async fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
     let hex: String = text.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("").chars().filter(|c| !c.is_whitespace()).collect();
     if hex.len() % 2 != 0 {
         return None;
@@ -136,13 +137,13 @@ impl ArtifactEditor for BinaryEditor {
     /// hex (odd length or an invalid digit) is a documented no-op (`Emit::default()`), never a panic.
     async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let BinaryEditorCommand::ReplaceText { text } = command;
-        let Some(parsed) = parse_hex_dump(text).await else { return Ok(Emit::default()) };
+        let Some(parsed) = parse_hex_dump(text) else { return Ok(Emit::default()) };
         Ok(Emit { artifact_mutations: vec![BinaryMutation::Splice { offset: 0, remove_len: doc.snapshot.bytes.len(), insert: parsed }], description: Some("Replace bytes".into()), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -150,14 +151,15 @@ impl ArtifactEditor for BinaryEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_binary_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_binary_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BINARY_EDITOR_DIALECT)
-        .await.document(["stdio", "binary"])
-        .await.icon_id("binary")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::BINARY_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["stdio", "binary"])
+        .icon_id("binary")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::BINARY_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

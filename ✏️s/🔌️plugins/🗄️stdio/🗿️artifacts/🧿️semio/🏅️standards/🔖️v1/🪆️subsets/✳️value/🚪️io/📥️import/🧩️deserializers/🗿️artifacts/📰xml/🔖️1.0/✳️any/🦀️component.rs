@@ -26,54 +26,61 @@ impl ArtifactDeserializer for SemioValueFromXml {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_xml_document(&from.doc).await, nodes: Vec::new() })
+        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_xml_document(&from.doc), nodes: Vec::new() })
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
-async fn entry(key: &str, value: SemioValue) -> SemioValueEntry {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entry(key: &str, value: SemioValue) -> SemioValueEntry {
     SemioValueEntry { key: key.into(), value }
 }
 
-async fn str_value(s: &str) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn str_value(s: &str) -> SemioValue {
     SemioValue::Str { value: s.to_string() }
 }
 
-async fn kind_tagged(kind: &str, text: &str) -> SemioValue {
-    SemioValue::Map { entries: vec![entry("kind", str_value(kind).await).await, entry("text", str_value(text).await).await] }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn kind_tagged(kind: &str, text: &str) -> SemioValue {
+    SemioValue::Map { entries: vec![entry("kind", str_value(kind)), entry("text", str_value(text))] }
 }
 
-pub async fn semio_value_of_node(node: &XmlNode) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_value_of_node(node: &XmlNode) -> SemioValue {
     match node {
         XmlNode::Element { name, attrs, children } => SemioValue::Map {
             entries: vec![
-                entry("kind", str_value("element").await).await,
-                entry("tag", str_value(name).await).await,
-                entry("attrs", SemioValue::Map { entries: attrs.iter().map(|a| entry(&a.name, str_value(&a.value))).collect() }).await,
-                entry("children", SemioValue::List { items: children.iter().map(semio_value_of_node).collect() }).await,
+                entry("kind", str_value("element")),
+                entry("tag", str_value(name)),
+                entry("attrs", SemioValue::Map { entries: attrs.iter().map(|a| entry(&a.name, str_value(&a.value))).collect() }),
+                entry("children", SemioValue::List { items: children.iter().map(semio_value_of_node).collect() }),
             ],
         },
-        XmlNode::Text { text } => kind_tagged("text", text).await,
-        XmlNode::CData { text } => kind_tagged("cdata", text).await,
-        XmlNode::Comment { text } => kind_tagged("comment", text).await,
-        XmlNode::ProcessingInstruction { target, data } => SemioValue::Map { entries: vec![entry("kind", str_value("pi").await).await, entry("target", str_value(target).await).await, entry("data", str_value(data).await).await] },
+        XmlNode::Text { text } => kind_tagged("text", text),
+        XmlNode::CData { text } => kind_tagged("cdata", text),
+        XmlNode::Comment { text } => kind_tagged("comment", text),
+        XmlNode::ProcessingInstruction { target, data } => SemioValue::Map { entries: vec![entry("kind", str_value("pi")), entry("target", str_value(target)), entry("data", str_value(data))] },
     }
 }
 
-async fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
     SemioValue::Map {
-        entries: vec![entry("version", str_value(&d.version).await).await, entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null).await).await, entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null)).await],
+        entries: vec![entry("version", str_value(&d.version)), entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null)), entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null))],
     }
 }
 
-async fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
     let external_id = match &doctype.external_id {
         None => SemioValue::Null,
-        Some(XmlExternalId::System { system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("system").await).await, entry("systemId", str_value(system_id).await).await] },
-        Some(XmlExternalId::Public { public_id, system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("public").await).await, entry("publicId", str_value(public_id).await).await, entry("systemId", str_value(system_id).await).await] },
+        Some(XmlExternalId::System { system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("system")), entry("systemId", str_value(system_id))] },
+        Some(XmlExternalId::Public { public_id, system_id }) => SemioValue::Map { entries: vec![entry("kind", str_value("public")), entry("publicId", str_value(public_id)), entry("systemId", str_value(system_id))] },
     };
     let declarations = doctype
         .declarations
@@ -84,17 +91,18 @@ async fn semio_value_of_doctype(doctype: &XmlDoctype) -> SemioValue {
             }
         })
         .collect();
-    SemioValue::Map { entries: vec![entry("name", str_value(&doctype.name).await).await, entry("externalId", external_id).await, entry("declarations", SemioValue::List { items: declarations }).await] }
+    SemioValue::Map { entries: vec![entry("name", str_value(&doctype.name)), entry("externalId", external_id), entry("declarations", SemioValue::List { items: declarations })] }
 }
 
-pub async fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
     SemioValue::Map {
         entries: vec![
-            entry("kind", str_value("document").await).await,
-            entry("declaration", doc.declaration.as_ref().map(semio_value_of_declaration).unwrap_or(SemioValue::Null).await).await,
-            entry("doctype", doc.doctype.as_ref().map(semio_value_of_doctype).unwrap_or(SemioValue::Null).await).await,
-            entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }).await,
-            entry("root", doc.root.as_ref().map(semio_value_of_node).unwrap_or(SemioValue::Null).await).await,
+            entry("kind", str_value("document")),
+            entry("declaration", doc.declaration.as_ref().map(semio_value_of_declaration).unwrap_or(SemioValue::Null)),
+            entry("doctype", doc.doctype.as_ref().map(semio_value_of_doctype).unwrap_or(SemioValue::Null)),
+            entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }),
+            entry("root", doc.root.as_ref().map(semio_value_of_node).unwrap_or(SemioValue::Null)),
         ],
     }
 }

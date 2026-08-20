@@ -2,6 +2,7 @@ use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::{app
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 /// ▶️ Applies a set-snapshot mutation.
-pub async fn apply(projection: &mut HtmlSnapshot, mutation: &HtmlMutation) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(projection: &mut HtmlSnapshot, mutation: &HtmlMutation) {
     let _ = apply_html_mutation(projection, mutation);
 }

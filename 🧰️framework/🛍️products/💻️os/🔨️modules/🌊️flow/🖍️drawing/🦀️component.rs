@@ -188,7 +188,10 @@ impl Default for DrawingScene {
 // #region 🔖️KernelTrait
 /// 🔌️ Model-free 2D drawing kernel interface (fully async) — flow's own ephemeral node-evaluation
 /// contract, implemented only by [`DrawingStore`] below.
-#[async_trait::async_trait(?Send)]
+///
+/// 🚪️ R8: plain AFIT, no `#[async_trait]`. That macro desugars every method to
+/// `Pin<Box<dyn Future>>` in return position, which R1 bans outright; and with exactly one
+/// implementor and zero `dyn DrawingKernel` uses repo-wide, there was never an erasure to buy.
 pub trait DrawingKernel {
     // #region Primitives
     async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
@@ -811,7 +814,6 @@ fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
 // #endregion 🔖️Export
 
 // #region 🔖️KernelImpl
-#[async_trait::async_trait(?Send)]
 impl DrawingKernel for DrawingStore {
     async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height })

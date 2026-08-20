@@ -24,7 +24,8 @@ pub struct ValueId {
 }
 
 impl ValueId {
-    pub async fn new(value: impl Into<String>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
 }
@@ -126,21 +127,23 @@ impl Default for SemioValueSnapshot {
 /// text codec is likewise shared verbatim by its diff/mutations facets' `value=` token). Single
 /// source of truth: `🧬️mutations/🦀️component.rs`'s `SetSnapshot` argument encoding calls THESE
 /// functions directly rather than keeping its own second copy.
-pub(crate) async fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
     let nodes = s.nodes.iter().map(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::artifacts::semio::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
 }
-pub(crate) async fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [schema_s, root_s, nodes_s] = parts.as_slice() else {
         return Err(format!("semio value snapshot: expected 3 top-level fields, got {}", parts.len()));
     };
-    let nodes_inner = strip_brackets(nodes_s).await?;
+    let nodes_inner = strip_brackets(nodes_s)?;
     let nodes = split_top_level(nodes_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_value_node).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioValueSnapshot { schema: dec_str(schema_s).await?, root: dec_semio_value(root_s).await?, nodes })
+    Ok(SemioValueSnapshot { schema: dec_str(schema_s)?, root: dec_semio_value(root_s)?, nodes })
 }
 //#endregion 🔖️SnapshotTextCodec
 
@@ -163,7 +166,7 @@ impl store::ArtifactDsl for SemioValueSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        dec_semio_value_snapshot(body.trim()).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        dec_semio_value_snapshot(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -176,7 +179,7 @@ impl store::ArtifactDsl for SemioValueSnapshot {
 impl store::ArtifactPack for SemioValueSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = enc_semio_value_snapshot(self).await.into_bytes();
+        let raw = enc_semio_value_snapshot(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -188,7 +191,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        dec_semio_value_snapshot(text).await.map_err(store::PackError::Schema)
+        dec_semio_value_snapshot(text).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -202,7 +205,8 @@ impl store::ArtifactPack for SemioValueSnapshot {
 /// `🎹️composer/🦀️component.rs`) and for this file's own round-trip tests below — same convention
 /// `json`'s `demo_json_snapshot()`/`flow`'s `demo_flow_snapshot()` use.
 #[cfg(test)]
-pub(crate) async fn demo_semio_value_snapshot() -> SemioValueSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
     SemioValueSnapshot {
         schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
         root: SemioValue::Map {

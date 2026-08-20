@@ -913,21 +913,15 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                             None => break,
                         }
                     }
-                    // 🚫️async: E5 executor bridge, NOT a plain `.await`. `TimerWheel::disarm`
-                    // holds a `std::sync::MutexGuard<WheelCore>` across ITS OWN internal `.await`
-                    // on `WheelCore::disarm` (`🛎️services/🦀️component.rs:506-508`) — the exact
-                    // Send-violating shape that impl block's OWN sibling methods `pop_expired`/
-                    // `next_expiry_ms` are already R9-tagged against (see their doc comments there),
-                    // but `arm`/`disarm`/`armed_count` were missed. A plain `.await` here forces the
-                    // non-`Send` guard into this block's own generated state (it is cast to
-                    // `HostFuture<()> = Pin<Box<dyn Future + Send>>` two lines below) — confirmed by
-                    // compiling it: E0277 `MutexGuard<WheelCore> cannot be sent between threads`.
-                    // `🛎️services` is outside this packet's `🔌️plugin/🖥️host` path_scope to fix at
-                    // the root (reported to the coordinator instead, see the packet report). Sound
-                    // here because `WheelCore::disarm`'s own body has zero suspension points (pure
-                    // `HashMap`/counter bookkeeping, no internal `.await`), so the whole call always
-                    // resolves on its first poll — `resolve_ready` never hits its `unreachable!()`.
-                    resolve_ready(wheel.disarm(timer_id));
+                    // 🩹️ terra-shard-lane: the `resolve_ready` bridge this comment used to document
+                    // was a workaround for a `🛎️services` `TimerWheel::arm`/`disarm`/`armed_count`
+                    // bug (holding a `std::sync::MutexGuard<WheelCore>` across their OWN internal
+                    // `.await`, breaking `HostFuture<()>: Send`) — sol R9-reverted all three to sync
+                    // (matching their already-tagged siblings `pop_expired`/`next_expiry_ms`) and
+                    // removed the guard-across-await shape at its root. Plain `.await` now compiles
+                    // (verified: no E0277), so the bridge is gone — one fewer E5 exception in this
+                    // crate.
+                    wheel.disarm(timer_id).await;
                 });
                 self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
             }
@@ -1007,21 +1001,6 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
             }
         });
         self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
-    }
-}
-
-/// 🌉️ Local copy of the same tiny bridge `🛎️services`/`🚪️io`/`🕸️graph/🗣️dsl` each already carry
-/// (no shared home for it in `⏳️async` today) — polls `fut` exactly once, asserting it resolves
-/// without suspending. Used ONLY where the callee's own future is proven suspension-free (see each
-/// call site's own `// 🚫️async: E5` tag); this is what lets a `Send`-boxed `HostFuture<()>` call a
-/// non-`Send` future without forcing its internals into the boxed block's own generated state.
-fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
-    let waker = std::task::Waker::noop();
-    let mut cx = std::task::Context::from_waker(waker);
-    let mut fut = std::pin::pin!(fut);
-    match fut.as_mut().poll(&mut cx) {
-        std::task::Poll::Ready(value) => value,
-        std::task::Poll::Pending => unreachable!("resolve_ready: the awaited future is documented to resolve on its first poll — a Pending here means that contract was violated"),
     }
 }
 

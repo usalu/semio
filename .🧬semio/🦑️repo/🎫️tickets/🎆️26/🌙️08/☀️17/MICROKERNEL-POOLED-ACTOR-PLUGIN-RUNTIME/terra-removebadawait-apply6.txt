@@ -1,0 +1,2 @@
+[pass 1] errors=5695 bad-await=0 out-of-scope=0
+  fixpoint reached

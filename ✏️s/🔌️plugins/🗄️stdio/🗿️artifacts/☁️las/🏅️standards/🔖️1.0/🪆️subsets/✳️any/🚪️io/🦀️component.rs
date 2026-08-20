@@ -59,29 +59,35 @@ use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 
 //#region 🔖️ByteHelpers
 /// 🔍 Reads a null/space-padded fixed-width ASCII field, trimmed of trailing padding.
-async fn read_fixed_str(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_fixed_str(bytes: &[u8]) -> String {
     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
     String::from_utf8_lossy(&bytes[..end]).trim_end().to_string()
 }
 
 /// 🏗️ Writes `s` into a fixed-width field, truncated to `buf.len()` bytes, the rest left as
 /// whatever `buf` already held (callers zero-init the output buffer up front).
-async fn write_fixed_str(buf: &mut [u8], s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_fixed_str(buf: &mut [u8], s: &str) {
     let bytes = s.as_bytes();
     let n = bytes.len().min(buf.len());
     buf[..n].copy_from_slice(&bytes[..n]);
 }
 
-async fn read_u16(bytes: &[u8], off: usize) -> Result<u16, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u16(bytes: &[u8], off: usize) -> Result<u16, String> {
     bytes.get(off..off + 2).and_then(|s| s.try_into().ok()).map(u16::from_le_bytes).ok_or_else(|| format!("las: truncated u16 at offset {off}"))
 }
-async fn read_u32(bytes: &[u8], off: usize) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u32(bytes: &[u8], off: usize) -> Result<u32, String> {
     bytes.get(off..off + 4).and_then(|s| s.try_into().ok()).map(u32::from_le_bytes).ok_or_else(|| format!("las: truncated u32 at offset {off}"))
 }
-async fn read_u64(bytes: &[u8], off: usize) -> Result<u64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u64(bytes: &[u8], off: usize) -> Result<u64, String> {
     bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(u64::from_le_bytes).ok_or_else(|| format!("las: truncated u64 at offset {off}"))
 }
-async fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
     bytes.get(off..off + 8).and_then(|s| s.try_into().ok()).map(f64::from_le_bytes).ok_or_else(|| format!("las: truncated f64 at offset {off}"))
 }
 //#endregion 🔖️ByteHelpers
@@ -89,7 +95,8 @@ async fn read_f64(bytes: &[u8], off: usize) -> Result<f64, String> {
 //#region 🔖️RecordLayout
 /// 📏 Fixed byte width of point data record formats 0-3 (§LAS 1.2). `0` marks an
 /// unsupported format.
-async fn point_record_min_len(fmt: u8) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_record_min_len(fmt: u8) -> usize {
     match fmt {
         0 => 20,
         1 => 28,
@@ -148,12 +155,13 @@ mod vlr_off {
 //#region 🔖️Decode
 /// 🔍 Decodes one point record at fixed byte offsets for the given point data format,
 /// applying the header's scale/offset to reconstruct real-world `x/y/z`.
-async fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> Result<LasPoint, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> Result<LasPoint, String> {
     let min_len = point_record_min_len(fmt);
     if min_len == 0 {
         return Err(format!("las: unsupported point data format {fmt}"));
     }
-    if rec.len() < min_len.await {
+    if rec.len() < min_len {
         return Err("las: truncated point record".into());
     }
     let xi = i32::from_le_bytes(rec[0..4].try_into().unwrap());
@@ -192,7 +200,8 @@ async fn decode_point(rec: &[u8], fmt: u8, scale: (f64, f64, f64), offset: (f64,
 
 /// 🔍 Decodes `number_of_vlrs` Variable Length Records starting at `header_size`, bounded by
 /// `point_offset` (graceful truncation — never reads past either boundary or `bytes.len()`).
-async fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_vlrs: u32) -> Vec<LasVlr> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, number_of_vlrs: u32) -> Vec<LasVlr> {
     let mut vlrs = Vec::with_capacity((number_of_vlrs as usize).min(10_000));
     let mut pos = header_size;
     for _ in 0..number_of_vlrs {
@@ -200,11 +209,11 @@ async fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, numb
             break;
         }
         let user_id = read_fixed_str(&bytes[pos + vlr_off::USER_ID.start..pos + vlr_off::USER_ID.end]);
-        let record_id = match read_u16(bytes, pos + vlr_off::RECORD_ID).await {
+        let record_id = match read_u16(bytes, pos + vlr_off::RECORD_ID) {
             Ok(v) => v,
             Err(_) => break,
         };
-        let data_len = match read_u16(bytes, pos + vlr_off::RECORD_LENGTH).await {
+        let data_len = match read_u16(bytes, pos + vlr_off::RECORD_LENGTH) {
             Ok(v) => v as usize,
             Err(_) => break,
         };
@@ -224,7 +233,8 @@ async fn decode_vlrs(bytes: &[u8], header_size: usize, point_offset: usize, numb
 /// 🔍 Decodes a full LAS binary buffer: header fields (trusting `offset_to_point_data` and
 /// `header_size` rather than a hardcoded 227 constant) + VLRs + all point records for whichever
 /// of formats 0-3 the header declares.
-pub async fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     if bytes.len() < 4 || &bytes[0..4] != b"LASF" {
         return Err("las: signature missing".into());
     }
@@ -236,51 +246,51 @@ pub async fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
     let version_minor = bytes[off::VERSION_MINOR];
     let system_identifier = read_fixed_str(&bytes[off::SYSTEM_IDENTIFIER]);
     let generating_software = read_fixed_str(&bytes[off::GENERATING_SOFTWARE]);
-    let creation_day_of_year = read_u16(bytes, off::CREATION_DAY).await?;
-    let creation_year = read_u16(bytes, off::CREATION_YEAR).await?;
-    let header_size = read_u16(bytes, off::HEADER_SIZE).await? as usize;
-    let offset_to_point_data = read_u32(bytes, off::OFFSET_TO_POINT_DATA).await?;
+    let creation_day_of_year = read_u16(bytes, off::CREATION_DAY)?;
+    let creation_year = read_u16(bytes, off::CREATION_YEAR)?;
+    let header_size = read_u16(bytes, off::HEADER_SIZE)? as usize;
+    let offset_to_point_data = read_u32(bytes, off::OFFSET_TO_POINT_DATA)?;
     let point_offset = offset_to_point_data as usize;
     if point_offset < header_size {
         return Err(format!("las: offset_to_point_data {point_offset} precedes declared header_size {header_size}"));
     }
-    let number_of_vlrs = read_u32(bytes, off::NUMBER_OF_VLRS).await?;
+    let number_of_vlrs = read_u32(bytes, off::NUMBER_OF_VLRS)?;
     let point_format = bytes[off::POINT_DATA_FORMAT_ID] & 0x7F; // top bit flags waveform-packet storage, irrelevant to the record layout itself
-    let record_len = read_u16(bytes, off::POINT_DATA_RECORD_LENGTH).await? as usize;
+    let record_len = read_u16(bytes, off::POINT_DATA_RECORD_LENGTH)? as usize;
     if record_len == 0 {
         return Err("las: point data record length is zero".into());
     }
-    let legacy_count = read_u32(bytes, off::NUMBER_OF_POINT_RECORDS).await?;
+    let legacy_count = read_u32(bytes, off::NUMBER_OF_POINT_RECORDS)?;
     let mut point_count = legacy_count as u64;
     if point_count == 0 && version_minor >= 4 && bytes.len() >= off::EXTENDED_POINT_COUNT + 8 {
         // 🔖 LAS 1.4: legacy count of 0 means "see the extended 64-bit count".
-        let extended = read_u64(bytes, off::EXTENDED_POINT_COUNT).await?;
+        let extended = read_u64(bytes, off::EXTENDED_POINT_COUNT)?;
         if extended != 0 {
             point_count = extended;
         }
     }
     let mut points_by_return = [0u32; 5];
     for (i, slot) in points_by_return.iter_mut().enumerate() {
-        *slot = read_u32(bytes, off::POINTS_BY_RETURN + i * 4).await?;
+        *slot = read_u32(bytes, off::POINTS_BY_RETURN + i * 4)?;
     }
-    let x_scale = read_f64(bytes, off::X_SCALE).await?;
-    let y_scale = read_f64(bytes, off::Y_SCALE).await?;
-    let z_scale = read_f64(bytes, off::Z_SCALE).await?;
-    let x_offset = read_f64(bytes, off::X_OFFSET).await?;
-    let y_offset = read_f64(bytes, off::Y_OFFSET).await?;
-    let z_offset = read_f64(bytes, off::Z_OFFSET).await?;
-    let max_x = read_f64(bytes, off::MAX_X).await?;
-    let min_x = read_f64(bytes, off::MIN_X).await?;
-    let max_y = read_f64(bytes, off::MAX_Y).await?;
-    let min_y = read_f64(bytes, off::MIN_Y).await?;
-    let max_z = read_f64(bytes, off::MAX_Z).await?;
-    let min_z = read_f64(bytes, off::MIN_Z).await?;
+    let x_scale = read_f64(bytes, off::X_SCALE)?;
+    let y_scale = read_f64(bytes, off::Y_SCALE)?;
+    let z_scale = read_f64(bytes, off::Z_SCALE)?;
+    let x_offset = read_f64(bytes, off::X_OFFSET)?;
+    let y_offset = read_f64(bytes, off::Y_OFFSET)?;
+    let z_offset = read_f64(bytes, off::Z_OFFSET)?;
+    let max_x = read_f64(bytes, off::MAX_X)?;
+    let min_x = read_f64(bytes, off::MIN_X)?;
+    let max_y = read_f64(bytes, off::MAX_Y)?;
+    let min_y = read_f64(bytes, off::MIN_Y)?;
+    let max_z = read_f64(bytes, off::MAX_Z)?;
+    let min_z = read_f64(bytes, off::MIN_Z)?;
 
     let min_len = point_record_min_len(point_format);
     if min_len == 0 {
         return Err(format!("las: unsupported point data format {point_format}"));
     }
-    if record_len < min_len.await {
+    if record_len < min_len {
         return Err(format!("las: record length {record_len} too small for point data format {point_format} (needs >= {min_len})"));
     }
 
@@ -293,7 +303,7 @@ pub async fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
             break;
         }
         let rec = &bytes[pos..pos + record_len];
-        points.push(decode_point(rec, point_format, (x_scale, y_scale, z_scale), (x_offset, y_offset, z_offset)).await?);
+        points.push(decode_point(rec, point_format, (x_scale, y_scale, z_scale), (x_offset, y_offset, z_offset))?);
         pos += record_len;
     }
 
@@ -337,7 +347,8 @@ pub async fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
 /// and `number_of_point_records` (`== points.len()`) ALWAYS recomputed from the real `vlrs`/
 /// `points` content — never trusted verbatim from `snap.header`, since these six fields are
 /// structural. Every other header field is written verbatim from `snap.header`.
-async fn choose_point_format(points: &[LasPoint]) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn choose_point_format(points: &[LasPoint]) -> u8 {
     let has_gps = points.iter().any(|p| p.gps_time.is_some());
     let has_rgb = points.iter().any(|p| p.rgb.is_some());
     match (has_gps, has_rgb) {
@@ -350,9 +361,10 @@ async fn choose_point_format(points: &[LasPoint]) -> u8 {
 
 /// 🏗️ Encodes `snap` into a real LAS binary buffer: header + VLRs + point records, point data
 /// format 0-3 chosen automatically (see `choose_point_format`).
-pub async fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
     let format = choose_point_format(&snap.points);
-    let record_len = point_record_min_len(format.await) as u16;
+    let record_len = point_record_min_len(format) as u16;
     let header_size = off::FIXED_HEADER_LEN;
     let point_count = snap.points.len();
     if point_count as u64 > u32::MAX as u64 {
@@ -381,7 +393,7 @@ pub async fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
     out[off::HEADER_SIZE..off::HEADER_SIZE + 2].copy_from_slice(&(header_size as u16).to_le_bytes());
     out[off::OFFSET_TO_POINT_DATA..off::OFFSET_TO_POINT_DATA + 4].copy_from_slice(&(offset_to_point_data as u32).to_le_bytes());
     out[off::NUMBER_OF_VLRS..off::NUMBER_OF_VLRS + 4].copy_from_slice(&(snap.vlrs.len() as u32).to_le_bytes());
-    out[off::POINT_DATA_FORMAT_ID] = format.await;
+    out[off::POINT_DATA_FORMAT_ID] = format;
     out[off::POINT_DATA_RECORD_LENGTH..off::POINT_DATA_RECORD_LENGTH + 2].copy_from_slice(&record_len.to_le_bytes());
     out[off::NUMBER_OF_POINT_RECORDS..off::NUMBER_OF_POINT_RECORDS + 4].copy_from_slice(&(point_count as u32).to_le_bytes());
     for (i, count) in snap.header.points_by_return.iter().enumerate() {
@@ -428,7 +440,7 @@ pub async fn encode_las(snap: &LasSnapshot) -> Result<Vec<u8>, String> {
         out[pos + 16] = p.scan_angle_rank as u8;
         out[pos + 17] = p.user_data;
         out[pos + 18..pos + 20].copy_from_slice(&p.point_source_id.to_le_bytes());
-        match format.await {
+        match format {
             0 => {}
             1 => out[pos + 20..pos + 28].copy_from_slice(&p.gps_time.unwrap_or(0.0).to_le_bytes()),
             2 => {
@@ -494,7 +506,8 @@ mod tests {
     //#region 🔖️Fixtures
     /// 🧪 7 points with varied per-field values (not all zero/default) so a naive stub that
     /// only reads x/y/z would fail these assertions on intensity/classification/flags/etc.
-    async fn sample_points(fmt: u8) -> Vec<LasPoint> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_points(fmt: u8) -> Vec<LasPoint> {
         (0..7)
             .map(|i| {
                 let base = LasPoint {
@@ -523,14 +536,16 @@ mod tests {
             .collect()
     }
 
-    async fn sample_vlrs() -> Vec<LasVlr> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_vlrs() -> Vec<LasVlr> {
         vec![
             LasVlr { user_id: "LASF_Projection".into(), record_id: 34735, description: "GeoKeyDirectoryTag".into(), data: vec![1, 0, 1, 0, 0, 0, 3, 0] },
             LasVlr { user_id: "semio".into(), record_id: 1, description: "custom metadata".into(), data: b"hello vlr".to_vec() },
         ]
     }
 
-    async fn snapshot_with(fmt: u8, vlrs: Vec<LasVlr>) -> LasSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot_with(fmt: u8, vlrs: Vec<LasVlr>) -> LasSnapshot {
         let points = sample_points(fmt);
         LasSnapshot {
             schema: STDIO_LAS_DOCUMENT_SCHEMA.into(),
@@ -557,7 +572,8 @@ mod tests {
         }
     }
 
-    async fn assert_points_match(a: &LasPoint, b: &LasPoint) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_points_match(a: &LasPoint, b: &LasPoint) {
         assert!((a.x - b.x).abs() < 1e-6, "x mismatch: {} vs {}", a.x, b.x);
         assert!((a.y - b.y).abs() < 1e-6, "y mismatch: {} vs {}", a.y, b.y);
         assert!((a.z - b.z).abs() < 1e-6, "z mismatch: {} vs {}", a.z, b.z);
@@ -578,7 +594,8 @@ mod tests {
         assert_eq!(a.rgb, b.rgb);
     }
 
-    async fn assert_vlrs_match(a: &LasVlr, b: &LasVlr) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_vlrs_match(a: &LasVlr, b: &LasVlr) {
         assert_eq!(a.user_id, b.user_id);
         assert_eq!(a.record_id, b.record_id);
         assert_eq!(a.description, b.description);

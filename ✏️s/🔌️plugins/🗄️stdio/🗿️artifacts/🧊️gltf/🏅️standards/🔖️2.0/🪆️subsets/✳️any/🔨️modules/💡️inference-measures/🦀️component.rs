@@ -4,7 +4,8 @@ use super::measurement_contracts::*;
 use super::mesh_topology::Topology;
 
 //#region 💡️Measures
-async fn provenance() -> GltfProvenance {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn provenance() -> GltfProvenance {
     GltfProvenance {
         algorithm: "s.stdio.gltf.geometry".into(),
         algorithm_version: 2,
@@ -16,7 +17,8 @@ async fn provenance() -> GltfProvenance {
     }
 }
 
-async fn quality(method: GltfComputationMethod, sample_count: usize, topology: Option<Topology>) -> GltfQuality {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn quality(method: GltfComputationMethod, sample_count: usize, topology: Option<Topology>) -> GltfQuality {
     let topology = topology.unwrap_or(Topology { components: 0, boundary_loops: 0, chi: 0, genus: None, manifold: true, watertight: false, oriented: true });
     GltfQuality {
         method,
@@ -31,27 +33,31 @@ async fn quality(method: GltfComputationMethod, sample_count: usize, topology: O
     }
 }
 
-async fn measure<T>(value: T, unit: GltfUnit, method: GltfComputationMethod, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn measure<T>(value: T, unit: GltfUnit, method: GltfComputationMethod, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     GltfMeasure {
         value: Some(value),
         unit,
         availability: if method == GltfComputationMethod::Exact { GltfAvailability::Available } else { GltfAvailability::Approximate },
         validity: GltfValidity::Valid,
         diagnostic_ids: Vec::new(),
-        quality: quality(method, sample_count, topology).await,
-        provenance: provenance().await,
+        quality: quality(method, sample_count, topology),
+        provenance: provenance(),
     }
 }
 
-pub(crate) async fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, diagnostic_ids: Vec<String>, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, diagnostic_ids: Vec<String>, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     let validity = if availability == GltfAvailability::InvalidInput { GltfValidity::Invalid } else { GltfValidity::Indeterminate };
-    GltfMeasure { value: None, unit, availability, validity, diagnostic_ids, quality: quality(GltfComputationMethod::Exact, sample_count, topology).await, provenance: provenance().await }
+    GltfMeasure { value: None, unit, availability, validity, diagnostic_ids, quality: quality(GltfComputationMethod::Exact, sample_count, topology), provenance: provenance() }
 }
 
-pub(crate) async fn exact<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
-    measure(value, unit, GltfComputationMethod::Exact, sample_count, topology).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn exact<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+    measure(value, unit, GltfComputationMethod::Exact, sample_count, topology)
 }
-pub(crate) async fn estimate<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
-    measure(value, unit, GltfComputationMethod::DeterministicEstimate, sample_count, topology).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn estimate<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+    measure(value, unit, GltfComputationMethod::DeterministicEstimate, sample_count, topology)
 }
 //#endregion 💡️Measures

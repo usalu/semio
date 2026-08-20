@@ -7,13 +7,15 @@ pub const EPW_EDIT_MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::epw::create_epw_editor`.
-pub async fn definition() -> ModeDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: EPW_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window, one layout slot.
-pub async fn layout() -> WindowLayout {
-    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Weather Records".into()])).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn layout() -> WindowLayout {
+    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Weather Records".into()]))
 }
 //#endregion 🔖️Definition
 

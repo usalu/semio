@@ -318,8 +318,10 @@ pub trait HasStackLayout: HasBase {
 }
 
 /// 🏗️ Finalizes any builder into a [`BuiltNode`], filling an empty key with the positional default
-/// `"#0"`. Blanket-implemented for every builder in this file; [`ImageBuilder`] shadows it with an
-/// inherent `build` that also enforces its accessibility opt-in.
+/// `"#0"`. Blanket-implemented for every `T: Into<BuiltNode>`; [`ImageBuilder<NoAlt>`](ImageBuilder)
+/// deliberately does NOT implement `Into<BuiltNode>` (only [`ImageBuilder<HasAlt>`](ImageBuilder) does),
+/// so this trait — and therefore `.build()` — is simply absent from `ImageBuilder<NoAlt>`'s method set
+/// at compile time, rather than present but panicking.
 pub trait Buildable: Into<BuiltNode> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build(self) -> BuiltNode
@@ -974,69 +976,89 @@ impl From<TreeItemBuilder> for BuiltNode {
 //#endregion 🌲️Tree
 
 //#region 🖼️Image
-/// 🖼️ Whether an [`ImageBuilder`] carries a real accessible name or has deliberately opted out —
-/// exists so [`ImageBuilder::build`] can tell "never decided" (the state it panics on) apart from
-/// "decided decorative".
+/// 🖼️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
+/// `ImageBuilder<NoAlt>` has no `build()` at all — there is no inherent `build` on this state, and the
+/// blanket [`Buildable`] impl only applies to `T: Into<BuiltNode>`, which `ImageBuilder<NoAlt>` is not
+/// (only `ImageBuilder<HasAlt>` implements [`From`] into [`BuiltNode`]). Calling `.build()` on this
+/// state is therefore a COMPILE error (`E0599: no method named build`), never a runtime panic — see
+/// this module's own accessible-UI mandate in [`crate`]'s docs and the compile-fail example below.
+pub struct NoAlt;
+
+/// 🖼️ Typestate marker: [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] was called, so the image
+/// carries a decided accessible name (either real alt text or an explicit decorative opt-out). Only
+/// `ImageBuilder<HasAlt>` implements `Into<BuiltNode>`, which is what makes [`Buildable::build`]
+/// available on it and not on `ImageBuilder<NoAlt>`.
+pub struct HasAlt;
+
+/// 🖼️ Whether an [`ImageBuilder`] carries real accessible text or has deliberately opted out —
+/// `ImageBuilder<HasAlt>` is only ever constructed with this set to `Some`, by [`ImageBuilder::alt`] or
+/// [`ImageBuilder::decorative`], so [`ImageBuilder`]'s own `From` impl can treat the `None` case as an
+/// internal invariant rather than a user-reachable failure (see [`From<ImageBuilder<HasAlt>>`]).
 enum ImageAlt {
     Text(crate::Label),
     Decorative,
 }
 
-/// 🖼️ An image — `Component::Image`. Build with [`image`]; call [`ImageBuilder::alt`] or
-/// [`ImageBuilder::decorative`] before [`ImageBuilder::build`] — CLAUDE.md's accessible-UI mandate
-/// makes an image's accessible name non-optional, and the builder is the cheapest place in the whole
-/// authoring path to hold that line, since every image passes through here.
-pub struct ImageBuilder {
+/// 🖼️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
+/// [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] to obtain an `ImageBuilder<HasAlt>` before
+/// [`ImageBuilder::build`]/[`Buildable::build`] is even callable — CLAUDE.md's accessible-UI mandate
+/// makes an image's accessible name non-optional, and a **typestate**, not a runtime panic, is the
+/// cheapest place to hold that line: a plugin that forgets `.alt(..)`/`.decorative()` fails to compile,
+/// it never reaches a running actor to crash.
+///
+/// ```compile_fail
+/// use semio_framework_ui_contract::*;
+/// // ImageBuilder<NoAlt> has no `build()` — E0599, no method named `build` found.
+/// let _ = image("atlas://logo").build();
+/// ```
+///
+/// ```
+/// use semio_framework_ui_contract::*;
+/// // .alt(..)/.decorative() moves to ImageBuilder<HasAlt>, which DOES have `build()`.
+/// let _ = image("atlas://logo").alt("Company logo").build();
+/// let _ = image("atlas://deco").decorative().build();
+/// ```
+pub struct ImageBuilder<State = NoAlt> {
     base: NodeBase,
     src: String,
     alt: Option<ImageAlt>,
+    _state: std::marker::PhantomData<State>,
 }
 
-/// 🖼️ An image loaded from `src`.
+/// 🖼️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
+/// [`ImageBuilder::decorative`] before `.build()` becomes callable at all.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn image(src: impl Into<String>) -> ImageBuilder {
-    ImageBuilder { base: NodeBase::leaf(), src: src.into(), alt: None }
+pub fn image(src: impl Into<String>) -> ImageBuilder<NoAlt> {
+    ImageBuilder { base: NodeBase::leaf(), src: src.into(), alt: None, _state: std::marker::PhantomData }
 }
 
-impl ImageBuilder {
-    /// ♿️ Supplies the accessible alt text.
+impl<State> ImageBuilder<State> {
+    /// ♿️ Supplies the accessible alt text, unlocking `.build()` by transitioning to [`HasAlt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn alt(mut self, alt: impl Into<crate::Label>) -> Self {
-        self.alt = Some(ImageAlt::Text(alt.into()));
-        self
+    pub fn alt(self, alt: impl Into<crate::Label>) -> ImageBuilder<HasAlt> {
+        ImageBuilder { base: self.base, src: self.src, alt: Some(ImageAlt::Text(alt.into())), _state: std::marker::PhantomData }
     }
 
     /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
+    /// Unlocks `.build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn decorative(mut self) -> Self {
-        self.alt = Some(ImageAlt::Decorative);
-        self
-    }
-
-    /// 🏗️ Finalizes the image. Panics if neither [`ImageBuilder::alt`] nor
-    /// [`ImageBuilder::decorative`] was called — see the type's own docs for why that is deliberate.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn build(self) -> BuiltNode {
-        let mut node: BuiltNode = self.into();
-        if node.key.is_empty() {
-            node.key = positional_key(0);
-        }
-        node
+    pub fn decorative(self) -> ImageBuilder<HasAlt> {
+        ImageBuilder { base: self.base, src: self.src, alt: Some(ImageAlt::Decorative), _state: std::marker::PhantomData }
     }
 }
 
-impl HasBase for ImageBuilder {
+impl<State> HasBase for ImageBuilder<State> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
-impl From<ImageBuilder> for BuiltNode {
+impl From<ImageBuilder<HasAlt>> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn from(builder: ImageBuilder) -> Self {
-        let ImageBuilder { mut base, src, alt } = builder;
-        let alt = alt.unwrap_or_else(|| panic!("image(\"{src}\") needs .alt(..) or .decorative() before .build()"));
+    fn from(builder: ImageBuilder<HasAlt>) -> Self {
+        let ImageBuilder { mut base, src, alt, .. } = builder;
+        let alt = alt.expect("🚫️ ImageBuilder<HasAlt> is only ever constructed by .alt(..)/.decorative(), both of which set Some — an internal invariant, never a user-reachable panic");
         let alt_label = match alt {
             ImageAlt::Text(label) => {
                 base.accessibility.label.get_or_insert_with(|| label.clone());
@@ -1198,10 +1220,13 @@ mod tests {
         assert_eq!(node.accessibility.label, Some(crate::Label::from("Save the document")));
     }
 
+    /// 🚫️ `image(..)` without `.alt(..)`/`.decorative()` is a COMPILE error now (see the `compile_fail`
+    /// doctest on [`ImageBuilder`] itself), not a runtime panic — `ImageBuilder<NoAlt>` has no `build()`
+    /// at all, so there is nothing for a `#[test]` here to call. This comment stands in its place so the
+    /// next reader finds the negative case instead of assuming it was dropped.
     #[test]
-    #[should_panic(expected = "needs .alt(..) or .decorative()")]
-    fn image_without_alt_or_decorative_panics() {
-        image("atlas://logo").build();
+    fn image_builder_no_alt_state_has_no_build_method_verified_by_the_type_doc_compile_fail_test() {
+        let _: ImageBuilder<NoAlt> = image("atlas://logo");
     }
 
     #[test]

@@ -51,14 +51,15 @@ pub enum TsvMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
-    let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
+    let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -70,7 +71,7 @@ impl Mutation<TsvSnapshot> for TsvMutation {
     async fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TsvMutation::NoMutation => TsvDiff::default(),
-            TsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            TsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             TsvMutation::SetTrailingNewline { trailing_newline } => TsvDiff { trailing_newline: Some(*trailing_newline), ..TsvDiff::default() },
             TsvMutation::SetLineEnding { line_ending } => TsvDiff { line_ending: Some(*line_ending), ..TsvDiff::default() },
             TsvMutation::InsertRow { index, row } => TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![TsvRowAdded { index: *index, row: row.clone() }] }), ..TsvDiff::default() },
@@ -107,7 +108,8 @@ impl Mutation<TsvSnapshot> for TsvMutation {
 /// 🧪️ F6: hand-rolled `OpText`/`OpBinary` for `TsvMutation` — reuses `TsvDiff`'s `pub(crate)`
 /// grammar primitives. Grammar: `keyword arg=value ...` (space-separated), same convention csv's/
 /// gif89a's/svg's own hand-rolled `OpText` impls use.
-async fn enc_tsv_snapshot(s: &TsvSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_tsv_snapshot(s: &TsvSnapshot) -> String {
     format!(
         "[{},{},{},[{}]]",
         enc_str(&s.schema),
@@ -116,16 +118,18 @@ async fn enc_tsv_snapshot(s: &TsvSnapshot) -> String {
         s.records.iter().map(|r| enc_row(r)).collect::<Vec<_>>().join(","),
     )
 }
-async fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, trailing_newline, line_ending, records] = parts.as_slice() else {
         return Err(format!("tsv snapshot: expected 4 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
-    Ok(TsvSnapshot { schema: dec_str(schema).await?, trailing_newline: *trailing_newline == "1", line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(line_ending).await?, records })
+    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
+    Ok(TsvSnapshot { schema: dec_str(schema)?, trailing_newline: *trailing_newline == "1", line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(line_ending)?, records })
 }
 
-async fn print_tsv_mutation(m: &TsvMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_tsv_mutation(m: &TsvMutation) -> String {
     match m {
         TsvMutation::NoMutation => "no-mutation".to_string(),
         TsvMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_tsv_snapshot(snapshot)),
@@ -136,7 +140,8 @@ async fn print_tsv_mutation(m: &TsvMutation) -> String {
         TsvMutation::SetCell { row_index, field_index, value } => format!("set-cell row-index={row_index} field-index={field_index} value={}", enc_str(value),),
     }
 }
-async fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
     if line == "no-mutation" {
         return Ok(TsvMutation::NoMutation);
     }
@@ -145,22 +150,22 @@ async fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("tsv mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(TsvMutation::SetSnapshot { snapshot: dec_tsv_snapshot(arg("snapshot")?).await? }),
+        "set-snapshot" => Ok(TsvMutation::SetSnapshot { snapshot: dec_tsv_snapshot(arg("snapshot")?)? }),
         "set-trailing-newline" => Ok(TsvMutation::SetTrailingNewline { trailing_newline: arg("trailing-newline")? == "1" }),
-        "set-line-ending" => Ok(TsvMutation::SetLineEnding { line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(arg("line-ending")?).await? }),
-        "insert-row" => Ok(TsvMutation::InsertRow { index: usize_arg("index")?, row: dec_row(arg("row")?).await? }),
+        "set-line-ending" => Ok(TsvMutation::SetLineEnding { line_ending: crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::dec_line_ending(arg("line-ending")?)? }),
+        "insert-row" => Ok(TsvMutation::InsertRow { index: usize_arg("index")?, row: dec_row(arg("row")?)? }),
         "remove-row" => Ok(TsvMutation::RemoveRow { index: usize_arg("index")? }),
-        "set-cell" => Ok(TsvMutation::SetCell { row_index: usize_arg("row-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?).await? }),
+        "set-cell" => Ok(TsvMutation::SetCell { row_index: usize_arg("row-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? }),
         other => Err(format!("tsv mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for TsvMutation {
     async fn print_op(&self) -> String {
-        print_tsv_mutation(self).await
+        print_tsv_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_tsv_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_tsv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -183,10 +188,12 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️Fixtures
-    async fn row(fields: &[&str]) -> Vec<String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn row(fields: &[&str]) -> Vec<String> {
         fields.iter().map(|s| s.to_string()).collect()
     }
-    async fn base_snapshot() -> TsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> TsvSnapshot {
         TsvSnapshot { records: vec![row(&["id", "name"]), row(&["1", "Oak"]), row(&["2", "Steel"])], trailing_newline: true, line_ending: LineEnding::Lf, ..TsvSnapshot::default() }
     }
     //#endregion 🔖️Fixtures
@@ -194,12 +201,14 @@ mod tests {
     //#region 🔖️FieldSweepFixtures
     /// 🧬️ Canonical "differs in every mutable field" snapshot A: 3 rows — one that will be
     /// removed, one that will be modified in every column, one untouched.
-    async fn sweep_a() -> TsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> TsvSnapshot {
         TsvSnapshot { records: vec![row(&["gone", "also-gone"]), row(&["old-a", "old-b"]), row(&["stable", "x"])], trailing_newline: true, line_ending: LineEnding::Lf, ..TsvSnapshot::default() }
     }
     /// 🧬️ Sweep B: `trailing_newline`/`line_ending` flip, row 0 is removed, row 1 (now index 0)
     /// is modified in every column, row 2 (now index 1) is untouched, and a brand-new row is added.
-    async fn sweep_b() -> TsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> TsvSnapshot {
         TsvSnapshot { records: vec![row(&["new-a", "new-b"]), row(&["stable", "x"]), row(&["brand-new", "y"])], trailing_newline: false, line_ending: LineEnding::Crlf, ..TsvSnapshot::default() }
     }
     //#endregion 🔖️FieldSweepFixtures

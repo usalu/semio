@@ -24,7 +24,7 @@ pub struct PptxInference {
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
     async fn infer(snapshot: &PptxSnapshot) -> Self {
-        Self { outline: PptxOutline::compute(snapshot).await }
+        Self { outline: PptxOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::pptx::standards::v_ecma_376::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pptx.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `pptx_artifact_schema_descriptor`'s registration.
-pub async fn pptx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pptx_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.pptx.inference",
         inference: schema::FacetLeaves {

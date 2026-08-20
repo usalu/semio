@@ -27,7 +27,7 @@ pub struct SemioTextInference {
 
 impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
     async fn infer(snapshot: &SemioTextSnapshot) -> Self {
-        Self { profile: compute_semio_text_profile(snapshot).await }
+        Self { profile: compute_semio_text_profile(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::text:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.text.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_text_artifact_schema_descriptor`'s registration.
-pub async fn semio_text_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_text_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.text.inference",
         inference: schema::FacetLeaves {

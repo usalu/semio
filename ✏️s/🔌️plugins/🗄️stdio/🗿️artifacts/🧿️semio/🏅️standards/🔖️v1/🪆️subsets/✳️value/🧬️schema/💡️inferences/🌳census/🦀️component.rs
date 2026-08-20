@@ -40,7 +40,8 @@ impl Default for SemioValueCensus {
 
 /// 🌳️ Recursively walks `value`, tallying its own variant into `census` and returning the max
 /// depth reached at or below it (`depth` is this node's own 1-based depth).
-async fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> u32 {
     match value {
         SemioValue::Null => {
             census.null_count += 1;
@@ -68,11 +69,11 @@ async fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> 
         }
         SemioValue::List { items } => {
             census.list_count += 1;
-            items.iter().fold(depth, |acc, item| acc.max(semio_framework_plugin::resolve_ready(walk(item, census, depth + 1))))
+            items.iter().fold(depth, |acc, item| acc.max(walk(item, census, depth + 1)))
         }
         SemioValue::Map { entries } => {
             census.map_count += 1;
-            entries.iter().fold(depth, |acc, entry| acc.max(semio_framework_plugin::resolve_ready(walk(&entry.value, census, depth + 1))))
+            entries.iter().fold(depth, |acc, entry| acc.max(walk(&entry.value, census, depth + 1)))
         }
         SemioValue::Ref { .. } => {
             census.ref_count += 1;
@@ -84,14 +85,15 @@ async fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> 
 /// 🌳️ Computes [`SemioValueCensus`] — pure, total, O(root's tree size + every node's own tree
 /// size). `root` and every `nodes[].value` are each walked as an independent tree rooted at
 /// depth 1 — see module doc comment for why `Ref` is never dereferenced.
-pub async fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioValueCensus {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioValueCensus {
     let mut census = SemioValueCensus { null_count: 0, bool_count: 0, int_count: 0, float_count: 0, str_count: 0, bytes_count: 0, list_count: 0, map_count: 0, ref_count: 0, node_count: 0, max_depth: 0 };
     let mut max_depth = walk(&snapshot.root, &mut census, 1);
     for node in &snapshot.nodes {
         max_depth = max_depth.max(walk(&node.value, &mut census, 1));
     }
     census.node_count = snapshot.nodes.len() as u32;
-    census.max_depth = max_depth.await;
+    census.max_depth = max_depth;
     census
 }
 //#endregion 🔖️Census
@@ -105,7 +107,8 @@ mod tests {
     /// 🌱 A hand-built, non-empty graph: a 3-deep map/list root (Map -> List -> Str, depth 3) plus
     /// one backing node holding a 2-deep value (Map -> Bool, depth 2) — exercises every variant and
     /// a genuine max-depth comparison across root vs. nodes.
-    async fn populated() -> SemioValueSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioValueSnapshot {
         SemioValueSnapshot {
             schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
             root: SemioValue::Map {

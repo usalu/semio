@@ -17,11 +17,13 @@ pub const SEMIO_ARTIFACT_SCHEMA_ID: &str = "s.stdio.semio";
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("semio", definition).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::definition_only_assembly("semio", definition)
 }
 
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.semio".into(),
         name: "Semio".into(),
@@ -46,7 +48,8 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// deliberate imperative-`register()` artifacts (never converted to the `ArtifactDeclaration`
 /// builder pattern, per `crate::plugin()`'s own call — unchanged in call order/behavior, only
 /// the function's file moved with the deleted directory).
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
     crate::artifacts::semio::standards::v1::subsets::model::io::register();
@@ -98,7 +101,8 @@ macro_rules! semio_subset_table {
 }
 
 /// 🧸️ Every subset name this artifact can materialize a child as.
-pub async fn composable_subsets() -> Vec<&'static str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn composable_subsets() -> Vec<&'static str> {
     macro_rules! subset_names {
         ($($name:ident => $module:ident, $snapshot:ident, $mutation:ident);* $(;)?) => { vec![$(stringify!($name)),*] };
     }
@@ -141,25 +145,28 @@ dsl::space_members! {
 
 /// 🏭️ Mints a new subset-typed `semio` child — the `create` half of the removed `ChildStoreFactory`.
 /// Dispatch key is `dialect.subset` (see [`SemioMembers`]'s doc).
-pub async fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    <SemioMembers as dsl::MemberFactory>::create(dialect.subset.as_str(), id, dialect, initial_pack).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
+    <SemioMembers as dsl::MemberFactory>::create(dialect.subset.as_str(), id, dialect, initial_pack)
 }
 
 /// 📤️ Reopens a persisted subset-typed `semio` child — the `open` half. The subset is recovered from
 /// the envelope itself (`subset_of_persisted_envelope`), exactly as the removed `ChildStoreFactory::
 /// open` did — `open` gets no dialect argument, so it has to; this only works because the `.spr`
 /// composition overlay carries `dialect` (see this ticket's `REC_COMPOSITION`).
-pub async fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    let subset = subset_of_persisted_envelope(envelope_pack).await?;
-    <SemioMembers as dsl::MemberFactory>::open(subset.as_str(), envelope_pack).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
+    let subset = subset_of_persisted_envelope(envelope_pack)?;
+    <SemioMembers as dsl::MemberFactory>::open(subset.as_str(), envelope_pack)
 }
 
 /// 🎯️ Reads a persisted child's subset out of its own `.spr` composition overlay — deliberately
 /// snapshot-type-agnostic (it decodes only the history log, never the document body), because
 /// choosing the snapshot type is exactly what this answer is needed FOR.
-async fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
-    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack).await?;
-    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).await.map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
+    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack)?;
+    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
     log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
 }
 //#endregion 🔖️Members
@@ -177,12 +184,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SemioComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v1::entries());
     }
 }
@@ -195,7 +204,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
     use crate::dsl::{os_io::ArtifactDialect, ArtifactPack, SpaceMember};
 
-    async fn subset_dialect(subset: &str) -> ArtifactDialect {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn subset_dialect(subset: &str) -> ArtifactDialect {
         ArtifactDialect { artifact_kind: SEMIO_ARTIFACT_SCHEMA_ID.into(), standard: "v1".into(), subset: subset.into() }
     }
 

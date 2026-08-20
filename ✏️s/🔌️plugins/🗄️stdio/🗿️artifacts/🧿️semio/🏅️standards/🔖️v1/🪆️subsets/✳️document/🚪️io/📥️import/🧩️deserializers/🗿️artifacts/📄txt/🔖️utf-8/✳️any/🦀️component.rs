@@ -32,7 +32,8 @@ mod tests {
     use super::*;
     use crate::artifacts::txt::schema::snapshot::LineEnding;
 
-    pub(crate) async fn sample_txt() -> TxtSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn sample_txt() -> TxtSnapshot {
         TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf }
     }
 

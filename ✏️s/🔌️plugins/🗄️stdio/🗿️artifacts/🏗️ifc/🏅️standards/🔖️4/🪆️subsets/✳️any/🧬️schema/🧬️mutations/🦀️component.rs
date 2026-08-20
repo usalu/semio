@@ -110,12 +110,12 @@ impl Mutation<IfcSnapshot> for IfcMutation {
     async fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             IfcMutation::NoMutation => IfcDiff::default(),
-            IfcMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            IfcMutation::SetFileDescription { values } => diff::diff_set_file_description(values.clone()).await,
-            IfcMutation::SetFileName { values } => diff::diff_set_file_name(values.clone()).await,
-            IfcMutation::SetFileSchema { values } => diff::diff_set_file_schema(values.clone()).await,
-            IfcMutation::InsertEntity { index, entity } => diff::diff_insert_entity(*index, entity.clone()).await,
-            IfcMutation::RemoveEntity { id } => diff::diff_remove_entity(*id).await,
+            IfcMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            IfcMutation::SetFileDescription { values } => diff::diff_set_file_description(values.clone()),
+            IfcMutation::SetFileName { values } => diff::diff_set_file_name(values.clone()),
+            IfcMutation::SetFileSchema { values } => diff::diff_set_file_schema(values.clone()),
+            IfcMutation::InsertEntity { index, entity } => diff::diff_insert_entity(*index, entity.clone()),
+            IfcMutation::RemoveEntity { id } => diff::diff_remove_entity(*id),
             IfcMutation::SetEntityName { id, name } => diff::diff_set_entity_name(*id, name),
             IfcMutation::SetEntityArg { id, index, value } => diff::diff_set_entity_arg(*id, *index, value.clone()),
             IfcMutation::InsertEntityArg { id, index, value } => diff::diff_insert_entity_arg(*id, *index, value.clone()),
@@ -167,19 +167,19 @@ async fn enc_ifc_header(h: &IfcHeader) -> String {
     format!("[{},{},{}]", enc_ifc_value_list(&h.file_description), enc_ifc_value_list(&h.file_name), enc_ifc_value_list(&h.file_schema))
 }
 async fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("ifc header: expected 3 fields, got {}", parts.len())) };
-    Ok(IfcHeader { file_description: dec_ifc_value_list(fd).await?, file_name: dec_ifc_value_list(fname).await?, file_schema: dec_ifc_value_list(fs).await? })
+    Ok(IfcHeader { file_description: dec_ifc_value_list(fd)?, file_name: dec_ifc_value_list(fname)?, file_schema: dec_ifc_value_list(fs)? })
 }
 async fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
     let entities = s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&s.schema), enc_ifc_header(&s.header), entities)
 }
 async fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, entities] = parts.as_slice() else { return Err(format!("ifc snapshot: expected 3 fields, got {}", parts.len())) };
-    let entities = split_top_level(strip_brackets(entities).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?;
-    Ok(IfcSnapshot { schema: dec_str(schema).await?, header: dec_ifc_header(header).await?, entities })
+    let entities = split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?;
+    Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header).await?, entities })
 }
 
 async fn print_ifc_mutation(m: &IfcMutation) -> String {
@@ -208,14 +208,14 @@ async fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     let u64_arg = |k: &str| -> Result<u64, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-snapshot" => Ok(IfcMutation::SetSnapshot { snapshot: dec_ifc_snapshot(arg("snapshot")?).await? }),
-        "set-file-description" => Ok(IfcMutation::SetFileDescription { values: dec_ifc_value_list(arg("values")?).await? }),
-        "set-file-name" => Ok(IfcMutation::SetFileName { values: dec_ifc_value_list(arg("values")?).await? }),
-        "set-file-schema" => Ok(IfcMutation::SetFileSchema { values: dec_ifc_value_list(arg("values")?).await? }),
-        "insert-entity" => Ok(IfcMutation::InsertEntity { index: usize_arg("index")?, entity: dec_entity(arg("entity")?).await? }),
+        "set-file-description" => Ok(IfcMutation::SetFileDescription { values: dec_ifc_value_list(arg("values")?)? }),
+        "set-file-name" => Ok(IfcMutation::SetFileName { values: dec_ifc_value_list(arg("values")?)? }),
+        "set-file-schema" => Ok(IfcMutation::SetFileSchema { values: dec_ifc_value_list(arg("values")?)? }),
+        "insert-entity" => Ok(IfcMutation::InsertEntity { index: usize_arg("index")?, entity: dec_entity(arg("entity")?)? }),
         "remove-entity" => Ok(IfcMutation::RemoveEntity { id: u64_arg("id")? }),
-        "set-entity-name" => Ok(IfcMutation::SetEntityName { id: u64_arg("id")?, name: dec_str(arg("name")?).await? }),
-        "set-entity-arg" => Ok(IfcMutation::SetEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?).await? }),
-        "insert-entity-arg" => Ok(IfcMutation::InsertEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?).await? }),
+        "set-entity-name" => Ok(IfcMutation::SetEntityName { id: u64_arg("id")?, name: dec_str(arg("name")?)? }),
+        "set-entity-arg" => Ok(IfcMutation::SetEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?)? }),
+        "insert-entity-arg" => Ok(IfcMutation::InsertEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?)? }),
         "remove-entity-arg" => Ok(IfcMutation::RemoveEntityArg { id: u64_arg("id")?, index: usize_arg("index")? }),
         other => Err(format!("ifc mutation: unknown keyword {other:?}")),
     }
@@ -242,9 +242,9 @@ async fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
     enc_ifc_value_list_bin(&h.file_schema, out);
 }
 async fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
-    let file_description = dec_ifc_value_list_bin(reader).await?;
-    let file_name = dec_ifc_value_list_bin(reader).await?;
-    let file_schema = dec_ifc_value_list_bin(reader).await?;
+    let file_description = dec_ifc_value_list_bin(reader)?;
+    let file_name = dec_ifc_value_list_bin(reader)?;
+    let file_schema = dec_ifc_value_list_bin(reader)?;
     Ok(IfcHeader { file_description, file_name, file_schema })
 }
 async fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
@@ -253,9 +253,9 @@ async fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
     enc_entity_list_bin(&s.entities, out);
 }
 async fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
-    let schema = read_str_bin(reader).await?;
+    let schema = read_str_bin(reader)?;
     let header = dec_ifc_header_bin(reader).await?;
-    let entities = dec_entity_list_bin(reader).await?;
+    let entities = dec_entity_list_bin(reader)?;
     Ok(IfcSnapshot { schema, header, entities })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -287,9 +287,9 @@ impl OpBinary for IfcMutation {
         match self {
             IfcMutation::NoMutation => {}
             IfcMutation::SetSnapshot { snapshot } => enc_ifc_snapshot_bin(snapshot, &mut out).await,
-            IfcMutation::SetFileDescription { values } => enc_ifc_value_list_bin(values, &mut out).await,
-            IfcMutation::SetFileName { values } => enc_ifc_value_list_bin(values, &mut out).await,
-            IfcMutation::SetFileSchema { values } => enc_ifc_value_list_bin(values, &mut out).await,
+            IfcMutation::SetFileDescription { values } => enc_ifc_value_list_bin(values, &mut out),
+            IfcMutation::SetFileName { values } => enc_ifc_value_list_bin(values, &mut out),
+            IfcMutation::SetFileSchema { values } => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::InsertEntity { index, entity } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_entity_bin(entity, &mut out);
@@ -329,20 +329,20 @@ impl OpBinary for IfcMutation {
                 Ok(IfcMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let values = dec_ifc_value_list_bin(&mut reader).await.map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetFileDescription { values })
             }
             3 => {
-                let values = dec_ifc_value_list_bin(&mut reader).await.map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetFileName { values })
             }
             4 => {
-                let values = dec_ifc_value_list_bin(&mut reader).await.map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetFileSchema { values })
             }
             5 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_entity_bin(&mut reader).await.map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::InsertEntity { index, entity })
             }
             6 => {
@@ -351,19 +351,19 @@ impl OpBinary for IfcMutation {
             }
             7 => {
                 let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let name = read_str_bin(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetEntityName { id, name })
             }
             8 => {
                 let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_ifc_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetEntityArg { id, index, value })
             }
             9 => {
                 let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_ifc_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::InsertEntityArg { id, index, value })
             }
             10 => {

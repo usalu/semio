@@ -26,7 +26,8 @@ extern crate semio_framework_graph as graph_core;
 
 //#region SemanticFingerprint
 /// 🪪️ Computes the stable BLAKE3 identity of a serializable semantic projection.
-pub async fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u8>, String> {
     let encoded = serde_json::to_vec(projection).map_err(|error| format!("semantic projection serialization failed: {error}"))?;
     Ok(blake3::hash(&encoded).as_bytes().to_vec())
 }
@@ -2037,7 +2038,8 @@ pub mod artifacts {
             /// flat glob re-export can't do this (two `register` fns of the same name would
             /// collide), so this local definition shadows the glob-imported v4 one and calls both
             /// explicitly. Same shape as pdf's own shim fix for 1.4/1.7.
-            pub async fn register() {
+            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+            pub fn register() {
                 super::standards::v4::engine::register();
                 super::standards::v2x3::engine::register();
             }
@@ -4851,7 +4853,8 @@ pub mod artifacts {
             /// 📎 Registers BOTH standards' engines (89a canonical + 87a legacy) — a flat glob
             /// re-export can't do this (two `register` fns of the same name would collide), so this
             /// local definition shadows the glob-imported 89a one and calls both explicitly.
-            pub async fn register() {
+            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+            pub fn register() {
                 super::standards::v87a::engine::register();
                 super::standards::v89a::engine::register();
             }
@@ -9305,7 +9308,8 @@ pub mod artifacts {
                 /// protected `dsl::registry` entrypoints — its call site is explicitly not to be
                 /// touched).
                 pub mod engine {
-                    pub async fn register() {
+                    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+                    pub fn register() {
                         super::subsets::any::io::register();
                     }
                 }

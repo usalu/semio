@@ -112,18 +112,21 @@ pub mod derived_analysis {
     pub const CODE_VALIDITY_NOT_VERIFIED: &str = "stdio.xml.valid.validity-not-fully-verified";
 
     /// 🌳️ The actual root element's tag name, if a root element is present at all.
-    async fn root_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn root_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
         match &snapshot.doc.root {
             Some(XmlNode::Element { name, .. }) => Some(name.as_str()),
             _ => None,
         }
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -132,14 +135,15 @@ pub mod derived_analysis {
     /// hard-gates on this (pre-serialization, authoritative), `XmlValidBuilder::build` hard-gates on
     /// this too, and the registered `SubsetValidator` re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub async fn check_valid_conformance(snapshot: &XmlSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_valid_conformance(snapshot: &XmlSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         match &snapshot.doc.doctype {
             None => {
                 out.push(hard(CODE_DOCTYPE_MISSING, "no <!DOCTYPE ...> declaration present -- XML 1.0 §5.1 validity requires one (a document without one can be well-formed at best)".into()));
             }
             Some(doctype) => {
-                if let Some(actual_root) = root_element_name(snapshot).await {
+                if let Some(actual_root) = root_element_name(snapshot) {
                     if doctype.name != actual_root {
                         out.push(hard(CODE_ROOT_NAME_MISMATCH, format!("doctype declares root name '{}' but the actual root element is '<{actual_root}>' -- §2.8 requires the DOCTYPE Name to match the document element", doctype.name)));
                     }
@@ -177,7 +181,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_valid_conformance(snapshot).await;
+                let checks = check_valid_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -193,7 +197,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlDeclaration, XmlDocument};
 
-        async fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
             XmlSnapshot {
                 doc: XmlDocument {
                     declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone }),

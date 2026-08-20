@@ -28,13 +28,16 @@ impl Default for TsvArtifact {
 }
 
 impl TsvArtifact {
-    pub async fn to_snapshot(&self) -> TsvSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> TsvSnapshot {
         TsvSnapshot { schema: self.schema.clone(), records: self.records.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
-    pub async fn from_snapshot(snapshot: TsvSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: TsvSnapshot) -> Self {
         Self { schema: snapshot.schema, records: snapshot.records, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
-    pub async fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
         self.schema = snapshot.schema;
         self.records = snapshot.records;
         self.trailing_newline = snapshot.trailing_newline;
@@ -42,7 +45,8 @@ impl TsvArtifact {
     }
 }
 
-pub async fn tsv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn tsv_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.tsv",
         artifact: schema::FacetLeaves {
@@ -105,7 +109,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_tsv_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TsvDiff as protocol::MutationDiff<TsvSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -139,7 +143,7 @@ pub mod derived_analysis {
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if snapshot::sniff_real_bytes(bytes).await {
+                    if snapshot::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_TSV_DOCUMENT_SCHEMA.as_bytes();
@@ -150,7 +154,7 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    if snapshot::sniff_real_bytes(text.as_bytes()).await || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {
+                    if snapshot::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

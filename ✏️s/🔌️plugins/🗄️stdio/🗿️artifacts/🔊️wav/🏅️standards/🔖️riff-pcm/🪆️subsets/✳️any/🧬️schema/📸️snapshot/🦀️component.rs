@@ -112,11 +112,11 @@ impl store::ArtifactDsl for WavSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes).await.map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&bytes).map_err(|e| store::TextError::new(format!("wav decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self).await;
+        let bytes = crate::artifacts::wav::standards::riff_pcm::subsets::any::io::encode_wav(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -137,7 +137,7 @@ impl store::ArtifactPack for WavSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&inner).await.map_err(store::PackError::Schema)
+        crate::artifacts::wav::standards::riff_pcm::subsets::any::io::decode_wav(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -147,7 +147,8 @@ impl store::ArtifactPack for WavSnapshot {
 mod tests {
     use super::*;
 
-    async fn sample_snapshot() -> WavSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> WavSnapshot {
         WavSnapshot { data: WavData::Pcm16(vec![1, -1, 100, -100]), ..WavSnapshot::default() }
     }
 

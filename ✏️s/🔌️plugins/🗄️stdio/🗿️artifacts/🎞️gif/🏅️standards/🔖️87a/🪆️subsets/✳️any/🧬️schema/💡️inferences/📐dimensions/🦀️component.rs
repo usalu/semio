@@ -24,15 +24,17 @@ pub struct GifDimensions {
 
 /// 🔢️ `ceil(log2(colors.max(2)))`, clamped to `8` — GIF87a §18's "size of Global/Local Color
 /// Table" field is exactly this value (the on-disk field stores `size - 1`).
-async fn color_table_bit_depth(colors_len: usize) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn color_table_bit_depth(colors_len: usize) -> u8 {
     let n = colors_len.max(2);
     ((usize::BITS - (n - 1).leading_zeros()) as u8).min(8)
 }
 
 /// 📐️ Computes [`GifDimensions`] from a snapshot's screen descriptor + GCT — pure, total, O(1).
-pub async fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
     let bit_depth = match &snapshot.gct {
-        Some(table) => color_table_bit_depth(table.colors.len()).await,
+        Some(table) => color_table_bit_depth(table.colors.len()),
         None => 8,
     };
     GifDimensions { width: snapshot.width, height: snapshot.height, bit_depth, has_alpha: false, pixel_count: snapshot.width as u64 * snapshot.height as u64 }

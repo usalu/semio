@@ -41,17 +41,20 @@ impl Default for DxfArtifact {
 
 impl DxfArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> DxfSnapshot {
         DxfSnapshot { schema: self.schema.clone(), header_vars: self.header_vars.clone(), tables: self.tables.clone(), other_tables: self.other_tables.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: DxfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
         Self { schema: snapshot.schema, header_vars: snapshot.header_vars, tables: snapshot.tables, other_tables: snapshot.other_tables, blocks: snapshot.blocks, entities: snapshot.entities }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
         self.schema = snapshot.schema;
         self.header_vars = snapshot.header_vars;
         self.tables = snapshot.tables;
@@ -64,7 +67,8 @@ impl DxfArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.dxf`.
-pub async fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dxf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.dxf",
         artifact: schema::FacetLeaves {
@@ -129,7 +133,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::dxf::schema::mutations::apply_dxf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -243,14 +247,16 @@ semio_framework_plugin::derive_artifact_facets!(
 use crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA;
 
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_dxf_snapshot() -> DxfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_dxf_snapshot() -> DxfSnapshot {
     DxfSnapshot::default()
 }
 
 /// 🧬️ Genuinely 2-level-nested (a `BLOCK` with a nested entity), every-section demo snapshot —
 /// the single source of truth for `fixture_honesty_law`'s shipped `🗣️example.dsl.semio`/
 /// `🎒️example.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
-pub async fn demo_dxf_snapshot() -> DxfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_dxf_snapshot() -> DxfSnapshot {
     use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),

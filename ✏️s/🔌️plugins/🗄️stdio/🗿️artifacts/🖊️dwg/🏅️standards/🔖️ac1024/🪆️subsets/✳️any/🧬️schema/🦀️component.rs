@@ -66,7 +66,8 @@ impl Default for DwgArtifact {
 }
 
 impl DwgArtifact {
-    pub async fn to_snapshot(&self) -> DwgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> DwgSnapshot {
         DwgSnapshot {
             schema: self.schema.clone(),
             version: self.version.clone(),
@@ -86,7 +87,8 @@ impl DwgArtifact {
         }
     }
 
-    pub async fn from_snapshot(snapshot: DwgSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: DwgSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             version: snapshot.version,
@@ -106,7 +108,8 @@ impl DwgArtifact {
         }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: DwgSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: DwgSnapshot) {
         self.schema = snapshot.schema;
         self.version = snapshot.version;
         self.maintenance_version = snapshot.maintenance_version;
@@ -127,7 +130,8 @@ impl DwgArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn dwg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.dwg",
         artifact: schema::FacetLeaves {
@@ -192,7 +196,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::dwg::schema::mutations::apply_dwg_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DwgDiff as protocol::MutationDiff<DwgSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -285,12 +289,14 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `crate::artifacts::dwg::standards::v_ac1024::engine::empty_dwg_snapshot` through the `engine`
 /// barrel shim, and (via the root `crate::artifacts::dwg::engine` shim, ac1024-only) as
 /// `crate::artifacts::dwg::engine::empty_dwg_snapshot` too.
-pub async fn empty_dwg_snapshot() -> DwgSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_dwg_snapshot() -> DwgSnapshot {
     DwgSnapshot::default()
 }
 
 /// 📄️ The minimal logical `stdio.dwg` AC1024 demonstration document.
-pub async fn demo_dwg_snapshot() -> DwgSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_dwg_snapshot() -> DwgSnapshot {
     DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() }
 }
 //#endregion 🔖️DocumentHelpers
@@ -306,11 +312,13 @@ pub async fn demo_dwg_snapshot() -> DwgSnapshot {
 /// root's own `.setup(crate::artifacts::dwg::engine::register_schema_specs)`, reached through the
 /// root `engine` shim (ac1024-only) and this standard's own `engine` barrel shim.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.dwg#diff", crate::artifacts::dwg::schema::diff::DwgDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 //#endregion 🔖️RegisterSchemaSpecs

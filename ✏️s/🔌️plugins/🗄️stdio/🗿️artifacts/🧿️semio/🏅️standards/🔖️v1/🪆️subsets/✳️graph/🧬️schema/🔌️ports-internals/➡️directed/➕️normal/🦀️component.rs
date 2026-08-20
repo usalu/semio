@@ -24,70 +24,82 @@ impl Default for PortDirectedGraph {
 impl PortDirectedGraph {
     // #subregion 🔖️Construction
     /// 🆕️ Empty directed multigraph.
-    pub async fn new() -> Self {
-        Self { storage: Storage::new().await, default_handle: BTreeMap::new(), name: String::new() }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new() -> Self {
+        Self { storage: Storage::new(), default_handle: BTreeMap::new(), name: String::new() }
     }
     // #endsubregion
 
     // #subregion 🔖️Handles
     /// 🪝️ Returns `node`'s default handle, lazily allocating one the first time it's needed. `node` MUST already exist.
-    async fn handle_of(&mut self, node: NodeId) -> HandleId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn handle_of(&mut self, node: NodeId) -> HandleId {
         if let Some(&h) = self.default_handle.get(&node) {
             return h;
         }
-        let h = self.storage.add_handle(node).await.expect("node exists before a handle is requested for it");
+        let h = self.storage.add_handle(node).expect("node exists before a handle is requested for it");
         self.default_handle.insert(node, h);
         h
     }
     // #endsubregion
 
     // #subregion 🔖️NodeOperations
-    pub async fn add_node(&mut self) -> NodeId {
-        self.storage.add_node().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_node(&mut self) -> NodeId {
+        self.storage.add_node()
     }
 
-    pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
-        self.storage.add_node_with(attrs).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
+        self.storage.add_node_with(attrs)
     }
 
-    pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
-        self.storage.add_node_with_id(id, attrs).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
+        self.storage.add_node_with_id(id, attrs)
     }
 
-    pub async fn add_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         for id in nodes {
             self.storage.add_node_with_id(id, PropertyBag::new());
         }
     }
 
     /// 🗑️ Removes a node, cascading incident edges (any handle-node they route through), then drops its default handle entry.
-    pub async fn remove_node(&mut self, node: NodeId) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn remove_node(&mut self, node: NodeId) -> bool {
         let removed = self.storage.remove_node(node);
-        if removed.await {
+        if removed {
             self.default_handle.remove(&node);
         }
-        removed.await
+        removed
     }
 
-    pub async fn remove_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn remove_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         for id in nodes {
             self.remove_node(id);
         }
     }
 
-    pub async fn has_node(&self, node: NodeId) -> bool {
-        self.storage.contains_node(node).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn has_node(&self, node: NodeId) -> bool {
+        self.storage.contains_node(node)
     }
 
-    pub async fn number_of_nodes(&self) -> usize {
-        self.storage.node_count().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn number_of_nodes(&self) -> usize {
+        self.storage.node_count()
     }
 
-    pub async fn order(&self) -> usize {
-        self.storage.node_count().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn order(&self) -> usize {
+        self.storage.node_count()
     }
 
-    pub async fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.nodes()
     }
     // #endsubregion
@@ -95,11 +107,13 @@ impl PortDirectedGraph {
     // #subregion 🔖️EdgeOperations
     /// ➕️ Auto-creates missing endpoints, then always adds a fresh parallel `source -> target` edge (NetworkX
     /// `MultiDiGraph.add_edge` semantics — never an upsert, direction matters).
-    pub async fn add_edge(&mut self, source: NodeId, target: NodeId) -> EdgeId {
-        self.add_edge_with(source, target, PropertyBag::new()).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_edge(&mut self, source: NodeId, target: NodeId) -> EdgeId {
+        self.add_edge_with(source, target, PropertyBag::new())
     }
 
-    pub async fn add_edge_with(&mut self, source: NodeId, target: NodeId, attrs: PropertyBag) -> EdgeId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_edge_with(&mut self, source: NodeId, target: NodeId, attrs: PropertyBag) -> EdgeId {
         if !self.storage.contains_node(source) {
             self.storage.add_node_with_id(source, PropertyBag::new());
         }
@@ -108,17 +122,19 @@ impl PortDirectedGraph {
         }
         let hs = self.handle_of(source);
         let ht = self.handle_of(target);
-        self.storage.add_edge_with(hs.await, ht.await, attrs).await
+        self.storage.add_edge_with(hs, ht, attrs)
     }
 
-    pub async fn add_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId)>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId)>) {
         for (source, target) in edges {
             self.add_edge(source, target);
         }
     }
 
     /// ⚖️ Adds `(source, target, weight)` triples, storing `weight` under the `"weight"` attribute key.
-    pub async fn add_weighted_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId, f64)>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_weighted_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId, f64)>) {
         for (source, target, weight) in edges {
             let mut attrs = PropertyBag::new();
             attrs.insert("weight".to_string(), PropertyValue::Number(weight));
@@ -126,23 +142,27 @@ impl PortDirectedGraph {
         }
     }
 
-    pub async fn remove_edge(&mut self, id: EdgeId) -> bool {
-        self.storage.remove_edge(id).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn remove_edge(&mut self, id: EdgeId) -> bool {
+        self.storage.remove_edge(id)
     }
 
     /// 🗑️ Removes an arbitrary one of the parallel `source -> target` edges — the smallest `EdgeId`, for determinism.
-    pub async fn remove_one_edge(&mut self, source: NodeId, target: NodeId) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn remove_one_edge(&mut self, source: NodeId, target: NodeId) -> bool {
         let Some(id) = self.edges_between(source, target).next() else { return false };
-        self.storage.remove_edge(id).await
+        self.storage.remove_edge(id)
     }
 
-    pub async fn has_edge(&self, source: NodeId, target: NodeId) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn has_edge(&self, source: NodeId, target: NodeId) -> bool {
         self.storage.edges_between(source, target).next().is_some()
     }
 
     /// 🔢️ Counts edges: both endpoints given counts parallel `source -> target` edges; one endpoint given counts every
     /// edge touching it (in + out); neither given counts the whole graph.
-    pub async fn number_of_edges(&self, source: Option<NodeId>, target: Option<NodeId>) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn number_of_edges(&self, source: Option<NodeId>, target: Option<NodeId>) -> usize {
         match (source, target) {
             (Some(u), Some(v)) => self.storage.edges_between(u, v).count(),
             (Some(u), None) => self.degree(u),
@@ -151,24 +171,29 @@ impl PortDirectedGraph {
         }
     }
 
-    pub async fn get_edge_data(&self, id: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(id).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get_edge_data(&self, id: EdgeId) -> Option<&PropertyBag> {
+        self.storage.edge_attrs(id)
     }
 
-    pub async fn edges_between(&self, source: NodeId, target: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn edges_between(&self, source: NodeId, target: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
         self.storage.edges_between(source, target).map(|e| e.id)
     }
 
-    pub async fn in_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn in_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
         self.storage.in_neighbors(node).flat_map(move |u| self.storage.edges_between(u, node))
     }
 
-    pub async fn out_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn out_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
         self.storage.out_neighbors(node).flat_map(move |v| self.storage.edges_between(node, v))
     }
 
     /// 🐍️ Adds a directed path `nodes[0] -> nodes[1] -> ... -> nodes[n-1]`, auto-creating nodes as needed.
-    pub async fn add_path(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_path(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         let ids: Vec<NodeId> = nodes.into_iter().collect();
         for pair in ids.windows(2) {
             self.add_edge(pair[0], pair[1]);
@@ -176,7 +201,8 @@ impl PortDirectedGraph {
     }
 
     /// 🔁️ Adds a directed cycle over `nodes` in order, closing back to the first.
-    pub async fn add_cycle(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_cycle(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         let ids: Vec<NodeId> = nodes.into_iter().collect();
         if ids.len() < 2 {
             if let Some(&only) = ids.first() {
@@ -191,7 +217,8 @@ impl PortDirectedGraph {
     }
 
     /// ⭐️ Adds directed edges from `nodes[0]` (the semio_hub) to every other node in `nodes`.
-    pub async fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         let ids: Vec<NodeId> = nodes.into_iter().collect();
         let Some(&semio_hub) = ids.first() else { return };
         for &leaf in &ids[1..] {
@@ -201,28 +228,34 @@ impl PortDirectedGraph {
     // #endsubregion
 
     // #subregion 🔖️Queries
-    pub async fn successors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn successors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.out_neighbors(node).collect::<BTreeSet<_>>().into_iter()
     }
 
-    pub async fn predecessors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn predecessors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.in_neighbors(node).collect::<BTreeSet<_>>().into_iter()
     }
 
-    pub async fn in_degree(&self, node: NodeId) -> usize {
-        GraphView::in_degree(&self.storage, node).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn in_degree(&self, node: NodeId) -> usize {
+        GraphView::in_degree(&self.storage, node)
     }
 
-    pub async fn out_degree(&self, node: NodeId) -> usize {
-        GraphView::out_degree(&self.storage, node).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn out_degree(&self, node: NodeId) -> usize {
+        GraphView::out_degree(&self.storage, node)
     }
 
-    pub async fn degree(&self, node: NodeId) -> usize {
-        GraphView::degree(&self.storage, node).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn degree(&self, node: NodeId) -> usize {
+        GraphView::degree(&self.storage, node)
     }
 
     /// ⚖️ Sums the edge weights of every incident edge (in + out) using `weights`.
-    pub async fn weighted_degree(&self, node: NodeId, weights: &impl EdgeWeights) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn weighted_degree(&self, node: NodeId, weights: &impl EdgeWeights) -> f64 {
         let out: f64 = self.storage.out_neighbors(node).flat_map(|v| self.storage.edges_between(node, v)).map(|e| weights.weight(e)).sum();
         let inn: f64 = self.storage.in_neighbors(node).flat_map(|u| self.storage.edges_between(u, node)).map(|e| weights.weight(e)).sum();
         out + inn
@@ -230,7 +263,8 @@ impl PortDirectedGraph {
 
     /// 📐️ Directed multigraph density `m / (n * (n - 1))`; unlike a simple graph this can exceed `1.0` because parallel
     /// edges are not deduped — matches NetworkX `density()` applied to a `MultiDiGraph`. `0.0` for `n < 2`.
-    pub async fn density(&self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn density(&self) -> f64 {
         let n = self.storage.node_count() as f64;
         if n < 2.0 {
             return 0.0;
@@ -238,33 +272,37 @@ impl PortDirectedGraph {
         self.storage.edge_count() as f64 / (n * (n - 1.0))
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.storage.edge_count() == 0
     }
 
     /// 🔗️ Union of predecessors and successors, deduped.
-    pub async fn all_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn all_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
         self.storage.out_neighbors(node).chain(self.storage.in_neighbors(node)).collect::<BTreeSet<_>>().into_iter()
     }
     // #endsubregion
 
     // #subregion 🔖️Transforms
-    pub async fn copy(&self) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn copy(&self) -> Self {
         self.clone()
     }
 
     /// 🔎️ Owned copy restricted to `nodes`; an edge is kept only when both endpoints are in the subset.
-    pub async fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let keep: BTreeSet<NodeId> = nodes.into_iter().filter(|&n| self.storage.contains_node(n)).collect();
-        let mut out = Self::new().await;
+        let mut out = Self::new();
         for &n in &keep {
-            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
             if keep.contains(&e.u) && keep.contains(&e.v) {
-                let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
-                out.add_edge_with(e.u, e.v, attrs).await;
+                let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+                out.add_edge_with(e.u, e.v, attrs);
             }
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
@@ -273,21 +311,22 @@ impl PortDirectedGraph {
     }
 
     /// 🔎️ Owned copy restricted to `edges`; nodes are exactly the endpoints of the included edges.
-    pub async fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
         let keep: BTreeSet<EdgeId> = edges.into_iter().collect();
-        let mut out = Self::new().await;
+        let mut out = Self::new();
         for e in self.storage.edges() {
             if !keep.contains(&e.id) {
                 continue;
             }
             for n in [e.u, e.v] {
                 if !out.storage.contains_node(n) {
-                    let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+                    let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
                     out.storage.add_node_with_id(n, attrs);
                 }
             }
-            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
-            out.add_edge_with(e.u, e.v, attrs).await;
+            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            out.add_edge_with(e.u, e.v, attrs);
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out.name = self.name.clone();
@@ -296,15 +335,16 @@ impl PortDirectedGraph {
 
     /// ↩️ Owned copy with every edge's source/target swapped (NetworkX `MultiDiGraph.reverse()`); rebuilt explicitly
     /// (rather than wrapping with `ReversedView`) since the facade owns its storage and must hand back a `Self`.
-    pub async fn reverse(&self) -> Self {
-        let mut out = Self::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn reverse(&self) -> Self {
+        let mut out = Self::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
-            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
-            out.add_edge_with(e.v, e.u, attrs).await;
+            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            out.add_edge_with(e.v, e.u, attrs);
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out.name = self.name.clone();
@@ -319,12 +359,13 @@ impl PortDirectedGraph {
     /// undirected edge is emitted per surviving directed edge (so a mutual pair emits two parallel undirected edges,
     /// mirroring NetworkX's behavior of keeping both directed edges' data). Builds fresh default-handle bookkeeping —
     /// this new `Storage<Ported, Undirected>`'s handle ids are unrelated to `self`'s.
-    pub async fn to_undirected(&self, reciprocal: bool) -> Storage<Ported, Undirected> {
-        let mut out = Storage::<Ported, Undirected>::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_undirected(&self, reciprocal: bool) -> Storage<Ported, Undirected> {
+        let mut out = Storage::<Ported, Undirected>::new();
         let mut handles: BTreeMap<NodeId, HandleId> = BTreeMap::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs).await;
+            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            out.add_node_with_id(n, attrs);
         }
         let mut handle_of = |out: &mut Storage<Ported, Undirected>, node: NodeId| -> HandleId {
             if let Some(&h) = handles.get(&node) {
@@ -338,90 +379,102 @@ impl PortDirectedGraph {
             if reciprocal && self.storage.edges_between(e.v, e.u).next().is_none() {
                 continue;
             }
-            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
+            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
             let hu = handle_of(&mut out, e.u);
             let hv = handle_of(&mut out, e.v);
-            out.add_edge_with(hu, hv, attrs).await;
+            out.add_edge_with(hu, hv, attrs);
         }
-        *out.graph_attrs_mut().await = self.storage.graph_attrs().clone();
+        *out.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out
     }
 
     /// 🧵️ Collapses parallel `(source, target)` directed edges into one, summing each edge's `"weight"` attribute
     /// (defaulting to `1.0` per edge when absent) — NetworkX `MultiDiGraph` -> `DiGraph` simplification.
-    pub async fn to_simple(&self) -> Storage<Normal, Directed> {
-        let mut out = Storage::<Normal, Directed>::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_simple(&self) -> Storage<Normal, Directed> {
+        let mut out = Storage::<Normal, Directed>::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs).await;
+            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            out.add_node_with_id(n, attrs);
         }
         let mut weight_sum: BTreeMap<(NodeId, NodeId), f64> = BTreeMap::new();
         for e in self.storage.edges() {
-            let w = self.storage.edge_attrs(e.id).await.and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
+            let w = self.storage.edge_attrs(e.id).and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
             *weight_sum.entry((e.u, e.v)).or_insert(0.0) += w;
         }
         for ((u, v), w) in weight_sum {
             let mut attrs = PropertyBag::new();
             attrs.insert("weight".to_string(), PropertyValue::Number(w));
-            out.add_edge_with(u, v, attrs).await;
+            out.add_edge_with(u, v, attrs);
         }
         out
     }
 
     /// 🧹️ Removes every node, edge, and handle-owner mapping; the `default_handle` cache is cleared too.
-    pub async fn clear(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn clear(&mut self) {
         self.storage.clear();
         self.default_handle.clear();
     }
 
     /// 🧹️ Removes every edge but keeps nodes; default handles persist (same documented choice as the undirected sibling
     /// facade — a node's default handle is a stable identity, not edge-scoped).
-    pub async fn clear_edges(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn clear_edges(&mut self) {
         self.storage.clear_edges();
     }
     // #endsubregion
 
     // #subregion 🔖️Attributes
-    pub async fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
-        if let Some(bag) = self.storage.node_attrs_mut(node).await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
+        if let Some(bag) = self.storage.node_attrs_mut(node) {
             bag.extend(attrs);
         }
     }
 
-    pub async fn get_node_attributes(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.storage.node_attrs(node).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get_node_attributes(&self, node: NodeId) -> Option<&PropertyBag> {
+        self.storage.node_attrs(node)
     }
 
-    pub async fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
-        if let Some(bag) = self.storage.edge_attrs_mut(edge).await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
+        if let Some(bag) = self.storage.edge_attrs_mut(edge) {
             bag.extend(attrs);
         }
     }
 
-    pub async fn get_edge_attributes(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(edge).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn get_edge_attributes(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.storage.edge_attrs(edge)
     }
 
-    pub async fn name(&self) -> &str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub async fn set_name(&mut self, name: impl Into<String>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_name(&mut self, name: impl Into<String>) {
         self.name = name.into();
     }
     // #endsubregion
 
     // #subregion 🔖️SelfLoops
     /// 🔁️ Every self-loop edge ref (`u == v`), in `EdgeId` order.
-    pub async fn selfloop_edges(&self) -> impl Iterator<Item = EdgeRef> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeRef> + '_ {
         self.storage.edges().filter(|e| e.u == e.v)
     }
 
-    pub async fn number_of_selfloops(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn number_of_selfloops(&self) -> usize {
         self.selfloop_edges().count()
     }
 
-    pub async fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
         self.selfloop_edges().map(|e| e.u).collect::<BTreeSet<_>>().into_iter()
     }
     // #endsubregion

@@ -18,7 +18,8 @@ pub struct Pdf17Outline {
 }
 
 impl Pdf17Outline {
-    pub async fn compute(snapshot: &PdfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &PdfSnapshot) -> Self {
         let page_count = snapshot.pages.len() as u32;
         let word_count = snapshot.pages.iter().map(|p| p.text.split_whitespace().count() as u32).sum();
         Self { page_count, word_count, title: snapshot.info.title.clone() }

@@ -54,7 +54,8 @@ impl Default for ObjArtifact {
 
 impl ObjArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> ObjSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> ObjSnapshot {
         ObjSnapshot {
             schema: self.schema.clone(),
             vertices: self.vertices.clone(),
@@ -71,7 +72,8 @@ impl ObjArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: ObjSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: ObjSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             vertices: snapshot.vertices,
@@ -88,7 +90,8 @@ impl ObjArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: ObjSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: ObjSnapshot) {
         self.schema = snapshot.schema;
         self.vertices = snapshot.vertices;
         self.texcoords = snapshot.texcoords;
@@ -106,7 +109,8 @@ impl ObjArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.obj`.
-pub async fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn obj_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.obj",
         artifact: schema::FacetLeaves {
@@ -171,7 +175,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::obj::schema::mutations::apply_obj_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -207,7 +211,8 @@ pub mod derived_analysis {
     /// 🔍 OBJ has no magic byte signature (it's plain text) — sniff by scanning the first
     /// ~200 non-blank lines for real Wavefront keyword shapes (`v `/`f ` are the strong
     /// signal; `vt`/`vn`/`o`/`g`/`usemtl`/`s`/`mtllib` are weaker corroborating signals).
-    async fn looks_like_obj(text: &str) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_obj(text: &str) -> IoConfidence {
         let mut vertex_lines = 0u32;
         let mut face_lines = 0u32;
         let mut other_tokens = 0u32;
@@ -248,15 +253,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_obj(body).await
+                    looks_like_obj(body)
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_obj(&text).await,
+                        Ok(text) => looks_like_obj(&text),
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_obj(text).await,
+                        Ok(text) => looks_like_obj(text),
                         Err(_) => IoConfidence::Low,
                     },
                 },
@@ -329,7 +334,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::obj::engine::empty_obj_snapshot` through the `engine` barrel shim.
-pub async fn empty_obj_snapshot() -> ObjSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_obj_snapshot() -> ObjSnapshot {
     ObjSnapshot::default()
 }
 
@@ -358,10 +364,11 @@ weird_directive foo bar\n";
 /// `print_dsl(demo_obj_snapshot())` is genuinely stable, matching `🗣️example.dsl.semio`'s own
 /// `fixture_honesty_law` requirement exactly. Same pattern `stdio.txt`'s own
 /// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
-pub async fn demo_obj_snapshot() -> ObjSnapshot {
-    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).await.unwrap_or_else(|_| empty_obj_snapshot());
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_obj_snapshot() -> ObjSnapshot {
+    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
     let gen2_text = crate::artifacts::obj::engine::encode_obj(&gen1);
-    crate::artifacts::obj::engine::decode_obj(&gen2_text).await.unwrap_or(gen1)
+    crate::artifacts::obj::engine::decode_obj(&gen2_text).unwrap_or(gen1)
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -380,10 +387,12 @@ pub async fn demo_obj_snapshot() -> ObjSnapshot {
 /// `.setup(crate::artifacts::obj::engine::register_schema_specs)`, reached through the `engine`
 /// barrel shim.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.obj", ObjSnapshot::__dsl_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 //#endregion 🔖️RegisterSchemaSpecs

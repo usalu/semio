@@ -27,7 +27,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard:
 //#region 🔖️Topology
 /// 🔺️ `SemioTopology` -> gltf `primitive.mode` (§5.19.4) -- total (every semio variant has a real
 /// gltf mode; the partial direction is the deserializer's `LINE_LOOP` gap, not this one).
-async fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
     match topology {
         SemioTopology::Points => 0,
         SemioTopology::Lines => 1,
@@ -44,7 +45,8 @@ async fn topology_to_gltf_mode(topology: SemioTopology) -> u64 {
 /// bytes to `buf`, registers one tightly-packed `bufferView` + `accessor` for them, and returns
 /// the new accessor's index. Only `Float`/`UnsignedInt` are exercised by this codec (positions/
 /// normals/uvs/colors as Float, indices as UnsignedInt).
-async fn push_accessor(buf: &mut Vec<u8>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f64], count: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_accessor(buf: &mut Vec<u8>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f64], count: usize) -> usize {
     let byte_offset = buf.len();
     for &v in values {
         match component_type {
@@ -130,7 +132,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
                     None => None,
                 };
 
-                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology).await), targets: Vec::new(), extensions: None, extras: None });
+                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology)), targets: Vec::new(), extensions: None, extras: None });
             }
             gltf_meshes.push(GltfMesh { primitives: gprims, weights: Vec::new(), name: Some(mesh.id.clone()), extensions: None, extras: None });
         }
@@ -166,7 +168,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
         for tex in &from.textures {
             let mime = if tex.mime.is_empty() { "application/octet-stream".to_string() } else { tex.mime.clone() };
             let img_idx = gltf_images.len();
-            gltf_images.push(GltfImage { uri: Some(encode_data_uri(&mime, &tex.bytes).await), mime_type: Some(tex.mime.clone()), buffer_view: None, name: Some(tex.id.clone()), extensions: None, extras: None });
+            gltf_images.push(GltfImage { uri: Some(encode_data_uri(&mime, &tex.bytes)), mime_type: Some(tex.mime.clone()), buffer_view: None, name: Some(tex.id.clone()), extensions: None, extras: None });
             gltf_textures.push(GltfTexture { sampler: None, source: Some(img_idx), name: Some(tex.id.clone()), extensions: None, extras: None });
         }
 
@@ -191,7 +193,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn sample_semio_mesh() -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {

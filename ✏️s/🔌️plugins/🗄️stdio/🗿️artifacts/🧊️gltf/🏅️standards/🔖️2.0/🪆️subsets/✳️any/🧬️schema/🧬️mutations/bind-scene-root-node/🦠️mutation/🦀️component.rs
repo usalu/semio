@@ -12,18 +12,20 @@ pub struct GltfBindSceneRootNodePayload {
     pub position: usize,
 }
 
-pub async fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
-    checked_index(payload.scene, base.document.scenes.len(), "document/scenes").await?;
-    checked_index(payload.node, base.document.nodes.len(), "document/nodes").await?;
-    checked_position(payload.position, base.document.scenes[payload.scene].nodes.len(), "document/scenes/nodes").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    checked_position(payload.position, base.document.scenes[payload.scene].nodes.len(), "document/scenes/nodes")?;
     if base.document.scenes[payload.scene].nodes.contains(&payload.node) {
-        return Err(reject("gltf.mutation.duplicate-scene-root", format!("document/scenes/{}/nodes", payload.scene), "node is already a scene root").await);
+        return Err(reject("gltf.mutation.duplicate-scene-root", format!("document/scenes/{}/nodes", payload.scene), "node is already a scene root"));
     }
     Ok(())
 }
 
-pub async fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
     let mut next = base.clone();
     next.document.scenes[payload.scene].nodes.insert(payload.position, payload.node);
     Ok(next)

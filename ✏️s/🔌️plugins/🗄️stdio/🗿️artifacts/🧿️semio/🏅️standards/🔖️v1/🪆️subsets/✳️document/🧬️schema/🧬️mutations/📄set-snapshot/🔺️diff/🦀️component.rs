@@ -2,9 +2,10 @@ use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{di
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
-pub async fn diff(base: &SemioDocumentSnapshot, snapshot: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(base: &SemioDocumentSnapshot, snapshot: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
+        return protocol::MutationOutcome::new(SemioDocumentDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

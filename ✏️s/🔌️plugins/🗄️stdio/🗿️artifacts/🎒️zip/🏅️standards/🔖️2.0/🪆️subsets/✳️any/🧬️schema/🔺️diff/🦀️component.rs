@@ -38,7 +38,8 @@ pub struct ZipEntriesDiff {
 }
 
 impl ZipEntriesDiff {
-    async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -57,7 +58,8 @@ pub struct ZipDiff {
 //#endregion 🔖️Model
 
 //#region 🔖️EntryLogic
-async fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
     if let Some(name) = &diff.name {
         entry.name = name.clone();
     }
@@ -66,11 +68,13 @@ async fn apply_entry_diff(entry: &mut ZipEntry, diff: &ZipEntryDiff) {
     }
 }
 
-async fn entry_between(base: &ZipEntry, other: &ZipEntry) -> ZipEntryDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entry_between(base: &ZipEntry, other: &ZipEntry) -> ZipEntryDiff {
     ZipEntryDiff { name: (base.name != other.name).then(|| other.name.clone()), data: (base.data != other.data).then(|| other.data.clone()) }
 }
 
-async fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
     if other.name.is_some() {
         base.name = other.name;
     }
@@ -79,7 +83,8 @@ async fn absorb_entry_diff(base: &mut ZipEntryDiff, other: ZipEntryDiff) {
     }
 }
 
-async fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>) -> Option<ZipEntriesDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>) -> Option<ZipEntriesDiff> {
     let (mut first, second) = match (first, second) {
         (None, None) => return None,
         (Some(value), None) | (None, Some(value)) => return Some(value),
@@ -130,7 +135,7 @@ async fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntries
 impl MutationDiff<ZipSnapshot> for ZipDiff {
     async fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
         if let Some(entries) = &self.entries {
-            validate_zip_entries(&base.entries, entries).await?;
+            validate_zip_entries(&base.entries, entries)?;
         }
         let mut next = base.clone();
         if let Some(comment) = &self.comment {
@@ -154,19 +159,20 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
         if other.comment.is_some() {
             self.comment = other.comment;
         }
-        self.entries = absorb_entries(self.entries.take(), other.entries).await;
+        self.entries = absorb_entries(self.entries.take(), other.entries);
     }
 }
 
-async fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApplyResult<()> {
     let base_names: HashSet<&str> = base.iter().map(|entry| entry.name.as_str()).collect();
     if base_names.len() != base.len() {
-        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP snapshot contains duplicate entry names").await.at(["entries"]).await);
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP snapshot contains duplicate entry names").at(["entries"]));
     }
     let mut removed = HashSet::new();
     for name in &diff.removed {
         if !base_names.contains(name.as_str()) || !removed.insert(name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "ZIP entry removal is missing or duplicated").await.at(["entries", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "ZIP entry removal is missing or duplicated").at(["entries", "removed"]));
         }
     }
     let mut modified = HashSet::new();
@@ -174,11 +180,11 @@ async fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> Mutat
     let mut renamed = HashSet::new();
     for entry in &diff.modified {
         if !base_names.contains(entry.name.as_str()) || !modified.insert(entry.name.as_str()) || removed.contains(entry.name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "ZIP entry modification is missing, duplicated, or removed").await.at(["entries", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "ZIP entry modification is missing, duplicated, or removed").at(["entries", "modified"]));
         }
         if let Some(name) = &entry.diff.name {
             if name.is_empty() || (name != &entry.name && occupied.contains(name.as_str())) || !renamed.insert(name.as_str()) {
-                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry rename conflicts with an existing or repeated name").await.at(["entries", "modified"]).await);
+                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry rename conflicts with an existing or repeated name").at(["entries", "modified"]));
             }
             occupied.remove(entry.name.as_str());
             occupied.insert(name.as_str());
@@ -186,7 +192,7 @@ async fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> Mutat
     }
     for entry in &diff.added {
         if entry.name.is_empty() || occupied.contains(entry.name.as_str()) || !occupied.insert(entry.name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry addition conflicts with the target archive").await.at(["entries", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry addition conflicts with the target archive").at(["entries", "added"]));
         }
     }
     Ok(())
@@ -223,32 +229,39 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
 //#endregion 🔖️Algebra
 
 //#region 🔖️Builders
-pub async fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
-    ZipDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
+    ZipDiff::between(base, next)
 }
 
-pub async fn diff_set_archive_comment(comment: &str) -> ZipDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_archive_comment(comment: &str) -> ZipDiff {
     ZipDiff { comment: Some(comment.into()), entries: None }
 }
 
-pub async fn diff_add_entry(entry: ZipEntry) -> ZipDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_add_entry(entry: ZipEntry) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { added: vec![entry], ..Default::default() }) }
 }
 
-pub async fn diff_remove_entry(name: &str) -> ZipDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_entry(name: &str) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { removed: vec![name.into()], ..Default::default() }) }
 }
 
-async fn diff_entry_field(name: &str, diff: ZipEntryDiff) -> ZipDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_entry_field(name: &str, diff: ZipEntryDiff) -> ZipDiff {
     ZipDiff { comment: None, entries: Some(ZipEntriesDiff { modified: vec![ZipEntryModified { name: name.into(), diff }], ..Default::default() }) }
 }
 
-pub async fn diff_rename_entry(name: &str, new_name: &str) -> ZipDiff {
-    diff_entry_field(name, ZipEntryDiff { name: Some(new_name.into()), data: None }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_rename_entry(name: &str, new_name: &str) -> ZipDiff {
+    diff_entry_field(name, ZipEntryDiff { name: Some(new_name.into()), data: None })
 }
 
-pub async fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
-    diff_entry_field(name, ZipEntryDiff { name: None, data: Some(data) }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
+    diff_entry_field(name, ZipEntryDiff { name: None, data: Some(data) })
 }
 //#endregion 🔖️Builders
 
@@ -283,7 +296,8 @@ impl protocol::DiffCodec for ZipDiff {
 //#endregion 🔖️Codec
 
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<ZipDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
     let base = ZipSnapshot { entries: vec![ZipEntry { name: "before.txt".into(), data: b"before".to_vec() }], ..Default::default() };
     let other = ZipSnapshot { entries: vec![ZipEntry { name: "after.txt".into(), data: b"after".to_vec() }], comment: "archive".into(), ..Default::default() };
     vec![ZipDiff::default(), ZipDiff::between(&base, &other), ZipDiff::between(&other, &base)]

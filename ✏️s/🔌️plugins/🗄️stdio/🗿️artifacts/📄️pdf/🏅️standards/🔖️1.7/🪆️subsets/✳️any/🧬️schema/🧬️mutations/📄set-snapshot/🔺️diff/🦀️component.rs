@@ -5,9 +5,10 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfS
 
 /// 🔺️ Diff helper for set-snapshot -- the sparse field-by-field `between(base, snapshot)` (no
 /// `snapshot: Option<PdfSnapshot>` full-replace slot exists on `PdfDiff` to short-circuit into).
-pub async fn diff(base: &PdfSnapshot, snapshot: &PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(base: &PdfSnapshot, snapshot: &PdfSnapshot) -> protocol::MutationOutcome<PdfDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(PdfDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
+        return protocol::MutationOutcome::new(PdfDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

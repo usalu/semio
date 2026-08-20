@@ -6,7 +6,8 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{c
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &DeleteFace, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &DeleteFace, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
     match base.faces.iter().find(|x| x.id == payload.id) {
         Some(x) => vec![SemioBrepMutation::CreateFace(create_face::mutation::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation })],
         None => Vec::new(),

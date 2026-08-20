@@ -12,25 +12,28 @@ use std::sync::OnceLock;
 /// 🎯️ `s.stdio.txt@utf-8/*` — `CARRIER_TEXT` in `semio_framework::io_schema`.
 pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
-async fn examples() -> &'static [ExampleSource] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::txt::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::txt_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard utf-8 / subset any`'s complete declaration — carrier pilot: `io.entries` is
 /// empty by the carrier law (see `🚪️io/🦀️component.rs`'s `io()` doc comment).
-pub async fn subset() -> SubsetDeclaration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::txt_artifact_schema_descriptor().await, inferences: inference_descriptors().await, inference_services: Vec::new() },
-        io: io::io().await,
-        viewer: viewer_surface::<viewer::TxtViewer>(viewer::create_txt_viewer().await).await,
-        editor: editor_surface::<editor::TxtEditor>(editor::create_txt_editor().await).await,
-        examples: examples().await,
+        schema: SchemaDeclaration { descriptor: schema::txt_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        io: io::io(),
+        viewer: viewer_surface::<viewer::TxtViewer>(viewer::create_txt_viewer()),
+        editor: editor_surface::<editor::TxtEditor>(editor::create_txt_editor()),
+        examples: examples(),
     }
 }

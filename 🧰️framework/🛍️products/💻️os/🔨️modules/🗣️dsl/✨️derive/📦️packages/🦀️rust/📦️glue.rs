@@ -404,8 +404,8 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         let (shape_expr, to_value_expr, from_value_expr): (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream) = match kind {
             FieldKind::Scalar => (
                 quantity_shape_override.clone().unwrap_or_else(|| quote! { <#elem_ty as ::dsl::DslField>::shape() }),
-                quote! { ::dsl::DslField::to_value(&self.#ident).await },
-                quote! { <#elem_ty as ::dsl::DslField>::from_value(value).await.map_err(::dsl::__rt::field_error)? },
+                quote! { ::dsl::DslField::to_value(&self.#ident) },
+                quote! { <#elem_ty as ::dsl::DslField>::from_value(value).map_err(::dsl::__rt::field_error)? },
             ),
             FieldKind::Bytes64 => (
                 quote! { ::dsl::Shape::Bytes64 },
@@ -421,14 +421,14 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quantity_shape_override.clone().unwrap_or_else(|| quote! { <#inner as ::dsl::DslField>::shape() }),
                 quote! {
                     match &self.#ident {
-                        Some(v) => ::dsl::DslField::to_value(v).await,
+                        Some(v) => ::dsl::DslField::to_value(v),
                         None => ::dsl::FieldValue::Absent,
                     }
                 },
                 quote! {
                     match value {
                         ::dsl::FieldValue::Absent => None,
-                        other => Some(<#inner as ::dsl::DslField>::from_value(other).await.map_err(::dsl::__rt::field_error)?),
+                        other => Some(<#inner as ::dsl::DslField>::from_value(other).map_err(::dsl::__rt::field_error)?),
                     }
                 },
             ),
@@ -437,7 +437,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v).await); }
+                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
                         ::dsl::FieldValue::List(__items)
                     }
                 },
@@ -445,7 +445,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::List(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).await.map_err(::dsl::__rt::field_error)?); }
+                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected List, found {other:?}"))),
@@ -460,7 +460,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v).await); }
+                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
                         ::dsl::FieldValue::List(__items)
                     }
                 },
@@ -468,7 +468,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::List(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).await.map_err(::dsl::__rt::field_error)?); }
+                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected List, found {other:?}"))),
@@ -480,7 +480,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v).await); }
+                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
                         ::dsl::FieldValue::Tuple(__items)
                     }
                 },
@@ -488,7 +488,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::Tuple(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).await.map_err(::dsl::__rt::field_error)?); }
+                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected Tuple, found {other:?}"))),
@@ -500,7 +500,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
+                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
                         ::dsl::FieldValue::Statements(__items)
                     }
                 },
@@ -508,7 +508,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::Statements(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for (keyword, record) in items.iter() { __out.push(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)).await?); }
+                            for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected Statements, found {other:?}"))),
@@ -520,7 +520,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
+                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
                         ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
                     }
                 },
@@ -529,7 +529,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::dsl::FieldValue::Block(inner_value) => match inner_value.as_ref() {
                             ::dsl::FieldValue::Statements(items) => {
                                 let mut __out = Vec::with_capacity(items.len());
-                                for (keyword, record) in items.iter() { __out.push(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)).await?); }
+                                for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)?); }
                                 __out
                             }
                             other => return Err(::dsl::__rt::field_error(format!("expected Statements inside Block, found {other:?}"))),
@@ -543,7 +543,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __entries = Vec::with_capacity(self.#ident.len());
-                        for (k, v) in self.#ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v).await)); }
+                        for (k, v) in self.#ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v))); }
                         ::dsl::FieldValue::Map(__entries)
                     }
                 },
@@ -551,7 +551,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::Map(entries) => {
                             let mut __out = ::std::collections::BTreeMap::new();
-                            for (k, v) in entries.iter() { __out.insert(k.clone(), <#inner as ::dsl::DslField>::from_value(v).await.map_err(::dsl::__rt::field_error)?); }
+                            for (k, v) in entries.iter() { __out.insert(k.clone(), <#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected Map, found {other:?}"))),
@@ -562,7 +562,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
                 quote! {
                     ::dsl::FieldValue::Statements(match &self.#ident {
-                        Some(v) => vec![Box::pin(::dsl::DslVariants::to_named_record(v)).await],
+                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
                         None => vec![],
                     })
                 },
@@ -571,7 +571,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::dsl::FieldValue::Absent => None,
                         ::dsl::FieldValue::Statements(items) if items.is_empty() => None,
                         ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Some(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)).await?)
+                            Some(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected 0 or 1 tagged values, found {other:?}"))),
                     }
@@ -579,11 +579,11 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             ),
             FieldKind::RequiredStatements(inner) => (
                 quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
-                quote! { ::dsl::FieldValue::Statements(vec![Box::pin(::dsl::DslVariants::to_named_record(self.#ident.as_ref())).await]) },
+                quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(self.#ident.as_ref())]) },
                 quote! {
                     match value {
                         ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Box::new(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)).await?)
+                            Box::new(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected exactly 1 tagged value, found {other:?}"))),
                     }
@@ -669,12 +669,12 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
             pub fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub async fn __dsl_to_record(&self) -> ::dsl::RecordValue {
+            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub async fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
@@ -685,12 +685,12 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
             }
-            async fn to_value(&self) -> ::dsl::FieldValue {
-                ::dsl::FieldValue::Record(self.__dsl_to_record().await)
+            fn to_value(&self) -> ::dsl::FieldValue {
+                ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
-            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
-                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).await.map_err(|e| e.message),
+                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
                     other => Err(format!("expected Record, found {other:?}")),
                 }
             }
@@ -741,12 +741,12 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             pub fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub async fn __dsl_to_record(&self) -> ::dsl::RecordValue {
+            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub async fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
+            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
@@ -762,12 +762,12 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
             }
-            async fn to_value(&self) -> ::dsl::FieldValue {
-                ::dsl::FieldValue::Record(self.__dsl_to_record().await)
+            fn to_value(&self) -> ::dsl::FieldValue {
+                ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
-            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
-                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).await.map_err(|e| e.message),
+                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
                     other => Err(format!("expected Record, found {other:?}")),
                 }
             }
@@ -877,10 +877,10 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Enum(vec![ #(#variant_tags),* ])
             }
-            async fn to_value(&self) -> ::dsl::FieldValue {
+            fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Enum(match self { #(#match_to_ordinal),* })
             }
-            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
                     ::dsl::FieldValue::Enum(ordinal) => match *ordinal {
                         #(#match_from_ordinal,)*
@@ -923,10 +923,10 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
                     (#keyword.to_string(), ::dsl::__rt::newtype_variant_spec::<#inner_ty> as fn() -> ::dsl::RecordSpec)
                 });
                 to_named_arms.push(quote! {
-                    #name::#variant_ident(inner) => (#keyword.to_string(), ::dsl::__rt::newtype_variant_to_record(inner).await)
+                    #name::#variant_ident(inner) => (#keyword.to_string(), ::dsl::__rt::newtype_variant_to_record(inner))
                 });
                 from_named_arms.push(quote! {
-                    #keyword => Ok(#name::#variant_ident(::dsl::__rt::newtype_variant_from_record::<#inner_ty>(record).await?))
+                    #keyword => Ok(#name::#variant_ident(::dsl::__rt::newtype_variant_from_record::<#inner_ty>(record)?))
                 });
                 continue;
             }
@@ -976,10 +976,10 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
             fn variants() -> Vec<(String, fn() -> ::dsl::RecordSpec)> {
                 vec![ #(#variants_exprs),* ]
             }
-            async fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
+            fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
                 match self { #(#to_named_arms),* }
             }
-            async fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 match keyword {
                     #(#from_named_arms,)*
                     other => Err(::dsl::__rt::field_error(format!("unknown keyword '{other}'"))),
@@ -1325,56 +1325,56 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
         .map(|plan| {
             let FieldPlan { ident, id, kind, block, .. } = plan;
             let to_value_expr: proc_macro2::TokenStream = match kind {
-                FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident).await },
+                FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident) },
                 FieldKind::Bytes64 => quote! { ::dsl::FieldValue::Bytes64(#ident.clone()) },
                 FieldKind::OptionScalar(_) => quote! {
                     match #ident {
-                        Some(v) => ::dsl::DslField::to_value(v).await,
+                        Some(v) => ::dsl::DslField::to_value(v),
                         None => ::dsl::FieldValue::Absent,
                     }
                 },
                 FieldKind::VecList(_) | FieldKind::VecTable(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v).await); }
+                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
                         ::dsl::FieldValue::List(__items)
                     }
                 },
                 FieldKind::VecTuple(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v).await); }
+                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
                         ::dsl::FieldValue::Tuple(__items)
                     }
                 },
                 FieldKind::VecStatements(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
+                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
                         ::dsl::FieldValue::Statements(__items)
                     }
                 },
                 FieldKind::VecBlockStatements(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
+                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
                         ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
                     }
                 },
                 FieldKind::MapField(_) => quote! {
                     {
                         let mut __entries = Vec::with_capacity(#ident.len());
-                        for (k, v) in #ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v).await)); }
+                        for (k, v) in #ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v))); }
                         ::dsl::FieldValue::Map(__entries)
                     }
                 },
                 FieldKind::OptionStatements(_) => quote! {
                     ::dsl::FieldValue::Statements(match #ident {
-                        Some(v) => vec![Box::pin(::dsl::DslVariants::to_named_record(v)).await],
+                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
                         None => vec![],
                     })
                 },
-                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![Box::pin(::dsl::DslVariants::to_named_record(#ident.as_ref())).await]) },
+                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(#ident.as_ref())]) },
             };
             let to_value_expr = if *block {
                 quote! {

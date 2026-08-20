@@ -630,13 +630,15 @@ mod codegen {
                 impl fsm::StatechartEvent for #event_name {
                     const EVENT_COUNT: u16 = #event_count;
 
-                    async fn event_id(&self) -> fsm::EventId {
+                    // 🚫️async: E1 pure — matches `fsm::StatechartEvent`'s own sync signature (that
+                    // trait was reverted per R9; this generated impl must match) — see R9.
+                    fn event_id(&self) -> fsm::EventId {
                         match self {
                             #(#event_id_arms),*
                         }
                     }
 
-                    async fn event_name(id: fsm::EventId) -> &'static str {
+                    fn event_name(id: fsm::EventId) -> &'static str {
                         match id.0 {
                             #(#event_name_arms,)*
                             _ => "?",
@@ -656,7 +658,9 @@ mod codegen {
                     type Effect = #effect_ty;
                     type Config = fsm::BitSet<#word_count>;
 
-                    async fn definition() -> &'static fsm::MachineDefinition<Self> {
+                    // 🚫️async: E1 pure — matches `fsm::Machine`'s own sync signature (reverted per
+                    // R9; this generated impl must match) — see R9.
+                    fn definition() -> &'static fsm::MachineDefinition<Self> {
                         static DEF: fsm::MachineDefinition<#marker_name> = fsm::MachineDefinition {
                             id: #machine_name_str,
                             nodes: &[ #(#node_defs),* ],
@@ -1173,13 +1177,15 @@ pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::
         impl fsm::StatechartEvent for #name {
             const EVENT_COUNT: u16 = #count;
 
-            async fn event_id(&self) -> fsm::EventId {
+            // 🚫️async: E1 pure — matches `fsm::StatechartEvent`'s own sync signature (that trait
+            // was reverted per R9; this generated impl must match) — see R9.
+            fn event_id(&self) -> fsm::EventId {
                 match self {
                     #(#id_arms),*
                 }
             }
 
-            async fn event_name(id: fsm::EventId) -> &'static str {
+            fn event_name(id: fsm::EventId) -> &'static str {
                 match id.0 {
                     #(#name_arms,)*
                     _ => "?",
@@ -1327,6 +1333,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
                 let context: <#machine_path as fsm::Machine>::Context =
                     serde_json::from_value(value["context"].clone()).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))?;
                 let snapshot = fsm::restore::<#machine_path, fsm::NoMigrations>(&persisted, context, &[])
+                    .await
                     .map_err(|e| wasm_bindgen::JsValue::from_str(&format!("{:?}", e)))?;
                 Ok(Self {
                     snapshot: std::cell::RefCell::new(snapshot),

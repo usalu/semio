@@ -16,12 +16,14 @@ use std::sync::OnceLock;
 /// 🎯️ `s.stdio.binary@raw/*` — `CARRIER_BINARY` in `semio_framework::io_schema`.
 pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
-async fn examples() -> &'static [ExampleSource] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::binary::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::binary_artifact_inference_descriptor()]).as_slice()
 }
@@ -29,13 +31,14 @@ async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescrip
 /// 🌳️ `standard raw / subset any`'s complete declaration — the carrier pilot: `io.entries` is
 /// empty by the carrier law (see `🚪️io/🦀️component.rs`'s `io()` doc comment), `examples` carries
 /// the one `demo` example, `inferences` carries the `extent` inference descriptor.
-pub async fn subset() -> SubsetDeclaration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor().await, inferences: inference_descriptors().await, inference_services: Vec::new() },
-        io: io::io().await,
-        viewer: viewer_surface::<viewer::BinaryViewer>(viewer::create_binary_viewer().await).await,
-        editor: editor_surface::<editor::BinaryEditor>(editor::create_binary_editor().await).await,
-        examples: examples().await,
+        schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        io: io::io(),
+        viewer: viewer_surface::<viewer::BinaryViewer>(viewer::create_binary_viewer()),
+        editor: editor_surface::<editor::BinaryEditor>(editor::create_binary_editor()),
+        examples: examples(),
     }
 }

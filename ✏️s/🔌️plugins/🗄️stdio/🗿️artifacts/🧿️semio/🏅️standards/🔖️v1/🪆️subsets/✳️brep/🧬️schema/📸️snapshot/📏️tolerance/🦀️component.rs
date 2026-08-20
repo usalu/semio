@@ -43,29 +43,35 @@ pub struct Tol(pub f64);
 impl Tol {
     pub const DEFAULT: Tol = Tol(Resolution::DEFAULT.linear);
 
-    pub async fn new(value: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(value: f64) -> Self {
         debug_assert!(value.is_finite(), "tolerance must be finite");
         Tol(value.max(0.0))
     }
-    pub async fn value(self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn value(self) -> f64 {
         self.0
     }
     /// 🎚️ True when `distance` is within this tolerance of zero.
-    pub async fn contains(self, distance: f64) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn contains(self, distance: f64) -> bool {
         distance.abs() <= self.0
     }
     /// 🎚️ The tighter (smaller) of two tolerances — used when an operation must satisfy both
     /// operands' requirements simultaneously.
-    pub async fn tighter(self, o: Tol) -> Tol {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tighter(self, o: Tol) -> Tol {
         Tol(self.0.min(o.0))
     }
     /// 🎚️ The looser (larger) of two tolerances — used when propagating tolerance up the
     /// containment hierarchy (an edge's tolerance must cover every incident vertex tolerance).
-    pub async fn looser(self, o: Tol) -> Tol {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn looser(self, o: Tol) -> Tol {
         Tol(self.0.max(o.0))
     }
     /// 🎚️ Scales the tolerance, clamping to zero rather than going negative on a negative factor.
-    pub async fn scaled(self, factor: f64) -> Tol {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn scaled(self, factor: f64) -> Tol {
         Tol((self.0 * factor).max(0.0))
     }
 }
@@ -80,7 +86,8 @@ impl Default for Tol {
 /// corresponding bound in `coarser` (e.g. a vertex's tolerance must be ≥ zero and every incident
 /// edge's tolerance ≥ the vertex's, every incident face's ≥ the edge's). Returns the first
 /// violating pair, if any.
-pub async fn check_containment(finer_label: &str, finer: Tol, coarser_label: &str, coarser: Tol) -> Option<(String, String)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn check_containment(finer_label: &str, finer: Tol, coarser_label: &str, coarser: Tol) -> Option<(String, String)> {
     if finer.value() > coarser.value() {
         Some((finer_label.to_string(), coarser_label.to_string()))
     } else {
@@ -103,19 +110,23 @@ pub struct Iv {
 }
 
 impl Iv {
-    pub async fn exact(v: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn exact(v: f64) -> Self {
         Iv { lo: v, hi: v }
     }
-    pub async fn new(lo: f64, hi: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(lo: f64, hi: f64) -> Self {
         debug_assert!(lo <= hi);
         Iv { lo, hi }
     }
-    pub async fn contains_zero(self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn contains_zero(self) -> bool {
         self.lo <= 0.0 && self.hi >= 0.0
     }
     /// 🎚️ `Some(true)`/`Some(false)` when the sign is certain, `None` when the interval straddles
     /// zero and the caller must escalate to an exact recomputation.
-    pub async fn sign(self) -> Option<std::cmp::Ordering> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sign(self) -> Option<std::cmp::Ordering> {
         if self.hi < 0.0 {
             Some(std::cmp::Ordering::Less)
         } else if self.lo > 0.0 {
@@ -127,24 +138,29 @@ impl Iv {
         }
     }
     #[allow(clippy::should_implement_trait)]
-    pub async fn add(self, o: Iv) -> Iv {
-        Iv::new(self.lo + o.lo, self.hi + o.hi).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn add(self, o: Iv) -> Iv {
+        Iv::new(self.lo + o.lo, self.hi + o.hi)
     }
     #[allow(clippy::should_implement_trait)]
-    pub async fn sub(self, o: Iv) -> Iv {
-        Iv::new(self.lo - o.hi, self.hi - o.lo).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sub(self, o: Iv) -> Iv {
+        Iv::new(self.lo - o.hi, self.hi - o.lo)
     }
     #[allow(clippy::should_implement_trait)]
-    pub async fn mul(self, o: Iv) -> Iv {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mul(self, o: Iv) -> Iv {
         let candidates = [self.lo * o.lo, self.lo * o.hi, self.hi * o.lo, self.hi * o.hi];
-        Iv::new(candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max)).await
+        Iv::new(candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max))
     }
     #[allow(clippy::should_implement_trait)]
-    pub async fn neg(self) -> Iv {
-        Iv::new(-self.hi, -self.lo).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn neg(self) -> Iv {
+        Iv::new(-self.hi, -self.lo)
     }
-    pub async fn widen(self, epsilon: f64) -> Iv {
-        Iv::new(self.lo - epsilon, self.hi + epsilon).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn widen(self, epsilon: f64) -> Iv {
+        Iv::new(self.lo - epsilon, self.hi + epsilon)
     }
 }
 

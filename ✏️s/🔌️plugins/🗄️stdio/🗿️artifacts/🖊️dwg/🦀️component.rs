@@ -57,26 +57,29 @@ pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 /// `.setup(crate::artifacts::dwg::engine::register_schema_specs)` alongside this declaration's
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case).
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
-pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("dwg", definition, declaration).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    crate::registry::runtime_assembly("dwg", definition, declaration)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("dwg").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = crate::registry::format_descriptors_for("dwg")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor().await)
-        .await.formats(formats)
-        .await.inferences([crate::artifacts::dwg::schema::inferences::dwg_artifact_inference_descriptor()])
-        .await.composers(dwg_combined_composer_entries().await)
-        .await.languages(pilot_languages().await)
-        .await.document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
+        .schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::artifacts::dwg::schema::inferences::dwg_artifact_inference_descriptor()])
+        .composers(dwg_combined_composer_entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
         .try_build()
 }
 
 /// 🎹️ `ac1018` + `ac1024` engine composer entries, re-materialized as one owned `&'static
 /// [ComposerEntry]` — see `declaration()`'s own doc for why this exists instead of a bare
 /// `.composers()` call.
-async fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
     use semio_framework_plugin::ComposerEntry;
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
@@ -92,7 +95,8 @@ async fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::Co
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
 /// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -155,7 +159,8 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.dwg".into(),
         name: "Dwg".into(),
@@ -186,12 +191,14 @@ pub mod io_registry {
         ENTRIES.get_or_init(|| v_ac1018::entries().iter().chain(v_ac1024::entries().iter()).collect()).as_slice()
     }
 
-    pub async fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DwgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
         semio_framework_plugin::resolve_ready((entry.compose)(sources))
     }
 
-    pub async fn register() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
         let _ = register_composer_entries(v_ac1018::entries());
         let _ = register_composer_entries(v_ac1024::entries());
     }

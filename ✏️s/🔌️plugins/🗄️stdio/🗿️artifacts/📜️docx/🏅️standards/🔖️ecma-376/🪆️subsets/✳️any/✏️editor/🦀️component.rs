@@ -65,7 +65,8 @@ impl protocol::OpBinary for DocxEditorCommand {
 /// 🧮️ Pure `set-page` -> `DocxMutation` mapping, standalone so it is directly unit-testable
 /// without constructing a full `ArtifactView`. `None` covers both "index out of range" and "block
 /// at index is not a Paragraph" — both documented no-ops.
-async fn build_set_page_mutation(snapshot: &DocxSnapshot, index: usize, text: &str) -> Option<DocxMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_set_page_mutation(snapshot: &DocxSnapshot, index: usize, text: &str) -> Option<DocxMutation> {
     let DocxBlock::Paragraph(paragraph) = snapshot.document.body.get(index)? else { return None };
     let mut replacement = paragraph.clone();
     replacement.runs = vec![DocxRun { text: text.to_string(), ..Default::default() }];
@@ -115,7 +116,7 @@ impl ArtifactEditor for DocxEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let DocxEditorCommand::SetPage { index, text } = command;
         let index = *index as usize;
-        match build_set_page_mutation(doc.snapshot, index, text).await {
+        match build_set_page_mutation(doc.snapshot, index, text) {
             Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {index}")), ..Default::default() }),
             None => Ok(Emit::default()),
         }
@@ -123,7 +124,7 @@ impl ArtifactEditor for DocxEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -131,14 +132,15 @@ impl ArtifactEditor for DocxEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DOCX_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "docx"])
-        .await.icon_id("file-text")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::DOCX_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "stdio", "docx"])
+        .icon_id("file-text")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::DOCX_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

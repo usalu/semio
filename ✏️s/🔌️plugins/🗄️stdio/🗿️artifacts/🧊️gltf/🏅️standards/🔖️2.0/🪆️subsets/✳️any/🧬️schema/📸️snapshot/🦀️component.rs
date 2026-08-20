@@ -145,7 +145,8 @@ impl<'de> Deserialize<'de> for GltfJson {
 mod ordered_attr_map {
     use super::*;
 
-    pub async fn serialize<S: Serializer>(attrs: &[(String, usize)], serializer: S) -> Result<S::Ok, S::Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn serialize<S: Serializer>(attrs: &[(String, usize)], serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(attrs.len()))?;
         for (k, v) in attrs {
             map.serialize_entry(k, v)?;
@@ -168,7 +169,8 @@ mod ordered_attr_map {
         }
     }
 
-    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<(String, usize)>, D::Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<(String, usize)>, D::Error> {
         deserializer.deserialize_map(AttrVisitor)
     }
 }
@@ -179,49 +181,64 @@ mod ordered_attr_map {
 /// omitted on write when the in-memory value still equals the default -- a documented (and, for
 /// this fixture set, byte-exact) normal form: a field is either genuinely absent or explicitly
 /// non-default in every real document this codec has seen.
-async fn default_one_f64() -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_one_f64() -> f64 {
     1.0
 }
-async fn is_one_f64(v: &f64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_one_f64(v: &f64) -> bool {
     *v == 1.0
 }
-async fn default_zero_u64() -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_zero_u64() -> u64 {
     0
 }
-async fn is_zero_u64(v: &u64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_zero_u64(v: &u64) -> bool {
     *v == 0
 }
-async fn default_zero_usize() -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_zero_usize() -> usize {
     0
 }
-async fn is_zero_usize(v: &usize) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_zero_usize(v: &usize) -> bool {
     *v == 0
 }
-async fn default_wrap() -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_wrap() -> u64 {
     10497
 }
-async fn is_default_wrap(v: &u64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_default_wrap(v: &u64) -> bool {
     *v == 10497
 }
-async fn default_alpha_cutoff() -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_alpha_cutoff() -> f64 {
     0.5
 }
-async fn is_default_alpha_cutoff(v: &f64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_default_alpha_cutoff(v: &f64) -> bool {
     *v == 0.5
 }
-async fn default_vec3_zero() -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_vec3_zero() -> [f64; 3] {
     [0.0, 0.0, 0.0]
 }
-async fn is_vec3_zero(v: &[f64; 3]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_vec3_zero(v: &[f64; 3]) -> bool {
     *v == [0.0, 0.0, 0.0]
 }
-async fn default_vec4_one() -> [f64; 4] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_vec4_one() -> [f64; 4] {
     [1.0, 1.0, 1.0, 1.0]
 }
-async fn is_vec4_one(v: &[f64; 4]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_vec4_one(v: &[f64; 4]) -> bool {
     *v == [1.0, 1.0, 1.0, 1.0]
 }
-async fn is_false(v: &bool) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_false(v: &bool) -> bool {
     !*v
 }
 //#endregion 🔖️SpecDefaults
@@ -529,7 +546,8 @@ pub enum GltfAlphaMode {
     Blend,
 }
 
-async fn is_opaque(v: &GltfAlphaMode) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_opaque(v: &GltfAlphaMode) -> bool {
     matches!(v, GltfAlphaMode::Opaque)
 }
 
@@ -715,7 +733,8 @@ pub enum GltfInterpolation {
     CubicSpline,
 }
 
-async fn is_linear(v: &GltfInterpolation) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_linear(v: &GltfInterpolation) -> bool {
     matches!(v, GltfInterpolation::Linear)
 }
 
@@ -965,11 +984,11 @@ impl store::ArtifactDsl for GltfSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes()).await.map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body_bytes = crate::artifacts::gltf::engine::serialize_gltf_document(self);
-        let body = String::from_utf8(body_bytes.await).unwrap_or_else(|_| "{}".into());
+        let body = String::from_utf8(body_bytes).unwrap_or_else(|_| "{}".into());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -986,7 +1005,7 @@ impl store::ArtifactPack for GltfSnapshot {
     /// adds the SEMIO envelope around the SAME real container, it does not invent a second shape.
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gltf::engine::encode_glb(self).await.map_err(store::PackError::Schema)?;
+        let raw = crate::artifacts::gltf::engine::encode_glb(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -996,7 +1015,7 @@ impl store::ArtifactPack for GltfSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::gltf::engine::decode_glb(&inner).await.map_err(store::PackError::Schema)
+        crate::artifacts::gltf::engine::decode_glb(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

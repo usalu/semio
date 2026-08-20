@@ -92,19 +92,24 @@ import {
   START_INTRODUCTION_ACTION_ID,
   START_TUTORIAL_ACTION_ID,
   type StoragePort,
+  type SurfaceId,
   TUTORIAL_CONVERGE_MS,
   type TutorialAssetSrc,
   type TutorialCameraState,
   type TutorialChapter,
   type TutorialDefinition,
-  type TutorialDocumentEventKind,
+  type TutorialArtifactEventKind,
   type TutorialEvent,
   type TutorialGestureCue,
   type TutorialUiChange,
   type TutorialUiSnapshot,
   type TutorialVideoCue,
+  type BuiltNode,
   type UiDirtyScope,
-  type UiNode,
+  type UiIntent,
+  type UiNodeRecord,
+  type UiRevision,
+  type UiSnapshot,
   type UtilityNode,
   waitForEvent,
   windowElementId,
@@ -134,9 +139,6 @@ import {
   encodeMutationEnvelopesPack,
   encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
-  mutationEnvelopeFromWire,
-  mutationEnvelopeToWire,
-  type MutationEnvelope,
   type PersistenceBinding,
   DirectoryClient,
   DirectoryHttpError,
@@ -144,6 +146,11 @@ import {
   type DirectoryEvent,
   type DirectoryStreamMessage,
 } from "@semio-tech/framework-os";
+/** 🔗️ `mutationEnvelopeFromWire`/`mutationEnvelopeToWire`/`MutationEnvelope` live in the wire-contract
+ * package itself, not re-exported by `@semio-tech/framework-os` — same source
+ * `🧰️framework/🛍️products/💻️os/🟦️component.ts` (that package's own root) imports them from for its
+ * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
+import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type MutationEnvelope } from "@semio-tech/framework-replication";
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
  * identity facet's documentId/schema + fold. `@semio-tech/framework-os/backbone-worker` is the
  * package's own subpath export for this (`💻️os/📦️packages/🟦️typescript/🟦️glue.backbone-worker.ts`),
@@ -298,12 +305,12 @@ import {
   writeStoredUiKeybindingOverrides,
 } from "@semio-tech/ui-react";
 import {
-  declarativeSurfaceStatus,
   InterpretedUiNode,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
   wireLabel,
 } from "../Interpreter/🟦️component.tsx";
+import { UiDocumentStore } from "../UiDocumentStore/🟦️component.tsx";
 import {
   actionStageKey,
   type ActiveSession,
@@ -448,7 +455,10 @@ import {
   windowEngagementToSpec,
   windowMeasureTreeContainsId,
   windowMeasuresChrome,
+  type ActionPaneSlice,
+  type PluginInstallOutcome,
   type ResolvedCommand,
+  type TutorialUiBridgeContext,
   type UiRefreshCache,
 } from "../ShellHelpers/🟦️component.tsx";
 
@@ -487,6 +497,75 @@ import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../ShellSea
 import { UTILITY_CATEGORY_ICON_ID } from "../UtilityTree/🟦️component.tsx";
 import { coerceWireBytes } from "../PluginRuntime/🟦️component.tsx";
 // #endregion 🔌️Adapters
+
+//#region 🔖️BuiltNodeReconciler
+/** 🧬️ Mints a flat `UiSnapshot` from an authored `BuiltNode` tree — the retained-mode contract's own
+ * "ids get minted at reconciliation" step (see `BuiltNode`'s own doc comment on `@semio-tech/framework`).
+ * `ShellHost` performs this locally because the trees it holds (`pendingWindowUiNode()` placeholders,
+ * `refreshUi` results merged by `mergeRecordPreservingIdentity`) are authored directly, never received
+ * as an already-reconciled snapshot over a patch wire. Ids are minted fresh on every call (a DFS
+ * pre-order counter, unique only for the lifetime of one snapshot) — safe because every caller feeds
+ * the result straight into `UiDocumentStore.loadSnapshot`, whose own doc explains a whole-body replace
+ * deliberately never tries to preserve node identity ACROSS calls, only per-node content reference
+ * equality WITHIN one loaded snapshot (`notifyDiff`). `BuiltNode` carries no `transition` field (that's
+ * a patch-time hint with no meaning for a from-scratch load), so every minted record gets `null`. */
+function builtNodeToSnapshot(surface: SurfaceId, root: BuiltNode, revision: UiRevision = 0, layoutEpoch: bigint = 0n): UiSnapshot {
+  const nodes: UiNodeRecord[] = [];
+  let nextId = 1;
+  const mint = (node: BuiltNode): number => {
+    const id = nextId++;
+    const children = node.children.map(mint);
+    nodes.push({
+      id,
+      key: node.key,
+      component: node.component,
+      layout: node.layout,
+      style: node.style,
+      activity: node.activity,
+      disabled: node.disabled,
+      transition: null,
+      accessibility: node.accessibility,
+      bindings: node.bindings,
+      menu: node.menu,
+      children,
+    });
+    return id;
+  };
+  const root_ = mint(root);
+  return { surface, revision, root: root_, nodes, layoutEpoch };
+}
+
+/** 🎬️ `InterpretedUiNode`'s required `onIntent` — no plugin-facing dispatch exists yet for `UiIntent`
+ * (`PluginWasmHandle` carries `handleAction` for the legacy `ActionDescriptor` channel only, no
+ * `UiIntent`-shaped counterpart), the same `ActionId`-versioning gap flagged for `ShellHelpers`' own
+ * tree-panel-config subsystem (see that file's `ActionBinding`/`ActionId` doc comments). Reported
+ * loudly rather than silently dropped, matching `Interpreter`'s own "never throw, never silently
+ * drop" convention for an unresolved contract gap — wiring a real plugin-facing `UiIntent` dispatch is
+ * its own packet. */
+function reportUnwiredUiIntent(intent: UiIntent): void {
+  console.error("[os-shell] UiIntent dispatch has no plugin-facing channel yet", intent);
+}
+
+/** 🩹️ `WindowKindDefinition.label` has no ts-rs mirror yet (`unknown` — see that generated type's own
+ * doc comment, and `resolveManifestLabel`'s "some call sites may still see the pre-migration shape
+ * until that typegen lands" note) — asserts each window kind's real, documented label shape for the
+ * `*LayoutSeed`/`retitleWindowLayoutNode` helpers that still declare their `windowKinds` param
+ * strictly as `{ id, label: LocalizedLabel | string }[]`. */
+function withLocalizedWindowKindLabels(windowKinds: readonly { readonly id: string; readonly label: unknown }[]): readonly { readonly id: string; readonly label: LocalizedLabel | string }[] {
+  return windowKinds as readonly { readonly id: string; readonly label: LocalizedLabel | string }[];
+}
+
+/** 🌳️ `flattenPanelTabLeaves`'s own twin for `PanelTabNode` trees — that shared helper's generic
+ * constraint rejects `PanelTabNode` as a TS "weak type" (its `PanelTabLeaf` variant carries no
+ * `children` key at all, see `flattenPanelTabLeaves`'s own doc comment), so this walks the union via
+ * `panelTabChildren`'s own kind-aware accessor instead of a structural `.children` read. */
+function flattenPanelTabNodeLeaves(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
+  return tabs.flatMap((tab) => {
+    const children = panelTabChildren(tab);
+    return children && children.length > 0 ? flattenPanelTabNodeLeaves(children) : [tab];
+  });
+}
+//#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell
 /** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
@@ -654,7 +733,17 @@ function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapsh
     if (prev.activePanelTabByGroup[group] !== next.activePanelTabByGroup[group]) changes.push({ kind: "panelTab", group, tabId: next.activePanelTabByGroup[group] });
   }
   if (next.panelJson != null && prev.panelJson !== next.panelJson) changes.push({ kind: "panelState", panelJson: next.panelJson });
-  if (next.selectionJson != null && prev.selectionJson !== next.selectionJson) changes.push({ kind: "selection", selectionJson: next.selectionJson });
+  // 🕹️ `TutorialUiSnapshot.selectionJson` is gone — replaced by `interactionSelection`, the framework-
+  // owned per-domain selection map. Diffed one domain at a time, matching the granularity every other
+  // diff in this function already operates at (`activeUtilityByWindowId`/`activePanelTabByGroup`).
+  const selectionDomainIds = new Set([...Object.keys(prev.interactionSelection), ...Object.keys(next.interactionSelection)]);
+  for (const domainId of selectionDomainIds) {
+    const prevSelection = prev.interactionSelection[domainId];
+    const nextSelection = next.interactionSelection[domainId];
+    if (nextSelection && (!prevSelection || prevSelection.granularity !== nextSelection.granularity || prevSelection.ids.join(",") !== nextSelection.ids.join(","))) {
+      changes.push({ kind: "selection", domainId, granularity: nextSelection.granularity, ids: nextSelection.ids });
+    }
+  }
   if (prev.openDialogId !== next.openDialogId) changes.push({ kind: "dialog", id: next.openDialogId });
   const prevTree = new Set(prev.expandedTreeIds);
   const nextTree = new Set(next.expandedTreeIds);
@@ -741,8 +830,8 @@ export class TutorialRecorder {
       title: synthesizeLocalizedLabel(title),
       durationMs,
       chapters: this.chapters,
-      base: { documentJson: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
-      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
+      base: { documentDsl: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, artifact: [], camera: this.cameraKeyframes, gestures: [] },
       recordedAt: new Date().toISOString(),
     };
   }
@@ -1136,6 +1225,27 @@ function FrameworkOsShellInner({
    * stack the next time this fires, instead of shipping another blind guess.
    */
   const applyShellUriDepthRef = useRef(0);
+  //#region 🔖️BuiltNodeStores
+  /** 🧬️ Per-window/panel `UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey`/
+   * `spawnedWindowUi` already are — one stable store instance per key, reloaded via
+   * `loadSnapshot`/`builtNodeToSnapshot` whenever that key's authored `BuiltNode` reference actually
+   * changes (the reducer's own `mergeRecordPreservingIdentity` already keeps an unchanged window's
+   * `BuiltNode` reference-stable across a `refreshUi` cycle, so this rarely reloads). Plain ref-backed
+   * memoization, not a custom hook — the call sites live inside `useMemo` callbacks over `.map()`,
+   * where a hook call would violate the Rules of Hooks. */
+  const builtNodeStoresRef = useRef(new Map<string, { readonly node: BuiltNode; readonly store: UiDocumentStore }>());
+  /** 🧬️ Get-or-create the `UiDocumentStore` for `key`, reloading it from `node` only when `node`'s own
+   * reference changed since the last call — see `builtNodeStoresRef`'s doc above. */
+  const builtNodeStoreFor = useCallback((key: string, node: BuiltNode): UiDocumentStore => {
+    const cache = builtNodeStoresRef.current;
+    const existing = cache.get(key);
+    if (existing && existing.node === node) return existing.store;
+    const store = existing?.store ?? new UiDocumentStore(key);
+    store.loadSnapshot(builtNodeToSnapshot(key, node));
+    cache.set(key, { node, store });
+    return store;
+  }, []);
+  //#endregion 🔖️BuiltNodeStores
   const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
@@ -1511,7 +1621,7 @@ function FrameworkOsShellInner({
         const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
         // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
-        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+        const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, withLocalizedWindowKindLabels(sApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
         extraWindowInstancesRef.current = seeded.extraInstances;
         extraWindowCounterRef.current = seeded.extraInstances.length;
         dispatch({ type: "SET_SESSION", value: { pluginId: handle.pluginId, instanceId, app: sApp, viewState } });
@@ -1540,7 +1650,7 @@ function FrameworkOsShellInner({
           })();
       if (!primaryApp) return;
       const instanceId = await handle.createApp(primaryApp.id);
-      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, withLocalizedWindowKindLabels(primaryApp.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({
@@ -2397,16 +2507,21 @@ function FrameworkOsShellInner({
       // 🪟️ On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
       // this very first fetch already requests every default-layout pane's body/measures/engagements
       // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
-      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale) : undefined;
+      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, withLocalizedWindowKindLabels(nextSession.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale) : undefined;
       // 🪟️ Prefer the override, then the just-computed session-switch seed, then the live ref (never the
       // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
+      // 🩹️ `buildContributionsJson`'s own `PluginManifest` (kernel/component.ts) is a stale, narrower
+      // mirror of this file's real one (`Shell/🟦️component.tsx`'s, deliberately richer — see that
+      // type's own doc comment): it's missing a required `workflows` field this file's manifests never
+      // carry, so `workflows: []` (a real, faithful "no workflow data" value, not a fabricated one) is
+      // added at the boundary — the `contributions` field it actually reads is real, untouched data.
       const contributionsJson = buildContributionsJson(
         loadedPlugins
           .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
-          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } })),
       );
       // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — mirrors
       // `contributionsJson` above exactly (same opt-in hint-push shape below), because the space app is
@@ -2432,14 +2547,37 @@ function FrameworkOsShellInner({
       if (request) {
         const response = await program.refreshUi(nextSession.instanceId, request);
         if (generation !== refreshGenerationRef.current) return;
+        // 🩹️ `resolveExternalSlots`/`ensureContributorInstance`'s `PluginWasmHandle` (kernel/component.ts,
+        // `manifest: () => Promise<Uint8Array>`/`enqueue`/`outcomes`/`dispose` — an actor/turn handle) is
+        // a genuinely DIFFERENT abstraction from this file's own `PluginWasmHandle` (`PluginRuntime`'s,
+        // `manifest: PluginManifest`) — PluginRuntime's own import already renames kernel's to
+        // `KernelPluginWasmHandle` to keep the two apart. Read both call sites (`ensureContributorInstance`
+        // only calls `.createApp`; `resolveExternalSlots` only checks the handle's truthiness — the
+        // external-slot render path itself is an explicit, documented stub, "the dedicated follow-up work
+        // package", always returning "Extension unavailable") before building a REAL adapter rather than
+        // casting past the mismatch: `createApp`/`destroyApp` forward to this file's real handle;
+        // `manifest`/`enqueue`/`outcomes`/`dispose` are genuinely never invoked by either function today,
+        // so they're honest no-op/empty implementations, not a fabricated claim about behavior.
         const slotContext = {
-          plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
+          plugins: new Map(
+            loadedPlugins.map((entry) => [
+              entry.handle.pluginId,
+              {
+                manifest: async () => new Uint8Array(),
+                createApp: entry.handle.createApp,
+                destroyApp: entry.handle.destroyApp,
+                enqueue: () => {},
+                outcomes: (async function* () {})(),
+                dispose: () => {},
+              },
+            ]),
+          ),
           contributorInstances: contributorInstancesRef.current,
           viewState,
         };
         // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
         // later no-operation refresh reuses the already-resolved cached value instead of re-resolving.
-        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry);
+        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as BuiltNode, slotContext) } : entry);
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
@@ -2498,7 +2636,7 @@ function FrameworkOsShellInner({
         value: (current) =>
           mergeRecordPreservingIdentity(
             current,
-            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as UiNode | undefined) ?? current[instance.id] ?? pendingWindowUiNode()] as const),
+            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as BuiltNode | undefined) ?? current[instance.id] ?? pendingWindowUiNode()] as const),
           ),
       });
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
@@ -2525,7 +2663,7 @@ function FrameworkOsShellInner({
             current,
             panelTabLeaves
               .filter((tab) => tab.bodyKey)
-              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const),
+              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const),
           ),
       });
       if (isSessionSwitch && layoutSeed) {
@@ -2551,14 +2689,14 @@ function FrameworkOsShellInner({
     if (!windowKinds) return;
     dispatch({
       type: "SET_SHELL_LAYOUT",
-      value: (current) => (current ? retitleWindowLayoutNode(current, windowKinds, extraWindowInstancesRef.current, uiTerminology, uiLocale) : current),
+      value: (current) => (current ? retitleWindowLayoutNode(current, withLocalizedWindowKindLabels(windowKinds), extraWindowInstancesRef.current, uiTerminology, uiLocale) : current),
     });
     dispatch({
       type: "SET_EXTRA_WINDOW_INSTANCES",
       value: (current) => {
         const next = current.map((entry) => {
           const kind = windowKinds.find((k) => k.id === entry.windowKindId || k.id === entry.id);
-          const title = kind ? resolveManifestLabel(kind.label, uiTerminology, uiLocale) : entry.title;
+          const title = kind ? resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale) : entry.title;
           return { ...entry, title };
         });
         extraWindowInstancesRef.current = next;
@@ -2581,7 +2719,13 @@ function FrameworkOsShellInner({
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (!plugin || !app) {
         console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
-        dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode });
+        dispatch({
+          type: "SET_SPAWNED_WINDOW_UI",
+          // 🦴 A `BuiltNode` needs its full field set (layout/style/accessibility/…) — reuse
+          // `pendingWindowUiNode()`'s already-valid defaults rather than hand-authoring them, and
+          // override just the component (a plain text node) and activity (no longer "loading").
+          value: { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode,
+        });
         dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
         dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
         return;
@@ -2593,10 +2737,15 @@ function FrameworkOsShellInner({
       }
       const cache = spawnedUiRefreshCacheRef.current;
       const disabledExtensionIds = new Set(extensionLedgerRef.current.filter((entry) => !entry.enabled).map((entry) => entry.extensionId));
+      // 🩹️ `buildContributionsJson`'s own `PluginManifest` (kernel/component.ts) is a stale, narrower
+      // mirror of this file's real one (`Shell/🟦️component.tsx`'s, deliberately richer — see that
+      // type's own doc comment): it's missing a required `workflows` field this file's manifests never
+      // carry, so `workflows: []` (a real, faithful "no workflow data" value, not a fabricated one) is
+      // added at the boundary — the `contributions` field it actually reads is real, untouched data.
       const contributionsJson = buildContributionsJson(
         loadedPlugins
           .filter((entry) => !disabledExtensionIds.has(entry.handle.pluginId))
-          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+          .map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } })),
       );
       const bodyKey = resolveCanvasBodyKey(app);
       const fullViewState: ViewModel = injectActiveUtility(
@@ -2613,10 +2762,10 @@ function FrameworkOsShellInner({
         if (generation !== spawnedRefreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, response);
       }
-      const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? pendingWindowUiNode();
+      const ui = (cache.get(`window:${bodyKey}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode();
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: UiNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: BuiltNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
     },
@@ -2703,7 +2852,7 @@ function FrameworkOsShellInner({
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
-      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -2827,14 +2976,14 @@ function FrameworkOsShellInner({
           for (const instance of windowInstances) {
             const cached = cache.get(`window:${instance.id}`);
             if (cached?.value) {
-              cache.set(`window:${instance.id}`, { hash: cached.hash, value: patchWorld3dChromeOntoNode(cached.value as UiNode, patch) });
+              cache.set(`window:${instance.id}`, { hash: cached.hash, value: patchWorld3dChromeOntoNode(cached.value as BuiltNode, patch) });
             }
           }
           const documentCached = cache.get(`panel:${documentPanelKey}`);
           if (documentCached?.value) {
             cache.set(`panel:${documentPanelKey}`, {
               hash: documentCached.hash,
-              value: patchDocumentTreeSelectedIds(documentCached.value as UiNode, documentSelectedIds, documentHighlightedIds),
+              value: patchDocumentTreeSelectedIds(documentCached.value as BuiltNode, documentSelectedIds, documentHighlightedIds),
             });
           }
           continue;
@@ -2862,11 +3011,11 @@ function FrameworkOsShellInner({
             const sprBytes = coerceWireBytes(payload.spr);
             console.log("[DEBUG] loadDocument pack/spr for instance", baseSession.instanceId, "pack", packBytes.length, "spr", sprBytes.length);
             await pluginEntry.handle.loadAppDocumentPack(baseSession.instanceId, packBytes, sprBytes);
-          } else if (payload.documentJson && pluginEntry?.handle.loadAppDocument) {
-            console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", payload.documentJson.length);
-            await pluginEntry.handle.loadAppDocument(baseSession.instanceId, payload.documentJson);
           } else {
-            console.error("[os-shell] loadDocument: program has no pack/json loader", baseSession.pluginId, Object.keys(payload));
+            // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
+            // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`
+            // type) — a program without `loadAppDocumentPack` simply cannot receive this effect.
+            console.error("[os-shell] loadDocument: program has no pack loader", baseSession.pluginId, Object.keys(payload));
           }
           continue;
         }
@@ -3716,7 +3865,7 @@ function FrameworkOsShellInner({
           console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
         }
         try {
-          if (def.base.documentJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentJson);
+          if (def.base.documentDsl && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentDsl);
           else if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
         } catch (loadError) {
           console.error("[DEBUG] tutorial base document load failed", loadError);
@@ -3756,15 +3905,15 @@ function FrameworkOsShellInner({
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
       let documentTouched = false;
       for (const documentEvent of slice.document) {
-        const kind: TutorialDocumentEventKind = documentEvent.kind;
+        const kind: TutorialArtifactEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
-          const mutations = slice.forward ? kind.forwards : kind.backwards;
+          const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
           if (plugin?.applyMutations) await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
         } else if (kind.kind === "load") {
           documentTouched = true;
-          const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
-          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentJson);
+          const documentDsl = slice.forward ? kind.documentDsl : kind.previousDsl;
+          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentDsl);
         } else if (kind.kind === "undo") {
           onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
         } else if (kind.kind === "redo") {
@@ -3833,15 +3982,15 @@ function FrameworkOsShellInner({
         const slice = tutorialSlice(def, from, clamped);
         let documentTouched = false;
         for (const documentEvent of slice.document) {
-          const kind: TutorialDocumentEventKind = documentEvent.kind;
+          const kind: TutorialArtifactEventKind = documentEvent.kind;
           if (kind.kind === "edit") {
             documentTouched = true;
-            const mutations = slice.forward ? kind.forwards : kind.backwards;
+            const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
             if (plugin?.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
           } else if (kind.kind === "load") {
             documentTouched = true;
-            const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
-            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentJson);
+            const documentDsl = slice.forward ? kind.documentDsl : kind.previousDsl;
+            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentDsl);
           }
           // 🚧️ Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
           // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
@@ -4090,13 +4239,19 @@ function FrameworkOsShellInner({
             documentId,
             message: {
               kind: "presenceHeartbeat",
+              // 🚧️ `cursor`/`viewport` are gone from `ArtifactPresencePeer`'s current wire shape (see
+              // that type's own field list, `@semio-tech/framework-replication`) — `presenceCursorRef`
+              // is still tracked (pointermove listener above) but has no landing spot on the wire
+              // anymore; left tracked rather than torn out, since removing the listener is a design
+              // call about whether cursor-sharing comes back, not a type fix.
               peer: {
                 actor: shellActorIdRef.current,
                 label: presenceIdentity.name,
                 presencePack: snapshot?.presence,
                 connectedAtMs: presenceConnectedAtMsRef.current,
-                cursor: presenceCursorRef.current,
-                viewport: { x: window.scrollX, y: window.scrollY, zoom: window.devicePixelRatio || 1 },
+                // 🪟️ No per-window camera/pointer tracking is wired into this heartbeat yet — an
+                // honest "no open windows reported" default, matching this field's own doc comment.
+                views: [],
               },
             },
           };
@@ -4230,7 +4385,7 @@ function FrameworkOsShellInner({
   const applyNamedLayout = useCallback(
     (layout: WindowLayout) => {
       if (!session) return;
-      const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+      const seeded = applyFrameworkLayoutSeed(layout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -4256,7 +4411,7 @@ function FrameworkOsShellInner({
           const layout = resolveLayoutForMode(current.app, modeId);
           const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId, activeToolId: undefined } };
           if (layout) {
-            const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
+            const seeded = applyFrameworkLayoutSeed(layout, withLocalizedWindowKindLabels(current.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
             extraWindowInstancesRef.current = seeded.extraInstances;
             extraWindowCounterRef.current = seeded.extraInstances.length;
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -4280,7 +4435,7 @@ function FrameworkOsShellInner({
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
       const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
       if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
-      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale));
+      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale));
       const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId: payload.windowKindId, title }];
       extraWindowInstancesRef.current = nextExtraInstances;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
@@ -4296,7 +4451,7 @@ function FrameworkOsShellInner({
         value: (current) => {
           const base =
             current ??
-            resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
+            resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
           return insertWindowAtDropZone(base, instanceId, target);
         },
       });
@@ -4309,7 +4464,7 @@ function FrameworkOsShellInner({
   const displayHostRef = useRef<DisplayHostApi | null>(null);
   const displayHost = useNamedLayoutHost({
     appId: session?.app.id ?? "framework-os",
-    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)) })) ?? [],
+    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)) })) ?? [],
     builtinLayouts: session?.app.namedLayouts ?? [],
     currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
@@ -4461,7 +4616,7 @@ function FrameworkOsShellInner({
       }
       void (plugin.handle as PendingAppChannelMethods).openArtifact?.(dialectCoordinate(dialect), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
       const instanceId = await plugin.handle.createApp(app.id);
-      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_SESSION", value: { pluginId: plugin.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } } });
@@ -4643,10 +4798,13 @@ function FrameworkOsShellInner({
    * with a command-palette-triggered one in the history panel regardless of which path triggered it. */
   const noteOsCommand = useCallback(
     (commandId: string, detail?: Record<string, unknown>) => {
-      const label = osCommands.find((entry) => entry.id === commandId)?.label ?? commandId;
+      // 🩹️ `CommandDefinition.label` has no ts-rs mirror yet (`unknown` — see that generated type's own
+      // doc comment); resolved the same way every other manifest label in this file is.
+      const rawLabel = osCommands.find((entry) => entry.id === commandId)?.label as LocalizedLabel | string | undefined;
+      const label = rawLabel !== undefined ? resolveManifestLabel(rawLabel, uiTerminology, uiLocale) : commandId;
       noteShellCommand(commandId, label, detail);
     },
-    [osCommands, noteShellCommand],
+    [osCommands, noteShellCommand, uiTerminology, uiLocale],
   );
 
   const draftThemePatch = useCallback(
@@ -5060,7 +5218,7 @@ function FrameworkOsShellInner({
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
   // shell) for every keystroke on the page regardless of which shell the user was actually using.
   const handleAppKeydown = useCallback(
-    (event: KeyboardEvent) => {
+    (event: globalThis.KeyboardEvent) => {
       if (event.defaultPrevented) return;
       if (!session) return;
       const parseKeys = (keys: string) =>
@@ -5075,7 +5233,7 @@ function FrameworkOsShellInner({
         if (target.isContentEditable) return true;
         return target.closest("[contenteditable='true'], [role='textbox']") != null;
       };
-      const matches = (event: KeyboardEvent, binding: string) => {
+      const matches = (event: globalThis.KeyboardEvent, binding: string) => {
         const parts = binding.split("+").map((part) => part.trim());
         const key = parts[parts.length - 1] ?? "";
         const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
@@ -5144,7 +5302,7 @@ function FrameworkOsShellInner({
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
     if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
-    const hasPluginArtifactTab = flattenPanelTabLeaves(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+    const hasPluginArtifactTab = flattenPanelTabNodeLeaves(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
     // 👁️✏️ "Open with…" — contract freeze §5's Document-panel surface: one section per role,
     // `AppRouter` entries owner-first, each row opens that surface for the SAME artifact; the
@@ -5226,7 +5384,11 @@ function FrameworkOsShellInner({
   // `{actor, label}` — the two shells' peer identity vocabulary otherwise matches byte-for-byte
   // (`peer:<actor>` row id, contract §C0).
   const presencePeers = useMemo((): readonly PresencePeer[] => {
-    const json = session?.viewState.presencePeersJson;
+    // 🩹️ `presencePeersJson` is a local, host-side-only field piggybacked onto `viewState` (set above,
+    // in `ensureBackboneWorker`'s `event.kind === "presence"` branch) — not part of `PluginViewState`'s
+    // real wire contract, so it's read back through the actual extended shape rather than the
+    // declared one.
+    const json = (session?.viewState as (ViewModel & { readonly presencePeersJson?: string }) | undefined)?.presencePeersJson;
     if (!json) return [];
     try {
       const raw = JSON.parse(json) as readonly { readonly clientId: string; readonly name: string }[];
@@ -5234,7 +5396,7 @@ function FrameworkOsShellInner({
     } catch {
       return [];
     }
-  }, [session?.viewState.presencePeersJson]);
+  }, [(session?.viewState as (ViewModel & { readonly presencePeersJson?: string }) | undefined)?.presencePeersJson]);
 
   const currentSyncStatus = currentDocumentId ? (syncStatusByDocumentId[currentDocumentId] ?? null) : null;
   const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
@@ -5410,7 +5572,7 @@ function FrameworkOsShellInner({
     return singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_HISTORY_ID,
       icon: shellTabIcon("undo"),
-      name: resolvePanelTabLabel(appLabelsOverlay, FRAMEWORK_PANEL_TAB_HISTORY_ID, resolveManifestLabel(tab.label, uiTerminology, uiLocale)),
+      name: resolvePanelTabLabel(appLabelsOverlay, FRAMEWORK_PANEL_TAB_HISTORY_ID, resolveManifestLabel(tab.label as LocalizedLabel | string, uiTerminology, uiLocale)),
       order: 1,
       tree: {
         sections: [
@@ -5479,7 +5641,10 @@ function FrameworkOsShellInner({
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
   const quarantinedConflicts = useMemo(() => selectQuarantinedConflicts(shellState), [shellState]);
   const frameworkSyncTab = useMemo((): PanelTabNode | null => {
-    const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri) as readonly UtilityNode[];
+    // 🩹️ `buildFrameworkSyncUtilities` already returns `readonly FrameworkSyncUtilityLeaf[]` — the
+    // `as readonly UtilityNode[]` cast this line used to carry was simply the wrong target type for
+    // `SyncAttachCard`'s own prop (a stale workaround, not a real narrowing need).
+    const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri);
     if (!syncUtilities.length) return null;
     const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
     // 📌️ §C5 item 1 — the status pill lives on THIS tab's own folded chrome button (`id`/`name`,
@@ -5545,7 +5710,9 @@ function FrameworkOsShellInner({
       .map((example) => ({
         id: example.id,
         label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
-        icon: example.iconId,
+        // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, documentJson, appId}` only,
+        // same shape kernel's own `PluginManifest` declares) — a generic fallback, not a fabricated field.
+        icon: "file" as IconName,
       }));
   }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
 
@@ -5591,7 +5758,7 @@ function FrameworkOsShellInner({
               data-state={isActive ? "on" : undefined}
               onClick={() => applyModeChange(mode.id)}
               icon={mode.iconId}
-              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale))}
+              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label as LocalizedLabel | string, uiTerminology, uiLocale))}
             />
           );
         })}
@@ -5642,7 +5809,8 @@ function FrameworkOsShellInner({
       }
       if (isOsCommandAddress(address)) {
         dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
-        const label = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label ?? commandId;
+        const rawCommandLabel = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label as LocalizedLabel | string | undefined;
+        const label = rawCommandLabel !== undefined ? resolveManifestLabel(rawCommandLabel, uiTerminology, uiLocale) : commandId;
         noteShellCommand(commandId, label, args);
         return;
       }
@@ -5684,7 +5852,7 @@ function FrameworkOsShellInner({
   );
 
   const handleCommandKeydown = useCallback(
-    (event: KeyboardEvent) => {
+    (event: globalThis.KeyboardEvent) => {
       if (event.defaultPrevented || isEditableEventTarget(event.target)) return;
       for (const entry of [...resolvedCommands].reverse()) {
         if (!entry.definition.inPalette) continue;
@@ -5721,7 +5889,7 @@ function FrameworkOsShellInner({
   // `resolveModeTools` (an external `framework-os-core` helper this file cannot edit), so every
   // downstream consumer (`buildToolTree`/`buildToolTabs`) keeps reading an already-plain-string `label`.
   const resolvedModeTools = useMemo(
-    () => resolveModeTools(session?.app, activeModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label, uiTerminology, uiLocale) })),
+    () => resolveModeTools(session?.app, activeModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label as LocalizedLabel | string, uiTerminology, uiLocale) })),
     [session?.app, activeModeId, uiTerminology, uiLocale],
   );
 
@@ -6122,7 +6290,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
         // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && hostMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+        if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
@@ -6193,7 +6361,7 @@ function FrameworkOsShellInner({
           }
         }
         // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && hostMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+        if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
         if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
@@ -6263,7 +6431,7 @@ function FrameworkOsShellInner({
       const tabId = panelTabKindId(tab.kind);
       items.push({
         id: `panel.${tabId}`,
-        label: resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, uiTerminology, uiLocale)),
+        label: resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label as LocalizedLabel | string, uiTerminology, uiLocale)),
         category: shellLabel("ui.search.category.panels"),
         icon: <Icon icon="panel-left" size="small" />,
         onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } }),
@@ -6272,7 +6440,7 @@ function FrameworkOsShellInner({
     for (const kind of session.app.windowKinds) {
       items.push({
         id: `window.${kind.id}`,
-        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)),
+        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)),
         category: shellLabel("ui.search.category.windows"),
         icon: <Icon icon="app-window" size="small" />,
         onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
@@ -6286,7 +6454,9 @@ function FrameworkOsShellInner({
       const argCarrying = (definition.args?.length ?? 0) > 0;
       items.push({
         id: `command.${commandAddressKey(address).replaceAll(":", ".")}`,
-        label: argCarrying ? `${definition.label}…` : definition.label,
+        // 🩹️ CommandDefinition.label has no ts-rs mirror yet (unknown) — resolved the same way every
+        // other manifest label in this file is.
+        label: (() => { const resolved = resolveManifestLabel(definition.label as LocalizedLabel | string, uiTerminology, uiLocale); return argCarrying ? `${resolved}…` : resolved; })(),
         description: commandKeybindingChords(definition, detectCommandPlatform(typeof navigator !== "undefined" ? `${navigator.platform} ${navigator.userAgent}` : "")).join(",") || undefined,
         category: commandCategoryLabel(definition.category),
         onSelect: () => {
@@ -6368,11 +6538,12 @@ function FrameworkOsShellInner({
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id] ?? undefined, onActionStable) : undefined;
         const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale) : [];
         return [
           {
             id: spawned.id,
+            iconId: windowIconsById[spawned.id] ?? windowKind?.iconId ?? "app-window",
             title: wireLabel(appBreadcrumb(spawnedApp ? resolveAppBreadcrumb(spawnedApp, uiTerminology) : spawned.breadcrumb)),
             fill: true,
             showControls: true,
@@ -6388,7 +6559,7 @@ function FrameworkOsShellInner({
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
                 <ShellFaultBoundary boundaryId={`window-${spawned.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  <InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} />
+                  <InterpretedUiNode store={builtNodeStoreFor("spawned", spawnedWindowUi)} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
                 </ShellFaultBoundary>
               </ChromeAwareWindowScrollSurface>
             ),
@@ -6399,12 +6570,12 @@ function FrameworkOsShellInner({
     if (Object.keys(windowUiByWindowId).length === 0) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);
-      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id] ?? undefined, kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
         iconId: windowIconsById[kind.id] ?? kind.iconId,
-        title: windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)), uiLocale),
+        title: wireLabel(windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale)),
         fill: true,
         showControls: true,
         measures: chrome.measures,
@@ -6416,13 +6587,13 @@ function FrameworkOsShellInner({
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
-        status: declarativeSurfaceStatus(windowUiByWindowId[kind.id]),
+        status: windowUiByWindowId[kind.id]?.activity,
         skeleton: <WindowBodySkeleton />,
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
+                <InterpretedUiNode store={builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -6438,13 +6609,13 @@ function FrameworkOsShellInner({
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay, uiTerminology, uiLocale);
-      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id] ?? undefined, instance.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
       return [
         {
           id: instance.id,
           iconId: windowIconsById[instance.id] ?? kind.iconId,
-          title: windowTitlesById[instance.id] ?? instance.title,
+          title: wireLabel(windowTitlesById[instance.id] ?? instance.title),
           fill: true,
           showControls: true,
           measures: chrome.measures,
@@ -6456,7 +6627,7 @@ function FrameworkOsShellInner({
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
           actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
-          status: declarativeSurfaceStatus(windowUiByWindowId[instance.id]),
+          status: windowUiByWindowId[instance.id]?.activity,
           skeleton: <WindowBodySkeleton />,
           children: (
             <ChromeAwareWindowScrollSurface
@@ -6467,7 +6638,7 @@ function FrameworkOsShellInner({
             >
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? pendingWindowUiNode()} onAction={onActionStable} />
+                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
@@ -6506,7 +6677,7 @@ function FrameworkOsShellInner({
   const effectiveModeLayout = useMemo(
     () =>
       shellLayout ??
-      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout : { kind: "stack" as const, children: [] }),
+      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout : { kind: "stack" as const, children: [] }),
     [appLabelsOverlay, session, shellLayout, uiTerminology, uiLocale],
   );
 
@@ -6637,7 +6808,7 @@ function FrameworkOsShellInner({
         <div className="min-h-0 flex-1">
           <ShellFaultBoundary boundaryId="session-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
             <App
-            modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale)), children: null }))}
+            modes={modes.map((mode) => ({ id: mode.id, label: wireLabel(resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label as LocalizedLabel | string, uiTerminology, uiLocale))), children: null }))}
             activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
             onActiveModeChange={applyModeChange}
             chrome={false}
@@ -6676,7 +6847,7 @@ function FrameworkOsShellInner({
                 });
                 dispatch({
                   type: "SET_SHELL_LAYOUT",
-                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
+                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
                 });
               }}
               onWindowOpenInNewWindow={(windowId) => {
@@ -6692,7 +6863,7 @@ function FrameworkOsShellInner({
                   appLabelsOverlay,
                   "windowKind",
                   kind.id,
-                  resolveManifestLabel(kind.label, uiTerminology, uiLocale),
+                  resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale),
                 );
                 const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId, title }];
                 extraWindowInstancesRef.current = nextExtraInstances;
@@ -6703,7 +6874,7 @@ function FrameworkOsShellInner({
                   value: (current) => {
                     const base =
                       current ??
-                      resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
+                      resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
                     const stackPath = resolveStackPathForWindowId(base, windowId);
                     if (stackPath === null) {
                       return insertWindowAtDropZone(base, instanceId, { kind: "root-split", side: "right" });
@@ -6855,7 +7026,7 @@ function FrameworkOsShellInner({
         categoryByActionId.set(action.id, actionCategoryId(action));
         specs.push({
           id: `shell-menu.action.${action.id}`,
-          label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale)) + (argCarrying ? "…" : ""),
+          label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label as LocalizedLabel | string, uiTerminology, uiLocale)) + (argCarrying ? "…" : ""),
           icon: action.iconId,
           shortcut: action.keys ?? keysByActionId.get(action.id),
           destructive: action.kind === "mutation" && action.id.toLowerCase().includes("delete"),
@@ -6881,7 +7052,7 @@ function FrameworkOsShellInner({
   }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction, uiTerminology, uiLocale, hasOpenArtifactSurfaces]);
 
   useEffect(() => {
-    const handleContextMenu = (event: MouseEvent) => {
+    const handleContextMenu = (event: globalThis.MouseEvent) => {
       if (isContextMenuPointerTarget(event.target)) return;
       const items = buildShellContextMenuItems();
       if (items.length === 0) return;

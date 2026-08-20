@@ -144,7 +144,8 @@ pub struct AviSnapshot {
     pub unknown_chunks: Vec<RiffChunk>,
 }
 
-async fn default_schema() -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_schema() -> String {
     STDIO_AVI_DOCUMENT_SCHEMA.into()
 }
 //#endregion 🔖️Snapshot
@@ -172,11 +173,11 @@ impl store::ArtifactDsl for AviSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        engine::decode_avi(&bytes).await.map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
+        engine::decode_avi(&bytes).map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = engine::encode_avi(self).await;
+        let bytes = engine::encode_avi(self);
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -197,7 +198,7 @@ impl store::ArtifactPack for AviSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        engine::decode_avi(&inner).await.map_err(store::PackError::Schema)
+        engine::decode_avi(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -207,7 +208,8 @@ impl store::ArtifactPack for AviSnapshot {
 mod tests {
     use super::*;
 
-    async fn sample_snapshot() -> AviSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader {

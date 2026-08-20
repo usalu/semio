@@ -17,7 +17,8 @@ pub struct StlBounds {
     pub triangle_count: u32,
 }
 
-async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64; 3]) {
     if !*seen {
         *min = p;
         *max = p;
@@ -30,14 +31,16 @@ async fn expand(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, p: [f64
     }
 }
 
-async fn expand_triangle(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, triangle: &StlTriangle) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_triangle(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, triangle: &StlTriangle) {
     for vertex in &triangle.vertices {
         expand(min, max, seen, *vertex);
     }
 }
 
 /// 📦️ Computes [`StlBounds`] over every triangle's own 3 vertices.
-pub async fn compute_stl_bounds(snapshot: &StlSnapshot) -> StlBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_stl_bounds(snapshot: &StlSnapshot) -> StlBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -56,7 +59,8 @@ mod tests {
     use super::*;
     use crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA;
 
-    async fn triangle(normal: [f64; 3], vertices: [[f64; 3]; 3]) -> StlTriangle {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn triangle(normal: [f64; 3], vertices: [[f64; 3]; 3]) -> StlTriangle {
         StlTriangle { normal, vertices }
     }
 

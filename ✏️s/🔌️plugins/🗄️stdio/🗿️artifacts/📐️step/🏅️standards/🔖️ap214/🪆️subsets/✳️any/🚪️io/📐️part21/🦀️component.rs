@@ -21,7 +21,8 @@ pub struct Part21Decimal {
 }
 
 impl Part21Decimal {
-    pub async fn parse(text: &str) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
             Some(b'+') => (false, &text[1..]),
@@ -38,13 +39,15 @@ impl Part21Decimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32, exponent })
     }
 
-    pub async fn from_f64(value: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let normalized = if text.contains('.') || text.contains('e') || text.contains('E') { text } else { format!("{text}.") };
-        Self::parse(&normalized).await.expect("finite f64 has valid STEP decimal form")
+        Self::parse(&normalized).expect("finite f64 has valid STEP decimal form")
     }
 
-    pub async fn to_f64(&self) -> Option<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
 }
@@ -96,49 +99,56 @@ pub enum Part21Value {
 }
 
 impl Part21Value {
-    pub async fn as_ref_id(&self) -> Option<u64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_ref_id(&self) -> Option<u64> {
         if let Part21Value::Ref(id) = self {
             Some(*id)
         } else {
             None
         }
     }
-    pub async fn as_str(&self) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_str(&self) -> Option<&str> {
         if let Part21Value::Str(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub async fn as_enum(&self) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_enum(&self) -> Option<&str> {
         if let Part21Value::Enum(s) = self {
             Some(s.as_str())
         } else {
             None
         }
     }
-    pub async fn as_real(&self) -> Option<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_real(&self) -> Option<f64> {
         match self {
-            Part21Value::Real(r) => r.to_f64().await,
+            Part21Value::Real(r) => r.to_f64(),
             Part21Value::Int(i) => Some(*i as f64),
             _ => None,
         }
     }
-    pub async fn as_list(&self) -> Option<&[Part21Value]> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_list(&self) -> Option<&[Part21Value]> {
         if let Part21Value::List(items) = self {
             Some(items.as_slice())
         } else {
             None
         }
     }
-    pub async fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
         if let Part21Value::Typed(name, items) = self {
             Some((name.as_str(), items.as_slice()))
         } else {
             None
         }
     }
-    pub async fn is_unset(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_unset(&self) -> bool {
         matches!(self, Part21Value::Unset)
     }
 }
@@ -154,13 +164,16 @@ pub struct Part21Instance {
 }
 
 impl Part21Instance {
-    pub async fn entity(&self, type_name: &str) -> Option<&Vec<Part21Value>> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entity(&self, type_name: &str) -> Option<&Vec<Part21Value>> {
         self.entities.iter().find(|(name, _)| name.eq_ignore_ascii_case(type_name)).map(|(_, args)| args)
     }
-    pub async fn primary(&self) -> Option<(&str, &Vec<Part21Value>)> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn primary(&self) -> Option<(&str, &Vec<Part21Value>)> {
         self.entities.first().map(|(name, args)| (name.as_str(), args))
     }
-    pub async fn is_type(&self, type_name: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_type(&self, type_name: &str) -> bool {
         self.entities.iter().any(|(name, _)| name.eq_ignore_ascii_case(type_name))
     }
 }
@@ -186,16 +199,20 @@ pub struct Part21Document {
 }
 
 impl Part21Document {
-    pub async fn instance(&self, id: u64) -> Option<&Part21Instance> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn instance(&self, id: u64) -> Option<&Part21Instance> {
         self.instances.iter().find(|i| i.id == id)
     }
-    pub async fn resolve(&self, value: &Part21Value) -> Option<&Part21Instance> {
-        value.as_ref_id().await.and_then(|id| self.instance(id))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn resolve(&self, value: &Part21Value) -> Option<&Part21Instance> {
+        value.as_ref_id().and_then(|id| self.instance(id))
     }
-    pub async fn by_type<'a>(&'a self, type_name: &'a str) -> impl Iterator<Item = &'a Part21Instance> + 'a {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn by_type<'a>(&'a self, type_name: &'a str) -> impl Iterator<Item = &'a Part21Instance> + 'a {
         self.instances.iter().filter(move |i| i.is_type(type_name))
     }
-    pub async fn next_id(&self) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn next_id(&self) -> u64 {
         self.instances.iter().map(|i| i.id).max().unwrap_or(0) + 1
     }
 }
@@ -212,17 +229,20 @@ pub struct Part21Builder {
 }
 
 impl Part21Builder {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new() -> Self {
         Self { instances: Vec::new(), next_id: 1 }
     }
     /// ➕️ Allocates the next `#id` and appends a simple `TYPE(args)` instance.
-    pub async fn alloc(&mut self, type_name: &str, args: Vec<Part21Value>) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn alloc(&mut self, type_name: &str, args: Vec<Part21Value>) -> u64 {
         let id = self.next_id;
         self.next_id += 1;
         self.instances.push(Part21Instance { id, entities: vec![(type_name.to_string(), args)] });
         id
     }
-    pub async fn build(self, header: Part21Header) -> Part21Document {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn build(self, header: Part21Header) -> Part21Document {
         Part21Document { header, instances: self.instances }
     }
 }
@@ -260,30 +280,35 @@ struct Lexer {
 }
 
 impl Lexer {
-    async fn new(text: &str) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(text: &str) -> Self {
         Self { chars: text.chars().collect(), pos: 0 }
     }
-    async fn peek(&self) -> Option<char> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek(&self) -> Option<char> {
         self.chars.get(self.pos).copied()
     }
-    async fn peek_at(&self, offset: usize) -> Option<char> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn peek_at(&self, offset: usize) -> Option<char> {
         self.chars.get(self.pos + offset).copied()
     }
-    async fn bump(&mut self) -> Option<char> {
-        let c = self.peek().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bump(&mut self) -> Option<char> {
+        let c = self.peek();
         if c.is_some() {
             self.pos += 1;
         }
         c
     }
 
-    async fn skip_ws_and_comments(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn skip_ws_and_comments(&mut self) {
         loop {
-            match self.peek().await {
+            match self.peek() {
                 Some(c) if c.is_whitespace() => self.pos += 1,
                 Some('/') if self.peek_at(1) == Some('*') => {
                     self.pos += 2;
-                    while let Some(c) = self.peek().await {
+                    while let Some(c) = self.peek() {
                         if c == '*' && self.peek_at(1) == Some('/') {
                             self.pos += 2;
                             break;
@@ -296,7 +321,8 @@ impl Lexer {
         }
     }
 
-    async fn expect_literal(&mut self, lit: &'static str) -> Result<(), Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn expect_literal(&mut self, lit: &'static str) -> Result<(), Part21Error> {
         self.skip_ws_and_comments();
         for c in lit.chars() {
             if self.peek() == Some(c) {
@@ -308,7 +334,8 @@ impl Lexer {
         Ok(())
     }
 
-    async fn try_literal(&mut self, lit: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn try_literal(&mut self, lit: &str) -> bool {
         let save = self.pos;
         self.skip_ws_and_comments();
         for c in lit.chars() {
@@ -322,11 +349,12 @@ impl Lexer {
         true
     }
 
-    async fn read_keyword(&mut self) -> Result<String, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_keyword(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         let start = self.pos;
         let mut s = String::new();
-        while let Some(c) = self.peek().await {
+        while let Some(c) = self.peek() {
             if c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_' {
                 s.push(c);
                 self.pos += 1;
@@ -335,20 +363,21 @@ impl Lexer {
             }
         }
         if s.is_empty() {
-            return Err(Part21Error::UnexpectedChar { at: start, found: self.peek().await.unwrap_or('\0'), expected: "keyword" });
+            return Err(Part21Error::UnexpectedChar { at: start, found: self.peek().unwrap_or('\0'), expected: "keyword" });
         }
         Ok(s)
     }
 
-    async fn read_string(&mut self) -> Result<String, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_string(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         if self.peek() != Some('\'') {
-            return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().await.unwrap_or('\0'), expected: "'" });
+            return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "'" });
         }
         self.pos += 1;
         let mut out = String::new();
         loop {
-            match self.bump().await {
+            match self.bump() {
                 None => return Err(Part21Error::UnexpectedEof { at: self.pos, expected: "closing '" }),
                 Some('\'') => {
                     if self.peek() == Some('\'') {
@@ -358,7 +387,7 @@ impl Lexer {
                         break;
                     }
                 }
-                Some('\\') => self.read_escape(&mut out).await?,
+                Some('\\') => self.read_escape(&mut out)?,
                 Some(c) => out.push(c),
             }
         }
@@ -367,10 +396,11 @@ impl Lexer {
 
     /// 🔤️ `\X\HH\` single byte, `\X2\HHHH(HHHH)*\X0\` UCS-2 run — the two Part-21 escape
     /// forms this codebase's fixtures/writer actually emit; anything else is a typed error.
-    async fn read_escape(&mut self, out: &mut String) -> Result<(), Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_escape(&mut self, out: &mut String) -> Result<(), Part21Error> {
         let start = self.pos - 1;
-        match self.bump().await {
-            Some('X') => match self.peek().await {
+        match self.bump() {
+            Some('X') => match self.peek() {
                 Some('2') => {
                     self.pos += 1;
                     if self.bump() != Some('\\') {
@@ -379,7 +409,7 @@ impl Lexer {
                     loop {
                         let mut hex = String::new();
                         for _ in 0..4 {
-                            match self.bump().await {
+                            match self.bump() {
                                 Some(c) if c.is_ascii_hexdigit() => hex.push(c),
                                 _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X2\\ hex group".into() }),
                             }
@@ -403,7 +433,7 @@ impl Lexer {
                     }
                     let mut hex = String::new();
                     for _ in 0..2 {
-                        match self.bump().await {
+                        match self.bump() {
                             Some(c) if c.is_ascii_hexdigit() => hex.push(c),
                             _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X\\ hex".into() }),
                         }
@@ -421,14 +451,15 @@ impl Lexer {
         }
     }
 
-    async fn read_number(&mut self) -> Result<Part21Value, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_number(&mut self) -> Result<Part21Value, Part21Error> {
         self.skip_ws_and_comments();
         let start = self.pos;
         let mut s = String::new();
-        if matches!(self.peek().await, Some('-') | Some('+')) {
-            s.push(self.bump().await.unwrap());
+        if matches!(self.peek(), Some('-') | Some('+')) {
+            s.push(self.bump().unwrap());
         }
-        while let Some(c) = self.peek().await {
+        while let Some(c) = self.peek() {
             if c.is_ascii_digit() {
                 s.push(c);
                 self.pos += 1;
@@ -441,7 +472,7 @@ impl Lexer {
             is_real = true;
             s.push('.');
             self.pos += 1;
-            while let Some(c) = self.peek().await {
+            while let Some(c) = self.peek() {
                 if c.is_ascii_digit() {
                     s.push(c);
                     self.pos += 1;
@@ -450,14 +481,14 @@ impl Lexer {
                 }
             }
         }
-        if matches!(self.peek().await, Some('E') | Some('e')) {
+        if matches!(self.peek(), Some('E') | Some('e')) {
             is_real = true;
             s.push('E');
             self.pos += 1;
-            if matches!(self.peek().await, Some('+') | Some('-')) {
-                s.push(self.bump().await.unwrap());
+            if matches!(self.peek(), Some('+') | Some('-')) {
+                s.push(self.bump().unwrap());
             }
-            while let Some(c) = self.peek().await {
+            while let Some(c) = self.peek() {
                 if c.is_ascii_digit() {
                     s.push(c);
                     self.pos += 1;
@@ -467,20 +498,21 @@ impl Lexer {
             }
         }
         if is_real {
-            Part21Decimal::parse(&s).await.map(Part21Value::Real).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
+            Part21Decimal::parse(&s).map(Part21Value::Real).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
         } else {
             s.parse::<i64>().map(Part21Value::Int).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
         }
     }
 
-    async fn read_enum(&mut self) -> Result<String, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_enum(&mut self) -> Result<String, Part21Error> {
         self.skip_ws_and_comments();
         if self.peek() != Some('.') {
-            return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().await.unwrap_or('\0'), expected: "." });
+            return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "." });
         }
         self.pos += 1;
         let mut s = String::new();
-        while let Some(c) = self.peek().await {
+        while let Some(c) = self.peek() {
             if c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_' {
                 s.push(c);
                 self.pos += 1;
@@ -494,9 +526,10 @@ impl Lexer {
         Ok(s)
     }
 
-    async fn read_value(&mut self) -> Result<Part21Value, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_value(&mut self) -> Result<Part21Value, Part21Error> {
         self.skip_ws_and_comments();
-        match self.peek().await {
+        match self.peek() {
             Some('$') => {
                 self.pos += 1;
                 Ok(Part21Value::Unset)
@@ -509,7 +542,7 @@ impl Lexer {
                 self.pos += 1;
                 let start = self.pos;
                 let mut s = String::new();
-                while let Some(c) = self.peek().await {
+                while let Some(c) = self.peek() {
                     if c.is_ascii_digit() {
                         s.push(c);
                         self.pos += 1;
@@ -519,25 +552,25 @@ impl Lexer {
                 }
                 s.parse::<u64>().map(Part21Value::Ref).map_err(|_| Part21Error::InvalidNumber { at: start, text: s })
             }
-            Some('\'') => self.read_string().await.map(Part21Value::Str),
-            Some('.') => self.read_enum().await.map(Part21Value::Enum),
+            Some('\'') => self.read_string().map(Part21Value::Str),
+            Some('.') => self.read_enum().map(Part21Value::Enum),
             Some('(') => {
                 self.pos += 1;
-                let items = self.read_value_list().await?;
-                self.expect_literal(")").await?;
+                let items = self.read_value_list()?;
+                self.expect_literal(")")?;
                 Ok(Part21Value::List(items))
             }
-            Some(c) if c.is_ascii_digit() || c == '-' || c == '+' => self.read_number().await,
+            Some(c) if c.is_ascii_digit() || c == '-' || c == '+' => self.read_number(),
             Some(c) if c.is_ascii_uppercase() => {
-                let kw = self.read_keyword().await?;
+                let kw = self.read_keyword()?;
                 self.skip_ws_and_comments();
                 if self.peek() == Some('(') {
                     self.pos += 1;
-                    let items = self.read_value_list().await?;
-                    self.expect_literal(")").await?;
+                    let items = self.read_value_list()?;
+                    self.expect_literal(")")?;
                     Ok(Part21Value::Typed(kw, items))
                 } else {
-                    Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().await.unwrap_or('\0'), expected: "( after typed value keyword" })
+                    Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "( after typed value keyword" })
                 }
             }
             Some(c) => Err(Part21Error::UnexpectedChar { at: self.pos, found: c, expected: "value" }),
@@ -545,14 +578,15 @@ impl Lexer {
         }
     }
 
-    async fn read_value_list(&mut self) -> Result<Vec<Part21Value>, Part21Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_value_list(&mut self) -> Result<Vec<Part21Value>, Part21Error> {
         self.skip_ws_and_comments();
         let mut out = Vec::new();
         if self.peek() == Some(')') {
             return Ok(out);
         }
         loop {
-            out.push(self.read_value().await?);
+            out.push(self.read_value()?);
             self.skip_ws_and_comments();
             if self.peek() == Some(',') {
                 self.pos += 1;
@@ -563,19 +597,21 @@ impl Lexer {
         Ok(out)
     }
 
-    async fn read_record(&mut self) -> Result<(String, Vec<Part21Value>), Part21Error> {
-        let name = self.read_keyword().await?;
-        self.expect_literal("(").await?;
-        let args = self.read_value_list().await?;
-        self.expect_literal(")").await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_record(&mut self) -> Result<(String, Vec<Part21Value>), Part21Error> {
+        let name = self.read_keyword()?;
+        self.expect_literal("(")?;
+        let args = self.read_value_list()?;
+        self.expect_literal(")")?;
         Ok((name, args))
     }
 
-    async fn read_instance(&mut self) -> Result<Part21Instance, Part21Error> {
-        self.expect_literal("#").await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_instance(&mut self) -> Result<Part21Instance, Part21Error> {
+        self.expect_literal("#")?;
         let start = self.pos;
         let mut id_s = String::new();
-        while let Some(c) = self.peek().await {
+        while let Some(c) = self.peek() {
             if c.is_ascii_digit() {
                 id_s.push(c);
                 self.pos += 1;
@@ -584,7 +620,7 @@ impl Lexer {
             }
         }
         let id = id_s.parse::<u64>().map_err(|_| Part21Error::InvalidNumber { at: start, text: id_s })?;
-        self.expect_literal("=").await?;
+        self.expect_literal("=")?;
         self.skip_ws_and_comments();
         let mut entities = Vec::new();
         if self.peek() == Some('(') {
@@ -594,14 +630,14 @@ impl Lexer {
                 if self.peek() == Some(')') {
                     break;
                 }
-                entities.push(self.read_record().await?);
+                entities.push(self.read_record()?);
                 self.skip_ws_and_comments();
             }
-            self.expect_literal(")").await?;
+            self.expect_literal(")")?;
         } else {
-            entities.push(self.read_record().await?);
+            entities.push(self.read_record()?);
         }
-        self.expect_literal(";").await?;
+        self.expect_literal(";")?;
         Ok(Part21Instance { id, entities })
     }
 }
@@ -610,18 +646,19 @@ impl Lexer {
 //#region 🔖️Parse
 /// 📥️ Parses a full ISO 10303-21 physical file into the generic graph. Real tokenizer,
 /// not a scraper — every header record and every data instance/argument round-trips.
-pub async fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
-    let mut lex = Lexer::new(text).await;
-    lex.expect_literal("ISO-10303-21;").await?;
-    lex.expect_literal("HEADER;").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
+    let mut lex = Lexer::new(text);
+    lex.expect_literal("ISO-10303-21;")?;
+    lex.expect_literal("HEADER;")?;
     let mut header = Part21Header::default();
     loop {
-        lex.skip_ws_and_comments().await;
-        if lex.try_literal("ENDSEC;").await {
+        lex.skip_ws_and_comments();
+        if lex.try_literal("ENDSEC;") {
             break;
         }
-        let (name, args) = lex.read_record().await?;
-        lex.expect_literal(";").await?;
+        let (name, args) = lex.read_record()?;
+        lex.expect_literal(";")?;
         match name.as_str() {
             "FILE_DESCRIPTION" => header.file_description = args,
             "FILE_NAME" => header.file_name = args,
@@ -629,16 +666,16 @@ pub async fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
             _ => {}
         }
     }
-    lex.expect_literal("DATA;").await?;
+    lex.expect_literal("DATA;")?;
     let mut instances = Vec::new();
     loop {
-        lex.skip_ws_and_comments().await;
-        if lex.try_literal("ENDSEC;").await {
+        lex.skip_ws_and_comments();
+        if lex.try_literal("ENDSEC;") {
             break;
         }
-        instances.push(lex.read_instance().await?);
+        instances.push(lex.read_instance()?);
     }
-    let _ = lex.try_literal("END-ISO-10303-21;").await;
+    let _ = lex.try_literal("END-ISO-10303-21;");
     Ok(Part21Document { header, instances })
 }
 //#endregion 🔖️Parse
@@ -678,13 +715,15 @@ impl Part21Preamble for NoPreamble {
 
 /// 📤️ Regenerates valid Part-21 text from the generic graph — round-trip losslessness is
 /// the writer's job; it never re-derives STEP/IFC semantics.
-pub async fn write_part21(doc: &Part21Document) -> String {
-    write_part21_with::<NoPreamble>(doc, Part21WriteOptions::default(), None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn write_part21(doc: &Part21Document) -> String {
+    write_part21_with::<NoPreamble>(doc, Part21WriteOptions::default(), None)
 }
 
 /// 📤️ Regenerates Part-21 with a standard-selected deterministic layout and typed preamble. Generic
 /// over the preamble implementor (O1 — R11(a): borrowed-reference parameter, trivially generic).
-pub async fn write_part21_with<P: Part21Preamble>(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&P>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn write_part21_with<P: Part21Preamble>(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&P>) -> String {
     let eol = options.line_ending;
     let mut out = format!("ISO-10303-21;{eol}HEADER;{eol}");
     if options.blank_after_header {
@@ -716,7 +755,8 @@ pub async fn write_part21_with<P: Part21Preamble>(doc: &Part21Document, options:
     out
 }
 
-async fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending: &str) {
     out.push_str(name);
     out.push('(');
     write_value_list(out, args);
@@ -724,7 +764,8 @@ async fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_e
     out.push_str(line_ending);
 }
 
-async fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, space_after_equals: bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &str, space_after_equals: bool) {
     let _ = write!(out, "#{}=", inst.id);
     if space_after_equals {
         out.push(' ');
@@ -749,7 +790,8 @@ async fn write_instance(out: &mut String, inst: &Part21Instance, line_ending: &s
     out.push_str(line_ending);
 }
 
-async fn write_value_list(out: &mut String, items: &[Part21Value]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_value_list(out: &mut String, items: &[Part21Value]) {
     for (i, item) in items.iter().enumerate() {
         if i > 0 {
             out.push(',');
@@ -758,7 +800,8 @@ async fn write_value_list(out: &mut String, items: &[Part21Value]) {
     }
 }
 
-async fn write_value(out: &mut String, v: &Part21Value) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_value(out: &mut String, v: &Part21Value) {
     match v {
         Part21Value::Ref(id) => {
             let _ = write!(out, "#{id}");
@@ -795,10 +838,12 @@ async fn write_value(out: &mut String, v: &Part21Value) {
 
 /// 🔡️ Inverse of the lexer's `read_escape`: `'` doubles, backslash is escaped (to stay
 /// unambiguous with `\X..` on reparse), any other non-printable-ASCII goes through `\X2\..\X0\`.
-async fn escape_part21_string(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn escape_part21_string(s: &str) -> String {
     let mut out = String::new();
     let mut run: Vec<char> = Vec::new();
-    async fn flush(run: &mut Vec<char>, out: &mut String) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn flush(run: &mut Vec<char>, out: &mut String) {
         if run.is_empty() {
             return;
         }

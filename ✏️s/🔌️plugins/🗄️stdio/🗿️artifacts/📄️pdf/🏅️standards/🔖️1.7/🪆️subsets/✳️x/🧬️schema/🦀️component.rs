@@ -18,7 +18,8 @@ pub mod derived_construction {
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real `/Root /OutputIntents` → `OutputIntent` object pair
     /// (`/S /GTS_PDFX` + `/DestOutputProfile`, ISO 15930-7's own conformance marker).
-    async fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -46,17 +47,20 @@ pub mod derived_construction {
 
     impl PdfXBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an output-condition identifier up front.
-        pub async fn new(output_condition: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(output_condition.into()).await }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(output_condition: impl Into<String>) -> Self {
+            Self { snapshot: seeded_snapshot(output_condition.into()) }
         }
 
-        pub async fn add_page(mut self, page: PdfPage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub async fn set_info(mut self, info: PdfInfo) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -68,7 +72,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new("FOGRA39").await
+            Self::new("FOGRA39")
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -85,7 +89,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -157,28 +161,33 @@ pub mod derived_analysis {
     pub const CODE_LAUNCH: &str = "stdio.pdf.x.launch-action";
     pub const CODE_MOVIE_OR_SOUND: &str = "stdio.pdf.x.movie-or-sound-annotation";
 
-    pub(crate) async fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
-    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
+            PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🔒️ Real scan: does any retained object look like a Standard Security Handler encryption
     /// dictionary (`/Filter /Standard` + `/V`/`/R`/`/O`/`/U`)?
-    pub(crate) async fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -190,26 +199,30 @@ pub mod derived_analysis {
     }
 
     /// 📜️ Real scan for `/S /<subtype>` action dictionaries anywhere in the retained object graph.
-    pub(crate) async fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
-        objects.iter().filter(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
+        objects.iter().filter(|o| o.value.as_dict().map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 📜️ Real scan for a bare `/JS` key not already caught by `/S /JavaScript`.
-    pub(crate) async fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| !already.contains(&o.id) && semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
+        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 🏳️ Real check: `/Root`'s `/OutputIntents` array contains an intent with `/S /GTS_PDFX` AND a
     /// `/DestOutputProfile` key (the ICC profile PDF/X-4 requires alongside the marker).
-    async fn has_pdfx_output_intent(objects: &[PdfIndirectObject]) -> bool {
-        let Some(catalog) = find_catalog(objects).await else { return false };
-        let Some(intents) = catalog.dict_get("OutputIntents").await.and_then(|v| v.as_array()) else { return false };
-        intents.iter().any(|item| semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFX") && d.iter().any(|e| e.key == "DestOutputProfile")).unwrap_or(false))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_pdfx_output_intent(objects: &[PdfIndirectObject]) -> bool {
+        let Some(catalog) = find_catalog(objects) else { return false };
+        let Some(intents) = catalog.dict_get("OutputIntents").and_then(|v| v.as_array()) else { return false };
+        intents.iter().any(|item| resolve_item(objects, item).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFX") && d.iter().any(|e| e.key == "DestOutputProfile")).unwrap_or(false))
     }
 
     /// 📄️ Real scan: every `/Type /Page` object carries a `/TrimBox` or `/ArtBox` key. Returns the
     /// refs of pages missing BOTH.
-    async fn pages_missing_trim_or_art_box(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pages_missing_trim_or_art_box(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -220,16 +233,18 @@ pub mod derived_analysis {
             .collect()
     }
 
-    async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).await.and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     /// 🔤️ Real check: every `/Type /Font` object (simple or `/DescendantFonts` composite) resolves
     /// to a `/FontDescriptor` carrying an embedded font program.
-    pub(crate) async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
-            let Some(d) = o.value.as_dict().await else { continue };
+            let Some(d) = o.value.as_dict() else { continue };
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
@@ -240,7 +255,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -252,22 +267,26 @@ pub mod derived_analysis {
     }
 
     /// 🎬️ Real scan: `/Subtype /Movie` or `/Subtype /Sound` annotation dicts anywhere in the graph.
-    async fn movie_or_sound_annotations(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false)).map(|o| o.id).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn movie_or_sound_annotations(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+        objects.iter().filter(|o| o.value.as_dict().map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false)).map(|o| o.id).collect()
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Real ISO 15930-7:2010 (PDF/X-4) conformance checks against one already-decoded
     /// `PdfSnapshot`. Shared single source of truth: `PdfXComposer::compose`, `PdfXBuilder::build`,
     /// `PdfXValidator::validate`, and (layered on top) `✳️vt`'s own conformance fn all call this.
-    pub async fn check_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         for r in scan_encryption(objects) {
@@ -317,7 +336,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_x_conformance(snapshot).await;
+                let checks = check_x_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -333,7 +352,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry;
 
-        async fn conforming_objects() -> Vec<PdfIndirectObject> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_objects() -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },

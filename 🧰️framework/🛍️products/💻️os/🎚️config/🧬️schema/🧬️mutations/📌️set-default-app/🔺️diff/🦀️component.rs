@@ -8,7 +8,7 @@ use super::super::super::{DefaultApp, OpeningPreferences};
 //#region 🔖️Diff
 pub async fn diff(payload: &SetDefaultApp, base: &OpeningPreferences) -> protocol::MutationOutcome<OpeningPreferences> {
     if base.defaults.iter().any(|entry| entry.dialect == payload.dialect && entry.role == payload.role && entry.app == payload.app) {
-        return protocol::MutationOutcome::new(base.clone()).await.warn("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", payload.app.app_id, payload.role.as_str().await, payload.dialect.to_coordinate().await)).await;
+        return protocol::MutationOutcome::new(base.clone()).await.warn("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", payload.app.app_id, payload.role.as_str().await, payload.dialect.to_coordinate())).await;
     }
     let mut defaults: Vec<DefaultApp> = base
         .defaults

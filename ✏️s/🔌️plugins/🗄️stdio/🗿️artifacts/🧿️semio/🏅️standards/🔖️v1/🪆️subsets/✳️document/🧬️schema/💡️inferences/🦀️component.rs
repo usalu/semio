@@ -26,7 +26,7 @@ pub struct SemioDocumentInference {
 
 impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
     async fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
-        Self { outline: compute_semio_document_outline(snapshot).await }
+        Self { outline: compute_semio_document_outline(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::docum
 /// 💡️ Registers `s.stdio.semio.document.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_document_artifact_schema_descriptor`'s
 /// registration.
-pub async fn semio_document_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_document_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.document.inference",
         inference: schema::FacetLeaves {

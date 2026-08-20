@@ -118,12 +118,12 @@ impl Mutation<JpgSnapshot> for JpgMutation {
     async fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JpgMutation::NoMutation => JpgDiff::default(),
-            JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => diff::diff_set_jfif_header(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()).await,
-            JpgMutation::SetQuantTable { table } => diff::diff_set_quant_table(base, table.clone()).await,
-            JpgMutation::RemoveQuantTable { id } => diff::diff_remove_quant_table(base, *id).await,
-            JpgMutation::SetHuffmanTable { table } => diff::diff_set_huffman_table(base, table.clone()).await,
-            JpgMutation::RemoveHuffmanTable { key } => diff::diff_remove_huffman_table(base, *key).await,
+            JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => diff::diff_set_jfif_header(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()),
+            JpgMutation::SetQuantTable { table } => diff::diff_set_quant_table(base, table.clone()),
+            JpgMutation::RemoveQuantTable { id } => diff::diff_remove_quant_table(base, *id),
+            JpgMutation::SetHuffmanTable { table } => diff::diff_set_huffman_table(base, table.clone()),
+            JpgMutation::RemoveHuffmanTable { key } => diff::diff_remove_huffman_table(base, *key),
             JpgMutation::SetRestartInterval { restart_interval } => diff::diff_set_restart_interval(base, *restart_interval),
             JpgMutation::InsertOtherSegment { index, segment } => diff::diff_insert_other_segment(base, *index, segment.clone()),
             JpgMutation::RemoveOtherSegment { index } => diff::diff_remove_other_segment(base, *index),
@@ -185,10 +185,10 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 /// `f6-recon-report.md` §2), one match arm per variant (no `DslVariants` scaffolding available
 /// since nothing here derives it).
 async fn enc_str_hex(s: &str) -> String {
-    diff::hex_encode(s.as_bytes()).await
+    diff::hex_encode(s.as_bytes())
 }
 async fn dec_str_hex(s: &str) -> Result<String, String> {
-    String::from_utf8(diff::hex_decode(s).await?).map_err(|e| e.to_string())
+    String::from_utf8(diff::hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 /// 🧬️ Positional `[schema,width,height,pixels,re-encode-quality,jfif-version,jfif-density-units,
@@ -220,7 +220,7 @@ async fn enc_jpg_snapshot(s: &JpgSnapshot) -> String {
     )
 }
 async fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
-    let parts = diff::split_top_level(diff::strip_brackets(s).await?, ',').await;
+    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments] =
         parts.as_slice()
     else {
@@ -228,22 +228,22 @@ async fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
     };
     Ok(JpgSnapshot {
         schema: dec_str_hex(schema).await?,
-        width: diff::parse_u32(width).await?,
-        height: diff::parse_u32(height).await?,
-        pixels: diff::hex_decode(pixels).await?,
-        re_encode_quality: diff::decode_option(re_encode_quality, diff::parse_u8).await?,
-        jfif_version: diff::dec_version(jfif_version).await?,
-        jfif_density_units: diff::dec_density_units(jfif_density_units).await?,
-        jfif_x_density: diff::parse_u16(jfif_x_density).await?,
-        jfif_y_density: diff::parse_u16(jfif_y_density).await?,
-        jfif_thumbnail: diff::decode_option(jfif_thumbnail, diff::dec_thumbnail).await?,
-        frame: diff::decode_option(frame, diff::dec_frame_header).await?,
-        sof_marker: diff::parse_u8(sof_marker).await?,
-        arithmetic: diff::parse_bool(arithmetic).await?,
-        quant_tables: diff::split_top_level(diff::strip_brackets(quant_tables).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_quant_table).collect::<Result<Vec<_>, String>>()?,
-        huffman_tables: diff::split_top_level(diff::strip_brackets(huffman_tables).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_huffman_table).collect::<Result<Vec<_>, String>>()?,
-        restart_interval: diff::decode_option(restart_interval, diff::parse_u16).await?,
-        other_segments: diff::split_top_level(diff::strip_brackets(other_segments).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_segment).collect::<Result<Vec<_>, String>>()?,
+        width: diff::parse_u32(width)?,
+        height: diff::parse_u32(height)?,
+        pixels: diff::hex_decode(pixels)?,
+        re_encode_quality: diff::decode_option(re_encode_quality, diff::parse_u8)?,
+        jfif_version: diff::dec_version(jfif_version)?,
+        jfif_density_units: diff::dec_density_units(jfif_density_units)?,
+        jfif_x_density: diff::parse_u16(jfif_x_density)?,
+        jfif_y_density: diff::parse_u16(jfif_y_density)?,
+        jfif_thumbnail: diff::decode_option(jfif_thumbnail, diff::dec_thumbnail)?,
+        frame: diff::decode_option(frame, diff::dec_frame_header)?,
+        sof_marker: diff::parse_u8(sof_marker)?,
+        arithmetic: diff::parse_bool(arithmetic)?,
+        quant_tables: diff::split_top_level(diff::strip_brackets(quant_tables)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_quant_table).collect::<Result<Vec<_>, String>>()?,
+        huffman_tables: diff::split_top_level(diff::strip_brackets(huffman_tables)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_huffman_table).collect::<Result<Vec<_>, String>>()?,
+        restart_interval: diff::decode_option(restart_interval, diff::parse_u16)?,
+        other_segments: diff::split_top_level(diff::strip_brackets(other_segments)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_segment).collect::<Result<Vec<_>, String>>()?,
     })
 }
 
@@ -275,21 +275,21 @@ async fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
     match keyword {
         "set-snapshot" => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot(arg("snapshot")?).await? }),
         "set-jfif-header" => Ok(JpgMutation::SetJfifHeader {
-            version: diff::dec_version(arg("version")?).await?,
-            density_units: diff::dec_density_units(arg("density-units")?).await?,
-            x_density: diff::parse_u16(arg("x-density")?).await?,
-            y_density: diff::parse_u16(arg("y-density")?).await?,
-            thumbnail: diff::decode_option(arg("thumbnail")?, diff::dec_thumbnail).await?,
+            version: diff::dec_version(arg("version")?)?,
+            density_units: diff::dec_density_units(arg("density-units")?)?,
+            x_density: diff::parse_u16(arg("x-density")?)?,
+            y_density: diff::parse_u16(arg("y-density")?)?,
+            thumbnail: diff::decode_option(arg("thumbnail")?, diff::dec_thumbnail)?,
         }),
-        "set-quant-table" => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table(arg("table")?).await? }),
-        "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable { id: diff::parse_u8(arg("id")?).await? }),
-        "set-huffman-table" => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table(arg("table")?).await? }),
-        "remove-huffman-table" => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key(arg("key")?).await? }),
-        "set-restart-interval" => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::decode_option(arg("restart-interval")?, diff::parse_u16).await? }),
-        "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: diff::parse_usize(arg("index")?).await?, segment: diff::dec_segment(arg("segment")?).await? }),
-        "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment { index: diff::parse_usize(arg("index")?).await? }),
-        "set-pixels" => Ok(JpgMutation::SetPixels { pixels: diff::hex_decode(arg("pixels")?).await? }),
-        "set-re-encode-quality" => Ok(JpgMutation::SetReEncodeQuality { quality: diff::decode_option(arg("quality")?, diff::parse_u8).await? }),
+        "set-quant-table" => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table(arg("table")?)? }),
+        "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable { id: diff::parse_u8(arg("id")?)? }),
+        "set-huffman-table" => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table(arg("table")?)? }),
+        "remove-huffman-table" => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key(arg("key")?)? }),
+        "set-restart-interval" => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::decode_option(arg("restart-interval")?, diff::parse_u16)? }),
+        "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: diff::parse_usize(arg("index")?)?, segment: diff::dec_segment(arg("segment")?)? }),
+        "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment { index: diff::parse_usize(arg("index")?)? }),
+        "set-pixels" => Ok(JpgMutation::SetPixels { pixels: diff::hex_decode(arg("pixels")?)? }),
+        "set-re-encode-quality" => Ok(JpgMutation::SetReEncodeQuality { quality: diff::decode_option(arg("quality")?, diff::parse_u8)? }),
         other => Err(format!("jpg mutation: unknown keyword {other:?}")),
     }
 }
@@ -338,34 +338,34 @@ async fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
     }
 }
 async fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
-    let schema = String::from_utf8(diff::read_bytes_lp(reader).await?).map_err(|e| e.to_string())?;
+    let schema = String::from_utf8(diff::read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
     let width = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     let height = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let pixels = diff::read_bytes_lp(reader).await?;
-    let re_encode_quality = diff::read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).await?;
-    let jfif_version = diff::dec_version_bin(reader).await?;
-    let jfif_density_units = diff::dec_density_units_bin(reader).await?;
+    let pixels = diff::read_bytes_lp(reader)?;
+    let re_encode_quality = diff::read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?;
+    let jfif_version = diff::dec_version_bin(reader)?;
+    let jfif_density_units = diff::dec_density_units_bin(reader)?;
     let jfif_x_density = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
     let jfif_y_density = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let jfif_thumbnail = diff::read_opt(reader, diff::dec_thumbnail_bin).await?;
-    let frame = diff::read_opt(reader, diff::dec_frame_header_bin).await?;
+    let jfif_thumbnail = diff::read_opt(reader, diff::dec_thumbnail_bin)?;
+    let frame = diff::read_opt(reader, diff::dec_frame_header_bin)?;
     let sof_marker = reader.read_u8().await.map_err(|e| e.to_string())?;
     let arithmetic = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
     let qc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut quant_tables = Vec::with_capacity(qc as usize);
     for _ in 0..qc {
-        quant_tables.push(diff::dec_quant_table_bin(reader).await?);
+        quant_tables.push(diff::dec_quant_table_bin(reader)?);
     }
     let hc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut huffman_tables = Vec::with_capacity(hc as usize);
     for _ in 0..hc {
-        huffman_tables.push(diff::dec_huffman_table_bin(reader).await?);
+        huffman_tables.push(diff::dec_huffman_table_bin(reader)?);
     }
-    let restart_interval = diff::read_opt(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).await?;
+    let restart_interval = diff::read_opt(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16))?;
     let sc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut other_segments = Vec::with_capacity(sc as usize);
     for _ in 0..sc {
-        other_segments.push(diff::dec_segment_bin(reader).await?);
+        other_segments.push(diff::dec_segment_bin(reader)?);
     }
     Ok(JpgSnapshot { schema, width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments })
 }
@@ -447,26 +447,26 @@ impl OpBinary for JpgMutation {
             0 => Ok(JpgMutation::NoMutation),
             1 => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot_bin(&mut reader).await.map_err(|e| malformed("op set-snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             2 => {
-                let version = diff::dec_version_bin(&mut reader).await.map_err(|e| malformed("op version", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let density_units = diff::dec_density_units_bin(&mut reader).await.map_err(|e| malformed("op density-units", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let version = diff::dec_version_bin(&mut reader).map_err(|e| malformed("op version", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let density_units = diff::dec_density_units_bin(&mut reader).map_err(|e| malformed("op density-units", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let x_density = reader.read_varint_u64().await.map_err(|e| malformed("op x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
                 let y_density = reader.read_varint_u64().await.map_err(|e| malformed("op y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
-                let thumbnail = diff::read_opt(&mut reader, diff::dec_thumbnail_bin).await.map_err(|e| malformed("op thumbnail", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let thumbnail = diff::read_opt(&mut reader, diff::dec_thumbnail_bin).map_err(|e| malformed("op thumbnail", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail })
             }
-            3 => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table_bin(&mut reader).await.map_err(|e| malformed("op quant-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            3 => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table_bin(&mut reader).map_err(|e| malformed("op quant-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             4 => Ok(JpgMutation::RemoveQuantTable { id: reader.read_u8().await.map_err(|e| malformed("op quant-id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? }),
-            5 => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table_bin(&mut reader).await.map_err(|e| malformed("op huffman-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            6 => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key_bin(&mut reader).await.map_err(|e| malformed("op huffman-key", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            7 => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::read_opt(&mut reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).await.map_err(|e| malformed("op restart-interval", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            5 => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table_bin(&mut reader).map_err(|e| malformed("op huffman-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            6 => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key_bin(&mut reader).map_err(|e| malformed("op huffman-key", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            7 => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::read_opt(&mut reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("op restart-interval", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             8 => {
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let segment = diff::dec_segment_bin(&mut reader).await.map_err(|e| malformed("op segment", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let segment = diff::dec_segment_bin(&mut reader).map_err(|e| malformed("op segment", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JpgMutation::InsertOtherSegment { index, segment })
             }
             9 => Ok(JpgMutation::RemoveOtherSegment { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
-            10 => Ok(JpgMutation::SetPixels { pixels: diff::read_bytes_lp(&mut reader).await.map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            11 => Ok(JpgMutation::SetReEncodeQuality { quality: diff::read_opt(&mut reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).await.map_err(|e| malformed("op quality", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            10 => Ok(JpgMutation::SetPixels { pixels: diff::read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            11 => Ok(JpgMutation::SetReEncodeQuality { quality: diff::read_opt(&mut reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).map_err(|e| malformed("op quality", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             other => Err(malformed("op tag", 1, format!("unknown JpgMutation tag {other}"))),
         }
     }

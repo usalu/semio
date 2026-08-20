@@ -22,7 +22,8 @@ pub struct AviDuration {
 /// product widens through `f64` rather than risking a `u32` overflow for a long high-framerate
 /// capture). `streamCount` is a plain `streams.len()` — the number of `strl` stream lists the
 /// container actually declared.
-pub async fn compute_avi_duration(snapshot: &AviSnapshot) -> AviDuration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_avi_duration(snapshot: &AviSnapshot) -> AviDuration {
     let duration_seconds = snapshot.main_header.total_frames as f64 * snapshot.main_header.micro_sec_per_frame as f64 / 1_000_000.0;
     AviDuration { duration_seconds, stream_count: snapshot.streams.len() as u32, total_frames: snapshot.main_header.total_frames }
 }
@@ -34,7 +35,8 @@ mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviMainHeader, AviStream};
 
-    async fn snapshot(total_frames: u32, micro_sec_per_frame: u32, stream_count: usize) -> AviSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(total_frames: u32, micro_sec_per_frame: u32, stream_count: usize) -> AviSnapshot {
         AviSnapshot { main_header: AviMainHeader { total_frames, micro_sec_per_frame, ..AviMainHeader::default() }, streams: (0..stream_count).map(|_| AviStream::default()).collect(), ..AviSnapshot::default() }
     }
 

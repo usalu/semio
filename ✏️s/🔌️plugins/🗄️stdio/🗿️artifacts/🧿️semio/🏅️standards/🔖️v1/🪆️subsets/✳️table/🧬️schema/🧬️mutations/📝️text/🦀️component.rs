@@ -24,26 +24,30 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Primitives
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_opt_usize(v: Option<usize>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opt_usize(v: Option<usize>) -> String {
     match v {
         Some(n) => n.to_string(),
         None => String::new(),
     }
 }
-async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
     if s.is_empty() {
         Ok(None)
     } else {
-        Ok(Some(parse_usize(s).await?))
+        Ok(Some(parse_usize(s)?))
     }
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️OpText
-async fn print_table_mutation(m: &SemioTableMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_table_mutation(m: &SemioTableMutation) -> String {
     match m {
         SemioTableMutation::CreateColumn(p) => format!("createColumn:{},{},{}", enc_str(&p.name), enc_cell_kind(p.kind), enc_opt_usize(p.index)),
         SemioTableMutation::DeleteColumn(p) => format!("deleteColumn:{}", enc_str(&p.name)),
@@ -56,39 +60,40 @@ async fn print_table_mutation(m: &SemioTableMutation) -> String {
     }
 }
 
-async fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("table mutation: missing ':' in {line:?}"))?;
     match tag {
         "createColumn" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, kind, index] = parts.as_slice() else { return Err(format!("createColumn: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioTableMutation::CreateColumn(CreateColumn { name: dec_str(name).await?, kind: dec_cell_kind(kind).await?, index: dec_opt_usize(index).await? }))
+            Ok(SemioTableMutation::CreateColumn(CreateColumn { name: dec_str(name)?, kind: dec_cell_kind(kind)?, index: dec_opt_usize(index)? }))
         }
-        "deleteColumn" => Ok(SemioTableMutation::DeleteColumn(DeleteColumn { name: dec_str(rest).await? })),
+        "deleteColumn" => Ok(SemioTableMutation::DeleteColumn(DeleteColumn { name: dec_str(rest)? })),
         "renameColumn" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, new_name] = parts.as_slice() else { return Err(format!("renameColumn: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioTableMutation::RenameColumn(RenameColumn { name: dec_str(name).await?, new_name: dec_str(new_name).await? }))
+            Ok(SemioTableMutation::RenameColumn(RenameColumn { name: dec_str(name)?, new_name: dec_str(new_name)? }))
         }
         "reorderColumns" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [name, to_index] = parts.as_slice() else { return Err(format!("reorderColumns: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioTableMutation::ReorderColumns(ReorderColumns { name: dec_str(name).await?, to_index: parse_usize(to_index).await? }))
+            Ok(SemioTableMutation::ReorderColumns(ReorderColumns { name: dec_str(name)?, to_index: parse_usize(to_index)? }))
         }
         "insertRow" => {
             let (idx, row) = rest.split_once(',').ok_or_else(|| "insertRow: missing comma".to_string())?;
-            Ok(SemioTableMutation::InsertRow(InsertRow { index: parse_usize(idx).await?, row: dec_row(row).await? }))
+            Ok(SemioTableMutation::InsertRow(InsertRow { index: parse_usize(idx)?, row: dec_row(row)? }))
         }
-        "removeRow" => Ok(SemioTableMutation::RemoveRow(RemoveRow { index: parse_usize(rest).await? })),
+        "removeRow" => Ok(SemioTableMutation::RemoveRow(RemoveRow { index: parse_usize(rest)? })),
         "reorderRows" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [from, to] = parts.as_slice() else { return Err(format!("reorderRows: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioTableMutation::ReorderRows(ReorderRows { from: parse_usize(from).await?, to: parse_usize(to).await? }))
+            Ok(SemioTableMutation::ReorderRows(ReorderRows { from: parse_usize(from)?, to: parse_usize(to)? }))
         }
         "editCell" => {
-            let parts = split_top_level(rest, ',').await;
+            let parts = split_top_level(rest, ',');
             let [row_index, column_name, new_value] = parts.as_slice() else { return Err(format!("editCell: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioTableMutation::EditCell(EditCell { row_index: parse_usize(row_index).await?, column_name: dec_str(column_name).await?, new_value: dec_semio_value(new_value).await? }))
+            Ok(SemioTableMutation::EditCell(EditCell { row_index: parse_usize(row_index)?, column_name: dec_str(column_name)?, new_value: dec_semio_value(new_value)? }))
         }
         other => Err(format!("table mutation: unknown keyword {other:?}")),
     }
@@ -96,10 +101,10 @@ async fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> 
 
 impl protocol::OpText for SemioTableMutation {
     async fn print_op(&self) -> String {
-        print_table_mutation(self).await
+        print_table_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_table_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_table_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -108,7 +113,8 @@ impl protocol::OpText for SemioTableMutation {
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️component.rs` and this file's own round-trip test.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioTableMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![

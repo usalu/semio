@@ -56,89 +56,96 @@ pub struct SurfaceDerivatives {
 }
 
 impl Surface {
-    pub async fn domain(&self) -> ((f64, f64), (f64, f64)) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn domain(&self) -> ((f64, f64), (f64, f64)) {
         match self {
             Surface::Plane { .. } => ((f64::NEG_INFINITY, f64::INFINITY), (f64::NEG_INFINITY, f64::INFINITY)),
             Surface::Cylinder { .. } => ((0.0, std::f64::consts::TAU), (f64::NEG_INFINITY, f64::INFINITY)),
             Surface::Cone { .. } => ((0.0, std::f64::consts::TAU), (0.0, f64::INFINITY)),
             Surface::Sphere { .. } => ((0.0, std::f64::consts::TAU), (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2)),
             Surface::Torus { .. } => ((0.0, std::f64::consts::TAU), (0.0, std::f64::consts::TAU)),
-            Surface::Nurbs { u_knots, v_knots, .. } => (u_knots.domain().await, v_knots.domain().await),
+            Surface::Nurbs { u_knots, v_knots, .. } => (u_knots.domain(), v_knots.domain()),
         }
     }
-    pub async fn is_u_periodic(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_u_periodic(&self) -> bool {
         matches!(self, Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. })
     }
-    pub async fn is_v_periodic(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_v_periodic(&self) -> bool {
         matches!(self, Surface::Torus { .. })
     }
-    pub async fn eval(&self, u: f64, v: f64) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn eval(&self, u: f64, v: f64) -> Pnt3 {
         match self {
-            Surface::Plane { frame } => frame.to_world(Pnt3::new(u, v, 0.0).await).await,
-            Surface::Cylinder { frame, radius } => frame.to_world(Pnt3::new(radius * u.cos(), radius * u.sin(), v).await).await,
+            Surface::Plane { frame } => frame.to_world(Pnt3::new(u, v, 0.0)),
+            Surface::Cylinder { frame, radius } => frame.to_world(Pnt3::new(radius * u.cos(), radius * u.sin(), v)),
             Surface::Cone { frame, half_angle } => {
                 let r = v * half_angle.tan();
-                frame.to_world(Pnt3::new(r * u.cos(), r * u.sin(), v).await).await
+                frame.to_world(Pnt3::new(r * u.cos(), r * u.sin(), v))
             }
-            Surface::Sphere { frame, radius } => frame.to_world(Pnt3::new(radius * v.cos() * u.cos(), radius * v.cos() * u.sin(), radius * v.sin()).await).await,
+            Surface::Sphere { frame, radius } => frame.to_world(Pnt3::new(radius * v.cos() * u.cos(), radius * v.cos() * u.sin(), radius * v.sin())),
             Surface::Torus { frame, major_radius, minor_radius } => {
                 let r = major_radius + minor_radius * v.cos();
-                frame.to_world(Pnt3::new(r * u.cos(), r * u.sin(), minor_radius * v.sin()).await).await
+                frame.to_world(Pnt3::new(r * u.cos(), r * u.sin(), minor_radius * v.sin()))
             }
-            Surface::Nurbs { u_knots, v_knots, controls, weights } => eval_nurbs_point(u_knots, v_knots, controls, weights, u, v).await,
+            Surface::Nurbs { u_knots, v_knots, controls, weights } => eval_nurbs_point(u_knots, v_knots, controls, weights, u, v),
         }
     }
     /// 🗺️ First and second partial derivatives at `(u, v)`. Analytic surfaces use closed forms;
     /// NURBS surfaces use central finite differences (see [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve`]'s equivalent note —
     /// adequate for normal/curvature/tessellation use, not for tight Newton iterations).
-    pub async fn derivatives(&self, u: f64, v: f64) -> SurfaceDerivatives {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn derivatives(&self, u: f64, v: f64) -> SurfaceDerivatives {
         match self {
-            Surface::Plane { frame } => SurfaceDerivatives { point: self.eval(u, v).await, du: frame.x, dv: frame.y, duu: Vec3::ZERO, duv: Vec3::ZERO, dvv: Vec3::ZERO },
+            Surface::Plane { frame } => SurfaceDerivatives { point: self.eval(u, v), du: frame.x, dv: frame.y, duu: Vec3::ZERO, duv: Vec3::ZERO, dvv: Vec3::ZERO },
             Surface::Cylinder { frame, radius } => {
-                let du = frame.to_world_vector(Vec3::new(-radius * u.sin(), radius * u.cos(), 0.0).await);
-                let duu = frame.to_world_vector(Vec3::new(-radius * u.cos(), -radius * u.sin(), 0.0).await);
-                SurfaceDerivatives { point: self.eval(u, v).await, du, dv: frame.z, duu, duv: Vec3::ZERO, dvv: Vec3::ZERO }
+                let du = frame.to_world_vector(Vec3::new(-radius * u.sin(), radius * u.cos(), 0.0));
+                let duu = frame.to_world_vector(Vec3::new(-radius * u.cos(), -radius * u.sin(), 0.0));
+                SurfaceDerivatives { point: self.eval(u, v), du, dv: frame.z, duu, duv: Vec3::ZERO, dvv: Vec3::ZERO }
             }
             Surface::Cone { frame, half_angle } => {
                 let r = v * half_angle.tan();
                 let tan_a = half_angle.tan();
-                let du = frame.to_world_vector(Vec3::new(-r * u.sin(), r * u.cos(), 0.0).await);
-                let dv = frame.to_world_vector(Vec3::new(tan_a * u.cos(), tan_a * u.sin(), 1.0).await);
-                let duu = frame.to_world_vector(Vec3::new(-r * u.cos(), -r * u.sin(), 0.0).await);
-                let duv = frame.to_world_vector(Vec3::new(-tan_a * u.sin(), tan_a * u.cos(), 0.0).await);
-                SurfaceDerivatives { point: self.eval(u, v).await, du, dv, duu, duv, dvv: Vec3::ZERO }
+                let du = frame.to_world_vector(Vec3::new(-r * u.sin(), r * u.cos(), 0.0));
+                let dv = frame.to_world_vector(Vec3::new(tan_a * u.cos(), tan_a * u.sin(), 1.0));
+                let duu = frame.to_world_vector(Vec3::new(-r * u.cos(), -r * u.sin(), 0.0));
+                let duv = frame.to_world_vector(Vec3::new(-tan_a * u.sin(), tan_a * u.cos(), 0.0));
+                SurfaceDerivatives { point: self.eval(u, v), du, dv, duu, duv, dvv: Vec3::ZERO }
             }
             Surface::Sphere { frame, radius } => {
-                let du = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.sin(), radius * v.cos() * u.cos(), 0.0).await);
-                let dv = frame.to_world_vector(Vec3::new(-radius * v.sin() * u.cos(), -radius * v.sin() * u.sin(), radius * v.cos()).await);
-                let duu = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.cos(), -radius * v.cos() * u.sin(), 0.0).await);
-                let duv = frame.to_world_vector(Vec3::new(radius * v.sin() * u.sin(), -radius * v.sin() * u.cos(), 0.0).await);
-                let dvv = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.cos(), -radius * v.cos() * u.sin(), -radius * v.sin()).await);
-                SurfaceDerivatives { point: self.eval(u, v).await, du, dv, duu, duv, dvv }
+                let du = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.sin(), radius * v.cos() * u.cos(), 0.0));
+                let dv = frame.to_world_vector(Vec3::new(-radius * v.sin() * u.cos(), -radius * v.sin() * u.sin(), radius * v.cos()));
+                let duu = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.cos(), -radius * v.cos() * u.sin(), 0.0));
+                let duv = frame.to_world_vector(Vec3::new(radius * v.sin() * u.sin(), -radius * v.sin() * u.cos(), 0.0));
+                let dvv = frame.to_world_vector(Vec3::new(-radius * v.cos() * u.cos(), -radius * v.cos() * u.sin(), -radius * v.sin()));
+                SurfaceDerivatives { point: self.eval(u, v), du, dv, duu, duv, dvv }
             }
             Surface::Torus { frame, major_radius, minor_radius } => {
                 let r = major_radius + minor_radius * v.cos();
-                let du = frame.to_world_vector(Vec3::new(-r * u.sin(), r * u.cos(), 0.0).await);
-                let dv = frame.to_world_vector(Vec3::new(-minor_radius * v.sin() * u.cos(), -minor_radius * v.sin() * u.sin(), minor_radius * v.cos()).await);
-                let duu = frame.to_world_vector(Vec3::new(-r * u.cos(), -r * u.sin(), 0.0).await);
-                let duv = frame.to_world_vector(Vec3::new(minor_radius * v.sin() * u.sin(), -minor_radius * v.sin() * u.cos(), 0.0).await);
-                let dvv = frame.to_world_vector(Vec3::new(-minor_radius * v.cos() * u.cos(), -minor_radius * v.cos() * u.sin(), -minor_radius * v.sin()).await);
-                SurfaceDerivatives { point: self.eval(u, v).await, du, dv, duu, duv, dvv }
+                let du = frame.to_world_vector(Vec3::new(-r * u.sin(), r * u.cos(), 0.0));
+                let dv = frame.to_world_vector(Vec3::new(-minor_radius * v.sin() * u.cos(), -minor_radius * v.sin() * u.sin(), minor_radius * v.cos()));
+                let duu = frame.to_world_vector(Vec3::new(-r * u.cos(), -r * u.sin(), 0.0));
+                let duv = frame.to_world_vector(Vec3::new(minor_radius * v.sin() * u.sin(), -minor_radius * v.sin() * u.cos(), 0.0));
+                let dvv = frame.to_world_vector(Vec3::new(-minor_radius * v.cos() * u.cos(), -minor_radius * v.cos() * u.sin(), -minor_radius * v.sin()));
+                SurfaceDerivatives { point: self.eval(u, v), du, dv, duu, duv, dvv }
             }
-            Surface::Nurbs { .. } => finite_difference_derivatives(self, u, v).await,
+            Surface::Nurbs { .. } => finite_difference_derivatives(self, u, v),
         }
     }
     /// 🗺️ Unit surface normal `du × dv` (falls back to `None` at a singular point, e.g. a sphere
     /// pole or a cone apex, where `du` degenerates to zero).
-    pub async fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
-        let d = self.derivatives(u, v).await;
-        d.du.cross(d.dv).await.normalized().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
+        let d = self.derivatives(u, v);
+        d.du.cross(d.dv).normalized()
     }
     /// 🗺️ Gaussian curvature `K = (LN - M²) / (EG - F²)` and mean curvature `H = (EN - 2FM + GL) /
     /// (2(EG - F²))`, from the first fundamental form `(E, F, G)` and second `(L, M, N)`.
-    pub async fn curvature(&self, u: f64, v: f64) -> Option<(f64, f64)> {
-        let d = self.derivatives(u, v).await;
-        let n = d.du.cross(d.dv).await.normalized().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn curvature(&self, u: f64, v: f64) -> Option<(f64, f64)> {
+        let d = self.derivatives(u, v);
+        let n = d.du.cross(d.dv).normalized()?;
         let e = d.du.dot(d.du);
         let f = d.du.dot(d.dv);
         let g = d.dv.dot(d.dv);
@@ -155,21 +162,24 @@ impl Surface {
     }
     /// 🗺️ Principal curvatures `(κ1, κ2)` derived from Gaussian `K` and mean `H` curvature via
     /// `κ = H ± √(H² - K)`.
-    pub async fn principal_curvatures(&self, u: f64, v: f64) -> Option<(f64, f64)> {
-        let (gaussian, mean) = self.curvature(u, v).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn principal_curvatures(&self, u: f64, v: f64) -> Option<(f64, f64)> {
+        let (gaussian, mean) = self.curvature(u, v)?;
         let disc = (mean * mean - gaussian).max(0.0).sqrt();
         Some((mean + disc, mean - disc))
     }
-    pub async fn is_planar(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_planar(&self) -> bool {
         matches!(self, Surface::Plane { .. })
     }
 }
 
-async fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], u: f64, v: f64) -> Pnt3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], u: f64, v: f64) -> Pnt3 {
     let u_span = u_knots.find_span(u);
     let v_span = v_knots.find_span(v);
-    let nu = basis_function_derivatives(u_knots, u_span.await, u, 0);
-    let nv = basis_function_derivatives(v_knots, v_span.await, v, 0);
+    let nu = basis_function_derivatives(u_knots, u_span, u, 0);
+    let nv = basis_function_derivatives(v_knots, v_span, v, 0);
     let up = u_knots.degree;
     let vp = v_knots.degree;
     let mut hx = 0.0;
@@ -189,17 +199,18 @@ async fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: 
             hw += b * w;
         }
     }
-    Pnt3::new(hx / hw, hy / hw, hz / hw).await
+    Pnt3::new(hx / hw, hy / hw, hz / hw)
 }
 
-async fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> SurfaceDerivatives {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> SurfaceDerivatives {
     let h = 1e-4;
-    let p = surface.eval(u, v).await;
+    let p = surface.eval(u, v);
     let du = (surface.eval(u + h, v) - surface.eval(u - h, v)) * (1.0 / (2.0 * h));
     let dv = (surface.eval(u, v + h) - surface.eval(u, v - h)) * (1.0 / (2.0 * h));
-    let duu = (surface.eval(u + h, v).await.to_vec() - p.to_vec().await * 2.0 + surface.eval(u - h, v).await.to_vec()) * (1.0 / (h * h));
-    let dvv = (surface.eval(u, v + h).await.to_vec() - p.to_vec().await * 2.0 + surface.eval(u, v - h).await.to_vec()) * (1.0 / (h * h));
-    let duv = (surface.eval(u + h, v + h).await.to_vec() - surface.eval(u + h, v - h).await.to_vec() - surface.eval(u - h, v + h).await.to_vec() + surface.eval(u - h, v - h).await.to_vec()) * (1.0 / (4.0 * h * h));
+    let duu = (surface.eval(u + h, v).to_vec() - p.to_vec() * 2.0 + surface.eval(u - h, v).to_vec()) * (1.0 / (h * h));
+    let dvv = (surface.eval(u, v + h).to_vec() - p.to_vec() * 2.0 + surface.eval(u, v - h).to_vec()) * (1.0 / (h * h));
+    let duv = (surface.eval(u + h, v + h).to_vec() - surface.eval(u + h, v - h).to_vec() - surface.eval(u - h, v + h).to_vec() + surface.eval(u - h, v - h).to_vec()) * (1.0 / (4.0 * h * h));
     SurfaceDerivatives { point: p, du, dv, duu, duv, dvv }
 }
 
@@ -210,11 +221,13 @@ async fn finite_difference_derivatives(surface: &Surface, u: f64, v: f64) -> Sur
 mod tests {
     use super::*;
 
-    async fn fd_du(s: &Surface, u: f64, v: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fd_du(s: &Surface, u: f64, v: f64) -> Vec3 {
         let h = 1e-6;
         (s.eval(u + h, v) - s.eval(u - h, v)) * (1.0 / (2.0 * h))
     }
-    async fn fd_dv(s: &Surface, u: f64, v: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fd_dv(s: &Surface, u: f64, v: f64) -> Vec3 {
         let h = 1e-6;
         (s.eval(u, v + h) - s.eval(u, v - h)) * (1.0 / (2.0 * h))
     }

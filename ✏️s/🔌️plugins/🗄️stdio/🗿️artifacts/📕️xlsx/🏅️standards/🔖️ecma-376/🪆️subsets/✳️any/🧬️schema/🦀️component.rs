@@ -32,17 +32,20 @@ impl Default for XlsxArtifact {
 
 impl XlsxArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> XlsxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> XlsxSnapshot {
         XlsxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), workbook: self.workbook.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, workbook: snapshot.workbook }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.workbook = snapshot.workbook;
@@ -52,7 +55,8 @@ impl XlsxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.xlsx`.
-pub async fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xlsx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xlsx",
         artifact: schema::FacetLeaves {
@@ -118,7 +122,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -139,22 +143,25 @@ pub mod derived_construction {
     /// auto-assigning `(row, col)` coordinates left-to-right (`col` 0-based).
     impl XlsxBuilderConstruction {
         /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
-        pub async fn add_sheet(mut self, name: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
             self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
-            self.rebuild().await
+            self.rebuild()
         }
 
         /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
         /// `(row: index, col: 0..)` coordinates left-to-right.
-        pub async fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
             if let Some(sheet) = self.snapshot.workbook.sheets.last_mut() {
                 sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
             }
-            self.rebuild().await
+            self.rebuild()
         }
 
-        async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook).await;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn rebuild(mut self) -> Self {
+            self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
             self
         }
     }
@@ -188,7 +195,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `xl/` — disambiguates from docx/pptx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_xlsx_bytes(bytes).await => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_xlsx_bytes(bytes) => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -224,7 +231,8 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub async fn empty_xlsx_snapshot() -> XlsxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
     XlsxSnapshot::default()
 }
 
@@ -236,7 +244,8 @@ pub async fn empty_xlsx_snapshot() -> XlsxSnapshot {
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`
 /// below) — same shape docx's own `demo_docx_snapshot()` establishes (this wave's OPC
 /// pattern-setter).
-pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
     use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx;
@@ -257,7 +266,7 @@ pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
         ],
         shared_strings: vec!["Name".into(), "Score".into(), "Alice".into()],
     };
-    let mut snap = build_minimal_xlsx(workbook).await;
+    let mut snap = build_minimal_xlsx(workbook);
     snap.opc.set_part("xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", b"<styleSheet/>".to_vec());
     // 🩹 Normalize `opc.parts`' ORDER to the canonical post-regeneration shape `encode_xlsx`
     // always produces (`regenerate_workbook_parts`'s `retain` keeps any unmodeled part -- here
@@ -269,8 +278,8 @@ pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
     // round-trips correctly (`XlsxSnapshot`'s derived `PartialEq` is order-sensitive on
     // `opc.parts: Vec<OpcPart>`) -- a real, previously-undiscovered fixture-construction bug this
     // wave's own `fixture_honesty_law` caught live, not assumed.
-    let bytes = encode_xlsx(&snap).await.expect("encode demo xlsx for part-order normalization");
-    decode_xlsx(&bytes).await.expect("decode demo xlsx for part-order normalization")
+    let bytes = encode_xlsx(&snap).expect("encode demo xlsx for part-order normalization");
+    decode_xlsx(&bytes).expect("decode demo xlsx for part-order normalization")
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -301,11 +310,13 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::xml_document_from_text;
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-    async fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
         XlsxCell { row, col, value }
     }
 
-    async fn sample_workbook() -> XlsxWorkbook {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_workbook() -> XlsxWorkbook {
         XlsxWorkbook {
             sheets: vec![
                 XlsxSheet {

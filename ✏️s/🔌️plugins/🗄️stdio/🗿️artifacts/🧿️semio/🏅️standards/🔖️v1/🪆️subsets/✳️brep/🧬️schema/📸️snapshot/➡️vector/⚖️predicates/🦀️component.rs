@@ -38,7 +38,8 @@ impl From<Ordering> for Orient {
 /// 🎯️ Decides the sign of `value` (a sum of `terms`) certainly, or returns `None` when
 /// accumulated floating-point roundoff across `terms.len()` operations could plausibly have
 /// flipped the sign — the caller must then escalate to exact arithmetic.
-async fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
     let magnitude: f64 = terms.iter().map(|t| t.abs()).sum();
     let bound = (terms.len() as f64 + 1.0) * f64::EPSILON * magnitude;
     if value > bound {
@@ -50,11 +51,13 @@ async fn filtered_sign(value: f64, terms: &[f64]) -> Option<Orient> {
     }
 }
 
-async fn to_rational(v: f64) -> Rational {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn to_rational(v: f64) -> Rational {
     Rational::from_f64(v).expect("finite f64 is always exactly representable as a Rational")
 }
 
-async fn rational_sign(v: &Rational) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rational_sign(v: &Rational) -> Orient {
     Orient::from(v.cmp(&Rational::zero()))
 }
 
@@ -64,7 +67,8 @@ async fn rational_sign(v: &Rational) -> Orient {
 
 /// 🎯️ Orientation of three 2D points: [`Orient::Positive`] when `a → b → c` turns counterclockwise,
 /// [`Orient::Negative`] clockwise, [`Orient::Zero`] when collinear.
-pub async fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     let acx = b.x - a.x;
     let acy = b.y - a.y;
     let bcx = c.x - a.x;
@@ -72,25 +76,27 @@ pub async fn orient2d(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     let det_left = acx * bcy;
     let det_right = acy * bcx;
     let det = det_left - det_right;
-    filtered_sign(det, &[det_left, det_right]).await.unwrap_or_else(|| orient2d_exact(a, b, c))
+    filtered_sign(det, &[det_left, det_right]).unwrap_or_else(|| orient2d_exact(a, b, c))
 }
 
-async fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     let (ax, ay) = (to_rational(a.x), to_rational(a.y));
     let (bx, by) = (to_rational(b.x), to_rational(b.y));
     let (cx, cy) = (to_rational(c.x), to_rational(c.y));
-    let acx = bx.await.sub(&ax);
-    let acy = by.await.sub(&ay);
-    let bcx = cx.await.sub(&ax);
-    let bcy = cy.await.sub(&ay);
+    let acx = bx.sub(&ax);
+    let acy = by.sub(&ay);
+    let bcx = cx.sub(&ax);
+    let bcy = cy.sub(&ay);
     let det = acx.mul(&bcy).sub(&acy.mul(&bcx));
-    rational_sign(&det).await
+    rational_sign(&det)
 }
 
 /// 🎯️ Orientation of four 3D points via the signed volume of tetrahedron `(a,b,c,d)`, computed as
 /// the scalar triple product `(b-a) · ((c-a) × (d-a))`. [`Orient::Positive`] when `(b-a,c-a,d-a)`
 /// form a right-handed frame; [`Orient::Zero`] when the four points are coplanar.
-pub async fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let u = b - a;
     let v = c - a;
     let w = d - a;
@@ -101,22 +107,23 @@ pub async fn orient3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let t5 = u.z * v.x * w.y;
     let t6 = u.z * v.y * w.x;
     let det = t1 - t2 + t3 - t4 + t5 - t6;
-    filtered_sign(det, &[t1, t2, t3, t4, t5, t6]).await.unwrap_or_else(|| orient3d_exact(a, b, c, d))
+    filtered_sign(det, &[t1, t2, t3, t4, t5, t6]).unwrap_or_else(|| orient3d_exact(a, b, c, d))
 }
 
-async fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let ax = to_rational(a.x);
     let ay = to_rational(a.y);
     let az = to_rational(a.z);
-    let ux = to_rational(b.x).await.sub(&ax);
-    let uy = to_rational(b.y).await.sub(&ay);
-    let uz = to_rational(b.z).await.sub(&az);
-    let vx = to_rational(c.x).await.sub(&ax);
-    let vy = to_rational(c.y).await.sub(&ay);
-    let vz = to_rational(c.z).await.sub(&az);
-    let wx = to_rational(d.x).await.sub(&ax);
-    let wy = to_rational(d.y).await.sub(&ay);
-    let wz = to_rational(d.z).await.sub(&az);
+    let ux = to_rational(b.x).sub(&ax);
+    let uy = to_rational(b.y).sub(&ay);
+    let uz = to_rational(b.z).sub(&az);
+    let vx = to_rational(c.x).sub(&ax);
+    let vy = to_rational(c.y).sub(&ay);
+    let vz = to_rational(c.z).sub(&az);
+    let wx = to_rational(d.x).sub(&ax);
+    let wy = to_rational(d.y).sub(&ay);
+    let wz = to_rational(d.z).sub(&az);
     let t1 = ux.mul(&vy).mul(&wz);
     let t2 = ux.mul(&vz).mul(&wy);
     let t3 = uy.mul(&vz).mul(&wx);
@@ -124,13 +131,14 @@ async fn orient3d_exact(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> Orient {
     let t5 = uz.mul(&vx).mul(&wy);
     let t6 = uz.mul(&vy).mul(&wx);
     let det = t1.sub(&t2).add(&t3).sub(&t4).add(&t5).sub(&t6);
-    rational_sign(&det).await
+    rational_sign(&det)
 }
 
 /// 🎯️ The incircle test: [`Orient::Positive`] when `d` lies strictly inside the circle through
 /// `a, b, c` (assuming `a, b, c` are given counterclockwise), [`Orient::Negative`] outside,
 /// [`Orient::Zero`] on the circle.
-pub async fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let adx = a.x - d.x;
     let ady = a.y - d.y;
     let bdx = b.x - d.x;
@@ -144,18 +152,19 @@ pub async fn in_circle2d(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let t2 = ady * (bdx * cd2 - cdx * bd2);
     let t3 = ad2 * (bdx * cdy - cdx * bdy);
     let det = t1 - t2 + t3;
-    filtered_sign(det, &[t1, t2, t3]).await.unwrap_or_else(|| in_circle2d_exact(a, b, c, d))
+    filtered_sign(det, &[t1, t2, t3]).unwrap_or_else(|| in_circle2d_exact(a, b, c, d))
 }
 
-async fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let dx = to_rational(d.x);
     let dy = to_rational(d.y);
-    let adx = to_rational(a.x).await.sub(&dx);
-    let ady = to_rational(a.y).await.sub(&dy);
-    let bdx = to_rational(b.x).await.sub(&dx);
-    let bdy = to_rational(b.y).await.sub(&dy);
-    let cdx = to_rational(c.x).await.sub(&dx);
-    let cdy = to_rational(c.y).await.sub(&dy);
+    let adx = to_rational(a.x).sub(&dx);
+    let ady = to_rational(a.y).sub(&dy);
+    let bdx = to_rational(b.x).sub(&dx);
+    let bdy = to_rational(b.y).sub(&dy);
+    let cdx = to_rational(c.x).sub(&dx);
+    let cdy = to_rational(c.y).sub(&dy);
     let ad2 = adx.mul(&adx).add(&ady.mul(&ady));
     let bd2 = bdx.mul(&bdx).add(&bdy.mul(&bdy));
     let cd2 = cdx.mul(&cdx).add(&cdy.mul(&cdy));
@@ -163,35 +172,39 @@ async fn in_circle2d_exact(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> Orient {
     let t2 = ady.mul(&bdx.mul(&cd2).sub(&cdx.mul(&bd2)));
     let t3 = ad2.mul(&bdx.mul(&cdy).sub(&cdx.mul(&bdy)));
     let det = t1.sub(&t2).add(&t3);
-    rational_sign(&det).await
+    rational_sign(&det)
 }
 
 /// 🎯️ True when `a, b, c` are collinear within the exact predicate (i.e. `orient2d` is exactly zero).
-pub async fn collinear2d(a: Pnt2, b: Pnt2, c: Pnt2) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn collinear2d(a: Pnt2, b: Pnt2, c: Pnt2) -> bool {
     orient2d(a, b, c) == Orient::Zero
 }
 
 /// 🎯️ True when `a, b, c, d` are coplanar within the exact predicate.
-pub async fn coplanar3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn coplanar3d(a: Pnt3, b: Pnt3, c: Pnt3, d: Pnt3) -> bool {
     orient3d(a, b, c, d) == Orient::Zero
 }
 
 /// 🎯️ The certified sign of `u · v` — used to classify angles as acute/obtuse/right without a
 /// raw `f64` comparison.
-pub async fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sign_of_dot(u: Vec3, v: Vec3) -> Orient {
     let tx = u.x * v.x;
     let ty = u.y * v.y;
     let tz = u.z * v.z;
     let dot = tx + ty + tz;
-    filtered_sign(dot, &[tx, ty, tz]).await.unwrap_or_else(|| sign_of_dot_exact(u, v))
+    filtered_sign(dot, &[tx, ty, tz]).unwrap_or_else(|| sign_of_dot_exact(u, v))
 }
 
-async fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
-    let tx = to_rational(u.x).await.mul(&to_rational(v.x));
-    let ty = to_rational(u.y).await.mul(&to_rational(v.y));
-    let tz = to_rational(u.z).await.mul(&to_rational(v.z));
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
+    let tx = to_rational(u.x).mul(&to_rational(v.x));
+    let ty = to_rational(u.y).mul(&to_rational(v.y));
+    let tz = to_rational(u.z).mul(&to_rational(v.z));
     let dot = tx.add(&ty).add(&tz);
-    rational_sign(&dot).await
+    rational_sign(&dot)
 }
 
 // #endregion 🔖️Exact
@@ -221,10 +234,12 @@ mod tests {
 
     /// 🎯️ The true next representable `f64` above/below `x` — unlike adding `f64::EPSILON`, this
     /// is a real one-bit perturbation regardless of `x`'s magnitude (ULP scales with exponent).
-    async fn next_up(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next_up(x: f64) -> f64 {
         f64::from_bits(x.to_bits() + 1)
     }
-    async fn next_down(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next_down(x: f64) -> f64 {
         f64::from_bits(x.to_bits() - 1)
     }
 

@@ -38,7 +38,8 @@ impl Default for SemioGraphTopology {
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub async fn compute_semio_graph_topology(snapshot: &SemioGraphSnapshot) -> SemioGraphTopology {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_graph_topology(snapshot: &SemioGraphSnapshot) -> SemioGraphTopology {
     let node_count = snapshot.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = snapshot.nodes.iter().map(|node| (node.id.value.clone(), Vec::new())).collect();
     let mut indegree: BTreeMap<String, u32> = snapshot.nodes.iter().map(|node| (node.id.value.clone(), 0u32)).collect();
@@ -91,15 +92,18 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
-    async fn node(id: &str) -> SemioGraphNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(id: &str) -> SemioGraphNode {
         SemioGraphNode { id: GraphNodeId::new(id), kind: "task".into(), label: id.into(), position: Default::default(), ports: Vec::new(), properties: Vec::new() }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge(id: &str, source: &str, target: &str) -> SemioGraphEdge {
         SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flows-to".into(), label: id.into() }
     }
 
-    async fn chain_snapshot() -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn chain_snapshot() -> SemioGraphSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }

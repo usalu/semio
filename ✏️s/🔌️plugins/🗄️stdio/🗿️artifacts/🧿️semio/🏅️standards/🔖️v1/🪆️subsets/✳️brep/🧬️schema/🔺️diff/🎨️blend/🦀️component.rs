@@ -28,27 +28,30 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 /// 🎨️ Constant-radius fillet on `edges` of `solid` (MVP arc-strip triangle soup). `rec` is threaded
 /// through to [`solid_from_blend_samples`] so the sample solid's provenance escapes this call.
-pub async fn fillet_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    validate_blend_request(body, solid, edges, radius).await?;
-    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Fillet { radius }).await?;
-    solid_from_blend_samples(body, &points, &tris, rec).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fillet_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    validate_blend_request(body, solid, edges, radius)?;
+    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Fillet { radius })?;
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Linearly varying fillet radius `r0→r1` along a single `edge` (MVP arc-strip triangle soup).
-pub async fn fillet_variable(body: &mut Body, solid: SolidId, edge: EdgeId, r0: f64, r1: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn fillet_variable(body: &mut Body, solid: SolidId, edge: EdgeId, r0: f64, r1: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if r0 <= 0.0 || r1 <= 0.0 {
         return Err(KernelError::InvalidInput("variable fillet radii must be positive".into()));
     }
-    validate_blend_request(body, solid, &[edge], r0.max(r1)).await?;
-    let (points, tris) = sample_blunt_geometry(body, solid, &[edge], BlendKind::Variable { r0, r1 }).await?;
-    solid_from_blend_samples(body, &points, &tris, rec).await
+    validate_blend_request(body, solid, &[edge], r0.max(r1))?;
+    let (points, tris) = sample_blunt_geometry(body, solid, &[edge], BlendKind::Variable { r0, r1 })?;
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 /// 🎨️ Constant-distance chamfer on `edges` of `solid` (MVP inset-strip triangle soup).
-pub async fn chamfer_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    validate_blend_request(body, solid, edges, distance).await?;
-    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Chamfer { distance }).await?;
-    solid_from_blend_samples(body, &points, &tris, rec).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chamfer_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    validate_blend_request(body, solid, edges, distance)?;
+    let (points, tris) = sample_blunt_geometry(body, solid, edges, BlendKind::Chamfer { distance })?;
+    solid_from_blend_samples(body, &points, &tris, rec)
 }
 
 // #endregion 🔖️Api
@@ -65,20 +68,21 @@ enum BlendKind {
 const EDGE_STATIONS: usize = 5;
 const ARC_SAMPLES: usize = 5;
 
-async fn validate_blend_request(body: &Body, solid: SolidId, edges: &[EdgeId], amount: f64) -> Result<(), KernelError> {
-    require_solid(body, solid).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_blend_request(body: &Body, solid: SolidId, edges: &[EdgeId], amount: f64) -> Result<(), KernelError> {
+    require_solid(body, solid)?;
     if edges.is_empty() {
         return Err(KernelError::InvalidInput("blend requires at least one edge".into()));
     }
     if !(amount.is_finite() && amount > 0.0) {
         return Err(KernelError::InvalidInput("blend radius/distance must be positive".into()));
     }
-    let solid_edges = solid_edge_set(body, solid).await;
+    let solid_edges = solid_edge_set(body, solid);
     for &edge in edges {
         if !solid_edges.contains(&edge) {
             return Err(KernelError::MissingEntity(format!("edge {edge:?} is not on solid")));
         }
-        let min_adj = min_adjacent_edge_length(body, edge).await?;
+        let min_adj = min_adjacent_edge_length(body, edge)?;
         if amount >= min_adj {
             return Err(KernelError::InvalidInput(format!("blend amount {amount} must be smaller than min adjacent edge length {min_adj}")));
         }
@@ -86,18 +90,20 @@ async fn validate_blend_request(body: &Body, solid: SolidId, edges: &[EdgeId], a
     Ok(())
 }
 
-async fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
-    if body.solids.get(solid).await.is_none() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+    if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity("solid".into()));
     }
     Ok(())
 }
 
-async fn solid_edge_set(body: &Body, solid: SolidId) -> HashSet<EdgeId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_edge_set(body: &Body, solid: SolidId) -> HashSet<EdgeId> {
     let mut edges = HashSet::new();
     for face in body.solid_faces(solid) {
         for coedge in body.face_coedges(face) {
-            if let Some(c) = body.coedges.get(coedge).await {
+            if let Some(c) = body.coedges.get(coedge) {
                 edges.insert(c.edge);
             }
         }
@@ -105,10 +111,11 @@ async fn solid_edge_set(body: &Body, solid: SolidId) -> HashSet<EdgeId> {
     edges
 }
 
-async fn solid_vertex_ids(body: &Body, solid: SolidId) -> HashSet<VertexId> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_vertex_ids(body: &Body, solid: SolidId) -> HashSet<VertexId> {
     let mut verts = HashSet::new();
     for edge in solid_edge_set(body, solid) {
-        if let Some(e) = body.edges.get(edge).await {
+        if let Some(e) = body.edges.get(edge) {
             verts.insert(e.v0);
             verts.insert(e.v1);
         }
@@ -116,15 +123,16 @@ async fn solid_vertex_ids(body: &Body, solid: SolidId) -> HashSet<VertexId> {
     verts
 }
 
-async fn min_adjacent_edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> {
-    let ent = body.edges.get(edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn min_adjacent_edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> {
+    let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
     let mut min_len = f64::INFINITY;
     for vid in [ent.v0, ent.v1] {
         for adj in body.vertex_edges(vid) {
             if adj == edge {
                 continue;
             }
-            let len = edge_length(body, adj).await?;
+            let len = edge_length(body, adj)?;
             if len > 0.0 {
                 min_len = min_len.min(len);
             }
@@ -136,14 +144,15 @@ async fn min_adjacent_edge_length(body: &Body, edge: EdgeId) -> Result<f64, Kern
     Ok(min_len)
 }
 
-async fn edge_adjacent_faces(body: &Body, solid: SolidId, edge: EdgeId) -> Result<(FaceId, FaceId), KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn edge_adjacent_faces(body: &Body, solid: SolidId, edge: EdgeId) -> Result<(FaceId, FaceId), KernelError> {
     let solid_faces: HashSet<FaceId> = body.solid_faces(solid).into_iter().collect();
     let mut faces = Vec::new();
     for coedge in body.edge_coedges(edge) {
-        let Some(c) = body.coedges.get(coedge).await else {
+        let Some(c) = body.coedges.get(coedge) else {
             continue;
         };
-        let Some(lp) = body.loops.get(c.loop_id).await else {
+        let Some(lp) = body.loops.get(c.loop_id) else {
             continue;
         };
         if solid_faces.contains(&lp.face) && !faces.contains(&lp.face) {
@@ -156,31 +165,34 @@ async fn edge_adjacent_faces(body: &Body, solid: SolidId, edge: EdgeId) -> Resul
     Ok((faces[0], faces[1]))
 }
 
-async fn face_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, KernelError> {
-    let face_ent = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    let surface = body.surfaces.get(face_ent.surface).await.ok_or_else(|| KernelError::MissingEntity("surface".into()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, KernelError> {
+    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    let surface = body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))?;
     let n = match surface {
         Surface::Plane { frame } => frame.z,
-        other => other.normal(0.0, 0.0).await.ok_or_else(|| KernelError::Operation("could not evaluate face normal for blend".into()))?,
+        other => other.normal(0.0, 0.0).ok_or_else(|| KernelError::Operation("could not evaluate face normal for blend".into()))?,
     };
     let n = if face_ent.flipped { -n } else { n };
-    n.normalized().await.ok_or_else(|| KernelError::Operation("degenerate face normal".into()))
+    n.normalized().ok_or_else(|| KernelError::Operation("degenerate face normal".into()))
 }
 
-async fn solid_from_blend_samples(body: &mut Body, points: &[Pnt3], tris: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_from_blend_samples(body: &mut Body, points: &[Pnt3], tris: &[[Pnt3; 3]], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if !tris.is_empty() {
-        if let Ok(id) = solid_from_triangle_soup(body, tris, rec).await {
+        if let Ok(id) = solid_from_triangle_soup(body, tris, rec) {
             return Ok(id);
         }
     }
-    make_convex_hull(body, points, rec).await
+    make_convex_hull(body, points, rec)
 }
 
-async fn sample_blunt_geometry(body: &Body, solid: SolidId, edges: &[EdgeId], kind: BlendKind) -> Result<(Vec<Pnt3>, Vec<[Pnt3; 3]>), KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sample_blunt_geometry(body: &Body, solid: SolidId, edges: &[EdgeId], kind: BlendKind) -> Result<(Vec<Pnt3>, Vec<[Pnt3; 3]>), KernelError> {
     let selected: HashSet<EdgeId> = edges.iter().copied().collect();
     let mut endpoint_verts: HashSet<VertexId> = HashSet::new();
     for &edge in edges {
-        let ent = body.edges.get(edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+        let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
         endpoint_verts.insert(ent.v0);
         endpoint_verts.insert(ent.v1);
     }
@@ -190,19 +202,19 @@ async fn sample_blunt_geometry(body: &Body, solid: SolidId, edges: &[EdgeId], ki
         if endpoint_verts.contains(&vid) {
             continue;
         }
-        if let Some(v) = body.vertices.get(vid).await {
+        if let Some(v) = body.vertices.get(vid) {
             points.push(v.position);
         }
     }
 
     let mut tris: Vec<[Pnt3; 3]> = Vec::new();
     for &edge in &selected {
-        let ent = body.edges.get(edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-        let a = body.vertices.get(ent.v0).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
-        let b = body.vertices.get(ent.v1).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
-        let (f0, f1) = edge_adjacent_faces(body, solid, edge).await?;
-        let n0 = face_outward_normal(body, f0).await?;
-        let n1 = face_outward_normal(body, f1).await?;
+        let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+        let a = body.vertices.get(ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
+        let b = body.vertices.get(ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position;
+        let (f0, f1) = edge_adjacent_faces(body, solid, edge)?;
+        let n0 = face_outward_normal(body, f0)?;
+        let n1 = face_outward_normal(body, f1)?;
 
         let mut stations: Vec<Vec<Pnt3>> = Vec::with_capacity(EDGE_STATIONS);
         for si in 0..EDGE_STATIONS {
@@ -264,7 +276,8 @@ async fn sample_blunt_geometry(body: &Body, solid: SolidId, edges: &[EdgeId], ki
 mod tests {
     use super::*;
 
-    async fn solid_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn solid_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
         let mut edges: Vec<EdgeId> = solid_edge_set(body, solid).into_iter().collect();
         edges.sort_by_key(|e| format!("{e:?}"));
         edges

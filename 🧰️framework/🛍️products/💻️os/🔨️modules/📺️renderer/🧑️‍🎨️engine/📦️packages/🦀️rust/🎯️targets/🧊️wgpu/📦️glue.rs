@@ -128,7 +128,7 @@ use winit::window::Window;
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, PatchOp, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
-    use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework_actor::{intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use std::collections::HashMap;
@@ -165,6 +165,88 @@ pub(crate) mod kernel_runtime {
         let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
         semio_framework_async::thread_plan(cores).shards as u16
     }
+
+    //#region 🔖️ExtensionIndex
+    /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the descriptor-driven
+    /// source of truth for "which extensions activate alongside plugin X" — `📓️design-unified.md`
+    /// §M6. Embedded at COMPILE time via `include_str!` (never a runtime path lookup into `🤖️
+    /// generated/**`, which is gitignored and has no stable runtime location once packaged) — the
+    /// same registry `🦀️hosts.rs` a few lines above this module already mounts as real Rust source,
+    /// just read as data here instead of compiled as code. READ-ONLY: this file is `🤖️generated/**`,
+    /// registrar-owned; never edited by this packet.
+    const PLUGINS_REGISTRY_JSON: &str = include_str!("../../../../../../🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
+
+    /// 🧩️ The handful of fields this host actually needs out of one registry entry — every other
+    /// field (`hashes`, `dependsOn`, `activationEvents`, …) is irrelevant to activation and left
+    /// unparsed (serde ignores unknown JSON fields by default).
+    #[derive(serde::Deserialize)]
+    struct PluginDescriptorJson {
+        #[serde(rename = "pluginId")]
+        plugin_id: String,
+        role: String,
+        #[serde(default)]
+        capabilities: Vec<String>,
+        #[serde(default)]
+        extends: Option<String>,
+    }
+
+    /// 🧩️ One extension's activation-relevant identity — `extension_id`/`package` are the SAME
+    /// string (the extension crate's own `pluginId`, deliberately distinct from its parent's
+    /// `PackageId` — see `activate_extensions_of`'s own doc for why this matters for package-wide
+    /// quarantine isolation). `capability_requests` mirrors the registry's `capabilities` array
+    /// verbatim as unscoped [`CapabilityGrant`]s (`scope: None` — this host has no capability broker
+    /// populating scopes for ANY actor kind yet, extension or plugin).
+    #[derive(Clone)]
+    struct ExtensionRecord {
+        extension_id: String,
+        package: PackageId,
+        capability_requests: Vec<CapabilityGrant>,
+    }
+
+    /// 🧩️ `by_parent[plugin_id]` = every installed extension whose descriptor `extends == plugin_id`
+    /// — exactly the "descriptors carry `extends`... zero special-casing" design requirement.
+    struct ExtensionIndex {
+        by_parent: HashMap<String, Vec<ExtensionRecord>>,
+    }
+
+    impl ExtensionIndex {
+        fn load() -> Self {
+            let mut by_parent: HashMap<String, Vec<ExtensionRecord>> = HashMap::new();
+            let entries: Vec<PluginDescriptorJson> = serde_json::from_str(PLUGINS_REGISTRY_JSON).unwrap_or_default();
+            for entry in entries {
+                if entry.role != "extension" {
+                    continue;
+                }
+                let Some(parent) = entry.extends else { continue };
+                let record = ExtensionRecord {
+                    extension_id: entry.plugin_id.clone(),
+                    package: PackageId(entry.plugin_id),
+                    capability_requests: entry.capabilities.into_iter().map(|capability| CapabilityGrant { capability, scope: None }).collect(),
+                };
+                by_parent.entry(parent).or_default().push(record);
+            }
+            Self { by_parent }
+        }
+
+        fn extensions_of(&self, plugin_id: &str) -> &[ExtensionRecord] {
+            self.by_parent.get(plugin_id).map(Vec::as_slice).unwrap_or(&[])
+        }
+    }
+
+    /// 🧩️ Parsed once, lazily — the registry JSON is fixed at compile time (`include_str!`), so
+    /// there is nothing to invalidate or re-read across the process's lifetime.
+    fn extension_index() -> &'static ExtensionIndex {
+        static INDEX: OnceLock<ExtensionIndex> = OnceLock::new();
+        INDEX.get_or_init(ExtensionIndex::load)
+    }
+
+    /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
+    /// plugin's own directory" convention — kept as a small local helper rather than importing that
+    /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
+    fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
+        std::fs::read_dir(dir).ok()?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"))
+    }
+    //#endregion 🔖️ExtensionIndex
 
     //#region 🔖️Requests/Outcomes
     pub(crate) enum KernelRequest {
@@ -350,7 +432,13 @@ pub(crate) mod kernel_runtime {
             let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
-            let compiled = self.guest_runtime.compile(&package_ref, &bytes).map_err(|error| error.to_string())?;
+            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): `GuestRuntime::
+            // compile` is `async fn` (the actor-green async migration landed after this call site was
+            // written) — bridged with `pollster::block_on`, this file's own established sync↔async
+            // bridge (already used repeatedly below, e.g. `poll_world3d_assets`/`fetch_url_bytes`).
+            // Pre-existing defect in this exact function, fixed here because it sits directly upstream
+            // of this packet's own cascade addition below.
+            let compiled = pollster::block_on(self.guest_runtime.compile(&package_ref, &bytes)).map_err(|error| error.to_string())?;
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
@@ -369,12 +457,105 @@ pub(crate) mod kernel_runtime {
                 quotas: QuotaSchema::default(),
             };
             self.run_turn(actor, instance_id, vec![open])?;
+            // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): descriptor-driven
+            // native cascade — M6's own acceptance wording, "activating a parent brings up its N
+            // extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
+            // (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
+            // wasm artifacts live as siblings under the same `modules_root`.
+            if let Some(modules_root) = wasm_path.parent().and_then(|dir| dir.parent()) {
+                self.activate_extensions_of(&plugin_id, actor, modules_root);
+            }
             Ok(instance_id)
+        }
+
+        /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): for every
+        /// descriptor in the generated registry with `extends == plugin_id`, compile (`guest_runtime.
+        /// compile` is itself keyed/cached by `PackageRef` content hash — no extra cache layer needed
+        /// here) and activate it as `ActorKind::Extension`, `Lane::Background` (design doc M6's
+        /// decided default — a UI-contributing extension is re-laned on `SurfaceVisible` by whichever
+        /// packet wires that event), with `scoped_grants` = [`semio_framework_actor::
+        /// intersect_capabilities`] of the parent's own granted set against the extension's requests
+        /// — the never-escalate-past-the-parent property. Records the [`semio_framework_actor::Kernel::
+        /// link_extension`] cascade edge so [`Self::destroy_app`] takes every extension down with its
+        /// parent. Best-effort per extension (mirrors `program_bridge::load_wasm_plugins`'s own "one
+        /// bad plugin does not hold the batch hostage" policy) — a missing/broken extension is logged
+        /// and skipped, never fails the parent's own `create_app`.
+        ///
+        /// 🕳️ Honest gap, not worked around: this activates the extension via `ParallelRuntime::
+        /// activate` (least-loaded shard), NOT pinned to the parent's exact shard — `ParallelRuntime`
+        /// has no `activate_pinned` entry point today (that facade lives in `🎯️targets/🧊️wgpu/
+        /// 🎠️runtime.rs`, owned by a different packet, `kernel-async-native`). The kernel-level
+        /// primitive this method WOULD call (`Kernel::activate_pinned`) is built, tested, and green in
+        /// `semio-framework-actor`; only the host-level plumbing to reach it through `ParallelRuntime`
+        /// is missing. A lease-request for a small additive method is open — see this ticket's report.
+        /// `link_extension` (cascade topology, zero-orphan teardown) is unaffected by this gap and
+        /// works correctly regardless of which shard the extension landed on.
+        fn activate_extensions_of(&mut self, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
+            let extensions = extension_index().extensions_of(plugin_id);
+            if extensions.is_empty() {
+                return;
+            }
+            let parent_grants = pollster::block_on(self.runtime.kernel().actor_record(parent)).map(|record| record.capabilities).unwrap_or_default();
+            for extension in extensions.to_vec() {
+                let extension_dir = modules_root.join(&extension.extension_id);
+                let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir) else {
+                    crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping", extension.extension_id, extension_dir.display()));
+                    continue;
+                };
+                let extension_bytes = match std::fs::read(&extension_wasm_path) {
+                    Ok(bytes) => bytes,
+                    Err(error) => {
+                        crate::log_debug(&format!("kernel: failed reading extension {} wasm ({}): {error}", extension.extension_id, extension_wasm_path.display()));
+                        continue;
+                    }
+                };
+                let extension_hash = PackageHash(*blake3::hash(&extension_bytes).as_bytes());
+                let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
+                let extension_compiled = match pollster::block_on(self.guest_runtime.compile(&extension_package_ref, &extension_bytes)) {
+                    Ok(handle) => handle,
+                    Err(error) => {
+                        crate::log_debug(&format!("kernel: compile failed for extension {}: {error}", extension.extension_id));
+                        continue;
+                    }
+                };
+                let extension_ordinal = self.plugin_ordinal(&extension.extension_id);
+                let extension_kind = ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: extension.extension_id.clone() };
+                // 🕳️ Honest gap: the REAL capability enforcement point for a guest instance is the
+                // `caps: &[BrokerCapabilityGrant]` argument below, `&[]` here because this native host
+                // has no capability broker wired up for ANY actor kind yet — the parent's own
+                // activation above passes the identical empty placeholder (A2b/T1 territory). The
+                // `intersect_capabilities` call still records the correctly-scoped grant kernel-side
+                // (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
+                // ready the moment a broker starts populating `parent_grants` for real.
+                match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET) {
+                    Ok(extension_actor) => {
+                        let scoped_grants = pollster::block_on(intersect_capabilities(&parent_grants, &extension.capability_requests));
+                        if let Err(error) = pollster::block_on(self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants)) {
+                            crate::log_debug(&format!("kernel: set_capabilities({extension_actor:?}) failed: {error}"));
+                        }
+                        if let Err(error) = pollster::block_on(self.runtime.kernel_mut().link_extension(parent, extension_actor)) {
+                            crate::log_debug(&format!("kernel: link_extension({parent:?}, {extension_actor:?}) failed: {error}"));
+                        }
+                    }
+                    Err(error) => crate::log_debug(&format!("kernel: activate failed for extension {}: {error}", extension.extension_id)),
+                }
+            }
         }
 
         fn destroy_app(&mut self, instance: u32) {
             if let Some(actor) = self.instances.remove(&instance) {
-                self.runtime.unregister(actor);
+                // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): cascade
+                // teardown — `Kernel::deactivate` walks `actor`'s cascade subtree leaves-first and
+                // removes every extension from the KERNEL's own bookkeeping (mailbox/shard/failure
+                // state); each removed id ALSO needs its own `ParallelRuntime::unregister` to retire
+                // the shard-side `GuestInstance` — the two are separate teardown halves, matching
+                // `Kernel`'s own purity boundary (no transport inside the pure crate). Falls back to
+                // unregistering just `actor` if `Kernel::deactivate` errors (e.g. already gone) —
+                // the pre-existing single-actor behaviour this method had before this packet.
+                let removed = pollster::block_on(self.runtime.kernel_mut().deactivate(actor)).unwrap_or_else(|_| vec![actor]);
+                for id in removed {
+                    self.runtime.unregister(id);
+                }
             }
             self.retained.retain(|(inst, _), _| *inst != instance);
             self.pending_rejections.retain(|(inst, _), _| *inst != instance);

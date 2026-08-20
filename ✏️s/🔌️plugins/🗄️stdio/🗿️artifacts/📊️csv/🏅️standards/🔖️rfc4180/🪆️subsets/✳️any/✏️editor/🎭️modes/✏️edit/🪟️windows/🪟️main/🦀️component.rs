@@ -14,8 +14,9 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::csv::create_csv_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
@@ -24,7 +25,8 @@ pub async fn definition() -> WindowKindDefinition {
 /// record is one editable row — `set-cell`'s `row`/`column` index this rendered grid directly
 /// (see the surface root's `CsvEditorCommand::SetCell` for the row-offset math back to
 /// `CsvMutation::SetField`'s `record_index`).
-pub async fn render(document: &CsvSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &CsvSnapshot) -> UiNode {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
@@ -32,7 +34,7 @@ pub async fn render(document: &CsvSnapshot) -> UiNode {
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
     let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows }).await
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

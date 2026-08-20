@@ -25,7 +25,7 @@ pub struct SemioAudioInference {
 
 impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
     async fn infer(snapshot: &SemioAudioSnapshot) -> Self {
-        Self { duration: compute_semio_audio_duration(snapshot).await }
+        Self { duration: compute_semio_audio_duration(snapshot) }
     }
 }
 
@@ -64,7 +64,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::audio
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.audio.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_audio_artifact_schema_descriptor`'s registration.
-pub async fn semio_audio_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_audio_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.audio.inference",
         inference: schema::FacetLeaves {

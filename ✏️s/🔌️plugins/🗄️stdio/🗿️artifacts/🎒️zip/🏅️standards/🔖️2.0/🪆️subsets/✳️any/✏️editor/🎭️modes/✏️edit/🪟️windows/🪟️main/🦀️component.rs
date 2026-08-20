@@ -23,8 +23,9 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::zip::any::create_zip_any_editor`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
 
@@ -32,10 +33,11 @@ pub async fn definition() -> WindowKindDefinition {
 /// ✏️ Real `ZipSnapshot -> UiNode`: root = the archive comment (a real `set-node` edit target), one
 /// leaf per entry labeled `"{name} ({n} bytes)"` (the leaf's NAME is a real `set-node` edit target
 /// via `ENTRY_NODE_PREFIX`; the byte count is a read-only label, not addressable).
-pub async fn render(document: &ZipSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &ZipSnapshot) -> UiNode {
     let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
     let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
-    TreeWindowKit::render(&TreeView { roots: vec![root] }).await
+    TreeWindowKit::render(&TreeView { roots: vec![root] })
 }
 //#endregion 🔖️Render
 

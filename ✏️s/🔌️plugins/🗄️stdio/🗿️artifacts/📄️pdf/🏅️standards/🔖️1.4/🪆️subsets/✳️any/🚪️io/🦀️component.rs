@@ -58,12 +58,13 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Codec
-pub async fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     let page = &snap.page;
     let w = page.width.max(1.0);
     let h = page.height.max(1.0);
     let stream = format!("BT /F1 12 Tf 72 {} Td ({}) Tj ET", h - 72.0, escape_pdf(&page.text));
-    let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(stream.as_bytes()).await?;
+    let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(stream.as_bytes())?;
     let mut body: Vec<u8> = Vec::new();
     body.extend_from_slice(b"%PDF-1.4\n");
     let o1 = body.len();
@@ -87,7 +88,8 @@ pub async fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     Ok(body)
 }
 
-async fn escape_pdf(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn escape_pdf(s: &str) -> String {
     s.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)")
 }
 
@@ -96,20 +98,22 @@ async fn escape_pdf(s: &str) -> String {
 /// (the deflate-compressed stream payload is essentially never valid UTF-8, so slicing a
 /// `String::from_utf8_lossy` copy corrupts the very bytes being extracted -- `codec_retention_law`
 /// caught this as a real, pre-existing decode bug).
-async fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
     data.windows(needle.len()).position(|w| w == needle)
 }
 
-pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
     if !data.starts_with(b"%PDF") {
         return Err("not pdf".into());
     }
     let w = 612.0f64;
     let h = 792.0f64;
     let mut content = String::new();
-    if let Some(i) = find_subslice(data, b"stream").await {
+    if let Some(i) = find_subslice(data, b"stream") {
         let rest = &data[i + 6..];
-        if let Some(j) = find_subslice(rest, b"endstream").await {
+        if let Some(j) = find_subslice(rest, b"endstream") {
             let raw_slice = &rest[..j];
             // `stream` is followed by an EOL before the real payload begins (ISO 32000-1
             // §7.3.8.1) and the payload itself may carry a trailing EOL before `endstream` --
@@ -117,7 +121,7 @@ pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
             let start = raw_slice.iter().position(|b| !b.is_ascii_whitespace()).unwrap_or(raw_slice.len());
             let end = raw_slice.iter().rposition(|b| !b.is_ascii_whitespace()).map(|p| p + 1).unwrap_or(start);
             let raw = &raw_slice[start..end];
-            if let Ok(dec) = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(raw).await {
+            if let Ok(dec) = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(raw) {
                 content = String::from_utf8_lossy(&dec).into_owned();
             }
         }
@@ -136,13 +140,15 @@ pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
 /// identical registration functions document: `register_schema_spec` registers one spec under one
 /// schema id, and there is no single canonical id for a Mutation enum's per-variant shapes.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.pdf#diff", PdfDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 //#endregion 🔖️SchemaSpecs
 
 #[cfg(test)]
@@ -184,7 +190,8 @@ mod tests {
         use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        async fn demo_mutation_cases() -> Vec<PdfMutation> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
                 PdfMutation::NoMutation,
                 PdfMutation::SetSnapshot { snapshot: demo_pdf_snapshot() },
@@ -192,7 +199,8 @@ mod tests {
             ]
         }
 
-        async fn demo_diff_cases() -> Vec<PdfDiff> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn demo_diff_cases() -> Vec<PdfDiff> {
             let a = demo_pdf_snapshot();
             let b = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 300.5, height: 400.25, text: "changed text".into() } };
             vec![<PdfDiff as protocol::command::DiffAlgebra<PdfSnapshot>>::between(&a, &b), PdfDiff::default()]

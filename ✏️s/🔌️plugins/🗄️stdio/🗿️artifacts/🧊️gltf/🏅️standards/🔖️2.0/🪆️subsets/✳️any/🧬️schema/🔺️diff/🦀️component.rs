@@ -34,13 +34,16 @@ use serde::{Deserialize, Serialize};
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
 /// `inverse`) — see `🧬️schema-design.md` §Absorb and the plan's "Absorb" section for the
 /// derivation. `excluded_sorted` must be sorted ascending.
-async fn count_le(sorted: &[usize], x: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
     sorted.partition_point(|&v| v <= x)
 }
-async fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
     pos - count_le(excluded_sorted, pos)
 }
-async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     let mut candidate = rank;
     loop {
         let next = rank + count_le(excluded_sorted, candidate);
@@ -50,8 +53,9 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
         candidate = next;
     }
 }
-async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
 }
 //#endregion 🔖️IndexTransport
 
@@ -60,7 +64,8 @@ async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_s
 /// `T` and its per-item diff type `D`. Canonical correctness verified against the plan's 3
 /// mandated cases in this module's tests. See `🧬️schema-design.md` §Absorb.
 #[allow(clippy::too_many_arguments)]
-async fn absorb_indexed_collection<T: Clone, D: Clone>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed_collection<T: Clone, D: Clone>(
     removed1: Vec<usize>,
     modified1: Vec<(usize, D)>,
     added1: Vec<(usize, T)>,
@@ -90,8 +95,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
-            merged_removed_base.push(base_index.await);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
         }
     }
     merged_removed_base.sort_unstable();
@@ -113,11 +118,11 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -144,7 +149,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
 }
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
-async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -155,7 +161,7 @@ async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modif
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index.await, diff_inverse(d, orig)));
+            inv_modified.push((after_index, diff_inverse(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -241,11 +247,13 @@ impl<T, D> Default for GltfCollectionDiff<T, D> {
 }
 
 impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub async fn between(base: &[T], other: &[T]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &[T], other: &[T]) -> Self {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
@@ -258,17 +266,18 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Self { removed, modified, added }
     }
 
-    pub async fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
         let mut removed = std::collections::BTreeSet::new();
         for &index in &self.removed {
             if index >= base_len || !removed.insert(index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).await.at([target]).await);
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at([target]));
             }
         }
         let mut modified = std::collections::BTreeSet::new();
         for entry in &self.modified {
             if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).await.at([target]).await);
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at([target]));
             }
         }
         let mut length = base_len - removed.len();
@@ -277,7 +286,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         let mut previous = None;
         for index in additions {
             if index > length || previous == Some(index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at([target]).await);
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at([target]));
             }
             previous = Some(index);
             length += 1;
@@ -285,12 +294,13 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Ok(())
     }
 
-    pub async fn apply(&self, base: &[T]) -> Vec<T> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
             if let Some(slot) = next.get_mut(m.index) {
                 if let Some(item) = slot {
-                    *item = m.diff.apply(item).await;
+                    *item = m.diff.apply(item);
                 }
             }
         }
@@ -312,7 +322,8 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         out
     }
 
-    pub async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
             std::mem::take(&mut self.modified).into_iter().map(|m| (m.index, m.diff)).collect(),
@@ -322,15 +333,16 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
             other.added.into_iter().map(|a| (a.index, a.item)).collect(),
             |d, o| d.absorb_into(o),
             |d, item| d.apply(item),
-        ).await;
+        );
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect();
         self.added = added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect();
     }
 
-    pub async fn inverse(&self, base_items: &[T]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base_items: &[T]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, item| d.inverse(item)).await;
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, item| d.inverse(item));
         Self { removed, modified: modified.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect(), added: added.into_iter().map(|(index, item)| GltfAdded { index, item }).collect() }
     }
 }
@@ -360,10 +372,12 @@ pub struct GltfAssetDiff {
 }
 
 impl GltfAssetDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.version.is_none() && self.generator.is_none() && self.copyright.is_none() && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
     }
-    pub async fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &GltfAsset, other: &GltfAsset) -> Self {
         Self {
             version: (base.version != other.version).then(|| other.version.clone()),
             generator: (base.generator != other.generator).then(|| other.generator.clone()),
@@ -373,7 +387,8 @@ impl GltfAssetDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    pub async fn apply(&self, base: &GltfAsset) -> GltfAsset {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &GltfAsset) -> GltfAsset {
         let mut next = base.clone();
         if let Some(v) = &self.version {
             next.version = v.clone();
@@ -395,7 +410,8 @@ impl GltfAssetDiff {
         }
         next
     }
-    pub async fn inverse(&self, base: &GltfAsset) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &GltfAsset) -> Self {
         Self {
             version: self.version.as_ref().map(|_| base.version.clone()),
             generator: self.generator.as_ref().map(|_| base.generator.clone()),
@@ -405,7 +421,8 @@ impl GltfAssetDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    pub async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
         }
@@ -1156,23 +1173,24 @@ pub struct GltfDiff {
 }
 
 impl GltfDiff {
-    pub async fn is_empty_diff(&self) -> bool {
-        self.asset.as_ref().map(GltfAssetDiff::is_empty).unwrap_or(true).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
+        self.asset.as_ref().map(GltfAssetDiff::is_empty).unwrap_or(true)
             && self.scene.is_none()
-            && self.scenes.as_ref().map(GltfScenesDiff::is_empty).unwrap_or(true).await
-            && self.nodes.as_ref().map(GltfNodesDiff::is_empty).unwrap_or(true).await
-            && self.meshes.as_ref().map(GltfMeshesDiff::is_empty).unwrap_or(true).await
-            && self.accessors.as_ref().map(GltfAccessorsDiff::is_empty).unwrap_or(true).await
-            && self.buffer_views.as_ref().map(GltfBufferViewsDiff::is_empty).unwrap_or(true).await
-            && self.buffers.as_ref().map(GltfBuffersDiff::is_empty).unwrap_or(true).await
-            && self.buffer_bytes.as_ref().map(GltfBufferBytesDiff::is_empty).unwrap_or(true).await
-            && self.materials.as_ref().map(GltfMaterialsDiff::is_empty).unwrap_or(true).await
-            && self.textures.as_ref().map(GltfTexturesDiff::is_empty).unwrap_or(true).await
-            && self.images.as_ref().map(GltfImagesDiff::is_empty).unwrap_or(true).await
-            && self.samplers.as_ref().map(GltfSamplersDiff::is_empty).unwrap_or(true).await
-            && self.skins.as_ref().map(GltfSkinsDiff::is_empty).unwrap_or(true).await
-            && self.animations.as_ref().map(GltfAnimationsDiff::is_empty).unwrap_or(true).await
-            && self.cameras.as_ref().map(GltfCamerasDiff::is_empty).unwrap_or(true).await
+            && self.scenes.as_ref().map(GltfScenesDiff::is_empty).unwrap_or(true)
+            && self.nodes.as_ref().map(GltfNodesDiff::is_empty).unwrap_or(true)
+            && self.meshes.as_ref().map(GltfMeshesDiff::is_empty).unwrap_or(true)
+            && self.accessors.as_ref().map(GltfAccessorsDiff::is_empty).unwrap_or(true)
+            && self.buffer_views.as_ref().map(GltfBufferViewsDiff::is_empty).unwrap_or(true)
+            && self.buffers.as_ref().map(GltfBuffersDiff::is_empty).unwrap_or(true)
+            && self.buffer_bytes.as_ref().map(GltfBufferBytesDiff::is_empty).unwrap_or(true)
+            && self.materials.as_ref().map(GltfMaterialsDiff::is_empty).unwrap_or(true)
+            && self.textures.as_ref().map(GltfTexturesDiff::is_empty).unwrap_or(true)
+            && self.images.as_ref().map(GltfImagesDiff::is_empty).unwrap_or(true)
+            && self.samplers.as_ref().map(GltfSamplersDiff::is_empty).unwrap_or(true)
+            && self.skins.as_ref().map(GltfSkinsDiff::is_empty).unwrap_or(true)
+            && self.animations.as_ref().map(GltfAnimationsDiff::is_empty).unwrap_or(true)
+            && self.cameras.as_ref().map(GltfCamerasDiff::is_empty).unwrap_or(true)
             && self.extensions_used.is_none()
             && self.extensions_required.is_none()
             && self.extensions.is_none()
@@ -1307,7 +1325,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         macro_rules! validate_collection {
             ($field:ident, $base:expr, $target:literal) => {
                 if let Some(diff) = &self.$field {
-                    diff.validate_apply($base.len(), $target).await?;
+                    diff.validate_apply($base.len(), $target)?;
                 }
             };
         }
@@ -1328,52 +1346,52 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         let mut next = base.clone();
         let doc = &mut next.document;
         if let Some(d) = &self.asset {
-            doc.asset = d.apply(&doc.asset).await;
+            doc.asset = d.apply(&doc.asset);
         }
         if let Some(v) = self.scene {
             doc.scene = v;
         }
         if let Some(d) = &self.scenes {
-            doc.scenes = d.apply(&doc.scenes).await;
+            doc.scenes = d.apply(&doc.scenes);
         }
         if let Some(d) = &self.nodes {
-            doc.nodes = d.apply(&doc.nodes).await;
+            doc.nodes = d.apply(&doc.nodes);
         }
         if let Some(d) = &self.meshes {
-            doc.meshes = d.apply(&doc.meshes).await;
+            doc.meshes = d.apply(&doc.meshes);
         }
         if let Some(d) = &self.accessors {
-            doc.accessors = d.apply(&doc.accessors).await;
+            doc.accessors = d.apply(&doc.accessors);
         }
         if let Some(d) = &self.buffer_views {
-            doc.buffer_views = d.apply(&doc.buffer_views).await;
+            doc.buffer_views = d.apply(&doc.buffer_views);
         }
         if let Some(d) = &self.buffers {
-            doc.buffers = d.apply(&doc.buffers).await;
+            doc.buffers = d.apply(&doc.buffers);
         }
         if let Some(d) = &self.buffer_bytes {
-            next.buffers = d.apply(&next.buffers).await;
+            next.buffers = d.apply(&next.buffers);
         }
         if let Some(d) = &self.materials {
-            doc.materials = d.apply(&doc.materials).await;
+            doc.materials = d.apply(&doc.materials);
         }
         if let Some(d) = &self.textures {
-            doc.textures = d.apply(&doc.textures).await;
+            doc.textures = d.apply(&doc.textures);
         }
         if let Some(d) = &self.images {
-            doc.images = d.apply(&doc.images).await;
+            doc.images = d.apply(&doc.images);
         }
         if let Some(d) = &self.samplers {
-            doc.samplers = d.apply(&doc.samplers).await;
+            doc.samplers = d.apply(&doc.samplers);
         }
         if let Some(d) = &self.skins {
-            doc.skins = d.apply(&doc.skins).await;
+            doc.skins = d.apply(&doc.skins);
         }
         if let Some(d) = &self.animations {
-            doc.animations = d.apply(&doc.animations).await;
+            doc.animations = d.apply(&doc.animations);
         }
         if let Some(d) = &self.cameras {
-            doc.cameras = d.apply(&doc.cameras).await;
+            doc.cameras = d.apply(&doc.cameras);
         }
         if let Some(v) = &self.extensions_used {
             doc.extensions_used = v.clone();
@@ -1400,7 +1418,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
 
     async fn absorb(&mut self, other: Self) {
         match (&mut self.asset, other.asset) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
+            (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -1410,7 +1428,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         macro_rules! absorb_collection {
             ($field:ident) => {
                 match (&mut self.$field, other.$field) {
-                    (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
+                    (Some(mine), Some(theirs)) => mine.absorb(theirs),
                     (slot @ None, Some(theirs)) => *slot = Some(theirs),
                     _ => {}
                 }
@@ -1478,38 +1496,38 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
 
     async fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
         let (bd, od) = (&base.document, &other.document);
-        let asset_diff = GltfAssetDiff::between(&bd.asset, &od.asset).await;
-        let scenes_diff = GltfScenesDiff::between(&bd.scenes, &od.scenes).await;
-        let nodes_diff = GltfNodesDiff::between(&bd.nodes, &od.nodes).await;
-        let meshes_diff = GltfMeshesDiff::between(&bd.meshes, &od.meshes).await;
-        let accessors_diff = GltfAccessorsDiff::between(&bd.accessors, &od.accessors).await;
-        let buffer_views_diff = GltfBufferViewsDiff::between(&bd.buffer_views, &od.buffer_views).await;
-        let buffers_diff = GltfBuffersDiff::between(&bd.buffers, &od.buffers).await;
-        let buffer_bytes_diff = GltfBufferBytesDiff::between(&base.buffers, &other.buffers).await;
-        let materials_diff = GltfMaterialsDiff::between(&bd.materials, &od.materials).await;
-        let textures_diff = GltfTexturesDiff::between(&bd.textures, &od.textures).await;
-        let images_diff = GltfImagesDiff::between(&bd.images, &od.images).await;
-        let samplers_diff = GltfSamplersDiff::between(&bd.samplers, &od.samplers).await;
-        let skins_diff = GltfSkinsDiff::between(&bd.skins, &od.skins).await;
-        let animations_diff = GltfAnimationsDiff::between(&bd.animations, &od.animations).await;
-        let cameras_diff = GltfCamerasDiff::between(&bd.cameras, &od.cameras).await;
+        let asset_diff = GltfAssetDiff::between(&bd.asset, &od.asset);
+        let scenes_diff = GltfScenesDiff::between(&bd.scenes, &od.scenes);
+        let nodes_diff = GltfNodesDiff::between(&bd.nodes, &od.nodes);
+        let meshes_diff = GltfMeshesDiff::between(&bd.meshes, &od.meshes);
+        let accessors_diff = GltfAccessorsDiff::between(&bd.accessors, &od.accessors);
+        let buffer_views_diff = GltfBufferViewsDiff::between(&bd.buffer_views, &od.buffer_views);
+        let buffers_diff = GltfBuffersDiff::between(&bd.buffers, &od.buffers);
+        let buffer_bytes_diff = GltfBufferBytesDiff::between(&base.buffers, &other.buffers);
+        let materials_diff = GltfMaterialsDiff::between(&bd.materials, &od.materials);
+        let textures_diff = GltfTexturesDiff::between(&bd.textures, &od.textures);
+        let images_diff = GltfImagesDiff::between(&bd.images, &od.images);
+        let samplers_diff = GltfSamplersDiff::between(&bd.samplers, &od.samplers);
+        let skins_diff = GltfSkinsDiff::between(&bd.skins, &od.skins);
+        let animations_diff = GltfAnimationsDiff::between(&bd.animations, &od.animations);
+        let cameras_diff = GltfCamerasDiff::between(&bd.cameras, &od.cameras);
         Self {
-            asset: (!asset_diff.is_empty().await).then_some(asset_diff),
+            asset: (!asset_diff.is_empty()).then_some(asset_diff),
             scene: (bd.scene != od.scene).then_some(od.scene),
-            scenes: (!scenes_diff.is_empty().await).then_some(scenes_diff),
-            nodes: (!nodes_diff.is_empty().await).then_some(nodes_diff),
-            meshes: (!meshes_diff.is_empty().await).then_some(meshes_diff),
-            accessors: (!accessors_diff.is_empty().await).then_some(accessors_diff),
-            buffer_views: (!buffer_views_diff.is_empty().await).then_some(buffer_views_diff),
-            buffers: (!buffers_diff.is_empty().await).then_some(buffers_diff),
-            buffer_bytes: (!buffer_bytes_diff.is_empty().await).then_some(buffer_bytes_diff),
-            materials: (!materials_diff.is_empty().await).then_some(materials_diff),
-            textures: (!textures_diff.is_empty().await).then_some(textures_diff),
-            images: (!images_diff.is_empty().await).then_some(images_diff),
-            samplers: (!samplers_diff.is_empty().await).then_some(samplers_diff),
-            skins: (!skins_diff.is_empty().await).then_some(skins_diff),
-            animations: (!animations_diff.is_empty().await).then_some(animations_diff),
-            cameras: (!cameras_diff.is_empty().await).then_some(cameras_diff),
+            scenes: (!scenes_diff.is_empty()).then_some(scenes_diff),
+            nodes: (!nodes_diff.is_empty()).then_some(nodes_diff),
+            meshes: (!meshes_diff.is_empty()).then_some(meshes_diff),
+            accessors: (!accessors_diff.is_empty()).then_some(accessors_diff),
+            buffer_views: (!buffer_views_diff.is_empty()).then_some(buffer_views_diff),
+            buffers: (!buffers_diff.is_empty()).then_some(buffers_diff),
+            buffer_bytes: (!buffer_bytes_diff.is_empty()).then_some(buffer_bytes_diff),
+            materials: (!materials_diff.is_empty()).then_some(materials_diff),
+            textures: (!textures_diff.is_empty()).then_some(textures_diff),
+            images: (!images_diff.is_empty()).then_some(images_diff),
+            samplers: (!samplers_diff.is_empty()).then_some(samplers_diff),
+            skins: (!skins_diff.is_empty()).then_some(skins_diff),
+            animations: (!animations_diff.is_empty()).then_some(animations_diff),
+            cameras: (!cameras_diff.is_empty()).then_some(cameras_diff),
             extensions_used: (bd.extensions_used != od.extensions_used).then(|| od.extensions_used.clone()),
             extensions_required: (bd.extensions_required != od.extensions_required).then(|| od.extensions_required.clone()),
             extensions: (bd.extensions != od.extensions).then(|| od.extensions.clone()),
@@ -1519,7 +1537,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 
@@ -1529,7 +1547,8 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
 /// every collection's `added`/`modified` entries are real, not fabricated) — used by this
 /// artifact's own `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests
 /// (⚙️engine/component.rs), mirroring json's own `demo_diff_cases()` role in its pilot report.
-pub async fn demo_diff_cases() -> Vec<GltfDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_diff_cases() -> Vec<GltfDiff> {
     let base = crate::artifacts::gltf::engine::demo_gltf_snapshot();
     let mut other = base.clone();
     other.document.asset.generator = Some("semio-fg3".into());
@@ -1558,12 +1577,13 @@ pub async fn demo_diff_cases() -> Vec<GltfDiff> {
     other.document.extras = None;
     other.source_form = GltfSourceForm::Glb;
     let rich = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &other);
-    vec![GltfDiff::default(), rich.await]
+    vec![GltfDiff::default(), rich]
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
-    <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> GltfDiff {
+    <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 
@@ -1602,25 +1622,31 @@ pub async fn diff_set_snapshot(base: &GltfSnapshot, snapshot: &GltfSnapshot) -> 
 /// GROUP (asset/scene/node; mesh/accessor/material; buffer family; texture/image/sampler/skin;
 /// animation; camera) rather than one monolithic function, per the recon's own suggested structure.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1641,18 +1667,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1663,70 +1692,87 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 /// layer when the tri-state value itself is embedded as a single positional field inside a larger
 /// bracketed tuple (e.g. one field of `GltfAssetDiff`/`GltfNodeDiff`), where both layers must be
 /// explicit since there is no "absent token" to lean on.
-pub(crate) async fn encode_option_option<T>(opt: &Option<Option<T>>, enc: impl Fn(&T) -> String) -> String {
-    encode_option(opt, |inner: &Option<T>| encode_option(inner, &enc)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option_option<T>(opt: &Option<Option<T>>, enc: impl Fn(&T) -> String) -> String {
+    encode_option(opt, |inner: &Option<T>| encode_option(inner, &enc))
 }
-pub(crate) async fn decode_option_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
-    decode_option(s, |inner: &str| decode_option(inner, &dec)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
+    decode_option(s, |inner: &str| decode_option(inner, &dec))
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ScalarCodecs
-pub(crate) async fn enc_f64(v: f64) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_f64(v: f64) -> String {
     v.to_string()
 }
-pub(crate) async fn dec_f64(s: &str) -> Result<f64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-pub(crate) async fn enc_u64(v: u64) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_u64(v: u64) -> String {
     v.to_string()
 }
-pub(crate) async fn dec_u64(s: &str) -> Result<u64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_u64(s: &str) -> Result<u64, String> {
     s.parse::<u64>().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn enc_bool(v: bool) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bool(v: bool) -> String {
     if v {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "0" => Ok(false),
         "1" => Ok(true),
         other => Err(format!("bool: expected 0/1, got {other:?}")),
     }
 }
-pub(crate) async fn enc_f64_slice(v: &[f64]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_f64_slice(v: &[f64]) -> String {
     format!("[{}]", v.iter().map(|x| enc_f64(*x)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_f64_vec(s: &str) -> Result<Vec<f64>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_f64).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f64_vec(s: &str) -> Result<Vec<f64>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_f64).collect()
 }
-pub(crate) async fn dec_f64_array<const N: usize>(s: &str) -> Result<[f64; N], String> {
-    let v = dec_f64_vec(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_f64_array<const N: usize>(s: &str) -> Result<[f64; N], String> {
+    let v = dec_f64_vec(s)?;
     let len = v.len();
     v.try_into().map_err(|_| format!("expected {N} floats, got {len}"))
 }
-pub(crate) async fn enc_usize_vec(v: &[usize]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_usize_vec(v: &[usize]) -> String {
     format!("[{}]", v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_usize_vec(s: &str) -> Result<Vec<usize>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_usize_vec(s: &str) -> Result<Vec<usize>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect()
 }
-pub(crate) async fn enc_string_vec(v: &[String]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_string_vec(v: &[String]) -> String {
     format!("[{}]", v.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_string_vec(s: &str) -> Result<Vec<String>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_string_vec(s: &str) -> Result<Vec<String>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
 }
 /// 🏷️ `GltfPrimitive::attributes` -- `Vec<(String, usize)>`, name-keyed and order-preserving.
-pub(crate) async fn enc_attr_pairs(v: &[(String, usize)]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_attr_pairs(v: &[(String, usize)]) -> String {
     format!("[{}]", v.iter().map(|(k, idx)| format!("{}:{idx}", enc_str(k))).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, String> {
-    split_top_level(strip_brackets(s).await?, ',')
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, String> {
+    split_top_level(strip_brackets(s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1742,7 +1788,8 @@ pub(crate) async fn dec_attr_pairs(s: &str) -> Result<Vec<(String, usize)>, Stri
 /// `Z`=Null (bare, no payload), `B[0|1]`=Bool, `F[<f64>]`=Number, `S[<hex>]`=String,
 /// `A[v,v,...]`=Array, `O[k:v,k:v,...]`=Object (member order preserved, matching `GltfJson::
 /// Object`'s own `Vec<(String,GltfJson)>` shape rather than a map).
-pub(crate) async fn enc_json(v: &GltfJson) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_json(v: &GltfJson) -> String {
     match v {
         GltfJson::Null => "Z".to_string(),
         GltfJson::Bool(b) => format!("B[{}]", enc_bool(*b)),
@@ -1754,16 +1801,17 @@ pub(crate) async fn enc_json(v: &GltfJson) -> String {
         }
     }
 }
-pub(crate) async fn dec_json(s: &str) -> Result<GltfJson, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_json(s: &str) -> Result<GltfJson, String> {
     if s == "Z" {
         return Ok(GltfJson::Null);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
-        "B" => Ok(GltfJson::Bool(dec_bool(inner).await?)),
-        "F" => Ok(GltfJson::Number(dec_f64(inner).await?)),
-        "S" => Ok(GltfJson::String(dec_str(inner).await?)),
+        "B" => Ok(GltfJson::Bool(dec_bool(inner)?)),
+        "F" => Ok(GltfJson::Number(dec_f64(inner)?)),
+        "S" => Ok(GltfJson::String(dec_str(inner)?)),
         "A" => Ok(GltfJson::Array(split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json).collect::<Result<Vec<_>, String>>()?)),
         "O" => Ok(GltfJson::Object(
             split_top_level(inner, ',')
@@ -1783,20 +1831,25 @@ pub(crate) async fn dec_json(s: &str) -> Result<GltfJson, String> {
 //#region 🔖️UnitEnumCodecs
 /// 🔢️ Wire code, not a word tag -- reuses [`GltfComponentType::code`]/`from_code` (the same spec
 /// numeric code the JSON serde impl uses, `crate::artifacts::gltf::engine`).
-pub(crate) async fn enc_component_type(t: GltfComponentType) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_component_type(t: GltfComponentType) -> String {
     t.code().to_string()
 }
-pub(crate) async fn dec_component_type(s: &str) -> Result<GltfComponentType, String> {
-    GltfComponentType::from_code(dec_u64(s).await?).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_component_type(s: &str) -> Result<GltfComponentType, String> {
+    GltfComponentType::from_code(dec_u64(s)?)
 }
 /// 🔤️ Word tag -- reuses [`GltfAccessorType::as_str`]/`from_str`.
-pub(crate) async fn enc_accessor_type(t: GltfAccessorType) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_accessor_type(t: GltfAccessorType) -> String {
     t.as_str().to_string()
 }
-pub(crate) async fn dec_accessor_type(s: &str) -> Result<GltfAccessorType, String> {
-    GltfAccessorType::from_str(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_accessor_type(s: &str) -> Result<GltfAccessorType, String> {
+    GltfAccessorType::from_str(s)
 }
-pub(crate) async fn enc_alpha_mode(m: GltfAlphaMode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_alpha_mode(m: GltfAlphaMode) -> String {
     match m {
         GltfAlphaMode::Opaque => "OPAQUE",
         GltfAlphaMode::Mask => "MASK",
@@ -1804,7 +1857,8 @@ pub(crate) async fn enc_alpha_mode(m: GltfAlphaMode) -> String {
     }
     .to_string()
 }
-pub(crate) async fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
     match s {
         "OPAQUE" => Ok(GltfAlphaMode::Opaque),
         "MASK" => Ok(GltfAlphaMode::Mask),
@@ -1812,7 +1866,8 @@ pub(crate) async fn dec_alpha_mode(s: &str) -> Result<GltfAlphaMode, String> {
         other => Err(format!("alpha mode: unknown {other:?}")),
     }
 }
-pub(crate) async fn enc_interpolation(i: GltfInterpolation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_interpolation(i: GltfInterpolation) -> String {
     match i {
         GltfInterpolation::Linear => "LINEAR",
         GltfInterpolation::Step => "STEP",
@@ -1820,7 +1875,8 @@ pub(crate) async fn enc_interpolation(i: GltfInterpolation) -> String {
     }
     .to_string()
 }
-pub(crate) async fn dec_interpolation(s: &str) -> Result<GltfInterpolation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_interpolation(s: &str) -> Result<GltfInterpolation, String> {
     match s {
         "LINEAR" => Ok(GltfInterpolation::Linear),
         "STEP" => Ok(GltfInterpolation::Step),
@@ -1828,7 +1884,8 @@ pub(crate) async fn dec_interpolation(s: &str) -> Result<GltfInterpolation, Stri
         other => Err(format!("interpolation: unknown {other:?}")),
     }
 }
-pub(crate) async fn enc_animation_path(p: GltfAnimationPath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_path(p: GltfAnimationPath) -> String {
     match p {
         GltfAnimationPath::Translation => "translation",
         GltfAnimationPath::Rotation => "rotation",
@@ -1837,7 +1894,8 @@ pub(crate) async fn enc_animation_path(p: GltfAnimationPath) -> String {
     }
     .to_string()
 }
-pub(crate) async fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, String> {
     match s {
         "translation" => Ok(GltfAnimationPath::Translation),
         "rotation" => Ok(GltfAnimationPath::Rotation),
@@ -1846,14 +1904,16 @@ pub(crate) async fn dec_animation_path(s: &str) -> Result<GltfAnimationPath, Str
         other => Err(format!("animation path: unknown {other:?}")),
     }
 }
-pub(crate) async fn enc_source_form(f: GltfSourceForm) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_source_form(f: GltfSourceForm) -> String {
     match f {
         GltfSourceForm::Json => "json",
         GltfSourceForm::Glb => "glb",
     }
     .to_string()
 }
-pub(crate) async fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
     match s {
         "json" => Ok(GltfSourceForm::Json),
         "glb" => Ok(GltfSourceForm::Glb),
@@ -1863,7 +1923,8 @@ pub(crate) async fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
 //#endregion 🔖️UnitEnumCodecs
 
 //#region 🔖️AssetSceneNodeGroupCodecs
-pub(crate) async fn enc_asset_diff(d: &GltfAssetDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.version, |v| enc_str(v)),
@@ -1874,39 +1935,45 @@ pub(crate) async fn enc_asset_diff(d: &GltfAssetDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, generator, copyright, min_version, extensions, extras] = parts.as_slice() else {
         return Err(format!("asset diff: expected 6 fields, got {}", parts.len()));
     };
     Ok(GltfAssetDiff {
-        version: decode_option(version, dec_str).await?,
-        generator: decode_option_option(generator, dec_str).await?,
-        copyright: decode_option_option(copyright, dec_str).await?,
-        min_version: decode_option_option(min_version, dec_str).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        version: decode_option(version, dec_str)?,
+        generator: decode_option_option(generator, dec_str)?,
+        copyright: decode_option_option(copyright, dec_str)?,
+        min_version: decode_option_option(min_version, dec_str)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
 
-pub(crate) async fn enc_scene(sc: &GltfScene) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_scene(sc: &GltfScene) -> String {
     format!("[{},{},{},{}]", enc_usize_vec(&sc.nodes), encode_option(&sc.name, |v| enc_str(v)), encode_option(&sc.extensions, enc_json), encode_option(&sc.extras, enc_json),)
 }
-pub(crate) async fn dec_scene(s: &str) -> Result<GltfScene, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_scene(s: &str) -> Result<GltfScene, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfScene { nodes: dec_usize_vec(nodes).await?, name: decode_option(name, dec_str).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfScene { nodes: dec_usize_vec(nodes)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_scene_diff(d: &GltfSceneDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_scene_diff(d: &GltfSceneDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.nodes, |v| enc_usize_vec(v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json),)
 }
-pub(crate) async fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene diff: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfSceneDiff { nodes: decode_option(nodes, dec_usize_vec).await?, name: decode_option_option(name, dec_str).await?, extensions: decode_option_option(extensions, dec_json).await?, extras: decode_option_option(extras, dec_json).await? })
+    Ok(GltfSceneDiff { nodes: decode_option(nodes, dec_usize_vec)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
 }
 
-pub(crate) async fn enc_node(n: &GltfNode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_node(n: &GltfNode) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_usize_vec(&n.children),
@@ -1923,27 +1990,29 @@ pub(crate) async fn enc_node(n: &GltfNode) -> String {
         encode_option(&n.extras, enc_json),
     )
 }
-pub(crate) async fn dec_node(s: &str) -> Result<GltfNode, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_node(s: &str) -> Result<GltfNode, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node: expected 12 fields, got {}", parts.len()));
     };
     Ok(GltfNode {
-        children: dec_usize_vec(children).await?,
-        mesh: decode_option(mesh, parse_usize).await?,
-        camera: decode_option(camera, parse_usize).await?,
-        skin: decode_option(skin, parse_usize).await?,
-        matrix: decode_option(matrix, dec_f64_array::<16>).await?,
-        translation: decode_option(translation, dec_f64_array::<3>).await?,
-        rotation: decode_option(rotation, dec_f64_array::<4>).await?,
-        scale: decode_option(scale, dec_f64_array::<3>).await?,
-        weights: dec_f64_vec(weights).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        children: dec_usize_vec(children)?,
+        mesh: decode_option(mesh, parse_usize)?,
+        camera: decode_option(camera, parse_usize)?,
+        skin: decode_option(skin, parse_usize)?,
+        matrix: decode_option(matrix, dec_f64_array::<16>)?,
+        translation: decode_option(translation, dec_f64_array::<3>)?,
+        rotation: decode_option(rotation, dec_f64_array::<4>)?,
+        scale: decode_option(scale, dec_f64_array::<3>)?,
+        weights: dec_f64_vec(weights)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_node_diff(d: &GltfNodeDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_node_diff(d: &GltfNodeDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&d.children, |v| enc_usize_vec(v)),
@@ -1960,30 +2029,32 @@ pub(crate) async fn enc_node_diff(d: &GltfNodeDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node diff: expected 12 fields, got {}", parts.len()));
     };
     Ok(GltfNodeDiff {
-        children: decode_option(children, dec_usize_vec).await?,
-        mesh: decode_option_option(mesh, parse_usize).await?,
-        camera: decode_option_option(camera, parse_usize).await?,
-        skin: decode_option_option(skin, parse_usize).await?,
-        matrix: decode_option_option(matrix, dec_f64_array::<16>).await?,
-        translation: decode_option_option(translation, dec_f64_array::<3>).await?,
-        rotation: decode_option_option(rotation, dec_f64_array::<4>).await?,
-        scale: decode_option_option(scale, dec_f64_array::<3>).await?,
-        weights: decode_option(weights, dec_f64_vec).await?,
-        name: decode_option_option(name, dec_str).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        children: decode_option(children, dec_usize_vec)?,
+        mesh: decode_option_option(mesh, parse_usize)?,
+        camera: decode_option_option(camera, parse_usize)?,
+        skin: decode_option_option(skin, parse_usize)?,
+        matrix: decode_option_option(matrix, dec_f64_array::<16>)?,
+        translation: decode_option_option(translation, dec_f64_array::<3>)?,
+        rotation: decode_option_option(rotation, dec_f64_array::<4>)?,
+        scale: decode_option_option(scale, dec_f64_array::<3>)?,
+        weights: decode_option(weights, dec_f64_vec)?,
+        name: decode_option_option(name, dec_str)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
 //#endregion 🔖️AssetSceneNodeGroupCodecs
 
 //#region 🔖️MeshAccessorMaterialGroupCodecs
-pub(crate) async fn enc_primitive(p: &GltfPrimitive) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_attr_pairs(&p.attributes),
@@ -1995,36 +2066,42 @@ pub(crate) async fn enc_primitive(p: &GltfPrimitive) -> String {
         encode_option(&p.extras, enc_json),
     )
 }
-pub(crate) async fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [attributes, indices, material, mode, targets, extensions, extras] = parts.as_slice() else {
         return Err(format!("primitive: expected 7 fields, got {}", parts.len()));
     };
     Ok(GltfPrimitive {
-        attributes: dec_attr_pairs(attributes).await?,
-        indices: decode_option(indices, parse_usize).await?,
-        material: decode_option(material, parse_usize).await?,
-        mode: decode_option(mode, dec_u64).await?,
-        targets: split_top_level(strip_brackets(targets).await?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| semio_framework_plugin::resolve_ready(dec_attr_pairs(&value)).map(GltfMorphTarget)).collect::<Result<Vec<_>, _>>()?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        attributes: dec_attr_pairs(attributes)?,
+        indices: decode_option(indices, parse_usize)?,
+        material: decode_option(material, parse_usize)?,
+        mode: decode_option(mode, dec_u64)?,
+        targets: split_top_level(strip_brackets(targets)?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| dec_attr_pairs(&value).map(GltfMorphTarget)).collect::<Result<Vec<_>, _>>()?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
     format!("[{}]", v.iter().map(enc_primitive).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_primitive).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_primitive).collect()
 }
-pub(crate) async fn enc_mesh(m: &GltfMesh) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_mesh(m: &GltfMesh) -> String {
     format!("[{},{},{},{},{}]", enc_primitive_vec(&m.primitives), enc_f64_slice(&m.weights), encode_option(&m.name, |v| enc_str(v)), encode_option(&m.extensions, enc_json), encode_option(&m.extras, enc_json),)
 }
-pub(crate) async fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfMesh { primitives: dec_primitive_vec(primitives).await?, weights: dec_f64_vec(weights).await?, name: decode_option(name, dec_str).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfMesh { primitives: dec_primitive_vec(primitives)?, weights: dec_f64_vec(weights)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.primitives, |v| enc_primitive_vec(v)),
@@ -2034,43 +2111,51 @@ pub(crate) async fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMeshDiff {
-        primitives: decode_option(primitives, dec_primitive_vec).await?,
-        weights: decode_option(weights, dec_f64_vec).await?,
-        name: decode_option_option(name, dec_str).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        primitives: decode_option(primitives, dec_primitive_vec)?,
+        weights: decode_option(weights, dec_f64_vec)?,
+        name: decode_option_option(name, dec_str)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
 
-pub(crate) async fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
     format!("[{},{},{}]", v.buffer_view, v.byte_offset, enc_component_type(v.component_type))
 }
-pub(crate) async fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type] = parts.as_slice() else { return Err(format!("sparse indices: expected 3 fields, got {}", parts.len())) };
-    Ok(GltfSparseIndices { buffer_view: parse_usize(buffer_view).await?, byte_offset: parse_usize(byte_offset).await?, component_type: dec_component_type(component_type).await? })
+    Ok(GltfSparseIndices { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)?, component_type: dec_component_type(component_type)? })
 }
-pub(crate) async fn enc_sparse_values(v: &GltfSparseValues) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_sparse_values(v: &GltfSparseValues) -> String {
     format!("[{},{}]", v.buffer_view, v.byte_offset)
 }
-pub(crate) async fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset] = parts.as_slice() else { return Err(format!("sparse values: expected 2 fields, got {}", parts.len())) };
-    Ok(GltfSparseValues { buffer_view: parse_usize(buffer_view).await?, byte_offset: parse_usize(byte_offset).await? })
+    Ok(GltfSparseValues { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)? })
 }
-pub(crate) async fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
     format!("[{},{},{}]", v.count, enc_sparse_indices(&v.indices), enc_sparse_values(&v.values))
 }
-pub(crate) async fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [count, indices, values] = parts.as_slice() else { return Err(format!("sparse accessor: expected 3 fields, got {}", parts.len())) };
-    Ok(GltfSparseAccessor { count: parse_usize(count).await?, indices: dec_sparse_indices(indices).await?, values: dec_sparse_values(values).await? })
+    Ok(GltfSparseAccessor { count: parse_usize(count)?, indices: dec_sparse_indices(indices)?, values: dec_sparse_values(values)? })
 }
-pub(crate) async fn enc_accessor(a: &GltfAccessor) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_accessor(a: &GltfAccessor) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&a.buffer_view, |v| v.to_string()),
@@ -2087,27 +2172,29 @@ pub(crate) async fn enc_accessor(a: &GltfAccessor) -> String {
         encode_option(&a.extras, enc_json),
     )
 }
-pub(crate) async fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor: expected 12 fields, got {}", parts.len()));
     };
     Ok(GltfAccessor {
-        buffer_view: decode_option(buffer_view, parse_usize).await?,
-        byte_offset: parse_usize(byte_offset).await?,
-        component_type: dec_component_type(component_type).await?,
-        normalized: dec_bool(normalized).await?,
-        count: parse_usize(count).await?,
-        kind: dec_accessor_type(kind).await?,
-        max: decode_option(max, dec_f64_vec).await?,
-        min: decode_option(min, dec_f64_vec).await?,
-        sparse: decode_option(sparse, dec_sparse_accessor).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        buffer_view: decode_option(buffer_view, parse_usize)?,
+        byte_offset: parse_usize(byte_offset)?,
+        component_type: dec_component_type(component_type)?,
+        normalized: dec_bool(normalized)?,
+        count: parse_usize(count)?,
+        kind: dec_accessor_type(kind)?,
+        max: decode_option(max, dec_f64_vec)?,
+        min: decode_option(min, dec_f64_vec)?,
+        sparse: decode_option(sparse, dec_sparse_accessor)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.buffer_view, |v| v.to_string()),
@@ -2124,52 +2211,60 @@ pub(crate) async fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor diff: expected 12 fields, got {}", parts.len()));
     };
     Ok(GltfAccessorDiff {
-        buffer_view: decode_option_option(buffer_view, parse_usize).await?,
-        byte_offset: decode_option(byte_offset, parse_usize).await?,
-        component_type: decode_option(component_type, dec_component_type).await?,
-        normalized: decode_option(normalized, dec_bool).await?,
-        count: decode_option(count, parse_usize).await?,
-        kind: decode_option(kind, dec_accessor_type).await?,
-        max: decode_option_option(max, dec_f64_vec).await?,
-        min: decode_option_option(min, dec_f64_vec).await?,
-        sparse: decode_option_option(sparse, dec_sparse_accessor).await?,
-        name: decode_option_option(name, dec_str).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        buffer_view: decode_option_option(buffer_view, parse_usize)?,
+        byte_offset: decode_option(byte_offset, parse_usize)?,
+        component_type: decode_option(component_type, dec_component_type)?,
+        normalized: decode_option(normalized, dec_bool)?,
+        count: decode_option(count, parse_usize)?,
+        kind: decode_option(kind, dec_accessor_type)?,
+        max: decode_option_option(max, dec_f64_vec)?,
+        min: decode_option_option(min, dec_f64_vec)?,
+        sparse: decode_option_option(sparse, dec_sparse_accessor)?,
+        name: decode_option_option(name, dec_str)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
 
-pub(crate) async fn enc_texture_info(v: &GltfTextureInfo) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_texture_info(v: &GltfTextureInfo) -> String {
     format!("[{},{},{},{}]", v.index, enc_u64(v.tex_coord), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) async fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, extensions, extras] = parts.as_slice() else { return Err(format!("texture info: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfTextureInfo { index: parse_usize(index).await?, tex_coord: dec_u64(tex_coord).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.scale), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) async fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, scale, extensions, extras] = parts.as_slice() else { return Err(format!("normal texture info: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfNormalTextureInfo { index: parse_usize(index).await?, tex_coord: dec_u64(tex_coord).await?, scale: dec_f64(scale).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfNormalTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, scale: dec_f64(scale)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.strength), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
-pub(crate) async fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, strength, extensions, extras] = parts.as_slice() else { return Err(format!("occlusion texture info: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfOcclusionTextureInfo { index: parse_usize(index).await?, tex_coord: dec_u64(tex_coord).await?, strength: dec_f64(strength).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfOcclusionTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, strength: dec_f64(strength)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_f64_slice(&v.base_color_factor),
@@ -2181,22 +2276,24 @@ pub(crate) async fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) async fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_color_factor, base_color_texture, metallic_factor, roughness_factor, metallic_roughness_texture, extensions, extras] = parts.as_slice() else {
         return Err(format!("pbr: expected 7 fields, got {}", parts.len()));
     };
     Ok(GltfPbrMetallicRoughness {
-        base_color_factor: dec_f64_array::<4>(base_color_factor).await?,
-        base_color_texture: decode_option(base_color_texture, dec_texture_info).await?,
-        metallic_factor: dec_f64(metallic_factor).await?,
-        roughness_factor: dec_f64(roughness_factor).await?,
-        metallic_roughness_texture: decode_option(metallic_roughness_texture, dec_texture_info).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        base_color_factor: dec_f64_array::<4>(base_color_factor)?,
+        base_color_texture: decode_option(base_color_texture, dec_texture_info)?,
+        metallic_factor: dec_f64(metallic_factor)?,
+        roughness_factor: dec_f64(roughness_factor)?,
+        metallic_roughness_texture: decode_option(metallic_roughness_texture, dec_texture_info)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_material(m: &GltfMaterial) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_material(m: &GltfMaterial) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&m.name, |v| enc_str(v)),
@@ -2212,26 +2309,28 @@ pub(crate) async fn enc_material(m: &GltfMaterial) -> String {
         encode_option(&m.extras, enc_json),
     )
 }
-pub(crate) async fn dec_material(s: &str) -> Result<GltfMaterial, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_material(s: &str) -> Result<GltfMaterial, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material: expected 11 fields, got {}", parts.len()));
     };
     Ok(GltfMaterial {
-        name: decode_option(name, dec_str).await?,
-        pbr_metallic_roughness: decode_option(pbr, dec_pbr).await?,
-        normal_texture: decode_option(normal_texture, dec_normal_texture_info).await?,
-        occlusion_texture: decode_option(occlusion_texture, dec_occlusion_texture_info).await?,
-        emissive_texture: decode_option(emissive_texture, dec_texture_info).await?,
-        emissive_factor: dec_f64_array::<3>(emissive_factor).await?,
-        alpha_mode: dec_alpha_mode(alpha_mode).await?,
-        alpha_cutoff: dec_f64(alpha_cutoff).await?,
-        double_sided: dec_bool(double_sided).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        name: decode_option(name, dec_str)?,
+        pbr_metallic_roughness: decode_option(pbr, dec_pbr)?,
+        normal_texture: decode_option(normal_texture, dec_normal_texture_info)?,
+        occlusion_texture: decode_option(occlusion_texture, dec_occlusion_texture_info)?,
+        emissive_texture: decode_option(emissive_texture, dec_texture_info)?,
+        emissive_factor: dec_f64_array::<3>(emissive_factor)?,
+        alpha_mode: dec_alpha_mode(alpha_mode)?,
+        alpha_cutoff: dec_f64(alpha_cutoff)?,
+        double_sided: dec_bool(double_sided)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_material_diff(d: &GltfMaterialDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_material_diff(d: &GltfMaterialDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.name, |v| enc_str(v)),
@@ -2247,37 +2346,41 @@ pub(crate) async fn enc_material_diff(d: &GltfMaterialDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material diff: expected 11 fields, got {}", parts.len()));
     };
     Ok(GltfMaterialDiff {
-        name: decode_option_option(name, dec_str).await?,
-        pbr_metallic_roughness: decode_option_option(pbr, dec_pbr).await?,
-        normal_texture: decode_option_option(normal_texture, dec_normal_texture_info).await?,
-        occlusion_texture: decode_option_option(occlusion_texture, dec_occlusion_texture_info).await?,
-        emissive_texture: decode_option_option(emissive_texture, dec_texture_info).await?,
-        emissive_factor: decode_option(emissive_factor, dec_f64_array::<3>).await?,
-        alpha_mode: decode_option(alpha_mode, dec_alpha_mode).await?,
-        alpha_cutoff: decode_option(alpha_cutoff, dec_f64).await?,
-        double_sided: decode_option(double_sided, dec_bool).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        name: decode_option_option(name, dec_str)?,
+        pbr_metallic_roughness: decode_option_option(pbr, dec_pbr)?,
+        normal_texture: decode_option_option(normal_texture, dec_normal_texture_info)?,
+        occlusion_texture: decode_option_option(occlusion_texture, dec_occlusion_texture_info)?,
+        emissive_texture: decode_option_option(emissive_texture, dec_texture_info)?,
+        emissive_factor: decode_option(emissive_factor, dec_f64_array::<3>)?,
+        alpha_mode: decode_option(alpha_mode, dec_alpha_mode)?,
+        alpha_cutoff: decode_option(alpha_cutoff, dec_f64)?,
+        double_sided: decode_option(double_sided, dec_bool)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
 //#endregion 🔖️MeshAccessorMaterialGroupCodecs
 
 //#region 🔖️BufferGroupCodecs
-pub(crate) async fn enc_buffer(b: &GltfBuffer) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_buffer(b: &GltfBuffer) -> String {
     format!("[{},{},{},{},{}]", b.byte_length, encode_option(&b.uri, |v| enc_str(v)), encode_option(&b.name, |v| enc_str(v)), encode_option(&b.extensions, enc_json), encode_option(&b.extras, enc_json))
 }
-pub(crate) async fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfBuffer { byte_length: parse_usize(byte_length).await?, uri: decode_option(uri, dec_str).await?, name: decode_option(name, dec_str).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfBuffer { byte_length: parse_usize(byte_length)?, uri: decode_option(uri, dec_str)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.byte_length, |v| v.to_string()),
@@ -2287,18 +2390,20 @@ pub(crate) async fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
         encode_option_option(&d.extras, enc_json),
     )
 }
-pub(crate) async fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfBufferDiff {
-        byte_length: decode_option(byte_length, parse_usize).await?,
-        uri: decode_option_option(uri, dec_str).await?,
-        name: decode_option_option(name, dec_str).await?,
-        extensions: decode_option_option(extensions, dec_json).await?,
-        extras: decode_option_option(extras, dec_json).await?,
+        byte_length: decode_option(byte_length, parse_usize)?,
+        uri: decode_option_option(uri, dec_str)?,
+        name: decode_option_option(name, dec_str)?,
+        extensions: decode_option_option(extensions, dec_json)?,
+        extras: decode_option_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_buffer_view(v: &GltfBufferView) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_buffer_view(v: &GltfBufferView) -> String {
     format!(
         "[{},{},{},{},{},{},{},{}]",
         v.buffer,
@@ -2311,43 +2416,49 @@ pub(crate) async fn enc_buffer_view(v: &GltfBufferView) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) async fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer, byte_offset, byte_length, byte_stride, target, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("buffer view: expected 8 fields, got {}", parts.len()));
     };
     Ok(GltfBufferView {
-        buffer: parse_usize(buffer).await?,
-        byte_offset: parse_usize(byte_offset).await?,
-        byte_length: parse_usize(byte_length).await?,
-        byte_stride: decode_option(byte_stride, parse_usize).await?,
-        target: decode_option(target, dec_u64).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        buffer: parse_usize(buffer)?,
+        byte_offset: parse_usize(byte_offset)?,
+        byte_length: parse_usize(byte_length)?,
+        byte_stride: decode_option(byte_stride, parse_usize)?,
+        target: decode_option(target, dec_u64)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
 /// 🧬️ Raw buffer bytes (`GltfSnapshot::buffers[i]`) -- hex, same as every other byte payload in
 /// this grammar (no base64: no external dep, matching the family's own hex idiom, see
 /// `f6-recon-report.md` §5).
-pub(crate) async fn enc_bytes(v: &[u8]) -> String {
-    hex_encode(v).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bytes(v: &[u8]) -> String {
+    hex_encode(v)
 }
-pub(crate) async fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
-    hex_decode(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+    hex_decode(s)
 }
 //#endregion 🔖️BufferGroupCodecs
 
 //#region 🔖️TextureImageSamplerSkinGroupCodecs
-pub(crate) async fn enc_texture(t: &GltfTexture) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_texture(t: &GltfTexture) -> String {
     format!("[{},{},{},{},{}]", encode_option(&t.sampler, |v| v.to_string()), encode_option(&t.source, |v| v.to_string()), encode_option(&t.name, |v| enc_str(v)), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json),)
 }
-pub(crate) async fn dec_texture(s: &str) -> Result<GltfTexture, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_texture(s: &str) -> Result<GltfTexture, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [sampler, source, name, extensions, extras] = parts.as_slice() else { return Err(format!("texture: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfTexture { sampler: decode_option(sampler, parse_usize).await?, source: decode_option(source, parse_usize).await?, name: decode_option(name, dec_str).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfTexture { sampler: decode_option(sampler, parse_usize)?, source: decode_option(source, parse_usize)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_image(i: &GltfImage) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_image(i: &GltfImage) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&i.uri, |v| enc_str(v)),
@@ -2358,19 +2469,21 @@ pub(crate) async fn enc_image(i: &GltfImage) -> String {
         encode_option(&i.extras, enc_json),
     )
 }
-pub(crate) async fn dec_image(s: &str) -> Result<GltfImage, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_image(s: &str) -> Result<GltfImage, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [uri, mime_type, buffer_view, name, extensions, extras] = parts.as_slice() else { return Err(format!("image: expected 6 fields, got {}", parts.len())) };
     Ok(GltfImage {
-        uri: decode_option(uri, dec_str).await?,
-        mime_type: decode_option(mime_type, dec_str).await?,
-        buffer_view: decode_option(buffer_view, parse_usize).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        uri: decode_option(uri, dec_str)?,
+        mime_type: decode_option(mime_type, dec_str)?,
+        buffer_view: decode_option(buffer_view, parse_usize)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_sampler(s: &GltfSampler) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_sampler(s: &GltfSampler) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         encode_option(&s.mag_filter, |v| enc_u64(*v)),
@@ -2382,22 +2495,24 @@ pub(crate) async fn enc_sampler(s: &GltfSampler) -> String {
         encode_option(&s.extras, enc_json),
     )
 }
-pub(crate) async fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [mag_filter, min_filter, wrap_s, wrap_t, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("sampler: expected 7 fields, got {}", parts.len()));
     };
     Ok(GltfSampler {
-        mag_filter: decode_option(mag_filter, dec_u64).await?,
-        min_filter: decode_option(min_filter, dec_u64).await?,
-        wrap_s: dec_u64(wrap_s).await?,
-        wrap_t: dec_u64(wrap_t).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        mag_filter: decode_option(mag_filter, dec_u64)?,
+        min_filter: decode_option(min_filter, dec_u64)?,
+        wrap_s: dec_u64(wrap_s)?,
+        wrap_t: dec_u64(wrap_t)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_skin(v: &GltfSkin) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_skin(v: &GltfSkin) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&v.inverse_bind_matrices, |x| x.to_string()),
@@ -2408,48 +2523,56 @@ pub(crate) async fn enc_skin(v: &GltfSkin) -> String {
         encode_option(&v.extras, enc_json),
     )
 }
-pub(crate) async fn dec_skin(s: &str) -> Result<GltfSkin, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_skin(s: &str) -> Result<GltfSkin, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [inverse_bind_matrices, skeleton, joints, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("skin: expected 6 fields, got {}", parts.len()));
     };
     Ok(GltfSkin {
-        inverse_bind_matrices: decode_option(inverse_bind_matrices, parse_usize).await?,
-        skeleton: decode_option(skeleton, parse_usize).await?,
-        joints: dec_usize_vec(joints).await?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        inverse_bind_matrices: decode_option(inverse_bind_matrices, parse_usize)?,
+        skeleton: decode_option(skeleton, parse_usize)?,
+        joints: dec_usize_vec(joints)?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
 //#endregion 🔖️TextureImageSamplerSkinGroupCodecs
 
 //#region 🔖️AnimationGroupCodecs
-pub(crate) async fn enc_animation_channel_target(t: &GltfAnimationChannelTarget) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_channel_target(t: &GltfAnimationChannelTarget) -> String {
     format!("[{},{},{},{}]", encode_option(&t.node, |v| v.to_string()), enc_animation_path(t.path), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json))
 }
-pub(crate) async fn dec_animation_channel_target(s: &str) -> Result<GltfAnimationChannelTarget, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_channel_target(s: &str) -> Result<GltfAnimationChannelTarget, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [node, path, extensions, extras] = parts.as_slice() else { return Err(format!("animation channel target: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfAnimationChannelTarget { node: decode_option(node, parse_usize).await?, path: dec_animation_path(path).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfAnimationChannelTarget { node: decode_option(node, parse_usize)?, path: dec_animation_path(path)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_animation_channel(c: &GltfAnimationChannel) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_channel(c: &GltfAnimationChannel) -> String {
     format!("[{},{},{},{}]", c.sampler, enc_animation_channel_target(&c.target), encode_option(&c.extensions, enc_json), encode_option(&c.extras, enc_json))
 }
-pub(crate) async fn dec_animation_channel(s: &str) -> Result<GltfAnimationChannel, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_channel(s: &str) -> Result<GltfAnimationChannel, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [sampler, target, extensions, extras] = parts.as_slice() else { return Err(format!("animation channel: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfAnimationChannel { sampler: parse_usize(sampler).await?, target: dec_animation_channel_target(target).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfAnimationChannel { sampler: parse_usize(sampler)?, target: dec_animation_channel_target(target)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_animation_sampler(s: &GltfAnimationSampler) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_sampler(s: &GltfAnimationSampler) -> String {
     format!("[{},{},{},{},{}]", s.input, enc_interpolation(s.interpolation), s.output, encode_option(&s.extensions, enc_json), encode_option(&s.extras, enc_json))
 }
-pub(crate) async fn dec_animation_sampler(s: &str) -> Result<GltfAnimationSampler, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_sampler(s: &str) -> Result<GltfAnimationSampler, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [input, interpolation, output, extensions, extras] = parts.as_slice() else { return Err(format!("animation sampler: expected 5 fields, got {}", parts.len())) };
-    Ok(GltfAnimationSampler { input: parse_usize(input).await?, interpolation: dec_interpolation(interpolation).await?, output: parse_usize(output).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfAnimationSampler { input: parse_usize(input)?, interpolation: dec_interpolation(interpolation)?, output: parse_usize(output)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
-pub(crate) async fn enc_animation(a: &GltfAnimation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation(a: &GltfAnimation) -> String {
     format!(
         "[{},{},{},{},{}]",
         format!("[{}]", a.channels.iter().map(enc_animation_channel).collect::<Vec<_>>().join(",")),
@@ -2459,66 +2582,75 @@ pub(crate) async fn enc_animation(a: &GltfAnimation) -> String {
         encode_option(&a.extras, enc_json),
     )
 }
-pub(crate) async fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation(s: &str) -> Result<GltfAnimation, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [channels, samplers, name, extensions, extras] = parts.as_slice() else { return Err(format!("animation: expected 5 fields, got {}", parts.len())) };
     Ok(GltfAnimation {
-        channels: split_top_level(strip_brackets(channels).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_channel).collect::<Result<Vec<_>, String>>()?,
-        samplers: split_top_level(strip_brackets(samplers).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_sampler).collect::<Result<Vec<_>, String>>()?,
-        name: decode_option(name, dec_str).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        channels: split_top_level(strip_brackets(channels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_channel).collect::<Result<Vec<_>, String>>()?,
+        samplers: split_top_level(strip_brackets(samplers)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_sampler).collect::<Result<Vec<_>, String>>()?,
+        name: decode_option(name, dec_str)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
 //#endregion 🔖️AnimationGroupCodecs
 
 //#region 🔖️CameraGroupCodecs
-pub(crate) async fn enc_perspective(p: &GltfPerspective) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_perspective(p: &GltfPerspective) -> String {
     format!("[{},{},{},{},{},{}]", encode_option(&p.aspect_ratio, |v| enc_f64(*v)), enc_f64(p.yfov), encode_option(&p.zfar, |v| enc_f64(*v)), enc_f64(p.znear), encode_option(&p.extensions, enc_json), encode_option(&p.extras, enc_json),)
 }
-pub(crate) async fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_perspective(s: &str) -> Result<GltfPerspective, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [aspect_ratio, yfov, zfar, znear, extensions, extras] = parts.as_slice() else { return Err(format!("perspective: expected 6 fields, got {}", parts.len())) };
     Ok(GltfPerspective {
-        aspect_ratio: decode_option(aspect_ratio, dec_f64).await?,
-        yfov: dec_f64(yfov).await?,
-        zfar: decode_option(zfar, dec_f64).await?,
-        znear: dec_f64(znear).await?,
-        extensions: decode_option(extensions, dec_json).await?,
-        extras: decode_option(extras, dec_json).await?,
+        aspect_ratio: decode_option(aspect_ratio, dec_f64)?,
+        yfov: dec_f64(yfov)?,
+        zfar: decode_option(zfar, dec_f64)?,
+        znear: dec_f64(znear)?,
+        extensions: decode_option(extensions, dec_json)?,
+        extras: decode_option(extras, dec_json)?,
     })
 }
-pub(crate) async fn enc_orthographic(o: &GltfOrthographic) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_orthographic(o: &GltfOrthographic) -> String {
     format!("[{},{},{},{},{},{}]", enc_f64(o.xmag), enc_f64(o.ymag), enc_f64(o.zfar), enc_f64(o.znear), encode_option(&o.extensions, enc_json), encode_option(&o.extras, enc_json))
 }
-pub(crate) async fn dec_orthographic(s: &str) -> Result<GltfOrthographic, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_orthographic(s: &str) -> Result<GltfOrthographic, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [xmag, ymag, zfar, znear, extensions, extras] = parts.as_slice() else { return Err(format!("orthographic: expected 6 fields, got {}", parts.len())) };
-    Ok(GltfOrthographic { xmag: dec_f64(xmag).await?, ymag: dec_f64(ymag).await?, zfar: dec_f64(zfar).await?, znear: dec_f64(znear).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfOrthographic { xmag: dec_f64(xmag)?, ymag: dec_f64(ymag)?, zfar: dec_f64(zfar)?, znear: dec_f64(znear)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 /// 🔀️ `GltfCameraProjection` is a real data-carrying enum (§3a) -- tag prefix `P`=Perspective,
 /// `O`=Orthographic.
-pub(crate) async fn enc_camera_projection(p: &GltfCameraProjection) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_camera_projection(p: &GltfCameraProjection) -> String {
     match p {
         GltfCameraProjection::Perspective(v) => format!("P{}", enc_perspective(v)),
         GltfCameraProjection::Orthographic(v) => format!("O{}", enc_orthographic(v)),
     }
 }
-pub(crate) async fn dec_camera_projection(s: &str) -> Result<GltfCameraProjection, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_camera_projection(s: &str) -> Result<GltfCameraProjection, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
-        "P" => Ok(GltfCameraProjection::Perspective(dec_perspective(rest).await?)),
-        "O" => Ok(GltfCameraProjection::Orthographic(dec_orthographic(rest).await?)),
+        "P" => Ok(GltfCameraProjection::Perspective(dec_perspective(rest)?)),
+        "O" => Ok(GltfCameraProjection::Orthographic(dec_orthographic(rest)?)),
         other => Err(format!("camera projection: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_camera(c: &GltfCamera) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_camera(c: &GltfCamera) -> String {
     format!("[{},{},{},{}]", enc_camera_projection(&c.projection), encode_option(&c.name, |v| enc_str(v)), encode_option(&c.extensions, enc_json), encode_option(&c.extras, enc_json))
 }
-pub(crate) async fn dec_camera(s: &str) -> Result<GltfCamera, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_camera(s: &str) -> Result<GltfCamera, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [projection, name, extensions, extras] = parts.as_slice() else { return Err(format!("camera: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfCamera { projection: dec_camera_projection(projection).await?, name: decode_option(name, dec_str).await?, extensions: decode_option(extensions, dec_json).await?, extras: decode_option(extras, dec_json).await? })
+    Ok(GltfCamera { projection: dec_camera_projection(projection)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 //#endregion 🔖️CameraGroupCodecs
 
@@ -2527,17 +2659,19 @@ pub(crate) async fn dec_camera(s: &str) -> Result<GltfCamera, String> {
 /// (STRONG entities pass a real per-item diff encoder; WEAK entities pass the same `enc_item`/
 /// `dec_item` for both `enc_item`/`enc_diff` via `GltfWeakCollectionDiff<T> = GltfCollectionDiff<T,
 /// T>`) -- one real generic codec, not 14 hand-duplicated ones.
-pub(crate) async fn enc_collection<T, D>(c: &GltfCollectionDiff<T, D>, enc_item: impl Fn(&T) -> String, enc_diff: impl Fn(&D) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_collection<T, D>(c: &GltfCollectionDiff<T, D>, enc_item: impl Fn(&T) -> String, enc_diff: impl Fn(&D) -> String) -> String {
     let removed = c.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = c.modified.iter().map(|m| format!("{}:{}", m.index, enc_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = c.added.iter().map(|a| format!("{}:{}", a.index, enc_item(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-pub(crate) async fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T, String>, dec_diff: impl Fn(&str) -> Result<D, String>) -> Result<GltfCollectionDiff<T, D>, String> {
-    let three = split_top_level(s, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T, String>, dec_diff: impl Fn(&str) -> Result<D, String>) -> Result<GltfCollectionDiff<T, D>, String> {
+    let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2545,7 +2679,7 @@ pub(crate) async fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Res
             Ok(GltfModified { index: parse_usize(idx)?, diff: dec_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2566,33 +2700,39 @@ pub(crate) async fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Res
 /// reachable with no `use` needed beyond the absolute path). `pub(crate)` so `🧬️mutations/
 /// 🦀️component.rs`'s hand-rolled `OpBinary` can reuse every one of these the same way it already
 /// reuses this module's TEXT `enc_*`/`dec_*` primitives.
-pub(crate) async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
-    let len = r.read_varint_u64().await? as usize;
-    Ok(r.read_bytes(len).await?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
 }
-pub(crate) async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
-pub(crate) async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
-    let bytes = read_bin_blob(r).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+    let bytes = read_bin_blob(r)?;
     String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gltf binary utf8 string", offset: 0, detail: e.to_string() })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
-pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(val) => {
             w.write_u8(1);
             write_value(w, val);
         }
     }
 }
-pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "gltf binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
@@ -2603,78 +2743,93 @@ pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: 
 /// chaining two `if`-guarded conditional fields at the PROTOCOL-DESCRIPTION level,
 /// `protocol-cond-cannot-chain`; the Rust codec here has no such limitation but keeps the same
 /// 3-way-flag SHAPE for parity with `../💾️binary/📡️component.protocol.semio`).
-pub(crate) async fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
-        Some(None) => w.write_u8(1).await,
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
         Some(Some(val)) => {
             w.write_u8(2);
             write_value(w, val);
         }
     }
 }
-pub(crate) async fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
         other => Err(dsl::PackError::Malformed { what: "gltf binary tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
-pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
     }
 }
-pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
-    let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n.min(1 << 20));
     for _ in 0..n {
         out.push(read_item(r)?);
     }
     Ok(out)
 }
-pub(crate) async fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[f64; N]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[f64; N]) {
     for x in v {
         w.write_f64_le(*x);
     }
 }
-pub(crate) async fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackError> {
     let mut out = [0.0f64; N];
     for slot in out.iter_mut() {
-        *slot = r.read_f64_le().await?;
+        *slot = r.read_f64_le()?;
     }
     Ok(out)
 }
-pub(crate) async fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
     write_bin_vec(w, v, |w, x| w.write_f64_le(*x));
 }
-pub(crate) async fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
-    read_bin_vec(r, |r| r.read_f64_le()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
+    read_bin_vec(r, |r| r.read_f64_le())
 }
-pub(crate) async fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
     write_bin_vec(w, v, |w, x: &usize| w.write_varint_u64(*x as u64));
 }
-pub(crate) async fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
-    read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
+    read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))
 }
-pub(crate) async fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
     write_bin_vec(w, v, |w, s: &String| write_bin_str(w, s));
 }
-pub(crate) async fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackError> {
-    read_bin_vec(r, read_bin_str).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackError> {
+    read_bin_vec(r, read_bin_str)
 }
-pub(crate) async fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)]) {
     write_bin_vec(w, v, |w, (k, idx): &(String, usize)| {
         write_bin_str(w, k);
         w.write_varint_u64(*idx as u64);
     });
 }
-pub(crate) async fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackError> {
-    read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize))).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackError> {
+    read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
 }
-pub(crate) async fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gltf binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -2682,9 +2837,10 @@ pub(crate) async fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
 //#region 🔖️RealBinaryJsonCodec
 /// 🌳 `GltfJson` -- genuinely recursive real binary: tag `u8` (0=Null,1=Bool,2=Number,3=String,
 /// 4=Array,5=Object) then the payload, matching `enc_json`/`dec_json`'s own tag scheme.
-pub(crate) async fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
     match v {
-        GltfJson::Null => w.write_u8(0).await,
+        GltfJson::Null => w.write_u8(0),
         GltfJson::Bool(b) => {
             w.write_u8(1);
             w.write_u8(if *b { 1 } else { 0 });
@@ -2710,22 +2866,25 @@ pub(crate) async fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
         }
     }
 }
-pub(crate) async fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(GltfJson::Null),
-        1 => Ok(GltfJson::Bool(r.read_u8().await? != 0)),
-        2 => Ok(GltfJson::Number(r.read_f64_le().await?)),
-        3 => Ok(GltfJson::String(read_bin_str(r).await?)),
-        4 => Ok(GltfJson::Array(read_bin_vec(r, read_bin_json).await?)),
-        5 => Ok(GltfJson::Object(read_bin_vec(r, |r| Ok((read_bin_str(r)?, read_bin_json(r)?))).await?)),
+        1 => Ok(GltfJson::Bool(r.read_u8()? != 0)),
+        2 => Ok(GltfJson::Number(r.read_f64_le()?)),
+        3 => Ok(GltfJson::String(read_bin_str(r)?)),
+        4 => Ok(GltfJson::Array(read_bin_vec(r, read_bin_json)?)),
+        5 => Ok(GltfJson::Object(read_bin_vec(r, |r| Ok((read_bin_str(r)?, read_bin_json(r)?)))?)),
         other => Err(dsl::PackError::Malformed { what: "gltf json binary tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) async fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) {
     write_bin_option(w, v, write_bin_json);
 }
-pub(crate) async fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackError> {
-    read_bin_option(r, read_bin_json).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackError> {
+    read_bin_option(r, read_bin_json)
 }
 //#endregion 🔖️RealBinaryJsonCodec
 
@@ -2733,16 +2892,19 @@ pub(crate) async fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Opt
 /// 🔢️ Real spec numeric code (5120..5126), matching `GltfComponentType::code`/`from_code` exactly
 /// -- NOT a re-derived discriminant table (the spec code IS this enum's real wire value, same one
 /// the artifact's own `serde` impl emits).
-pub(crate) async fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponentType) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponentType) {
     w.write_u32_le(t.code() as u32);
 }
-pub(crate) async fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackError> {
-    GltfComponentType::from_code(r.read_u32_le().await? as u64).await.map_err(|e| dsl::PackError::Malformed { what: "gltf component_type", offset: 0, detail: e })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackError> {
+    GltfComponentType::from_code(r.read_u32_le()? as u64).map_err(|e| dsl::PackError::Malformed { what: "gltf component_type", offset: 0, detail: e })
 }
 /// 🔢️ Compact `u8` discriminants for the remaining small unit-variant enums (real spec strings
 /// only exist on the TEXT side; the binary frame is free to use its own dense encoding since
 /// nothing outside this codec pair ever reads these bytes directly).
-pub(crate) async fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorType) {
     w.write_u8(match t {
         GltfAccessorType::Scalar => 0,
         GltfAccessorType::Vec2 => 1,
@@ -2753,8 +2915,9 @@ pub(crate) async fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAcce
         GltfAccessorType::Mat4 => 6,
     });
 }
-pub(crate) async fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackError> {
-    Ok(match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackError> {
+    Ok(match r.read_u8()? {
         0 => GltfAccessorType::Scalar,
         1 => GltfAccessorType::Vec2,
         2 => GltfAccessorType::Vec3,
@@ -2765,37 +2928,42 @@ pub(crate) async fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Resul
         other => return Err(dsl::PackError::Malformed { what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) async fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
     w.write_u8(match m {
         GltfAlphaMode::Opaque => 0,
         GltfAlphaMode::Mask => 1,
         GltfAlphaMode::Blend => 2,
     });
 }
-pub(crate) async fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackError> {
-    Ok(match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackError> {
+    Ok(match r.read_u8()? {
         0 => GltfAlphaMode::Opaque,
         1 => GltfAlphaMode::Mask,
         2 => GltfAlphaMode::Blend,
         other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) async fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolation) {
     w.write_u8(match i {
         GltfInterpolation::Linear => 0,
         GltfInterpolation::Step => 1,
         GltfInterpolation::CubicSpline => 2,
     });
 }
-pub(crate) async fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackError> {
-    Ok(match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackError> {
+    Ok(match r.read_u8()? {
         0 => GltfInterpolation::Linear,
         1 => GltfInterpolation::Step,
         2 => GltfInterpolation::CubicSpline,
         other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) async fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimationPath) {
     w.write_u8(match p {
         GltfAnimationPath::Translation => 0,
         GltfAnimationPath::Rotation => 1,
@@ -2803,8 +2971,9 @@ pub(crate) async fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAni
         GltfAnimationPath::Weights => 3,
     });
 }
-pub(crate) async fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackError> {
-    Ok(match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackError> {
+    Ok(match r.read_u8()? {
         0 => GltfAnimationPath::Translation,
         1 => GltfAnimationPath::Rotation,
         2 => GltfAnimationPath::Scale,
@@ -2812,14 +2981,16 @@ pub(crate) async fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Resu
         other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
-pub(crate) async fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) {
     w.write_u8(match f {
         GltfSourceForm::Json => 0,
         GltfSourceForm::Glb => 1,
     });
 }
-pub(crate) async fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackError> {
-    Ok(match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackError> {
+    Ok(match r.read_u8()? {
         0 => GltfSourceForm::Json,
         1 => GltfSourceForm::Glb,
         other => return Err(dsl::PackError::Malformed { what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }),
@@ -2828,7 +2999,8 @@ pub(crate) async fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<
 //#endregion 🔖️RealBinaryUnitEnumCodecs
 
 //#region 🔖️RealBinaryAssetSceneNodeGroupCodecs
-pub(crate) async fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
     write_bin_option(w, &d.version, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.generator, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.copyright, |w, v| write_bin_str(w, v));
@@ -2836,35 +3008,41 @@ pub(crate) async fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetD
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackError> {
     Ok(GltfAssetDiff {
-        version: read_bin_option(r, read_bin_str).await?,
-        generator: read_bin_tri(r, read_bin_str).await?,
-        copyright: read_bin_tri(r, read_bin_str).await?,
-        min_version: read_bin_tri(r, read_bin_str).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        version: read_bin_option(r, read_bin_str)?,
+        generator: read_bin_tri(r, read_bin_str)?,
+        copyright: read_bin_tri(r, read_bin_str)?,
+        min_version: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) async fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
     write_bin_usize_vec(w, &sc.nodes);
     write_bin_option(w, &sc.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &sc.extensions);
     write_bin_json_opt(w, &sc.extras);
 }
-pub(crate) async fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackError> {
-    Ok(GltfScene { nodes: read_bin_usize_vec(r).await?, name: read_bin_option(r, read_bin_str).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackError> {
+    Ok(GltfScene { nodes: read_bin_usize_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
     write_bin_option(w, &d.nodes, |w, v| write_bin_usize_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackError> {
-    Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec).await?, name: read_bin_tri(r, read_bin_str).await?, extensions: read_bin_tri(r, read_bin_json).await?, extras: read_bin_tri(r, read_bin_json).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackError> {
+    Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
 }
-pub(crate) async fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_usize_vec(w, &n.children);
     write_bin_option(w, &n.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &n.camera, |w, v| w.write_varint_u64(*v as u64));
@@ -2878,23 +3056,25 @@ pub(crate) async fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_json_opt(w, &n.extensions);
     write_bin_json_opt(w, &n.extras);
 }
-pub(crate) async fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackError> {
     Ok(GltfNode {
-        children: read_bin_usize_vec(r).await?,
-        mesh: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        camera: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        skin: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        matrix: read_bin_option(r, read_bin_f64_array::<16>).await?,
-        translation: read_bin_option(r, read_bin_f64_array::<3>).await?,
-        rotation: read_bin_option(r, read_bin_f64_array::<4>).await?,
-        scale: read_bin_option(r, read_bin_f64_array::<3>).await?,
-        weights: read_bin_f64_vec(r).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        children: read_bin_usize_vec(r)?,
+        mesh: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        camera: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skin: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        matrix: read_bin_option(r, read_bin_f64_array::<16>)?,
+        translation: read_bin_option(r, read_bin_f64_array::<3>)?,
+        rotation: read_bin_option(r, read_bin_f64_array::<4>)?,
+        scale: read_bin_option(r, read_bin_f64_array::<3>)?,
+        weights: read_bin_f64_vec(r)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_option(w, &d.children, |w, v| write_bin_usize_vec(w, v));
     write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
@@ -2908,26 +3088,28 @@ pub(crate) async fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDif
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackError> {
     Ok(GltfNodeDiff {
-        children: read_bin_option(r, read_bin_usize_vec).await?,
-        mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        camera: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        skin: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        matrix: read_bin_tri(r, read_bin_f64_array::<16>).await?,
-        translation: read_bin_tri(r, read_bin_f64_array::<3>).await?,
-        rotation: read_bin_tri(r, read_bin_f64_array::<4>).await?,
-        scale: read_bin_tri(r, read_bin_f64_array::<3>).await?,
-        weights: read_bin_option(r, read_bin_f64_vec).await?,
-        name: read_bin_tri(r, read_bin_str).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        children: read_bin_option(r, read_bin_usize_vec)?,
+        mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        camera: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skin: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        matrix: read_bin_tri(r, read_bin_f64_array::<16>)?,
+        translation: read_bin_tri(r, read_bin_f64_array::<3>)?,
+        rotation: read_bin_tri(r, read_bin_f64_array::<4>)?,
+        scale: read_bin_tri(r, read_bin_f64_array::<3>)?,
+        weights: read_bin_option(r, read_bin_f64_vec)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
 //#endregion 🔖️RealBinaryAssetSceneNodeGroupCodecs
 
 //#region 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
-pub(crate) async fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_attr_pairs(w, &p.attributes);
     write_bin_option(w, &p.indices, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &p.material, |w, v| w.write_varint_u64(*v as u64));
@@ -2936,73 +3118,87 @@ pub(crate) async fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimiti
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
 }
-pub(crate) async fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackError> {
     Ok(GltfPrimitive {
-        attributes: read_bin_attr_pairs(r).await?,
-        indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        material: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        mode: read_bin_option(r, |r| r.read_varint_u64()).await?,
-        targets: read_bin_vec(r, |r| semio_framework_plugin::resolve_ready(read_bin_attr_pairs(r)).map(GltfMorphTarget)).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        attributes: read_bin_attr_pairs(r)?,
+        indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        material: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        mode: read_bin_option(r, |r| r.read_varint_u64())?,
+        targets: read_bin_vec(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget))?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitive]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitive]) {
     write_bin_vec(w, v, write_bin_primitive);
 }
-pub(crate) async fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
-    read_bin_vec(r, read_bin_primitive).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
+    read_bin_vec(r, read_bin_primitive)
 }
-pub(crate) async fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
     write_bin_primitive_vec(w, &m.primitives);
     write_bin_f64_vec(w, &m.weights);
     write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &m.extensions);
     write_bin_json_opt(w, &m.extras);
 }
-pub(crate) async fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackError> {
-    Ok(GltfMesh { primitives: read_bin_primitive_vec(r).await?, weights: read_bin_f64_vec(r).await?, name: read_bin_option(r, read_bin_str).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackError> {
+    Ok(GltfMesh { primitives: read_bin_primitive_vec(r)?, weights: read_bin_f64_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
     write_bin_option(w, &d.primitives, |w, v| write_bin_primitive_vec(w, v));
     write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackError> {
     Ok(GltfMeshDiff {
-        primitives: read_bin_option(r, read_bin_primitive_vec).await?,
-        weights: read_bin_option(r, read_bin_f64_vec).await?,
-        name: read_bin_tri(r, read_bin_str).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        primitives: read_bin_option(r, read_bin_primitive_vec)?,
+        weights: read_bin_option(r, read_bin_f64_vec)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) async fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIndices) {
     w.write_varint_u64(v.buffer_view as u64);
     w.write_varint_u64(v.byte_offset as u64);
     write_bin_component_type(w, v.component_type);
 }
-pub(crate) async fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackError> {
-    Ok(GltfSparseIndices { buffer_view: r.read_varint_u64().await? as usize, byte_offset: r.read_varint_u64().await? as usize, component_type: read_bin_component_type(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackError> {
+    Ok(GltfSparseIndices { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize, component_type: read_bin_component_type(r)? })
 }
-pub(crate) async fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseValues) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseValues) {
     w.write_varint_u64(v.buffer_view as u64);
     w.write_varint_u64(v.byte_offset as u64);
 }
-pub(crate) async fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackError> {
-    Ok(GltfSparseValues { buffer_view: r.read_varint_u64().await? as usize, byte_offset: r.read_varint_u64().await? as usize })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackError> {
+    Ok(GltfSparseValues { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize })
 }
-pub(crate) async fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseAccessor) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseAccessor) {
     w.write_varint_u64(v.count as u64);
     write_bin_sparse_indices(w, &v.indices);
     write_bin_sparse_values(w, &v.values);
 }
-pub(crate) async fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackError> {
-    Ok(GltfSparseAccessor { count: r.read_varint_u64().await? as usize, indices: read_bin_sparse_indices(r).await?, values: read_bin_sparse_values(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackError> {
+    Ok(GltfSparseAccessor { count: r.read_varint_u64()? as usize, indices: read_bin_sparse_indices(r)?, values: read_bin_sparse_values(r)? })
 }
-pub(crate) async fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
     write_bin_option(w, &a.buffer_view, |w, v| w.write_varint_u64(*v as u64));
     w.write_varint_u64(a.byte_offset as u64);
     write_bin_component_type(w, a.component_type);
@@ -3016,23 +3212,25 @@ pub(crate) async fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor
     write_bin_json_opt(w, &a.extensions);
     write_bin_json_opt(w, &a.extras);
 }
-pub(crate) async fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackError> {
     Ok(GltfAccessor {
-        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        byte_offset: r.read_varint_u64().await? as usize,
-        component_type: read_bin_component_type(r).await?,
-        normalized: r.read_u8().await? != 0,
-        count: r.read_varint_u64().await? as usize,
-        kind: read_bin_accessor_type(r).await?,
-        max: read_bin_option(r, read_bin_f64_vec).await?,
-        min: read_bin_option(r, read_bin_f64_vec).await?,
-        sparse: read_bin_option(r, read_bin_sparse_accessor).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_offset: r.read_varint_u64()? as usize,
+        component_type: read_bin_component_type(r)?,
+        normalized: r.read_u8()? != 0,
+        count: r.read_varint_u64()? as usize,
+        kind: read_bin_accessor_type(r)?,
+        max: read_bin_option(r, read_bin_f64_vec)?,
+        min: read_bin_option(r, read_bin_f64_vec)?,
+        sparse: read_bin_option(r, read_bin_sparse_accessor)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
     write_bin_tri(w, &d.buffer_view, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &d.byte_offset, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &d.component_type, |w, v| write_bin_component_type(w, *v));
@@ -3046,52 +3244,60 @@ pub(crate) async fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAcc
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackError> {
     Ok(GltfAccessorDiff {
-        buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        component_type: read_bin_option(r, read_bin_component_type).await?,
-        normalized: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
-        count: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        kind: read_bin_option(r, read_bin_accessor_type).await?,
-        max: read_bin_tri(r, read_bin_f64_vec).await?,
-        min: read_bin_tri(r, read_bin_f64_vec).await?,
-        sparse: read_bin_tri(r, read_bin_sparse_accessor).await?,
-        name: read_bin_tri(r, read_bin_str).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        component_type: read_bin_option(r, read_bin_component_type)?,
+        normalized: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        count: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        kind: read_bin_option(r, read_bin_accessor_type)?,
+        max: read_bin_tri(r, read_bin_f64_vec)?,
+        min: read_bin_tri(r, read_bin_f64_vec)?,
+        sparse: read_bin_tri(r, read_bin_sparse_accessor)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) async fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInfo) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackError> {
-    Ok(GltfTextureInfo { index: r.read_varint_u64().await? as usize, tex_coord: r.read_varint_u64().await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackError> {
+    Ok(GltfTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNormalTextureInfo) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNormalTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     w.write_f64_le(v.scale);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackError> {
-    Ok(GltfNormalTextureInfo { index: r.read_varint_u64().await? as usize, tex_coord: r.read_varint_u64().await?, scale: r.read_f64_le().await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackError> {
+    Ok(GltfNormalTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, scale: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &GltfOcclusionTextureInfo) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &GltfOcclusionTextureInfo) {
     w.write_varint_u64(v.index as u64);
     w.write_varint_u64(v.tex_coord);
     w.write_f64_le(v.strength);
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
-    Ok(GltfOcclusionTextureInfo { index: r.read_varint_u64().await? as usize, tex_coord: r.read_varint_u64().await?, strength: r.read_f64_le().await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
+    Ok(GltfOcclusionTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, strength: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughness) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughness) {
     write_bin_f64_array::<4>(w, &v.base_color_factor);
     write_bin_option(w, &v.base_color_texture, write_bin_texture_info);
     w.write_f64_le(v.metallic_factor);
@@ -3100,18 +3306,20 @@ pub(crate) async fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRo
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
     Ok(GltfPbrMetallicRoughness {
-        base_color_factor: read_bin_f64_array::<4>(r).await?,
-        base_color_texture: read_bin_option(r, read_bin_texture_info).await?,
-        metallic_factor: r.read_f64_le().await?,
-        roughness_factor: r.read_f64_le().await?,
-        metallic_roughness_texture: read_bin_option(r, read_bin_texture_info).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        base_color_factor: read_bin_f64_array::<4>(r)?,
+        base_color_texture: read_bin_option(r, read_bin_texture_info)?,
+        metallic_factor: r.read_f64_le()?,
+        roughness_factor: r.read_f64_le()?,
+        metallic_roughness_texture: read_bin_option(r, read_bin_texture_info)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
     write_bin_option(w, &m.name, |w, v| write_bin_str(w, v));
     write_bin_option(w, &m.pbr_metallic_roughness, write_bin_pbr);
     write_bin_option(w, &m.normal_texture, write_bin_normal_texture_info);
@@ -3124,22 +3332,24 @@ pub(crate) async fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial
     write_bin_json_opt(w, &m.extensions);
     write_bin_json_opt(w, &m.extras);
 }
-pub(crate) async fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackError> {
     Ok(GltfMaterial {
-        name: read_bin_option(r, read_bin_str).await?,
-        pbr_metallic_roughness: read_bin_option(r, read_bin_pbr).await?,
-        normal_texture: read_bin_option(r, read_bin_normal_texture_info).await?,
-        occlusion_texture: read_bin_option(r, read_bin_occlusion_texture_info).await?,
-        emissive_texture: read_bin_option(r, read_bin_texture_info).await?,
-        emissive_factor: read_bin_f64_array::<3>(r).await?,
-        alpha_mode: read_bin_alpha_mode(r).await?,
-        alpha_cutoff: r.read_f64_le().await?,
-        double_sided: r.read_u8().await? != 0,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        name: read_bin_option(r, read_bin_str)?,
+        pbr_metallic_roughness: read_bin_option(r, read_bin_pbr)?,
+        normal_texture: read_bin_option(r, read_bin_normal_texture_info)?,
+        occlusion_texture: read_bin_option(r, read_bin_occlusion_texture_info)?,
+        emissive_texture: read_bin_option(r, read_bin_texture_info)?,
+        emissive_factor: read_bin_f64_array::<3>(r)?,
+        alpha_mode: read_bin_alpha_mode(r)?,
+        alpha_cutoff: r.read_f64_le()?,
+        double_sided: r.read_u8()? != 0,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialDiff) {
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.pbr_metallic_roughness, write_bin_pbr);
     write_bin_tri(w, &d.normal_texture, write_bin_normal_texture_info);
@@ -3152,51 +3362,57 @@ pub(crate) async fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMat
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackError> {
     Ok(GltfMaterialDiff {
-        name: read_bin_tri(r, read_bin_str).await?,
-        pbr_metallic_roughness: read_bin_tri(r, read_bin_pbr).await?,
-        normal_texture: read_bin_tri(r, read_bin_normal_texture_info).await?,
-        occlusion_texture: read_bin_tri(r, read_bin_occlusion_texture_info).await?,
-        emissive_texture: read_bin_tri(r, read_bin_texture_info).await?,
-        emissive_factor: read_bin_option(r, read_bin_f64_array::<3>).await?,
-        alpha_mode: read_bin_option(r, read_bin_alpha_mode).await?,
-        alpha_cutoff: read_bin_option(r, |r| r.read_f64_le()).await?,
-        double_sided: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        name: read_bin_tri(r, read_bin_str)?,
+        pbr_metallic_roughness: read_bin_tri(r, read_bin_pbr)?,
+        normal_texture: read_bin_tri(r, read_bin_normal_texture_info)?,
+        occlusion_texture: read_bin_tri(r, read_bin_occlusion_texture_info)?,
+        emissive_texture: read_bin_tri(r, read_bin_texture_info)?,
+        emissive_factor: read_bin_option(r, read_bin_f64_array::<3>)?,
+        alpha_mode: read_bin_option(r, read_bin_alpha_mode)?,
+        alpha_cutoff: read_bin_option(r, |r| r.read_f64_le())?,
+        double_sided: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
 //#endregion 🔖️RealBinaryMeshAccessorMaterialGroupCodecs
 
 //#region 🔖️RealBinaryBufferGroupCodecs
-pub(crate) async fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
     w.write_varint_u64(b.byte_length as u64);
     write_bin_option(w, &b.uri, |w, v| write_bin_str(w, v));
     write_bin_option(w, &b.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &b.extensions);
     write_bin_json_opt(w, &b.extras);
 }
-pub(crate) async fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackError> {
-    Ok(GltfBuffer { byte_length: r.read_varint_u64().await? as usize, uri: read_bin_option(r, read_bin_str).await?, name: read_bin_option(r, read_bin_str).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackError> {
+    Ok(GltfBuffer { byte_length: r.read_varint_u64()? as usize, uri: read_bin_option(r, read_bin_str)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
     write_bin_option(w, &d.byte_length, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.uri, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
-pub(crate) async fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackError> {
     Ok(GltfBufferDiff {
-        byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        uri: read_bin_tri(r, read_bin_str).await?,
-        name: read_bin_tri(r, read_bin_str).await?,
-        extensions: read_bin_tri(r, read_bin_json).await?,
-        extras: read_bin_tri(r, read_bin_json).await?,
+        byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        uri: read_bin_tri(r, read_bin_str)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
     })
 }
-pub(crate) async fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView) {
     w.write_varint_u64(v.buffer as u64);
     w.write_varint_u64(v.byte_offset as u64);
     w.write_varint_u64(v.byte_length as u64);
@@ -3206,38 +3422,42 @@ pub(crate) async fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBuffe
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackError> {
     Ok(GltfBufferView {
-        buffer: r.read_varint_u64().await? as usize,
-        byte_offset: r.read_varint_u64().await? as usize,
-        byte_length: r.read_varint_u64().await? as usize,
-        byte_stride: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        target: read_bin_option(r, |r| r.read_varint_u64()).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        buffer: r.read_varint_u64()? as usize,
+        byte_offset: r.read_varint_u64()? as usize,
+        byte_length: r.read_varint_u64()? as usize,
+        byte_stride: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        target: read_bin_option(r, |r| r.read_varint_u64())?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
 //#endregion 🔖️RealBinaryBufferGroupCodecs
 
 //#region 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
-pub(crate) async fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
     write_bin_option(w, &t.sampler, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &t.source, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &t.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
 }
-pub(crate) async fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackError> {
     Ok(GltfTexture {
-        sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_option(w, &i.uri, |w, v| write_bin_str(w, v));
     write_bin_option(w, &i.mime_type, |w, v| write_bin_str(w, v));
     write_bin_option(w, &i.buffer_view, |w, v| w.write_varint_u64(*v as u64));
@@ -3245,17 +3465,19 @@ pub(crate) async fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_json_opt(w, &i.extensions);
     write_bin_json_opt(w, &i.extras);
 }
-pub(crate) async fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackError> {
     Ok(GltfImage {
-        uri: read_bin_option(r, read_bin_str).await?,
-        mime_type: read_bin_option(r, read_bin_str).await?,
-        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        uri: read_bin_option(r, read_bin_str)?,
+        mime_type: read_bin_option(r, read_bin_str)?,
+        buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
     write_bin_option(w, &s.mag_filter, |w, v| w.write_varint_u64(*v));
     write_bin_option(w, &s.min_filter, |w, v| w.write_varint_u64(*v));
     w.write_varint_u64(s.wrap_s);
@@ -3264,18 +3486,20 @@ pub(crate) async fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) 
     write_bin_json_opt(w, &s.extensions);
     write_bin_json_opt(w, &s.extras);
 }
-pub(crate) async fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackError> {
     Ok(GltfSampler {
-        mag_filter: read_bin_option(r, |r| r.read_varint_u64()).await?,
-        min_filter: read_bin_option(r, |r| r.read_varint_u64()).await?,
-        wrap_s: r.read_varint_u64().await?,
-        wrap_t: r.read_varint_u64().await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        mag_filter: read_bin_option(r, |r| r.read_varint_u64())?,
+        min_filter: read_bin_option(r, |r| r.read_varint_u64())?,
+        wrap_s: r.read_varint_u64()?,
+        wrap_t: r.read_varint_u64()?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
-pub(crate) async fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
     write_bin_option(w, &v.inverse_bind_matrices, |w, x| w.write_varint_u64(*x as u64));
     write_bin_option(w, &v.skeleton, |w, x| w.write_varint_u64(*x as u64));
     write_bin_usize_vec(w, &v.joints);
@@ -3283,61 +3507,71 @@ pub(crate) async fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
 }
-pub(crate) async fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackError> {
     Ok(GltfSkin {
-        inverse_bind_matrices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        skeleton: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?,
-        joints: read_bin_usize_vec(r).await?,
-        name: read_bin_option(r, read_bin_str).await?,
-        extensions: read_bin_json_opt(r).await?,
-        extras: read_bin_json_opt(r).await?,
+        inverse_bind_matrices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skeleton: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        joints: read_bin_usize_vec(r)?,
+        name: read_bin_option(r, read_bin_str)?,
+        extensions: read_bin_json_opt(r)?,
+        extras: read_bin_json_opt(r)?,
     })
 }
 //#endregion 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
 
 //#region 🔖️RealBinaryAnimationGroupCodecs
-pub(crate) async fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
     write_bin_option(w, &t.node, |w, v| w.write_varint_u64(*v as u64));
     write_bin_animation_path(w, t.path);
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
 }
-pub(crate) async fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
-    Ok(GltfAnimationChannelTarget { node: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize)).await?, path: read_bin_animation_path(r).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
+    Ok(GltfAnimationChannelTarget { node: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, path: read_bin_animation_path(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnimationChannel) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnimationChannel) {
     w.write_varint_u64(c.sampler as u64);
     write_bin_animation_channel_target(w, &c.target);
     write_bin_json_opt(w, &c.extensions);
     write_bin_json_opt(w, &c.extras);
 }
-pub(crate) async fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackError> {
-    Ok(GltfAnimationChannel { sampler: r.read_varint_u64().await? as usize, target: read_bin_animation_channel_target(r).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackError> {
+    Ok(GltfAnimationChannel { sampler: r.read_varint_u64()? as usize, target: read_bin_animation_channel_target(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnimationSampler) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnimationSampler) {
     w.write_varint_u64(s.input as u64);
     write_bin_interpolation(w, s.interpolation);
     w.write_varint_u64(s.output as u64);
     write_bin_json_opt(w, &s.extensions);
     write_bin_json_opt(w, &s.extras);
 }
-pub(crate) async fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackError> {
-    Ok(GltfAnimationSampler { input: r.read_varint_u64().await? as usize, interpolation: read_bin_interpolation(r).await?, output: r.read_varint_u64().await? as usize, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackError> {
+    Ok(GltfAnimationSampler { input: r.read_varint_u64()? as usize, interpolation: read_bin_interpolation(r)?, output: r.read_varint_u64()? as usize, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
     write_bin_vec(w, &a.channels, write_bin_animation_channel);
     write_bin_vec(w, &a.samplers, write_bin_animation_sampler);
     write_bin_option(w, &a.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &a.extensions);
     write_bin_json_opt(w, &a.extras);
 }
-pub(crate) async fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackError> {
-    Ok(GltfAnimation { channels: read_bin_vec(r, read_bin_animation_channel).await?, samplers: read_bin_vec(r, read_bin_animation_sampler).await?, name: read_bin_option(r, read_bin_str).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackError> {
+    Ok(GltfAnimation { channels: read_bin_vec(r, read_bin_animation_channel)?, samplers: read_bin_vec(r, read_bin_animation_sampler)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryAnimationGroupCodecs
 
 //#region 🔖️RealBinaryCameraGroupCodecs
-pub(crate) async fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
     write_bin_option(w, &p.aspect_ratio, |w, v| w.write_f64_le(*v));
     w.write_f64_le(p.yfov);
     write_bin_option(w, &p.zfar, |w, v| w.write_f64_le(*v));
@@ -3345,10 +3579,12 @@ pub(crate) async fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPersp
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
 }
-pub(crate) async fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackError> {
-    Ok(GltfPerspective { aspect_ratio: read_bin_option(r, |r| r.read_f64_le()).await?, yfov: r.read_f64_le().await?, zfar: read_bin_option(r, |r| r.read_f64_le()).await?, znear: r.read_f64_le().await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackError> {
+    Ok(GltfPerspective { aspect_ratio: read_bin_option(r, |r| r.read_f64_le())?, yfov: r.read_f64_le()?, zfar: read_bin_option(r, |r| r.read_f64_le())?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
-pub(crate) async fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthographic) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthographic) {
     w.write_f64_le(o.xmag);
     w.write_f64_le(o.ymag);
     w.write_f64_le(o.zfar);
@@ -3356,11 +3592,13 @@ pub(crate) async fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrth
     write_bin_json_opt(w, &o.extensions);
     write_bin_json_opt(w, &o.extras);
 }
-pub(crate) async fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackError> {
-    Ok(GltfOrthographic { xmag: r.read_f64_le().await?, ymag: r.read_f64_le().await?, zfar: r.read_f64_le().await?, znear: r.read_f64_le().await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackError> {
+    Ok(GltfOrthographic { xmag: r.read_f64_le()?, ymag: r.read_f64_le()?, zfar: r.read_f64_le()?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 /// 🔀️ `GltfCameraProjection` real data-carrying enum -- tag `u8` (0=Perspective, 1=Orthographic).
-pub(crate) async fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCameraProjection) {
     match p {
         GltfCameraProjection::Perspective(v) => {
             w.write_u8(0);
@@ -3372,21 +3610,24 @@ pub(crate) async fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &Glt
         }
     }
 }
-pub(crate) async fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackError> {
-    match r.read_u8().await? {
-        0 => Ok(GltfCameraProjection::Perspective(read_bin_perspective(r).await?)),
-        1 => Ok(GltfCameraProjection::Orthographic(read_bin_orthographic(r).await?)),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(GltfCameraProjection::Perspective(read_bin_perspective(r)?)),
+        1 => Ok(GltfCameraProjection::Orthographic(read_bin_orthographic(r)?)),
         other => Err(dsl::PackError::Malformed { what: "gltf camera_projection", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) async fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
     write_bin_camera_projection(w, &c.projection);
     write_bin_option(w, &c.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &c.extensions);
     write_bin_json_opt(w, &c.extras);
 }
-pub(crate) async fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackError> {
-    Ok(GltfCamera { projection: read_bin_camera_projection(r).await?, name: read_bin_option(r, read_bin_str).await?, extensions: read_bin_json_opt(r).await?, extras: read_bin_json_opt(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackError> {
+    Ok(GltfCamera { projection: read_bin_camera_projection(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryCameraGroupCodecs
 
@@ -3394,7 +3635,8 @@ pub(crate) async fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfC
 /// 🧮️ Generic index-keyed collection triple real binary codec, shared by every one of the 14
 /// top-level arrays -- mirrors `enc_collection`/`dec_collection`'s TEXT shape exactly, real varint
 /// counts + real per-item recursive encoding (never text-as-bytes).
-pub(crate) async fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
     write_bin_vec(w, &c.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| {
         w.write_varint_u64(m.index as u64);
@@ -3405,22 +3647,23 @@ pub(crate) async fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &Gltf
         write_item(w, &a.item);
     });
 }
-pub(crate) async fn read_bin_collection<T, D>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_collection<T, D>(
     r: &mut dsl::ByteReader<'_>,
     read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
     read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
 ) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
-    let removed = read_bin_usize_vec(r).await?;
+    let removed = read_bin_usize_vec(r)?;
     let modified = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
         let diff = read_diff(r)?;
         Ok(GltfModified { index, diff })
-    }).await?;
+    })?;
     let added = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
         let item = read_item(r)?;
         Ok(GltfAdded { index, item })
-    }).await?;
+    })?;
     Ok(GltfCollectionDiff { removed, modified, added })
 }
 /// 🧵 A single opaque length-prefixed blob wrapping one collection's real binary encoding --
@@ -3428,23 +3671,26 @@ pub(crate) async fn read_bin_collection<T, D>(
 /// blob's OWN internal removed/modified/added shape isn't further protocol-walkable,
 /// `protocol-prim-ref-recursion`/`protocol-array-of-records`, same documented limitation as every
 /// other stdio pilot's own nested-payload field).
-pub(crate) async fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
-    let mut inner = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
+    let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_collection(&mut inner, c, write_item, write_diff);
-    inner.into_bytes().await
+    inner.into_bytes()
 }
-pub(crate) async fn read_bin_collection_blob<T, D>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_collection_blob<T, D>(
     bytes: &[u8],
     read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
     read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
 ) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
-    let mut inner = dsl::ByteReader::new(bytes);
-    read_bin_collection(&mut inner, read_item, read_diff).await
+    let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    read_bin_collection(&mut inner, read_item, read_diff)
 }
 //#endregion 🔖️RealBinaryGenericCollectionCodec
 
 //#region 🔖️TopLevel
-async fn print_gltf_diff(d: &GltfDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_gltf_diff(d: &GltfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.asset {
         tokens.push(format!("asset={}", enc_asset_diff(v)));
@@ -3511,54 +3757,55 @@ async fn print_gltf_diff(d: &GltfDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
     let mut d = GltfDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("asset=") {
-            d.asset = Some(dec_asset_diff(rest).await?);
+            d.asset = Some(dec_asset_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("scene=") {
-            d.scene = Some(decode_option(rest, parse_usize).await?);
+            d.scene = Some(decode_option(rest, parse_usize)?);
         } else if let Some(rest) = token.strip_prefix("scenes=") {
-            d.scenes = Some(dec_collection(rest, dec_scene, dec_scene_diff).await?);
+            d.scenes = Some(dec_collection(rest, dec_scene, dec_scene_diff)?);
         } else if let Some(rest) = token.strip_prefix("nodes=") {
-            d.nodes = Some(dec_collection(rest, dec_node, dec_node_diff).await?);
+            d.nodes = Some(dec_collection(rest, dec_node, dec_node_diff)?);
         } else if let Some(rest) = token.strip_prefix("meshes=") {
-            d.meshes = Some(dec_collection(rest, dec_mesh, dec_mesh_diff).await?);
+            d.meshes = Some(dec_collection(rest, dec_mesh, dec_mesh_diff)?);
         } else if let Some(rest) = token.strip_prefix("accessors=") {
-            d.accessors = Some(dec_collection(rest, dec_accessor, dec_accessor_diff).await?);
+            d.accessors = Some(dec_collection(rest, dec_accessor, dec_accessor_diff)?);
         } else if let Some(rest) = token.strip_prefix("buffer-views=") {
-            d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view).await?);
+            d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view)?);
         } else if let Some(rest) = token.strip_prefix("buffer-bytes=") {
-            d.buffer_bytes = Some(dec_collection(rest, dec_bytes, dec_bytes).await?);
+            d.buffer_bytes = Some(dec_collection(rest, dec_bytes, dec_bytes)?);
         } else if let Some(rest) = token.strip_prefix("buffers=") {
-            d.buffers = Some(dec_collection(rest, dec_buffer, dec_buffer_diff).await?);
+            d.buffers = Some(dec_collection(rest, dec_buffer, dec_buffer_diff)?);
         } else if let Some(rest) = token.strip_prefix("materials=") {
-            d.materials = Some(dec_collection(rest, dec_material, dec_material_diff).await?);
+            d.materials = Some(dec_collection(rest, dec_material, dec_material_diff)?);
         } else if let Some(rest) = token.strip_prefix("textures=") {
-            d.textures = Some(dec_collection(rest, dec_texture, dec_texture).await?);
+            d.textures = Some(dec_collection(rest, dec_texture, dec_texture)?);
         } else if let Some(rest) = token.strip_prefix("images=") {
-            d.images = Some(dec_collection(rest, dec_image, dec_image).await?);
+            d.images = Some(dec_collection(rest, dec_image, dec_image)?);
         } else if let Some(rest) = token.strip_prefix("samplers=") {
-            d.samplers = Some(dec_collection(rest, dec_sampler, dec_sampler).await?);
+            d.samplers = Some(dec_collection(rest, dec_sampler, dec_sampler)?);
         } else if let Some(rest) = token.strip_prefix("skins=") {
-            d.skins = Some(dec_collection(rest, dec_skin, dec_skin).await?);
+            d.skins = Some(dec_collection(rest, dec_skin, dec_skin)?);
         } else if let Some(rest) = token.strip_prefix("animations=") {
-            d.animations = Some(dec_collection(rest, dec_animation, dec_animation).await?);
+            d.animations = Some(dec_collection(rest, dec_animation, dec_animation)?);
         } else if let Some(rest) = token.strip_prefix("cameras=") {
-            d.cameras = Some(dec_collection(rest, dec_camera, dec_camera).await?);
+            d.cameras = Some(dec_collection(rest, dec_camera, dec_camera)?);
         } else if let Some(rest) = token.strip_prefix("extensions-used=") {
-            d.extensions_used = Some(dec_string_vec(rest).await?);
+            d.extensions_used = Some(dec_string_vec(rest)?);
         } else if let Some(rest) = token.strip_prefix("extensions-required=") {
-            d.extensions_required = Some(dec_string_vec(rest).await?);
+            d.extensions_required = Some(dec_string_vec(rest)?);
         } else if let Some(rest) = token.strip_prefix("extensions=") {
-            d.extensions = Some(decode_option(rest, dec_json).await?);
+            d.extensions = Some(decode_option(rest, dec_json)?);
         } else if let Some(rest) = token.strip_prefix("extras=") {
-            d.extras = Some(decode_option(rest, dec_json).await?);
+            d.extras = Some(decode_option(rest, dec_json)?);
         } else if let Some(rest) = token.strip_prefix("source-form=") {
-            d.source_form = Some(dec_source_form(rest).await?);
+            d.source_form = Some(dec_source_form(rest)?);
         } else {
             return Err(format!("gltf diff: unknown token {token:?}"));
         }
@@ -3568,10 +3815,10 @@ async fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
 
 impl protocol::DiffCodec for GltfDiff {
     async fn print_diff(&self) -> String {
-        print_gltf_diff(self).await
+        print_gltf_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_gltf_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_gltf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
@@ -3594,9 +3841,9 @@ impl protocol::DiffCodec for GltfDiff {
         // past without knowing its byte length up front.
         write_bin_option(&mut w, &self.asset, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = dsl::ByteWriter::new();
+                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
                 write_bin_asset_diff(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.await.into_bytes())
+                semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
         write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
@@ -3616,139 +3863,139 @@ impl protocol::DiffCodec for GltfDiff {
         write_bin_option(&mut w, &self.cameras, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_camera, write_bin_camera)));
         write_bin_option(&mut w, &self.extensions_used, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = dsl::ByteWriter::new();
+                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
                 write_bin_string_vec(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.await.into_bytes())
+                semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
         write_bin_option(&mut w, &self.extensions_required, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = dsl::ByteWriter::new();
+                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
                 write_bin_string_vec(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.await.into_bytes())
+                semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
         write_bin_tri(&mut w, &self.extensions, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = dsl::ByteWriter::new();
+                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
                 write_bin_json(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.await.into_bytes())
+                semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
         write_bin_tri(&mut w, &self.extras, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = dsl::ByteWriter::new();
+                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
                 write_bin_json(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.await.into_bytes())
+                semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
         Ok(w.into_bytes().await)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes);
+        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
         let asset = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&b);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
             read_bin_asset_diff(&mut inner)
         })
-        .await.map_err(gltf_bin_err)?;
-        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
+        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(gltf_bin_err)?;
         let scenes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_scene, read_bin_scene_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let nodes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_node, read_bin_node_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let meshes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_mesh, read_bin_mesh_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let accessors = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_accessor, read_bin_accessor_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let buffer_views = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let buffers = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_buffer, read_bin_buffer_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let buffer_bytes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_blob, read_bin_blob)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let materials = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_material, read_bin_material_diff)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let textures = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_texture, read_bin_texture)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let images = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_image, read_bin_image)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let samplers = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_sampler, read_bin_sampler)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let skins = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_skin, read_bin_skin)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let animations = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_animation, read_bin_animation)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let cameras = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_camera, read_bin_camera)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let extensions_used = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&b);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
             read_bin_string_vec(&mut inner)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let extensions_required = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&b);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
             read_bin_string_vec(&mut inner)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let extensions = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&b);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
             read_bin_json(&mut inner)
         })
-        .await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
         let extras = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&b);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
             read_bin_json(&mut inner)
         })
-        .await.map_err(gltf_bin_err)?;
-        let source_form = read_bin_option(&mut r, read_bin_source_form).await.map_err(gltf_bin_err)?;
+        .map_err(gltf_bin_err)?;
+        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(gltf_bin_err)?;
         Ok(GltfDiff { asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, buffer_bytes, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras, source_form })
     }
 }
@@ -3762,16 +4009,20 @@ mod tests {
     use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 
     //#region 🔖️Fixtures
-    async fn scene(seed: usize) -> GltfScene {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scene(seed: usize) -> GltfScene {
         GltfScene { nodes: vec![seed, seed + 1], name: Some(format!("scene{seed}")), extensions: None, extras: None }
     }
-    async fn node(seed: usize) -> GltfNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node(seed: usize) -> GltfNode {
         GltfNode { children: vec![seed], mesh: Some(seed), name: Some(format!("node{seed}")), ..GltfNode::default() }
     }
-    async fn mesh(seed: usize) -> GltfMesh {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn mesh(seed: usize) -> GltfMesh {
         GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), seed)], material: Some(seed), mode: Some(4), ..GltfPrimitive::default() }], name: Some(format!("mesh{seed}")), ..GltfMesh::default() }
     }
-    async fn accessor(seed: usize) -> GltfAccessor {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn accessor(seed: usize) -> GltfAccessor {
         GltfAccessor {
             buffer_view: Some(seed),
             byte_offset: 0,
@@ -3787,17 +4038,21 @@ mod tests {
             extras: None,
         }
     }
-    async fn material(seed: usize) -> GltfMaterial {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn material(seed: usize) -> GltfMaterial {
         GltfMaterial { name: Some(format!("mat{seed}")), double_sided: seed % 2 == 0, ..GltfMaterial::default() }
     }
-    async fn buffer_meta(seed: usize) -> GltfBuffer {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn buffer_meta(seed: usize) -> GltfBuffer {
         GltfBuffer { byte_length: seed * 4, uri: None, name: Some(format!("buf{seed}")), extensions: None, extras: None }
     }
-    async fn animation(seed: usize) -> GltfAnimation {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn animation(seed: usize) -> GltfAnimation {
         GltfAnimation { name: Some(format!("anim{seed}")), ..GltfAnimation::default() }
     }
 
-    async fn base_snapshot() -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4080,7 +4335,8 @@ mod handcrafted_diff_codec_tests {
     use protocol::DiffCodec;
 
     //#region 🔖️Fixtures
-    async fn node_tristate_a() -> GltfNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node_tristate_a() -> GltfNode {
         GltfNode {
             children: vec![0, 1],
             mesh: Some(0),
@@ -4099,7 +4355,8 @@ mod handcrafted_diff_codec_tests {
     /// 🎯️ Every one of `node_tristate_a`'s nullable fields flips the OTHER way (`Some -> None` OR
     /// `None -> Some`), so `between()` exercises `Some(None)` on `mesh`/`camera`/`skin`/`matrix`/
     /// `extensions` AND `Some(Some(_))` on `translation`/`rotation`/`scale`/`extras` in one pair.
-    async fn node_tristate_b() -> GltfNode {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn node_tristate_b() -> GltfNode {
         GltfNode {
             children: vec![2],
             mesh: None,
@@ -4115,26 +4372,30 @@ mod handcrafted_diff_codec_tests {
             extras: Some(GltfJson::Array(vec![GltfJson::Null, GltfJson::Number(-1.5), GltfJson::String("x".into())])),
         }
     }
-    async fn accessor_sparse_a() -> GltfAccessor {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn accessor_sparse_a() -> GltfAccessor {
         GltfAccessor { buffer_view: Some(1), byte_offset: 0, component_type: GltfComponentType::UnsignedShort, normalized: true, count: 4, kind: GltfAccessorType::Vec2, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
     }
     /// 🎯️ `sparse` flips `None -> Some(GltfSparseAccessor{..})` -- the one accessor field not
     /// exercised by `sweep_a`/`sweep_b` above.
-    async fn accessor_sparse_b() -> GltfAccessor {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn accessor_sparse_b() -> GltfAccessor {
         GltfAccessor {
             sparse: Some(GltfSparseAccessor { count: 2, indices: GltfSparseIndices { buffer_view: 2, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 3, byte_offset: 0 } }),
             max: Some(vec![1.0, 1.0]),
             ..accessor_sparse_a()
         }
     }
-    async fn material_textures_a() -> GltfMaterial {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn material_textures_a() -> GltfMaterial {
         GltfMaterial::default()
     }
     /// 🎯️ Every optional texture slot (`pbr_metallic_roughness`/`normal_texture`/
     /// `occlusion_texture`/`emissive_texture`) flips `None -> Some(_)` -- none of which
     /// `sweep_a`/`sweep_b` above touch (both leave `GltfMaterial::default()`'s texture slots at
     /// `None`).
-    async fn material_textures_b() -> GltfMaterial {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn material_textures_b() -> GltfMaterial {
         GltfMaterial {
             pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }), ..Default::default() }),
             normal_texture: Some(GltfNormalTextureInfo { index: 1, tex_coord: 0, scale: 2.0, extensions: None, extras: None }),
@@ -4144,13 +4405,16 @@ mod handcrafted_diff_codec_tests {
             ..GltfMaterial::default()
         }
     }
-    async fn buffer_uri_a() -> GltfBuffer {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn buffer_uri_a() -> GltfBuffer {
         GltfBuffer { byte_length: 4, uri: Some("data:...".into()), name: None, extensions: None, extras: None }
     }
-    async fn buffer_uri_b() -> GltfBuffer {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn buffer_uri_b() -> GltfBuffer {
         GltfBuffer { uri: None, ..buffer_uri_a() }
     }
-    async fn camera_orthographic() -> GltfCamera {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn camera_orthographic() -> GltfCamera {
         GltfCamera {
             projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: Some(GltfJson::Null) }),
             name: None,
@@ -4159,7 +4423,8 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    async fn tristate_snapshot_a() -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn tristate_snapshot_a() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4175,7 +4440,8 @@ mod handcrafted_diff_codec_tests {
             source_form: GltfSourceForm::Json,
         }
     }
-    async fn tristate_snapshot_b() -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn tristate_snapshot_b() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {

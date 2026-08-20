@@ -7,7 +7,8 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::S
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateColumn, _base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &CreateColumn, _base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
     vec![SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: payload.name.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -7173,6 +7173,7 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
+ "semio-framework-ui-scene",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7310,6 +7311,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-os-kernel",
+ "semio-framework-ui-scene",
  "semio-framework-ui-styling",
  "serde",
  "serde_json",
@@ -7420,6 +7422,17 @@ name = "semio-framework-ui-runtime"
 version = "0.1.0"
 dependencies = [
  "semio-framework-ui-contract",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-scene"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "semio-framework-ui-contract",
+ "serde",
  "serde_json",
 ]
 
@@ -7680,6 +7693,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

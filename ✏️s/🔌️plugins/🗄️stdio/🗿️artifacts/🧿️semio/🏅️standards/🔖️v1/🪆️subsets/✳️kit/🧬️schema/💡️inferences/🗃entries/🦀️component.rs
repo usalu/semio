@@ -28,7 +28,8 @@ pub struct SemioKitEntries {
 
 /// 🗃️ Computes [`SemioKitEntries`] — pure, total, O(types + designs + pieces + connections +
 /// objects + models + representations).
-pub async fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries {
     let piece_count = snapshot.designs.iter().map(|d| d.pieces.len() as u32).sum();
     let connection_count = snapshot.designs.iter().map(|d| d.connections.len() as u32).sum();
     SemioKitEntries {
@@ -54,7 +55,8 @@ mod tests {
     /// 🌱 A hand-built, non-empty catalog: 2 types, 2 designs (one with 2 pieces + 1 connection,
     /// one empty), no children/representations — exercises the real fold without depending on the
     /// composite subset's own child-handle demo fixture.
-    async fn populated() -> SemioKitSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioKitSnapshot {
         SemioKitSnapshot {
             schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(),
             types: vec![SemioKitType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }, SemioKitType { id: "table".into(), name: "Table".into(), category: "furniture".into() }],

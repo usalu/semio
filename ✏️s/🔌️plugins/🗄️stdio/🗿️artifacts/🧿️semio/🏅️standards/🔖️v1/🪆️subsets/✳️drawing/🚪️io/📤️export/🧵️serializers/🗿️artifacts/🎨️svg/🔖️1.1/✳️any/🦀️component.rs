@@ -23,7 +23,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
 
 //#region 🔖️PathBuild
-async fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
     segs.iter()
         .map(|s| match *s {
             PathSegment::MoveTo { to } => PathCommand::MoveTo { x: to.x, y: to.y, relative: false },
@@ -38,7 +39,8 @@ async fn segments_to_commands(segs: &[PathSegment]) -> Vec<PathCommand> {
 //#endregion 🔖️PathBuild
 
 //#region 🔖️TransformCompose
-async fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
     let theta = 2.0 * t.rotation.z.atan2(t.rotation.w);
     let (sin, cos) = theta.sin_cos();
     Matrix2D { a: cos * t.scale.x, b: sin * t.scale.x, c: -sin * t.scale.y, d: cos * t.scale.y, e: t.translation.x, f: t.translation.y }
@@ -46,20 +48,22 @@ async fn semio_transform_to_matrix(t: &SemioTransform) -> Matrix2D {
 //#endregion 🔖️TransformCompose
 
 //#region 🔖️Style
-async fn color_to_css(c: &SemioRgba) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn color_to_css(c: &SemioRgba) -> String {
     format!("rgba({},{},{},{})", (c.r * 255.0).round(), (c.g * 255.0).round(), (c.b * 255.0).round(), c.a)
 }
 
-async fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttrs {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttrs {
     let mut common = CommonAttrs::default();
     if let Some(name) = style_name {
         if let Some(s) = styles.iter().find(|s| s.name == name) {
             let mut p = PresentationAttrs::default();
             if let Some(fill) = &s.fill {
-                p.fill = Some(color_to_css(fill).await);
+                p.fill = Some(color_to_css(fill));
             }
             if let Some(stroke) = &s.stroke {
-                p.stroke = Some(color_to_css(stroke).await);
+                p.stroke = Some(color_to_css(stroke));
             }
             if let Some(sw) = s.stroke_width {
                 p.stroke_width = Some(sw.to_string());
@@ -79,7 +83,8 @@ const IMAGE_DATA_URI_ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 
 /// 🔤️ Minimal, dependency-free base64 encoder (mirror of the import leaf's decoder) — same
 /// no-external-libraries rule.
-async fn base64_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base64_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
     for chunk in bytes.chunks(3) {
         let b0 = chunk[0];
@@ -94,12 +99,13 @@ async fn base64_encode(bytes: &[u8]) -> String {
     out
 }
 
-async fn svg_element_from_draw_node(node: &DrawNode, styles: &[DrawStyle]) -> SvgElement {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn svg_element_from_draw_node(node: &DrawNode, styles: &[DrawStyle]) -> SvgElement {
     match node {
-        DrawNode::Path { segments, style } => SvgElement::Path { common: style_to_common(style.as_deref(), styles).await, d: segments_to_commands(segments).await },
-        DrawNode::Text { value, at, style } => SvgElement::Text { common: style_to_common(style.as_deref(), styles).await, x: Some(at.x), y: Some(at.y), children: vec![SvgElement::TextNode(value.clone())] },
+        DrawNode::Path { segments, style } => SvgElement::Path { common: style_to_common(style.as_deref(), styles), d: segments_to_commands(segments) },
+        DrawNode::Text { value, at, style } => SvgElement::Text { common: style_to_common(style.as_deref(), styles), x: Some(at.x), y: Some(at.y), children: vec![SvgElement::TextNode(value.clone())] },
         DrawNode::Group { transform, children } => {
-            let m = semio_transform_to_matrix(transform).await;
+            let m = semio_transform_to_matrix(transform);
             SvgElement::Group {
                 common: CommonAttrs { transform: Some(vec![TransformOp::Matrix { a: m.a, b: m.b, c: m.c, d: m.d, e: m.e, f: m.f }]), ..Default::default() },
                 children: children.iter().map(|c| svg_element_from_draw_node(c, styles)).collect(),
@@ -149,7 +155,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root).await), doctype: None, declaration: None, prolog: Vec::new() } })
+        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer
@@ -161,7 +167,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
-    async fn sample_drawing() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             canvas: DrawCanvas { width: 100.0, height: 50.0, background: None },
             styles: vec![DrawStyle { name: "s0".into(), fill: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }],

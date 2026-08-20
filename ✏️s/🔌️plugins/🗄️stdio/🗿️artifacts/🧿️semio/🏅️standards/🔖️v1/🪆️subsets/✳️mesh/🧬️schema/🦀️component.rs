@@ -29,13 +29,16 @@ impl Default for SemioMeshArtifact {
 }
 
 impl SemioMeshArtifact {
-    pub async fn to_snapshot(&self) -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioMeshSnapshot {
         SemioMeshSnapshot { schema: self.schema.clone(), meshes: self.meshes.clone(), materials: self.materials.clone(), textures: self.textures.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
         Self { schema: snapshot.schema, meshes: snapshot.meshes, materials: snapshot.materials, textures: snapshot.textures }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
         self.schema = snapshot.schema;
         self.meshes = snapshot.meshes;
         self.materials = snapshot.materials;
@@ -43,7 +46,8 @@ impl SemioMeshArtifact {
     }
 }
 
-pub async fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_mesh_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.mesh",
         artifact: schema::FacetLeaves {

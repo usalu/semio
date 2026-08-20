@@ -20,7 +20,8 @@ pub struct DocxOutline {
 /// 🌳️ Recursively walks `blocks`, accumulating `(paragraph_count, table_count, word_count)` —
 /// table cells recurse into their own `blocks`, so a paragraph nested inside a table cell is
 /// counted exactly like a top-level one.
-async fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mut u32, word_count: &mut u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mut u32, word_count: &mut u32) {
     for block in blocks {
         match block {
             DocxBlock::Paragraph(paragraph) => {
@@ -42,7 +43,8 @@ async fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_coun
 }
 
 impl DocxOutline {
-    pub async fn compute(snapshot: &DocxSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &DocxSnapshot) -> Self {
         let mut paragraph_count = 0u32;
         let mut table_count = 0u32;
         let mut word_count = 0u32;

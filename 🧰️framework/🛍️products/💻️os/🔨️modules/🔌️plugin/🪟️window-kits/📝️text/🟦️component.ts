@@ -4,7 +4,7 @@
  * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §2.6). One language-tagged text buffer; `readOnly`
  * stamps `TextEditorScene.settingsJson` so the host renderer can disable input without a separate
  * view-model shape for the editable variant. */
-import type { LocalizedLabel, UiNode } from "@semio-tech/framework";
+import type { LocalizedLabel, UiComponentSceneNode } from "@semio-tech/framework";
 
 export const KIND_ID = "framework.window.text";
 
@@ -16,8 +16,8 @@ export type TextView = {
   readonly readOnly: boolean;
 };
 
-/** 🖼️ Renders a {@link TextView} into a `text-editor` component-scene `UiNode`. */
-export function render(view: TextView): UiNode {
+/** 🖼️ Renders a {@link TextView} into a `text-editor` component-scene node. */
+export function render(view: TextView): UiComponentSceneNode {
   return {
     type: "componentScene",
     surfaceId: KIND_ID,

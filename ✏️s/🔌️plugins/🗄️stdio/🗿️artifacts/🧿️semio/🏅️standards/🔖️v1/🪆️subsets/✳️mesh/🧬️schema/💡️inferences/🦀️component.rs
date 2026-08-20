@@ -72,7 +72,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::mesh:
 /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` (aggregates all 14 `s.stdio.semio.*` subsets'
 /// `register()` calls) — out of this ticket's `✳️mesh/`-only edit scope, same boundary brep's own
 /// wave already flagged. Flagged under `## sharedFileRequests` in the wave report, not wired here.
-pub async fn semio_mesh_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_mesh_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.mesh.inference",
         inference: schema::FacetLeaves {

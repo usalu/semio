@@ -12,8 +12,9 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
-    async fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
-        diagnostics.extend(outcome.messages().await.iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
             span: dsl::TextSpan::at(1, 1),
@@ -23,7 +24,8 @@ pub mod derived_construction {
         }));
     }
 
-    async fn seeded_document() -> Part21Document {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [FMHandOverView]".into())]), Part21Value::Str("2;1".into())],
             file_name: vec![],
@@ -45,12 +47,14 @@ pub mod derived_construction {
     }
 
     impl Ifc2x3CobieBuilderConstruction {
-        pub async fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document().await, edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
-        pub async fn add_space(mut self, name: &str) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_space(mut self, name: &str) -> Self {
             let id = self.next_id;
             self.next_id += 1;
             let instance = Part21Instance { id, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])] };
@@ -72,7 +76,7 @@ pub mod derived_construction {
         type Diff = Ifc2x3Diff;
 
         async fn empty() -> Self {
-            Self::new().await
+            Self::new()
         }
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, next_id: 100, diagnostics: Vec::new() }
@@ -144,17 +148,21 @@ pub mod derived_analysis {
     pub const CODE_TYPE_ASSIGNMENT: &str = "stdio.ifc.2x3.cobie.missing-type-assignment";
     //#endregion 🔖️Codes
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| semio_framework_plugin::resolve_ready(v.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
+        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
-    async fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
         snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
     }
 
@@ -162,7 +170,8 @@ pub mod derived_analysis {
     /// 🛡️ Real Basic FM Handover (COBie) conformance checks. Shared source of truth for
     /// `Ifc2x3CobieComposer::compose`, `Ifc2x3CobieBuilder::build`, and the registered
     /// `SubsetValidator`.
-    pub async fn check_cobie_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_cobie_conformance(snapshot: &Ifc2x3Snapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !declares_schema(snapshot, "IFC2X3") {
             out.push(hard(CODE_FILE_SCHEMA, "FILE_SCHEMA does not declare IFC2X3".into()));
@@ -188,7 +197,7 @@ pub mod derived_analysis {
             ));
         }
 
-        let has_type = snapshot.document.instances.iter().any(|i| semio_framework_plugin::resolve_ready(i.primary()).map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
+        let has_type = snapshot.document.instances.iter().any(|i| i.primary().map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
         let has_type_rel = snapshot.document.by_type("IFCRELDEFINESBYTYPE").next().is_some();
         if !has_type || !has_type_rel {
             out.push(soft(CODE_TYPE_ASSIGNMENT, "no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type".into()));
@@ -214,7 +223,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_cobie_conformance(snapshot).await;
+                let checks = check_cobie_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -231,7 +240,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        async fn header(view: &str) -> Part21Header {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn header(view: &str) -> Part21Header {
             Part21Header {
                 file_description: vec![Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]), Part21Value::Str("2;1".into())],
                 file_name: vec![],
@@ -239,7 +249,8 @@ pub mod derived_analysis {
             }
         }
 
-        async fn conforming_snapshot() -> Ifc2x3Snapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_snapshot() -> Ifc2x3Snapshot {
             let space = Part21Instance { id: 1, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str("guid".into()), Part21Value::Unset, Part21Value::Str("Room 101".into())])] };
             let building = Part21Instance { id: 2, entities: vec![("IFCBUILDING".into(), vec![])] };
             let storey = Part21Instance { id: 3, entities: vec![("IFCBUILDINGSTOREY".into(), vec![])] };

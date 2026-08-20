@@ -3,6 +3,7 @@ use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::M
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &Mp4Snapshot, mutation: &Mp4Mutation) -> Vec<Mp4Mutation> {
-    <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &Mp4Snapshot, mutation: &Mp4Mutation) -> Vec<Mp4Mutation> {
+    <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(mutation, base)
 }

@@ -26,7 +26,7 @@ pub struct LasInference {
 
 impl protocol::Inference<LasSnapshot> for LasInference {
     async fn infer(snapshot: &LasSnapshot) -> Self {
-        Self { bounds: compute_las_bounds(snapshot).await }
+        Self { bounds: compute_las_bounds(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::las::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.las.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `las_artifact_schema_descriptor`'s registration.
-pub async fn las_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn las_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.las.inference",
         inference: schema::FacetLeaves {

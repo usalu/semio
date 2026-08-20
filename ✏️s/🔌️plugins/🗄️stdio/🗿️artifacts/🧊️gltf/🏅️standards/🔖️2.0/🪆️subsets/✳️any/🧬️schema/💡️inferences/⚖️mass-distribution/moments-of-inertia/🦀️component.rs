@@ -12,23 +12,28 @@ impl GltfInferenceLeaf for GltfMomentsOfInertiaInference {
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.moments-of-inertia.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.moments-of-inertia.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub async fn descriptor() -> GltfInferenceLeafDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfMomentsOfInertiaInference::DESCRIPTOR
 }
 
-pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
     let eigenvalues = context.principal_frame.eigenvalues;
     GltfVec3::new([eigenvalues[1] + eigenvalues[2], eigenvalues[0] + eigenvalues[2], eigenvalues[0] + eigenvalues[1]])
 }
-pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     estimate(raw(context), GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }
 
-pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.mass.moments_of_inertia)
 }
 

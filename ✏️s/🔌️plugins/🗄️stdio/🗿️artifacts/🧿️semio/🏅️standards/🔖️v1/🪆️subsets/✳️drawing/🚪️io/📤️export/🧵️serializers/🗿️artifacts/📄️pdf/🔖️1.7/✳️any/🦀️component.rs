@@ -13,7 +13,8 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
 
-async fn collect_text(node: &DrawNode, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn collect_text(node: &DrawNode, out: &mut String) {
     match node {
         DrawNode::Text { value, .. } => {
             if !out.is_empty() {
@@ -64,7 +65,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment};
 
-    async fn sample_drawing() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             canvas: DrawCanvas { width: 200.0, height: 100.0, background: None },
             layers: vec![DrawLayer {

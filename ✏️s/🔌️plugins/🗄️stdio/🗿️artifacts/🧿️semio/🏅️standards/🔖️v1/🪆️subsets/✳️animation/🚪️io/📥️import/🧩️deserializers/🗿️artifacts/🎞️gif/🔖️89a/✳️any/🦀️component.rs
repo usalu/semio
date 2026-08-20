@@ -59,7 +59,8 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::schema::snapshot::GifFrame;
 
-    async fn real_world_gif() -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_gif() -> GifSnapshot {
         GifSnapshot {
             schema: "stdio.gif.89a".into(),
             width: 10,

@@ -17,7 +17,8 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 const GL5_NODES: [f64; 5] = [-0.906_179_845_938_664, -0.538_469_310_105_683_1, 0.0, 0.538_469_310_105_683_1, 0.906_179_845_938_664];
 const GL5_WEIGHTS: [f64; 5] = [0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891];
 
-async fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
     let mid = 0.5 * (a + b);
     let half = 0.5 * (b - a);
     GL5_NODES.iter().zip(GL5_WEIGHTS.iter()).map(|(&x, &w)| w * f(mid + half * x)).sum::<f64>() * half
@@ -26,20 +27,22 @@ async fn gauss_legendre5(f: impl Fn(f64) -> f64, a: f64, b: f64) -> f64 {
 /// 📏️ Adaptive-quadrature arc length of `curve` over `[t0, t1]`: recursively halves the interval
 /// until the 5-point Gauss-Legendre estimate agrees with the sum of its two half-interval
 /// estimates to within `tol` (Richardson-style error control), or `max_depth` is reached.
-pub async fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
-    arc_length_recursive(curve, t0, t1, tol, 24).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
+    arc_length_recursive(curve, t0, t1, tol, 24)
 }
 
-async fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) -> f64 {
-    let speed = |t: f64| semio_framework_plugin::resolve_ready(curve.d1(t)).norm();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) -> f64 {
+    let speed = |t: f64| curve.d1(t).norm();
     let whole = gauss_legendre5(speed, t0, t1);
     if depth == 0 {
-        return whole.await;
+        return whole;
     }
     let mid = 0.5 * (t0 + t1);
     let left = gauss_legendre5(speed, t0, mid);
     let right = gauss_legendre5(speed, mid, t1);
-    if (whole - (left + right)).await.abs() < tol {
+    if (whole - (left + right)).abs() < tol {
         left + right
     } else {
         arc_length_recursive(curve, t0, mid, tol * 0.5, depth - 1) + arc_length_recursive(curve, mid, t1, tol * 0.5, depth - 1)
@@ -48,12 +51,13 @@ async fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth:
 
 /// 📏️ Finds the parameter `t ∈ [t0, t1]` at which the arc length from `t0` equals `target_length`,
 /// via bisection on the (monotonic, since speed ≥ 0) length function.
-pub async fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f64, tol: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f64, tol: f64) -> f64 {
     let total = arc_length(curve, t0, t1, tol);
     if target_length <= 0.0 {
         return t0;
     }
-    if target_length >= total.await {
+    if target_length >= total {
         return t1;
     }
     let mut lo = t0;
@@ -81,12 +85,13 @@ pub async fn param_at_length(curve: &Curve3, t0: f64, t1: f64, target_length: f6
 /// (`samples` intervals) seeds a safeguarded Newton refinement of `f(t) = (C(t)-P)·C'(t) = 0`
 /// (the standard first-order optimality condition for point-curve distance) from the best sample
 /// and its neighbors, keeping the global best result found. Returns `(t, distance)`.
-pub async fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> (f64, f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> (f64, f64) {
     let mut best_t = domain.0;
-    let mut best_d2 = curve.eval(domain.0).await.distance_sq(target);
+    let mut best_d2 = curve.eval(domain.0).distance_sq(target);
     for i in 0..=samples {
         let t = domain.0 + (domain.1 - domain.0) * (i as f64 / samples as f64);
-        let d2 = curve.eval(t).await.distance_sq(target);
+        let d2 = curve.eval(t).distance_sq(target);
         if d2 < best_d2 {
             best_d2 = d2;
             best_t = t;
@@ -95,16 +100,17 @@ pub async fn closest_point(curve: &Curve3, domain: (f64, f64), target: Pnt3, sam
     // For a periodic curve, the true minimum can sit just across the domain boundary from the
     // best coarse sample (e.g. near angle 0 when the closest point is actually at 2π-ε) — a hard
     // clamp would trap Newton exactly at that boundary. Wrap into the period instead of clamping.
-    let refined = newton_closest_point(curve, target, best_t, domain, curve.period().await);
-    let refined_d2 = curve.eval(refined.await).await.distance_sq(target);
+    let refined = newton_closest_point(curve, target, best_t, domain, curve.period());
+    let refined_d2 = curve.eval(refined).distance_sq(target);
     if refined_d2 < best_d2 {
-        (refined.await, refined_d2.await.sqrt())
+        (refined, refined_d2.sqrt())
     } else {
-        (best_t, best_d2.await.sqrt())
+        (best_t, best_d2.sqrt())
     }
 }
 
-async fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
     match period {
         Some(p) => {
             let mut x = (t - domain.0) % p;
@@ -117,24 +123,25 @@ async fn wrap_into_domain(t: f64, domain: (f64, f64), period: Option<f64>) -> f6
     }
 }
 
-async fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: (f64, f64), period: Option<f64>) -> f64 {
     for _ in 0..30 {
         let c = curve.eval(t);
-        let d1 = curve.d1(t).await;
+        let d1 = curve.d1(t);
         let d2 = curve.d2(t);
         let delta = c - target;
         let f = delta.dot(d1);
-        let fp = d1.dot(d1).await + delta.dot(d2);
+        let fp = d1.dot(d1) + delta.dot(d2);
         if fp.abs() <= 1e-300 {
             break;
         }
         let step = f / fp;
         let next = wrap_into_domain(t - step, domain, period);
         if (next - t).abs() < 1e-13 {
-            t = next.await;
+            t = next;
             break;
         }
-        t = next.await;
+        t = next;
     }
     t
 }
@@ -143,7 +150,8 @@ async fn newton_closest_point(curve: &Curve3, target: Pnt3, mut t: f64, domain: 
 /// maxima), found by sign changes of `f(t) = (C(t)-P)·C'(t)` across a uniform sample, each refined
 /// by the same Newton step as [`closest_point`]. Used where a caller needs every critical point,
 /// not just the global closest (e.g. offset self-intersection analysis in later phases).
-pub async fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, samples: usize) -> Vec<f64> {
     let f = |t: f64| (curve.eval(t) - target).dot(curve.d1(t));
     let mut roots = Vec::new();
     let mut prev_t = domain.0;
@@ -154,7 +162,7 @@ pub async fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, sampl
         if prev_f == 0.0 {
             roots.push(prev_t);
         } else if prev_f.signum() != ft.signum() {
-            roots.push(newton_closest_point(curve, target, 0.5 * (prev_t + t), (prev_t, t), None).await);
+            roots.push(newton_closest_point(curve, target, 0.5 * (prev_t + t), (prev_t, t), None));
         }
         prev_t = t;
         prev_f = ft;
@@ -172,7 +180,8 @@ pub async fn all_extrema(curve: &Curve3, domain: (f64, f64), target: Pnt3, sampl
 /// 📏️ Global cubic interpolation through `points` using centripetal parameterization (Lee's
 /// method) — the standard, well-conditioned choice for interpolating scattered points without
 /// the cusping chord-length parametrization can produce.
-pub async fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
     let n = points.len();
     if n < 2 {
         return None;
@@ -180,7 +189,7 @@ pub async fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
     let degree = (n - 1).min(3);
     let mut chord_sqrt = vec![0.0; n];
     for i in 1..n {
-        chord_sqrt[i] = points[i].distance(points[i - 1]).await.sqrt();
+        chord_sqrt[i] = points[i].distance(points[i - 1]).sqrt();
     }
     let total: f64 = chord_sqrt.iter().sum();
     if total <= 0.0 {
@@ -198,11 +207,11 @@ pub async fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
         knots.push(avg);
     }
     knots.extend(std::iter::repeat_n(1.0, degree + 1));
-    let kv = KnotVector::new(knots, degree, n).await?;
+    let kv = KnotVector::new(knots, degree, n)?;
     let mut a = vec![vec![0.0; n]; n];
     for (row, &u) in params.iter().enumerate() {
         let span = kv.find_span(u);
-        let basis = basis_functions(&kv, span.await, u).await;
+        let basis = basis_functions(&kv, span, u);
         for (j, &b) in basis.iter().enumerate() {
             a[row][span - degree + j] = b;
         }
@@ -220,7 +229,8 @@ pub async fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
 
 /// 📏️ Plain Gaussian elimination with partial pivoting — the interpolation matrix is small
 /// (control-point count) and banded but not worth a dedicated banded solver at this scale.
-async fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
     let n = rhs.len();
     let mut m: Vec<Vec<f64>> = a.to_vec();
     let mut b = rhs.to_vec();
@@ -252,8 +262,9 @@ async fn solve_linear_system(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
 
 /// 📏️ Reverses a NURBS curve's direction: reverses control points/weights and mirrors the knot
 /// vector around the domain, so `reverse(c).eval(domain.1 - (t - domain.0)) == c.eval(t)`.
-pub async fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
-    let (lo, hi) = curve.knots.domain().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
+    let (lo, hi) = curve.knots.domain();
     let mut controls = curve.controls.clone();
     controls.reverse();
     let mut weights = curve.weights.clone();
@@ -265,7 +276,8 @@ pub async fn reverse_nurbs(curve: &NurbsCurve3) -> NurbsCurve3 {
 /// 📏️ Splits a NURBS curve at `t` into two curves, each covering one side of the original domain,
 /// via repeated knot insertion until `t` reaches full multiplicity (`degree + 1`), then slicing
 /// the (now Bezier-joined) control net at that knot.
-pub async fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
     let degree = curve.knots.degree;
     let mut knots = curve.knots.clone();
     let mut hx: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.x * w).collect();
@@ -274,10 +286,10 @@ pub async fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurv
     let mut hw = curve.weights.clone();
     let needed = degree + 1 - knots.multiplicity(t);
     for _ in 0..needed {
-        let (nk, nx) = insert_knot(&knots, &hx, t).await;
-        let (_, ny) = insert_knot(&knots, &hy, t).await;
-        let (_, nz) = insert_knot(&knots, &hz, t).await;
-        let (_, nw) = insert_knot(&knots, &hw, t).await;
+        let (nk, nx) = insert_knot(&knots, &hx, t);
+        let (_, ny) = insert_knot(&knots, &hy, t);
+        let (_, nz) = insert_knot(&knots, &hz, t);
+        let (_, nw) = insert_knot(&knots, &hw, t);
         knots = nk;
         hx = nx;
         hy = ny;
@@ -373,7 +385,8 @@ mod tests {
     /// each data point — an independent oracle so the test checks the actual interpolation
     /// property (curve(param[i]) == points[i]) instead of a dense-sampling proxy, which can show
     /// a spurious "gap" purely from sampling resolution near fast-moving parts of the curve.
-    async fn centripetal_params(points: &[Pnt3]) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn centripetal_params(points: &[Pnt3]) -> Vec<f64> {
         let n = points.len();
         let mut chord_sqrt = vec![0.0; n];
         for i in 1..n {
@@ -400,7 +413,8 @@ mod tests {
         }
     }
 
-    async fn de_boor_pnt(curve: &NurbsCurve3, t: f64) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn de_boor_pnt(curve: &NurbsCurve3, t: f64) -> Pnt3 {
         let hx: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.x * w).collect();
         let hy: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.y * w).collect();
         let hz: Vec<f64> = curve.controls.iter().zip(&curve.weights).map(|(p, w)| p.z * w).collect();

@@ -20,7 +20,7 @@ struct CadComputersManifest {
     transformation_appliers: Vec<&'static str>,
 }
 
-async fn computers_manifest() -> CadComputersManifest {
+fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
         model_definition_ids: vec!["spatial.shape"],
         stat_computers: vec!["spatial.shape.geometry"],
@@ -30,22 +30,25 @@ async fn computers_manifest() -> CadComputersManifest {
     }
 }
 
-async fn bundle() -> ExtensionBundle {
-    ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", "0.1.0")
-        .extends("cad")
-        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-        // extension only contributes a topic (`cad.computer`).
-        .mode(ExecutionMode::Declarative)
-        .contributes_topic(
-            "cad.computer",
-            serde_json::json!({
-                "appId": HOST_APP_ID,
-                "moduleId": MODULE_ID,
-                "label": "Spatial Shape",
-                "iconId": "box",
-                "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-            }),
-        )
+// 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
+// plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
+// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's path_scope);
+// bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
+fn bundle() -> ExtensionBundle {
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", "0.1.0").extends("cad");
+    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+    // extension only contributes a topic (`cad.computer`).
+    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
+    semio_framework::io::resolve_ready(bundle.contributes_topic(
+        "cad.computer",
+        serde_json::json!({
+            "appId": HOST_APP_ID,
+            "moduleId": MODULE_ID,
+            "label": "Spatial Shape",
+            "iconId": "box",
+            "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
+        }),
+    ))
 }
 
 semio_framework_plugin::extension_exports!(bundle);

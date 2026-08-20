@@ -38,7 +38,8 @@ impl Default for DeflateWindow {
 /// reserved and honestly reported as `0` (matching the codec's own tolerant-but-honest treatment
 /// of reserved header bits elsewhere in this snapshot). `contentDigest` folds `payload` through
 /// `std`'s own `DefaultHasher` (same std-only reasoning `🎒️zip/🗃entries` already established).
-pub async fn compute_deflate_window(snapshot: &DeflateSnapshot) -> DeflateWindow {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_deflate_window(snapshot: &DeflateSnapshot) -> DeflateWindow {
     let window_size = if snapshot.window_bits <= 7 { 1u32 << (snapshot.window_bits as u32 + 8) } else { 0 };
     let mut hasher = DefaultHasher::new();
     snapshot.payload.hash(&mut hasher);

@@ -32,7 +32,8 @@ impl Default for SemioCadBounds {
     }
 }
 
-async fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p: SemioPoint2) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p: SemioPoint2) {
     if !*seen {
         *min = p;
         *max = p;
@@ -45,12 +46,14 @@ async fn expand(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, p
     max.y = max.y.max(p.y);
 }
 
-async fn expand_circle(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, center: SemioPoint2, radius: f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_circle(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, center: SemioPoint2, radius: f64) {
     expand(min, max, seen, SemioPoint2 { x: center.x - radius, y: center.y - radius });
     expand(min, max, seen, SemioPoint2 { x: center.x + radius, y: center.y + radius });
 }
 
-async fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, entity: &CadEntity) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut bool, entity: &CadEntity) {
     match entity {
         CadEntity::Line { a, b } => {
             expand(min, max, seen, *a);
@@ -68,8 +71,8 @@ async fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut 
                 expand(min, max, seen, *v);
             }
         }
-        CadEntity::Text { position, .. } => expand(min, max, seen, *position).await,
-        CadEntity::Insert { insertion_point, .. } => expand(min, max, seen, *insertion_point).await,
+        CadEntity::Text { position, .. } => expand(min, max, seen, *position),
+        CadEntity::Insert { insertion_point, .. } => expand(min, max, seen, *insertion_point),
         CadEntity::Solid { p1, p2, p3, p4 } => {
             for p in [p1, p2, p3, p4] {
                 expand(min, max, seen, *p);
@@ -84,7 +87,8 @@ async fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut 
 
 /// 📦️ Computes [`SemioCadBounds`] over every top-level `entities` record plus every block's own
 /// nested `entities` — see module doc comment for the per-variant bounding rule.
-pub async fn compute_semio_cad_bounds(snapshot: &SemioCadSnapshot) -> SemioCadBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_cad_bounds(snapshot: &SemioCadSnapshot) -> SemioCadBounds {
     let mut min = SemioPoint2 { x: 0.0, y: 0.0 };
     let mut max = SemioPoint2 { x: 0.0, y: 0.0 };
     let mut seen = false;
@@ -106,11 +110,13 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 
-    async fn point(x: f64, y: f64) -> SemioPoint2 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn point(x: f64, y: f64) -> SemioPoint2 {
         SemioPoint2 { x, y }
     }
 
-    async fn record(handle: &str, layer: &str, entity: CadEntity) -> CadEntityRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn record(handle: &str, layer: &str, entity: CadEntity) -> CadEntityRecord {
         CadEntityRecord { handle: handle.into(), layer: layer.into(), entity }
     }
 

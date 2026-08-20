@@ -16,29 +16,31 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 /// for [`Surface::Plane`] and [`Surface::Sphere`]; otherwise coarse-grid seeding followed by a 2D
 /// Newton iteration on the first-order optimality conditions `(S(u,v)-P)·Su = 0`, `(S(u,v)-P)·Sv = 0`.
 /// Returns `(u, v, distance)`.
-pub async fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
     match surface {
         Surface::Plane { frame } => {
-            let local = frame.to_local(target).await;
-            let p = surface.eval(local.x, local.y).await;
-            (local.x, local.y, p.distance(target).await)
+            let local = frame.to_local(target);
+            let p = surface.eval(local.x, local.y);
+            (local.x, local.y, p.distance(target))
         }
         Surface::Sphere { frame, .. } => {
-            let local = frame.to_local(target).await.to_vec();
-            let n = local.await.normalized().await.unwrap_or(Vec3::Z);
+            let local = frame.to_local(target).to_vec();
+            let n = local.normalized().unwrap_or(Vec3::Z);
             let v = n.z.clamp(-1.0, 1.0).asin();
             let u = n.y.atan2(n.x).rem_euclid(std::f64::consts::TAU);
-            let p = surface.eval(u, v).await;
-            (u, v, p.distance(target).await)
+            let p = surface.eval(u, v);
+            (u, v, p.distance(target))
         }
-        _ => closest_point_numeric(surface, domain, target, samples).await,
+        _ => closest_point_numeric(surface, domain, target, samples),
     }
 }
 
 /// 🧭️ Wraps into a periodic domain (mirrors [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops`]'s identical fix for closed
 /// curves) rather than clamping — otherwise Newton can get trapped exactly at a domain boundary
 /// when the true optimum sits just across the periodic seam.
-async fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
     if periodic {
         let period = hi - lo;
         let mut w = (x - lo) % period;
@@ -51,7 +53,8 @@ async fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
     }
 }
 
-async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
     let (u_dom, v_dom) = domain;
     let u_periodic = surface.is_u_periodic();
     let v_periodic = surface.is_v_periodic();
@@ -63,7 +66,7 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
         for j in 0..=samples {
             let u = u_dom.0 + (u_hi - u_dom.0) * (i as f64 / samples as f64);
             let v = v_lo + (v_hi - v_lo) * (j as f64 / samples as f64);
-            let d = surface.eval(u, v).await.distance_sq(target).await;
+            let d = surface.eval(u, v).distance_sq(target);
             if d < best.2 {
                 best = (u, v, d);
             }
@@ -72,7 +75,7 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
     best.2 = best.2.sqrt();
     let (mut u, mut v, _) = best;
     for _ in 0..30 {
-        let d = surface.derivatives(u, v).await;
+        let d = surface.derivatives(u, v);
         let delta = d.point - target;
         let fu = delta.dot(d.du);
         let fv = delta.dot(d.dv);
@@ -85,19 +88,19 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
         }
         let step_u = (fu * fvv - fv * fuv) / det;
         let step_v = (fv * fuu - fu * fuv) / det;
-        let next_u = wrap_or_clamp(u - step_u, u_dom.0, u_hi, u_periodic.await);
-        let next_v = wrap_or_clamp(v - step_v, v_lo, v_hi, v_periodic.await);
+        let next_u = wrap_or_clamp(u - step_u, u_dom.0, u_hi, u_periodic);
+        let next_v = wrap_or_clamp(v - step_v, v_lo, v_hi, v_periodic);
         if (next_u - u).abs() < 1e-13 && (next_v - v).abs() < 1e-13 {
-            u = next_u.await;
-            v = next_v.await;
+            u = next_u;
+            v = next_v;
             break;
         }
-        u = next_u.await;
-        v = next_v.await;
+        u = next_u;
+        v = next_v;
     }
-    let refined_dist = surface.eval(u, v).await.distance(target);
+    let refined_dist = surface.eval(u, v).distance(target);
     if refined_dist < best.2 {
-        (u, v, refined_dist.await)
+        (u, v, refined_dist)
     } else {
         best
     }
@@ -112,7 +115,8 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
 /// `u=1` boundaries (functions of `v`). Requires the four curves to agree at shared corners
 /// (`c0(0)==d0(0)`, `c0(1)==d1(0)`, `c1(0)==d0(1)`, `c1(1)==d1(1)`) — the caller is responsible for
 /// that consistency; this function does not check it.
-pub async fn coons_patch_eval(c0: &dyn Fn(f64) -> Pnt3, c1: &dyn Fn(f64) -> Pnt3, d0: &dyn Fn(f64) -> Pnt3, d1: &dyn Fn(f64) -> Pnt3, u: f64, v: f64) -> Pnt3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn coons_patch_eval(c0: &dyn Fn(f64) -> Pnt3, c1: &dyn Fn(f64) -> Pnt3, d0: &dyn Fn(f64) -> Pnt3, d1: &dyn Fn(f64) -> Pnt3, u: f64, v: f64) -> Pnt3 {
     let p00 = c0(0.0);
     let p10 = c0(1.0);
     let p01 = c1(0.0);

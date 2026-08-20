@@ -7,9 +7,10 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{Semio
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &DeleteColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &DeleteColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let Some(at) = base.columns.iter().position(|c| c.name == payload.name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]).await;
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
     };
     let mut columns = base.columns.clone();
     columns.remove(at);
@@ -21,11 +22,11 @@ pub async fn diff(payload: &DeleteColumn, base: &SemioTableSnapshot) -> protocol
             cascaded_rows += 1;
         }
     }
-    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) }).await;
+    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) });
     if cascaded_rows == 0 {
         outcome
     } else {
-        outcome.info("mutation.cascade", format!("Deleting column \"{}\" also removed its cell from {} row(s).", payload.name, cascaded_rows)).await
+        outcome.info("mutation.cascade", format!("Deleting column \"{}\" also removed its cell from {} row(s).", payload.name, cascaded_rows))
     }
 }
 //#endregion 🔖️Diff

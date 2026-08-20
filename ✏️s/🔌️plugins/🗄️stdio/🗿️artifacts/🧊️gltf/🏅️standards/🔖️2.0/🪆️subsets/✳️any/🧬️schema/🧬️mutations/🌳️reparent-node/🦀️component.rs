@@ -79,7 +79,8 @@ mod diff {
     use crate::artifacts::gltf::schema::diff::GltfDiff;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub async fn diff(payload: &ReparentNode, base: &GltfSnapshot) -> GltfDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn diff(payload: &ReparentNode, base: &GltfSnapshot) -> GltfDiff {
         payload.plan(base).unwrap_or_default()
     }
 }
@@ -93,7 +94,8 @@ mod inverse {
     use crate::artifacts::gltf::schema::modules::mutation_dispatch::*;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub async fn inverse(payload: &ReparentNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(payload: &ReparentNode, base: &GltfSnapshot) -> Vec<GltfMutation> {
         locate_node_owner(&base.document, payload.index).map(|(parent, scene, position)| vec![GltfMutation::ReparentNode(ReparentNode { index: payload.index, parent, scene, position })]).unwrap_or_default()
     }
 }

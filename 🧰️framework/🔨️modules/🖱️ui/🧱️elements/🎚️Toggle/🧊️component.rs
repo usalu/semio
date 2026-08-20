@@ -14,7 +14,7 @@ use crate::wgpu::chrome::{item_bg, item_text, push_control_border, push_icon, IC
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::IconName;
 
-pub(crate) async fn render_toggle<E: Clone>(id: &str, icon_id: IconName, pressed: bool, text: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_toggle<E: Clone>(id: &str, icon_id: IconName, pressed: bool, text: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = item_bg(ctx.theme, pressed, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);

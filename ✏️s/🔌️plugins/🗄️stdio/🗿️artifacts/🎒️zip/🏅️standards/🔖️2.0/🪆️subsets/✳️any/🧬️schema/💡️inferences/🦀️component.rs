@@ -26,7 +26,7 @@ pub struct ZipInference {
 
 impl protocol::Inference<ZipSnapshot> for ZipInference {
     async fn infer(snapshot: &ZipSnapshot) -> Self {
-        Self { entries: compute_zip_entries(snapshot).await }
+        Self { entries: compute_zip_entries(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::zip::standards::v2_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.zip.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `zip_artifact_schema_descriptor`'s registration.
-pub async fn zip_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn zip_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.zip.inference",
         inference: schema::FacetLeaves {

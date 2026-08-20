@@ -20,40 +20,48 @@ pub struct Mat3 {
 impl Mat3 {
     pub const IDENTITY: Mat3 = Mat3 { rows: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]] };
 
-    pub async fn from_rows(rows: [[f64; 3]; 3]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_rows(rows: [[f64; 3]; 3]) -> Self {
         Mat3 { rows }
     }
-    pub async fn from_columns(c0: Vec3, c1: Vec3, c2: Vec3) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_columns(c0: Vec3, c1: Vec3, c2: Vec3) -> Self {
         Mat3 { rows: [[c0.x, c1.x, c2.x], [c0.y, c1.y, c2.y], [c0.z, c1.z, c2.z]] }
     }
-    pub async fn column(&self, i: usize) -> Vec3 {
-        Vec3::new(self.rows[0][i], self.rows[1][i], self.rows[2][i]).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn column(&self, i: usize) -> Vec3 {
+        Vec3::new(self.rows[0][i], self.rows[1][i], self.rows[2][i])
     }
-    pub async fn transform(&self, v: Vec3) -> Vec3 {
-        Vec3::new(self.rows[0][0] * v.x + self.rows[0][1] * v.y + self.rows[0][2] * v.z, self.rows[1][0] * v.x + self.rows[1][1] * v.y + self.rows[1][2] * v.z, self.rows[2][0] * v.x + self.rows[2][1] * v.y + self.rows[2][2] * v.z).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transform(&self, v: Vec3) -> Vec3 {
+        Vec3::new(self.rows[0][0] * v.x + self.rows[0][1] * v.y + self.rows[0][2] * v.z, self.rows[1][0] * v.x + self.rows[1][1] * v.y + self.rows[1][2] * v.z, self.rows[2][0] * v.x + self.rows[2][1] * v.y + self.rows[2][2] * v.z)
     }
-    pub async fn transpose(&self) -> Mat3 {
-        Mat3::from_rows([[self.rows[0][0], self.rows[1][0], self.rows[2][0]], [self.rows[0][1], self.rows[1][1], self.rows[2][1]], [self.rows[0][2], self.rows[1][2], self.rows[2][2]]]).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transpose(&self) -> Mat3 {
+        Mat3::from_rows([[self.rows[0][0], self.rows[1][0], self.rows[2][0]], [self.rows[0][1], self.rows[1][1], self.rows[2][1]], [self.rows[0][2], self.rows[1][2], self.rows[2][2]]])
     }
-    pub async fn mul(&self, o: &Mat3) -> Mat3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mul(&self, o: &Mat3) -> Mat3 {
         let mut out = [[0.0; 3]; 3];
         for (r, out_row) in out.iter_mut().enumerate() {
             for (c, out_cell) in out_row.iter_mut().enumerate() {
                 *out_cell = (0..3).map(|k| self.rows[r][k] * o.rows[k][c]).sum();
             }
         }
-        Mat3::from_rows(out).await
+        Mat3::from_rows(out)
     }
-    pub async fn determinant(&self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn determinant(&self) -> f64 {
         let m = &self.rows;
         m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
     }
     /// 🧭️ From an axis-angle rotation (Rodrigues' formula). `axis` need not be normalized.
-    pub async fn from_axis_angle(axis: Vec3, angle: f64) -> Mat3 {
-        let a = axis.normalized().await.unwrap_or(Vec3::Z);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_axis_angle(axis: Vec3, angle: f64) -> Mat3 {
+        let a = axis.normalized().unwrap_or(Vec3::Z);
         let (s, c) = angle.sin_cos();
         let t = 1.0 - c;
-        Mat3::from_rows([[t * a.x * a.x + c, t * a.x * a.y - s * a.z, t * a.x * a.z + s * a.y], [t * a.x * a.y + s * a.z, t * a.y * a.y + c, t * a.y * a.z - s * a.x], [t * a.x * a.z - s * a.y, t * a.y * a.z + s * a.x, t * a.z * a.z + c]]).await
+        Mat3::from_rows([[t * a.x * a.x + c, t * a.x * a.y - s * a.z, t * a.x * a.z + s * a.y], [t * a.x * a.y + s * a.z, t * a.y * a.y + c, t * a.y * a.z - s * a.x], [t * a.x * a.z - s * a.y, t * a.y * a.z + s * a.x, t * a.z * a.z + c]])
     }
 }
 
@@ -73,16 +81,19 @@ pub struct Quat {
 impl Quat {
     pub const IDENTITY: Quat = Quat { w: 1.0, x: 0.0, y: 0.0, z: 0.0 };
 
-    pub async fn from_axis_angle(axis: Vec3, angle: f64) -> Self {
-        let a = axis.normalized().await.unwrap_or(Vec3::Z);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_axis_angle(axis: Vec3, angle: f64) -> Self {
+        let a = axis.normalized().unwrap_or(Vec3::Z);
         let half = angle * 0.5;
         let (s, c) = half.sin_cos();
         Quat { w: c, x: a.x * s, y: a.y * s, z: a.z * s }
     }
-    pub async fn norm(self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn norm(self) -> f64 {
         (self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
-    pub async fn normalized(self) -> Quat {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normalized(self) -> Quat {
         let n = self.norm();
         if n <= f64::EPSILON {
             Quat::IDENTITY
@@ -90,11 +101,13 @@ impl Quat {
             Quat { w: self.w / n, x: self.x / n, y: self.y / n, z: self.z / n }
         }
     }
-    pub async fn conjugate(self) -> Quat {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn conjugate(self) -> Quat {
         Quat { w: self.w, x: -self.x, y: -self.y, z: -self.z }
     }
     #[allow(clippy::should_implement_trait)]
-    pub async fn mul(self, o: Quat) -> Quat {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mul(self, o: Quat) -> Quat {
         Quat {
             w: self.w * o.w - self.x * o.x - self.y * o.y - self.z * o.z,
             x: self.w * o.x + self.x * o.w + self.y * o.z - self.z * o.y,
@@ -102,31 +115,34 @@ impl Quat {
             z: self.w * o.z + self.x * o.y - self.y * o.x + self.z * o.w,
         }
     }
-    pub async fn rotate(self, v: Vec3) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rotate(self, v: Vec3) -> Vec3 {
         let qv = Quat { w: 0.0, x: v.x, y: v.y, z: v.z };
-        let r = self.mul(qv).await.mul(self.conjugate().await);
-        Vec3::new(r.await.x, r.await.y, r.await.z).await
+        let r = self.mul(qv).mul(self.conjugate());
+        Vec3::new(r.x, r.y, r.z)
     }
-    pub async fn to_mat3(self) -> Mat3 {
-        let q = self.normalized().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_mat3(self) -> Mat3 {
+        let q = self.normalized();
         let (w, x, y, z) = (q.w, q.x, q.y, q.z);
         Mat3::from_rows([
             [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)],
             [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)],
             [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)],
-        ]).await
+        ])
     }
     /// 🧭️ Spherical linear interpolation, taking the short arc between `self` and `o`.
-    pub async fn slerp(self, o: Quat, t: f64) -> Quat {
-        let a = self.normalized().await;
-        let mut b = o.normalized().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn slerp(self, o: Quat, t: f64) -> Quat {
+        let a = self.normalized();
+        let mut b = o.normalized();
         let mut dot = a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z;
         if dot < 0.0 {
             b = Quat { w: -b.w, x: -b.x, y: -b.y, z: -b.z };
             dot = -dot;
         }
         if dot > 0.9995 {
-            return Quat { w: a.w + (b.w - a.w) * t, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t }.normalized().await;
+            return Quat { w: a.w + (b.w - a.w) * t, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t }.normalized();
         }
         let theta0 = dot.acos();
         let theta = theta0 * t;
@@ -155,35 +171,43 @@ pub struct Trsf {
 impl Trsf {
     pub const IDENTITY: Trsf = Trsf { rotation: Quat::IDENTITY, translation: Vec3::ZERO, scale: 1.0 };
 
-    pub async fn translation(t: Vec3) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn translation(t: Vec3) -> Self {
         Trsf { translation: t, ..Trsf::IDENTITY }
     }
-    pub async fn rotation(q: Quat) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rotation(q: Quat) -> Self {
         Trsf { rotation: q, ..Trsf::IDENTITY }
     }
-    pub async fn uniform_scale(s: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn uniform_scale(s: f64) -> Self {
         Trsf { scale: s, ..Trsf::IDENTITY }
     }
-    pub async fn apply_point(&self, p: Pnt3) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_point(&self, p: Pnt3) -> Pnt3 {
         let scaled = p.to_vec() * self.scale;
-        Pnt3::from_array(self.rotation.rotate(scaled).await.to_array().await) + self.translation
+        Pnt3::from_array(self.rotation.rotate(scaled).to_array()) + self.translation
     }
-    pub async fn apply_vector(&self, v: Vec3) -> Vec3 {
-        self.rotation.rotate(v * self.scale).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_vector(&self, v: Vec3) -> Vec3 {
+        self.rotation.rotate(v * self.scale)
     }
     /// 🧭️ Transforms a surface normal correctly under non-uniform-free `Trsf` (uniform scale
     /// leaves direction unchanged, so this is just the rotation — kept as its own method so
     /// callers never reach for `apply_vector` on a normal by habit).
-    pub async fn apply_normal(&self, n: Vec3) -> Vec3 {
-        self.rotation.rotate(n).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply_normal(&self, n: Vec3) -> Vec3 {
+        self.rotation.rotate(n)
     }
-    pub async fn semio_compose_rs(&self, inner: &Trsf) -> Trsf {
-        Trsf { rotation: self.rotation.mul(inner.rotation).await, translation: self.apply_vector(inner.translation) + self.translation, scale: self.scale * inner.scale }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn semio_compose_rs(&self, inner: &Trsf) -> Trsf {
+        Trsf { rotation: self.rotation.mul(inner.rotation), translation: self.apply_vector(inner.translation) + self.translation, scale: self.scale * inner.scale }
     }
-    pub async fn inverse(&self) -> Trsf {
-        let inv_rot = self.rotation.conjugate().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self) -> Trsf {
+        let inv_rot = self.rotation.conjugate();
         let inv_scale = 1.0 / self.scale;
-        let inv_translation = inv_rot.rotate(-self.translation * inv_scale).await;
+        let inv_translation = inv_rot.rotate(-self.translation * inv_scale);
         Trsf { rotation: inv_rot, translation: inv_translation, scale: inv_scale }
     }
 }
@@ -206,33 +230,39 @@ impl Frame3 {
 
     /// 🧭️ Builds a frame from an origin and a normal `z`-axis; `x`/`y` are derived deterministically
     /// via [`Vec3::any_orthogonal`] so the same normal always produces the same frame.
-    pub async fn from_normal(origin: Pnt3, normal: Vec3) -> Option<Frame3> {
-        let z = normal.normalized().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_normal(origin: Pnt3, normal: Vec3) -> Option<Frame3> {
+        let z = normal.normalized()?;
         let x = z.any_orthogonal();
-        let y = z.cross(x.await);
+        let y = z.cross(x);
         Some(Frame3 { origin, x, y, z })
     }
     /// 🧭️ Builds a frame from an origin, a preferred `x` direction and a `z` normal — `x` is
     /// Gram-Schmidt orthogonalized against `z`, `y` completes the right-handed triad.
-    pub async fn from_x_z(origin: Pnt3, x_hint: Vec3, z_hint: Vec3) -> Option<Frame3> {
-        let z = z_hint.normalized().await?;
-        let x_proj = x_hint - z * x_hint.dot(z).await;
-        let x = x_proj.normalized().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_x_z(origin: Pnt3, x_hint: Vec3, z_hint: Vec3) -> Option<Frame3> {
+        let z = z_hint.normalized()?;
+        let x_proj = x_hint - z * x_hint.dot(z);
+        let x = x_proj.normalized()?;
         let y = z.cross(x);
         Some(Frame3 { origin, x, y, z })
     }
-    pub async fn to_world(&self, local: Pnt3) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_world(&self, local: Pnt3) -> Pnt3 {
         self.origin + self.x * local.x + self.y * local.y + self.z * local.z
     }
-    pub async fn to_world_vector(&self, local: Vec3) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_world_vector(&self, local: Vec3) -> Vec3 {
         self.x * local.x + self.y * local.y + self.z * local.z
     }
-    pub async fn to_local(&self, world: Pnt3) -> Pnt3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_local(&self, world: Pnt3) -> Pnt3 {
         let v = world - self.origin;
-        Pnt3::new(v.dot(self.x).await, v.dot(self.y).await, v.dot(self.z).await).await
+        Pnt3::new(v.dot(self.x), v.dot(self.y), v.dot(self.z))
     }
-    pub async fn to_local_vector(&self, world: Vec3) -> Vec3 {
-        Vec3::new(world.dot(self.x).await, world.dot(self.y).await, world.dot(self.z).await).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_local_vector(&self, world: Vec3) -> Vec3 {
+        Vec3::new(world.dot(self.x), world.dot(self.y), world.dot(self.z))
     }
 }
 

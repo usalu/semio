@@ -39,13 +39,16 @@ impl Default for SemioImageArtifact {
 }
 
 impl SemioImageArtifact {
-    pub async fn to_snapshot(&self) -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioImageSnapshot {
         SemioImageSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, colorspace: self.colorspace, bit_depth: self.bit_depth, frames: self.frames.clone(), icc: self.icc.clone(), metadata: self.metadata.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioImageSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, colorspace: snapshot.colorspace, bit_depth: snapshot.bit_depth, frames: snapshot.frames, icc: snapshot.icc, metadata: snapshot.metadata }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioImageSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;
         self.height = snapshot.height;
@@ -57,7 +60,8 @@ impl SemioImageArtifact {
     }
 }
 
-pub async fn semio_image_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_image_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.image",
         artifact: schema::FacetLeaves {
@@ -105,31 +109,37 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioImageBuilderConstruction {
         /// 🏗️ Starts a fresh image at the given pixel dimensions.
-        pub async fn new(width: u32, height: u32) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(width: u32, height: u32) -> Self {
             Self { snapshot: SemioImageSnapshot { width, height, ..SemioImageSnapshot::default() } }
         }
         /// 🏗️ Sets the source colorspace.
-        pub async fn set_colorspace(mut self, colorspace: SemioColorspace) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_colorspace(mut self, colorspace: SemioColorspace) -> Self {
             self.snapshot.colorspace = colorspace;
             self
         }
         /// 🏗️ Sets the bit depth.
-        pub async fn set_bit_depth(mut self, bit_depth: u8) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_bit_depth(mut self, bit_depth: u8) -> Self {
             self.snapshot.bit_depth = bit_depth;
             self
         }
         /// 🏗️ Appends one frame, in order.
-        pub async fn add_frame(mut self, frame: SemioImageFrame) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_frame(mut self, frame: SemioImageFrame) -> Self {
             self.snapshot.frames.push(frame);
             self
         }
         /// 🏗️ Sets the embedded ICC profile (`None` clears it).
-        pub async fn set_icc(mut self, icc: Option<Vec<u8>>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_icc(mut self, icc: Option<Vec<u8>>) -> Self {
             self.snapshot.icc = icc;
             self
         }
         /// 🏗️ Appends one metadata entry.
-        pub async fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.snapshot.metadata.push(SemioImageMetadataEntry { key: key.into(), value: value.into() });
             self
         }
@@ -154,7 +164,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_image_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, &self.snapshot).await?;

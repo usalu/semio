@@ -76,7 +76,7 @@ pub struct XmlDoctype {
 
 impl From<&str> for XmlDoctype {
     fn from(value: &str) -> Self {
-        semio_framework_plugin::resolve_ready(parse_doctype(value)).expect("valid XML document type literal")
+        parse_doctype(value).expect("valid XML document type literal")
     }
 }
 
@@ -131,25 +131,29 @@ impl Default for XmlSnapshot {
 
 impl XmlSnapshot {
     /// 🪞️ Returns the lossless logical state used by diff and mutation laws.
-    pub async fn semantic_projection(&self) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn semantic_projection(&self) -> Self {
         self.clone()
     }
 
     /// 📥️ Parses XML into its lossless logical model.
-    pub async fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text).await? })
+        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)? })
     }
 
     /// 📤️ Deterministically materializes XML from the logical model.
-    pub async fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(xml_document_to_text(&self.doc).await.into_bytes())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
+        Ok(xml_document_to_text(&self.doc).into_bytes())
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️XmlTextCodec
-async fn xml_escape_text(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_escape_text(s: &str) -> String {
     let mut out = String::new();
     for ch in s.chars() {
         match ch {
@@ -162,7 +166,8 @@ async fn xml_escape_text(s: &str) -> String {
     out
 }
 
-async fn xml_escape_attr(s: &str) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_escape_attr(s: &str) -> String {
     let mut out = String::new();
     for ch in s.chars() {
         match ch {
@@ -182,7 +187,8 @@ async fn xml_escape_attr(s: &str) -> String {
 /// lone `&` into `&amp;` again -- so every decode->encode cycle grows `&amp;` into `&amp;amp;`
 /// into `&amp;amp;amp;`, permanently corrupting the document. An unrecognized/malformed entity is
 /// a hard parse error (never silently dropped or passed through raw).
-async fn xml_unescape_text(s: &str) -> Result<String, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_unescape_text(s: &str) -> Result<String, String> {
     let mut out = String::with_capacity(s.len());
     let mut chars = s.char_indices().peekable();
     while let Some((i, ch)) = chars.next() {
@@ -225,7 +231,8 @@ async fn xml_unescape_text(s: &str) -> Result<String, String> {
     Ok(out)
 }
 
-pub async fn xml_document_to_text(doc: &XmlDocument) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xml_document_to_text(doc: &XmlDocument) -> String {
     let mut out = String::new();
     if let Some(decl) = &doc.declaration {
         out.push_str("<?xml version=\"");
@@ -257,7 +264,8 @@ pub async fn xml_document_to_text(doc: &XmlDocument) -> String {
     out
 }
 
-async fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
     out.push_str("<!DOCTYPE ");
     out.push_str(&doctype.name);
     if let Some(external_id) = &doctype.external_id {
@@ -297,11 +305,13 @@ async fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
     out.push('>');
 }
 
-async fn xml_current_column(out: &str) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_current_column(out: &str) -> usize {
     out.rsplit_once('\n').map_or(out.len(), |(_, line)| line.len())
 }
 
-async fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
     match node {
         XmlNode::Text { text } => out.push_str(&xml_escape_text(text)),
         XmlNode::CData { text } => {
@@ -331,7 +341,7 @@ async fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
                 let closing_width = if index + 1 == attrs.len() {
                     match children.as_slice() {
                         [] => 2,
-                        [XmlNode::Text { text }] => xml_escape_text(text).await.chars().count() + name.len() + 4,
+                        [XmlNode::Text { text }] => xml_escape_text(text).chars().count() + name.len() + 4,
                         _ => 1,
                     }
                 } else {
@@ -360,16 +370,17 @@ async fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
     }
 }
 
-pub async fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
     let trimmed = text.trim();
     if trimmed.is_empty() {
         return Ok(XmlDocument::default());
     }
     let mut pos = 0;
-    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos).await?;
-    let (doctype, prolog) = skip_misc(trimmed, &mut pos).await?;
-    let root = parse_node(trimmed, &mut pos).await?;
-    let _ = skip_misc(trimmed, &mut pos).await?;
+    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
+    let (doctype, prolog) = skip_misc(trimmed, &mut pos)?;
+    let root = parse_node(trimmed, &mut pos)?;
+    let _ = skip_misc(trimmed, &mut pos)?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
@@ -380,7 +391,8 @@ pub async fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
 /// present. Per the XML 1.0 spec the declaration (when present at all) MUST be the very first
 /// thing in the document -- unlike ordinary processing instructions it is not represented as an
 /// `XmlNode::ProcessingInstruction` and is only ever looked for here, at the very start.
-async fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDeclaration>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDeclaration>, String> {
     if !s[*pos..].starts_with("<?xml") {
         return Ok(None);
     }
@@ -400,13 +412,13 @@ async fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option
         if s[*pos..].starts_with("?>") {
             break;
         }
-        let name = parse_name(s, pos).await?;
+        let name = parse_name(s, pos)?;
         skip_ws(s, pos);
         if s[*pos..].chars().next() != Some('=') {
             return Err("expected = in xml declaration".into());
         }
         *pos += 1;
-        let value = xml_unescape_text(&parse_attr_value(s, pos).await?).await?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
         match name.as_str() {
             "version" => version = Some(value),
             "encoding" => encoding = Some(value),
@@ -419,14 +431,15 @@ async fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option
 }
 
 /// 🚧️ Parses prolog processing instructions, comments, and a typed document declaration.
-async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<XmlNode>), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<XmlNode>), String> {
     let mut doctype = None;
     let mut nodes = Vec::new();
     loop {
         skip_ws(s, pos);
         if s[*pos..].starts_with("<?") {
             *pos += 2;
-            let target = parse_name(s, pos).await?;
+            let target = parse_name(s, pos)?;
             skip_ws(s, pos);
             let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
             let data = s[*pos..*pos + end].to_string();
@@ -461,7 +474,7 @@ async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<
                 }
                 *pos += 1;
             }
-            doctype = Some(parse_doctype(&s[start..*pos]).await?);
+            doctype = Some(parse_doctype(&s[start..*pos])?);
             continue;
         }
         break;
@@ -469,18 +482,19 @@ async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<
     Ok((doctype, nodes))
 }
 
-async fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
     let mut pos = "<!DOCTYPE".len();
     skip_ws(text, &mut pos);
-    let name = parse_name(text, &mut pos).await?;
+    let name = parse_name(text, &mut pos)?;
     skip_ws(text, &mut pos);
     let external_id = if text[pos..].starts_with("SYSTEM") {
         pos += "SYSTEM".len();
-        Some(XmlExternalId::System { system_id: xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await? })
+        Some(XmlExternalId::System { system_id: xml_unescape_text(&parse_attr_value(text, &mut pos)?)? })
     } else if text[pos..].starts_with("PUBLIC") {
         pos += "PUBLIC".len();
-        let public_id = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
-        let system_id = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
+        let public_id = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
+        let system_id = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
         Some(XmlExternalId::Public { public_id, system_id })
     } else {
         None
@@ -505,8 +519,8 @@ async fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
                 pos += 1;
                 skip_ws(text, &mut pos);
             }
-            let entity_name = parse_name(text, &mut pos).await?;
-            let value = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
+            let entity_name = parse_name(text, &mut pos)?;
+            let value = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
             skip_ws(text, &mut pos);
             if !text[pos..].starts_with('>') {
                 return Err("expected > after XML entity declaration".into());
@@ -526,13 +540,15 @@ async fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
     Ok(XmlDoctype { name, external_id, declarations })
 }
 
-async fn skip_ws(s: &str, pos: &mut usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn skip_ws(s: &str, pos: &mut usize) {
     while *pos < s.len() && s.as_bytes()[*pos].is_ascii_whitespace() {
         *pos += 1;
     }
 }
 
-async fn parse_name(s: &str, pos: &mut usize) -> Result<String, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_name(s: &str, pos: &mut usize) -> Result<String, String> {
     let start = *pos;
     if *pos >= s.len() || !is_name_start(s[*pos..].chars().next().unwrap()) {
         return Err("expected XML name".into());
@@ -540,7 +556,7 @@ async fn parse_name(s: &str, pos: &mut usize) -> Result<String, String> {
     *pos += 1;
     while *pos < s.len() {
         let ch = s[*pos..].chars().next().unwrap();
-        if is_name_char(ch).await {
+        if is_name_char(ch) {
             *pos += ch.len_utf8();
         } else {
             break;
@@ -549,15 +565,18 @@ async fn parse_name(s: &str, pos: &mut usize) -> Result<String, String> {
     Ok(s[start..*pos].to_string())
 }
 
-async fn is_name_start(ch: char) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_name_start(ch: char) -> bool {
     ch == ':' || ch.is_ascii_alphabetic() || ch == '_'
 }
 
-async fn is_name_char(ch: char) -> bool {
-    is_name_start(ch).await || ch.is_ascii_digit() || ch == '-' || ch == '.'
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_name_char(ch: char) -> bool {
+    is_name_start(ch) || ch.is_ascii_digit() || ch == '-' || ch == '.'
 }
 
-async fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
     skip_ws(s, pos);
     let quote = s[*pos..].chars().next().ok_or("expected attribute value")?;
     if quote != '"' && quote != '\'' {
@@ -577,26 +596,28 @@ async fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
     Err("unclosed attribute value".into())
 }
 
-async fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
     let mut attrs = Vec::new();
     loop {
         skip_ws(s, pos);
         if *pos >= s.len() || s[*pos..].starts_with(">") || s[*pos..].starts_with("/>") {
             break;
         }
-        let name = parse_name(s, pos).await?;
+        let name = parse_name(s, pos)?;
         skip_ws(s, pos);
         if s[*pos..].chars().next() != Some('=') {
             return Err("expected = in attribute".into());
         }
         *pos += 1;
-        let value = xml_unescape_text(&parse_attr_value(s, pos).await?).await?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
         attrs.push(XmlAttr { name, value });
     }
     Ok(attrs)
 }
 
-async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
     if *pos >= s.len() || !s[*pos..].starts_with('<') {
         return Err("expected element start".into());
     }
@@ -604,8 +625,8 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         return Err("unexpected closing tag".into());
     }
     *pos += 1;
-    let name = parse_name(s, pos).await?;
-    let attrs = parse_attrs(s, pos).await?;
+    let name = parse_name(s, pos)?;
+    let attrs = parse_attrs(s, pos)?;
     skip_ws(s, pos);
     if s[*pos..].starts_with("/>") {
         *pos += 2;
@@ -622,7 +643,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         if s[*pos..].starts_with("</") {
             *pos += 2;
-            let close = parse_name(s, pos).await?;
+            let close = parse_name(s, pos)?;
             skip_ws(s, pos);
             if !s[*pos..].starts_with('>') {
                 return Err("expected > on closing tag".into());
@@ -651,7 +672,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         if s[*pos..].starts_with("<?") {
             *pos += 2;
-            let target = parse_name(s, pos).await?;
+            let target = parse_name(s, pos)?;
             skip_ws(s, pos);
             let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
             let data = s[*pos..*pos + end].to_string();
@@ -660,7 +681,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
             continue;
         }
         if s[*pos..].starts_with('<') {
-            children.push(parse_node(s, pos).await?);
+            children.push(parse_node(s, pos)?);
             continue;
         }
         let start = *pos;
@@ -669,7 +690,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         let raw = &s[start..*pos];
         if !raw.is_empty() {
-            let text = xml_unescape_text(raw).await?;
+            let text = xml_unescape_text(raw)?;
             children.push(XmlNode::Text { text });
         }
     }
@@ -686,8 +707,8 @@ impl store::ArtifactDsl for XmlSnapshot {
 
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim()).await.map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
-            Err(_) => Self::import_utf8(text.as_bytes()).await.map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
         }
     }
     async fn print_dsl(&self) -> String {
@@ -724,7 +745,7 @@ impl store::ArtifactPack for XmlSnapshot {
         if version != 1 {
             return Err(store::PackError::Schema(format!("unsupported xml snapshot state version {version}")));
         }
-        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).await.map_err(store::PackError::Schema)
+        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -67,7 +67,7 @@ impl ArtifactEditor for JpgAnyEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -75,14 +75,15 @@ impl ArtifactEditor for JpgAnyEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(JPG_ANY_DIALECT)
-        .await.document(["semio", "jpg"])
-        .await.icon_id("image")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "jpg"])
+        .icon_id("image")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -23,7 +23,8 @@ impl Default for CsvOutline {
 }
 
 impl CsvOutline {
-    pub async fn compute(snapshot: &CsvSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &CsvSnapshot) -> Self {
         let record_count = snapshot.records.len() as u32;
         let column_count = snapshot.records.iter().map(|r| r.fields.len() as u32).max().unwrap_or(0);
         Self { record_count, column_count, has_header: snapshot.has_header }

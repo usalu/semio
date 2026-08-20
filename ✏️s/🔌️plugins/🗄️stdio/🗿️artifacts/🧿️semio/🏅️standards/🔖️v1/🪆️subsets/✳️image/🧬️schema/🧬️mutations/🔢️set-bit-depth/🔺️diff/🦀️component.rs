@@ -7,7 +7,8 @@ use protocol::Mutation;
 /// `base.bit_depth` is `mutation.no-op` (Warning, empty diff). No `mutation.invariant` check: `0`
 /// is `SemioImageSnapshot::default()`'s own resting state and every `u8` value is structurally
 /// valid, so there is no narrower domain to violate here.
-pub async fn diff(base: &SemioImageSnapshot, bit_depth: u8) -> protocol::MutationOutcome<SemioImageDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(base: &SemioImageSnapshot, bit_depth: u8) -> protocol::MutationOutcome<SemioImageDiff> {
     if base.bit_depth == bit_depth {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bit depth is already this value.".to_string());
     }

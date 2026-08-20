@@ -133,9 +133,10 @@ impl Mutation<SemioSnapshot> for SemioMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub async fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> protocol::MutationOutcome<SemioDiff> {
-    let outcome = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> protocol::MutationOutcome<SemioDiff> {
+    let outcome = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -146,7 +147,8 @@ pub async fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &Semio
 /// here); `setSnapshot`'s payload is hex(`SemioSnapshot::print_dsl`) — real delegation to this
 /// envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs), hex-flattened to keep
 /// `print_op`'s one-physical-line contract; `noMutation` carries no payload.
-async fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
     match m {
         SemioMutation::NoMutation => "noMutation",
         SemioMutation::SetSnapshot { .. } => "setSnapshot",
@@ -173,7 +175,8 @@ async fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
 
 /// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `NoMutation`, `1` = `SetSnapshot`,
 /// `2..=19` = the 18 wrapped subset kinds (enum declaration order).
-async fn mutation_tag(m: &SemioMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
         SemioMutation::NoMutation => 0,
         SemioMutation::SetSnapshot { .. } => 1,
@@ -198,11 +201,13 @@ async fn mutation_tag(m: &SemioMutation) -> u8 {
     }
 }
 
-async fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
-    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
+    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
     text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     if hex.len() % 2 != 0 {
         return Err("setSnapshot: odd hex length".to_string());
     }
@@ -214,10 +219,11 @@ async fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
         i += 2;
     }
     let text = String::from_utf8(bytes).map_err(|e| format!("setSnapshot: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.map_err(|e| format!("setSnapshot: dsl decode: {e}"))
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("setSnapshot: dsl decode: {e}"))
 }
 
-async fn print_semio_mutation(m: &SemioMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_mutation(m: &SemioMutation) -> String {
     let tag = subset_mutation_tag(m);
     match m {
         SemioMutation::NoMutation => tag.to_string(),
@@ -243,41 +249,42 @@ async fn print_semio_mutation(m: &SemioMutation) -> String {
     }
 }
 
-async fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
     if line == "noMutation" {
         return Ok(SemioMutation::NoMutation);
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
     match tag {
-        "setSnapshot" => Ok(SemioMutation::SetSnapshot { snapshot: dec_hex_snapshot(rest).await? }),
-        "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "value" => Ok(SemioMutation::Value(SemioValueMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "image" => Ok(SemioMutation::Image(SemioImageMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "video" => Ok(SemioMutation::Video(SemioVideoMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "table" => Ok(SemioMutation::Table(SemioTableMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "graph" => Ok(SemioMutation::Graph(SemioGraphMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "kit" => Ok(SemioMutation::Kit(SemioKitMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
+        "setSnapshot" => Ok(SemioMutation::SetSnapshot { snapshot: dec_hex_snapshot(rest)? }),
+        "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "value" => Ok(SemioMutation::Value(SemioValueMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "image" => Ok(SemioMutation::Image(SemioImageMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "video" => Ok(SemioMutation::Video(SemioVideoMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "table" => Ok(SemioMutation::Table(SemioTableMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "graph" => Ok(SemioMutation::Graph(SemioGraphMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "kit" => Ok(SemioMutation::Kit(SemioKitMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio mutation: unknown tag {other:?}")),
     }
 }
 
 impl OpText for SemioMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_semio_mutation(self).await
+        print_semio_mutation(self)
     }
 }
 
@@ -289,7 +296,7 @@ impl OpBinary for SemioMutation {
     /// `ArtifactPack::encode_pack()` bytes; `NoMutation` carries no payload.
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self).await];
+        let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
         let payload: Vec<u8> = match self {
             SemioMutation::NoMutation => Vec::new(),
             SemioMutation::SetSnapshot { snapshot } => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot).await,
@@ -365,7 +372,8 @@ impl OpBinary for SemioMutation {
 /// each's representative case is a real out-of-range/absent-target op, a genuine no-op at the
 /// snapshot-apply level.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
         SemioMutation::NoMutation,
         SemioMutation::SetSnapshot { snapshot: SemioSnapshot::default() },
@@ -406,11 +414,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    async fn audio_base() -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn audio_base() -> SemioSnapshot {
         SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
     }
 
-    async fn flow_base() -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn flow_base() -> SemioSnapshot {
         SemioSnapshot { subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot::default()), ..Default::default() }
     }
 

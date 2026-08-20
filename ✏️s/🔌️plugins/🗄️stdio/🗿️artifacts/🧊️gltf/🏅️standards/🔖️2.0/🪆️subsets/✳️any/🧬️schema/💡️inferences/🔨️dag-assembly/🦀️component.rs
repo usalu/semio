@@ -21,7 +21,8 @@ use super::{
 };
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
-async fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
     GltfEntityIndicators {
         size: GltfSizeInference::unavailable(&diagnostic_ids),
         area_volume: GltfAreaVolumeInference::unavailable(&diagnostic_ids),
@@ -40,9 +41,10 @@ async fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
     }
 }
 
-async fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
     let Some(context) = GltfGeometryContext::new(points, triangles, policy) else {
-        return (empty_indicators(Vec::new()).await, topology_summary(points, triangles));
+        return (empty_indicators(Vec::new()), topology_summary(points, triangles));
     };
     let topology = context.topology;
     (
@@ -66,7 +68,8 @@ async fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &G
     )
 }
 
-pub async fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference {
     let policy = policy();
     let mut diagnostics = Vec::new();
     let (raw_parts, node_instances) = collect_parts(snapshot, &mut diagnostics);
@@ -77,11 +80,11 @@ pub async fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInf
         all_points.extend_from_slice(&part.points);
         all_triangles.extend(part.triangles.iter().map(|face| [face[0] + offset, face[1] + offset, face[2] + offset]));
     }
-    let (mut overall, overall_topology) = assemble_indicators(&all_points, &all_triangles, &policy).await;
+    let (mut overall, overall_topology) = assemble_indicators(&all_points, &all_triangles, &policy);
     let mut parts = Vec::new();
     let mut component_count = 0;
     for raw in &raw_parts {
-        let (indicators, topology) = assemble_indicators(&raw.points, &raw.triangles, &policy).await;
+        let (indicators, topology) = assemble_indicators(&raw.points, &raw.triangles, &policy);
         component_count += topology.components;
         parts.push(GltfPartInference { address: raw.address.clone(), name: raw.name.clone(), indicators, diagnostic_ids: raw.diagnostic_ids.clone() });
     }
@@ -90,17 +93,17 @@ pub async fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInf
     for first in 0..raw_parts.len() {
         for second in first + 1..raw_parts.len() {
             if let Some(pair) = pair_geometry(&raw_parts[first], &raw_parts[second], &policy) {
-                let (minimum_distance, clearance_distribution, interference_volume, overlap_volume) = GltfClearanceInference::infer_pair(&pair, &policy).await;
+                let (minimum_distance, clearance_distribution, interference_volume, overlap_volume) = GltfClearanceInference::infer_pair(&pair, &policy);
                 pairs.push(GltfPairInference {
                     first: pair.first.clone(),
                     second: pair.second.clone(),
                     minimum_distance,
                     clearance_distribution,
-                    contact_area: GltfAreaVolumeInference::infer_pair_contact(&pair).await,
+                    contact_area: GltfAreaVolumeInference::infer_pair_contact(&pair),
                     interference_volume,
                     overlap_volume,
-                    adjacent: GltfAdjacencyInference::infer_pair(&pair).await,
-                    orientation_consistency: GltfOrientationInference::infer_pair(&pair).await,
+                    adjacent: GltfAdjacencyInference::infer_pair(&pair),
+                    orientation_consistency: GltfOrientationInference::infer_pair(&pair),
                 });
             }
         }

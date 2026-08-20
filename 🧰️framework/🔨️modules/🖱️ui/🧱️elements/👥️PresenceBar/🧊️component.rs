@@ -99,7 +99,7 @@ pub fn presence_css_var(index: u8) -> String {
 }
 //#endregion 🔖️Palette
 
-async fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
+fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "horizontal".into(),
         gap: Some("tight".into()),
@@ -114,8 +114,8 @@ async fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
     })
 }
 
-async fn presence_text(value: String) -> UiNode {
-    UiNode::Text(UiTextNode { value: Label::data(value).await, emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+fn presence_text(value: String) -> UiNode {
+    UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
 /// 👥️ Builds the `PresenceBar` roster as a `UiNode` tree: an empty-state text node when `peers` is
@@ -124,19 +124,19 @@ async fn presence_text(value: String) -> UiNode {
 /// the root `UiStackNode`'s own id (the shells pass `s-presence-peers`, contract freeze §C0).
 /// `locale` resolves this element's own framework-owned copy (empty state, overflow suffix, role
 /// words) — terminology-invariant, so [`Terminology::ALL`]'s first entry is used to resolve it.
-pub async fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>) -> UiNode {
-    build_presence_bar_localized(id, peers, max, Locale::default()).await
+pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>) -> UiNode {
+    build_presence_bar_localized(id, peers, max, Locale::default())
 }
 
 /// 🌐️ [`build_presence_bar`] with an explicit [`Locale`] — the host resolves the active locale itself
 /// (native shells read it from the same source as every other framework-owned label); this is the
 /// entry point that actually localizes.
-pub async fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
+pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
     let id = id.into();
     let terminology = Terminology::ALL[0];
     if peers.is_empty() {
         let empty_text = LocalizedLabel::native("No one else is here", "Niemand sonst ist hier").resolve(terminology, locale).to_string();
-        return presence_stack(id, vec![presence_text(empty_text).await]).await;
+        return presence_stack(id, vec![presence_text(empty_text)]);
     }
 
     let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
@@ -146,23 +146,23 @@ pub async fn build_presence_bar_localized(id: impl Into<String>, peers: &[Presen
 
     let mut children: Vec<UiNode> = Vec::with_capacity(visible_count);
     for peer in visible {
-        let text = presence_text(peer.label.clone()).await;
-        children.push(presence_stack(format!("peer:{}", peer.actor), vec![text]).await);
+        let text = presence_text(peer.label.clone());
+        children.push(presence_stack(format!("peer:{}", peer.actor), vec![text]));
     }
 
     if overflow_count > 0 {
         let more_word = LocalizedLabel::native("more", "weitere").resolve(terminology, locale).to_string();
-        children.push(presence_stack("peer:overflow".into(), vec![presence_text(format!("+{overflow_count} {more_word}")).await]).await);
+        children.push(presence_stack("peer:overflow".into(), vec![presence_text(format!("+{overflow_count} {more_word}"))]));
     }
 
-    presence_stack(id, children).await
+    presence_stack(id, children)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    async fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
+    fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
         PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None }
     }
 
@@ -193,8 +193,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_presence_bar_renders_one_stack_child_per_peer_under_max() {
-        let peers = vec![peer("user:a#1", "Alice", Some(PresenceRole::Author)).await, peer("user:b#1", "Bob", Some(PresenceRole::Spectator)).await];
-        let node = build_presence_bar("s-presence-peers", &peers, None).await;
+        let peers = vec![peer("user:a#1", "Alice", Some(PresenceRole::Author)), peer("user:b#1", "Bob", Some(PresenceRole::Spectator))];
+        let node = build_presence_bar("s-presence-peers", &peers, None);
         let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
         assert_eq!(root.id.as_deref(), Some("s-presence-peers"));
         assert_eq!(root.children.len(), 2);
@@ -208,9 +208,9 @@ mod tests {
     async fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
         let mut peers: Vec<PresencePeerRow> = Vec::with_capacity(7);
         for i in 0..7 {
-            peers.push(peer(&format!("user:{i}#1"), &format!("Peer {i}"), None).await);
+            peers.push(peer(&format!("user:{i}#1"), &format!("Peer {i}"), None));
         }
-        let node = build_presence_bar("s-presence-peers", &peers, Some(5)).await;
+        let node = build_presence_bar("s-presence-peers", &peers, Some(5));
         let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
         // 5 visible peers + 1 overflow node.
         assert_eq!(root.children.len(), 6);
@@ -220,13 +220,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_presence_bar_empty_peers_renders_localized_empty_text() {
-        let en = build_presence_bar_localized("s-presence-peers", &[], None, Locale::En).await;
-        let de = build_presence_bar_localized("s-presence-peers", &[], None, Locale::De).await;
+        let en = build_presence_bar_localized("s-presence-peers", &[], None, Locale::En);
+        let de = build_presence_bar_localized("s-presence-peers", &[], None, Locale::De);
         for (node, expected) in [(en, "No one else is here"), (de, "Niemand sonst ist hier")] {
             let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
             assert_eq!(root.children.len(), 1);
             let UiNode::Text(text) = &root.children[0] else { panic!("expected a Text child") };
-            assert_eq!(text.value.as_str().await, expected);
+            assert_eq!(text.value.as_str(), expected);
         }
     }
 }

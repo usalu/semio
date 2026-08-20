@@ -17,15 +17,17 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::deflate::create_deflate_viewer`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Codec
 /// 📐️ `DeflateLevelHint -> lowercase keyword` — mirrors the sibling authoring surface's own
 /// constant, kept as an independent copy per this ticket's viewer-purity rule.
-async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
     match hint {
         DeflateLevelHint::Fastest => "fastest",
         DeflateLevelHint::Fast => "fast",
@@ -35,7 +37,8 @@ async fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
 }
 
 /// 📐️ `dict_id -> "none" | "<id>"`.
-async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn preset_dictionary_text(dict_id: Option<u32>) -> String {
     match dict_id {
         Some(id) => id.to_string(),
         None => "none".into(),
@@ -46,7 +49,8 @@ async fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 //#region 🔖️Render
 /// 👁️ Pure `DeflateSnapshot -> UiNode` read: the same `key=value` header summary as the sibling
 /// authoring surface, always `read_only: true`.
-pub async fn render(document: &DeflateSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &DeflateSnapshot) -> UiNode {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown here)",
         document.compression_method,
@@ -55,7 +59,7 @@ pub async fn render(document: &DeflateSnapshot) -> UiNode {
         preset_dictionary_text(document.dict_id),
         document.payload.len(),
     );
-    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: true }).await
+    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: true })
 }
 //#endregion 🔖️Render
 

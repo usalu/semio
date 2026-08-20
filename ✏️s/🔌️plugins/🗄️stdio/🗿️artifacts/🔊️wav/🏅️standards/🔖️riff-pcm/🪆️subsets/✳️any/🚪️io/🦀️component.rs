@@ -43,19 +43,21 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
             crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
-        ).await);
+        ));
     }
 
     /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -74,7 +76,8 @@ use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::
 
 //#region 🔖️Sniff
 /// 🔍 Real magic sniff: `RIFF` fourcc at byte 0 + `WAVE` fourcc at byte 8 (RIFF's own type tag).
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
     bytes.len() >= 12 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"WAVE"
 }
 //#endregion 🔖️Sniff
@@ -83,7 +86,8 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// 📐️ Decodes a `fmt ` chunk body (already sliced to exactly `chunk_size` bytes). PCM's plain
 /// 16-byte form has no `cbSize`; the extensible/non-PCM form carries a `cbSize` (u16) at byte 16
 /// followed by `cbSize` bytes of extension data, retained verbatim in `WavFmt::ext`.
-async fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
     if body.len() < 16 {
         return Err(format!("wav: fmt chunk too short ({} bytes)", body.len()));
     }
@@ -111,7 +115,8 @@ async fn decode_fmt_chunk(body: &[u8]) -> Result<WavFmt, String> {
 
 /// 📐️ Encodes a `fmt ` chunk body: the plain 16-byte PCM form when `ext` is `None`, else the
 /// extensible form (16 bytes + `cbSize`(u16) + `ext` bytes).
-async fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
     let mut body = Vec::with_capacity(16);
     body.extend_from_slice(&fmt.audio_format.to_le_bytes());
     body.extend_from_slice(&fmt.channels.to_le_bytes());
@@ -133,7 +138,8 @@ async fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
 /// float 32-bit → `Float32`; every other `(audio_format, bits_per_sample)` combination (24-bit
 /// PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …) is retained as `Raw` — an honest boundary,
 /// not a silent misinterpretation.
-async fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
     match (fmt.audio_format, fmt.bits_per_sample) {
         (1, 16) if body.len() % 2 == 0 => WavData::Pcm16(body.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
         (1, 8) => WavData::Pcm8(body.to_vec()),
@@ -143,7 +149,8 @@ async fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
 }
 
 /// 📐️ Encodes a `data` chunk body from the typed sample vocabulary.
-async fn encode_data_chunk(data: &WavData) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_data_chunk(data: &WavData) -> Vec<u8> {
     match data {
         WavData::Pcm16(samples) => samples.iter().flat_map(|s| s.to_le_bytes()).collect(),
         WavData::Pcm8(bytes) => bytes.clone(),
@@ -157,7 +164,8 @@ async fn encode_data_chunk(data: &WavData) -> Vec<u8> {
 /// 🚶 Walks every top-level chunk under `RIFF …/WAVE`, routing `fmt `/`data` into their typed
 /// slots and retaining everything else (`LIST`/`INFO`/`fact`/`cue `/…) verbatim in
 /// `other_chunks`, in on-disk order.
-pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     if !sniff_real_bytes(bytes) {
         return Err("wav: missing RIFF/WAVE magic".into());
     }
@@ -179,7 +187,7 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
         }
         let body = &bytes[body_start..body_end];
         match fourcc {
-            b"fmt " => fmt = Some(decode_fmt_chunk(body).await?),
+            b"fmt " => fmt = Some(decode_fmt_chunk(body)?),
             b"data" => pending_data_body = Some(body.to_vec()),
             other => other_chunks.push(RiffChunk { fourcc: String::from_utf8_lossy(other).into_owned(), data: body.to_vec() }),
         }
@@ -187,7 +195,7 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     }
     let fmt = fmt.ok_or_else(|| "wav: no fmt chunk found".to_string())?;
     if let Some(body) = pending_data_body {
-        data = Some(decode_data_chunk(&fmt, &body).await);
+        data = Some(decode_data_chunk(&fmt, &body));
     }
     let data = data.ok_or_else(|| "wav: no data chunk found".to_string())?;
     Ok(WavSnapshot { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt, data, other_chunks })
@@ -196,17 +204,18 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
 /// 🚶 Re-encodes a `WavSnapshot` into real RIFF/WAVE bytes: `fmt ` then `data` then
 /// `other_chunks` in their stored order — for a snapshot decoded from a real file with no other
 /// chunks, this reproduces the original bytes exactly (see `codec_retention_law` below).
-pub async fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
     let mut body = Vec::new();
     body.extend_from_slice(b"WAVE");
-    let fmt_body = encode_fmt_chunk(&snapshot.fmt).await;
+    let fmt_body = encode_fmt_chunk(&snapshot.fmt);
     body.extend_from_slice(b"fmt ");
     body.extend_from_slice(&(fmt_body.len() as u32).to_le_bytes());
     body.extend_from_slice(&fmt_body);
     if fmt_body.len() % 2 == 1 {
         body.push(0);
     }
-    let data_body = encode_data_chunk(&snapshot.data).await;
+    let data_body = encode_data_chunk(&snapshot.data);
     body.extend_from_slice(b"data");
     body.extend_from_slice(&(data_body.len() as u32).to_le_bytes());
     body.extend_from_slice(&data_body);
@@ -238,7 +247,8 @@ mod codec_tests {
     /// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
     /// `📚️examples/🎬️demo/🖼️assets/🔊️example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
-    async fn real_fixture() -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_fixture() -> Vec<u8> {
         include_bytes!("../📚️examples/🎬️demo/🖼️assets/🔊️example.wav").to_vec()
     }
 

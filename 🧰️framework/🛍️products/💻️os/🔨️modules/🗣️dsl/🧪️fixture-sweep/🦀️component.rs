@@ -1163,13 +1163,13 @@ mod m5_handcrafted_grammar_conformance {
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
     async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> Result<(), String> {
-        let grammar = parse_grammar(grammar_semio).await.map_err(|error| format!("parse grammar.semio: {error:?}"))?;
+        let grammar = parse_grammar(grammar_semio).map_err(|error| format!("parse grammar.semio: {error:?}"))?;
         if grammar.dialect != SemioDialect::Grammar {
             return Err("expected grammar dialect".to_string());
         }
         let recognizer = Recognizer::compile(&grammar);
         let body = dsl_body_from_fixture(fixture_semio);
-        let ok = recognizer.await.recognize(&body.await).await.map_err(|error| format!("recognize failed: {error:?}"))?;
+        let ok = recognizer.recognize(&body.await).map_err(|error| format!("recognize failed: {error:?}"))?;
         if !ok {
             return Err("grammar did not recognize shipped fixture DSL body".to_string());
         }
@@ -1263,9 +1263,9 @@ mod m5_handcrafted_protocol_conformance {
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
     async fn check_protocol_conformance(protocol_semio: &str, bytes: &[u8]) -> Result<(), String> {
-        verify_protocol_source(protocol_semio, bytes).await?;
-        let spec = parse_protocol(protocol_semio).await.map_err(|error| format!("parse_protocol: {error:?}"))?;
-        walk_protocol(&spec, bytes).await.map(|_| ()).map_err(|error| format!("walk_protocol @{}: {}", error.offset, error.message))
+        verify_protocol_source(protocol_semio, bytes)?;
+        let spec = parse_protocol(protocol_semio).map_err(|error| format!("parse_protocol: {error:?}"))?;
+        walk_protocol(&spec, bytes).map(|_| ()).map_err(|error| format!("walk_protocol @{}: {}", error.offset, error.message))
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1385,11 +1385,11 @@ mod m5_cross_artifact_rejection {
             if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
                 continue;
             }
-            let Ok(grammar) = parse_grammar(&grammar_text).await else { continue };
+            let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
             if grammar.dialect != SemioDialect::Grammar {
                 continue;
             }
-            usable.push((facet.label.clone(), Recognizer::compile(&grammar).await, dsl_body_from_fixture(&fixture_text).await));
+            usable.push((facet.label.clone(), Recognizer::compile(&grammar), dsl_body_from_fixture(&fixture_text).await));
         }
 
         if usable.len() < 2 {
@@ -1401,10 +1401,10 @@ mod m5_cross_artifact_rejection {
             for j in (i + 1)..usable.len() {
                 let (label_a, recognizer_a, body_a) = &usable[i];
                 let (label_b, recognizer_b, body_b) = &usable[j];
-                if recognizer_a.recognize(body_b).await.unwrap_or(false) {
+                if recognizer_a.recognize(body_b).unwrap_or(false) {
                     failures.push(format!("{label_a} grammar must reject {label_b}'s fixture body"));
                 }
-                if recognizer_b.recognize(body_a).await.unwrap_or(false) {
+                if recognizer_b.recognize(body_a).unwrap_or(false) {
                     failures.push(format!("{label_b} grammar must reject {label_a}'s fixture body"));
                 }
             }
@@ -1469,17 +1469,17 @@ mod m5_production_coverage {
             }
             // A grammar that fails to even parse is grammar_conformance's failure to surface —
             // this diagnostic only covers the uncovered-productions signal once a grammar parses.
-            let Ok(grammar) = parse_grammar(&grammar_text).await else { continue };
-            let recognizer = Recognizer::compile(&grammar).await;
+            let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
+            let recognizer = Recognizer::compile(&grammar);
             let body = dsl_body_from_fixture(&fixture_text).await;
-            let Ok(uncovered) = recognizer.uncovered_productions(&body).await else { continue };
+            let Ok(uncovered) = recognizer.uncovered_productions(&body) else { continue };
             if !uncovered.is_empty() {
                 eprintln!("[DEBUG] {}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
             }
             checked += 1;
             // Soft assertion for now (matches the pre-P2-M3 design): recognition must succeed;
             // the uncovered list itself stays advisory until a later wave enforces full coverage.
-            if !recognizer.recognize(&body).await.unwrap_or(false) {
+            if !recognizer.recognize(&body).unwrap_or(false) {
                 if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
                     soft_failures.push(facet.label.clone());
                 } else {
@@ -1527,7 +1527,7 @@ mod m5_semio_envelope_protocol {
 
     #[semio_framework_async_macros::async_test]
     async fn semio_envelope_protocol_parses_under_the_real_dialect() {
-        let spec = parse_protocol(PROTOCOL).await.expect("semio envelope protocol.semio must parse under dsl_grammar's real parser");
+        let spec = parse_protocol(PROTOCOL).expect("semio envelope protocol.semio must parse under dsl_grammar's real parser");
         assert_eq!(spec.id, "semio.envelope");
         assert_eq!(spec.schema, "semio.envelope");
     }
@@ -1538,9 +1538,9 @@ mod m5_semio_envelope_protocol {
         let payload = b"real gif89a pack payload bytes, not a fabricated placeholder".to_vec();
         let wrapped = wrap_binary(&envelope, &payload);
 
-        verify_protocol_source(PROTOCOL, &wrapped).await.expect("verify_protocol_source must accept a real wrap_binary envelope");
-        let spec = parse_protocol(PROTOCOL).await.expect("parse_protocol");
-        let trace = walk_protocol(&spec, &wrapped).await.expect("walk_protocol must succeed on a real wrap_binary envelope");
+        verify_protocol_source(PROTOCOL, &wrapped).expect("verify_protocol_source must accept a real wrap_binary envelope");
+        let spec = parse_protocol(PROTOCOL).expect("parse_protocol");
+        let trace = walk_protocol(&spec, &wrapped).expect("walk_protocol must succeed on a real wrap_binary envelope");
         assert_eq!(trace.consumed, wrapped.len(), "walk_protocol must consume every byte of the envelope + payload, consumed == len");
     }
 
@@ -1552,8 +1552,8 @@ mod m5_semio_envelope_protocol {
         let envelope = SemioEnvelope::from_envelope_id("stdio.gif", Component::Spr, 3).expect("valid envelope id");
         let wrapped = wrap_binary(&envelope, &[]);
 
-        let spec = parse_protocol(PROTOCOL).await.expect("parse_protocol");
-        let trace = walk_protocol(&spec, &wrapped).await.expect("walk_protocol must succeed on an empty-payload envelope");
+        let spec = parse_protocol(PROTOCOL).expect("parse_protocol");
+        let trace = walk_protocol(&spec, &wrapped).expect("walk_protocol must succeed on an empty-payload envelope");
         assert_eq!(trace.consumed, wrapped.len());
     }
 }

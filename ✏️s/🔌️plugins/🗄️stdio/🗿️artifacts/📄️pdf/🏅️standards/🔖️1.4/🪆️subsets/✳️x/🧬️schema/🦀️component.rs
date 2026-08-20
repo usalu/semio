@@ -46,7 +46,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -96,14 +96,16 @@ pub mod derived_analysis {
     pub const CODE_DEGENERATE_PAGE_SIZE: &str = "stdio.pdf.x.degenerate-page-size";
     pub const CODE_SCHEMA_GAP: &str = "stdio.pdf.x.schema-gap-unverifiable";
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Honestly-scope-limited PDF/X conformance check against one already-decoded `PdfSnapshot`.
     /// Shared single source of truth: `PdfXComposer::compose` (pass-through, can't hard-gate without
     /// an object graph) and the registered `SubsetValidator` both call this.
-    pub async fn check_pdf_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_pdf_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !(snapshot.page.width > 0.0 && snapshot.page.height > 0.0) {
             out.push(soft(

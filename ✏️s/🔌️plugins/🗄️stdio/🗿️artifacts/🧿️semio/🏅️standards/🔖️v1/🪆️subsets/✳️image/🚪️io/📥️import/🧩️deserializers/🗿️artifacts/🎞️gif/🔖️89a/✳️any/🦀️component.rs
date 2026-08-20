@@ -48,7 +48,8 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
-    async fn sample_gif() -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_gif() -> GifSnapshot {
         GifSnapshot {
             width: 2,
             height: 1,

@@ -24,7 +24,8 @@ pub struct SemioTableShape {
 }
 
 /// 📐️ Computes [`SemioTableShape`] — pure, total, O(columns).
-pub async fn compute_semio_table_shape(snapshot: &SemioTableSnapshot) -> SemioTableShape {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_table_shape(snapshot: &SemioTableSnapshot) -> SemioTableShape {
     let mut shape = SemioTableShape { column_count: snapshot.columns.len() as u32, row_count: snapshot.rows.len() as u32, ..Default::default() };
     for column in &snapshot.columns {
         match column.kind {
@@ -47,7 +48,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
-    async fn populated() -> SemioTableSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioTableSnapshot {
         SemioTableSnapshot {
             schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
             columns: vec![

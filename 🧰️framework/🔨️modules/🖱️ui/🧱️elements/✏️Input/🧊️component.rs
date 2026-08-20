@@ -14,7 +14,7 @@ use crate::wgpu::widgets::{draw_text, measure_text_width, WidgetContext};
 use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::input::{HitKind, HitTarget};
 
-pub(crate) async fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let focused = ctx.input.focused_id.as_deref() == Some(id);
     let border = if focused { ctx.theme.border_emphasized } else { ctx.theme.border_normal };
     push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg);

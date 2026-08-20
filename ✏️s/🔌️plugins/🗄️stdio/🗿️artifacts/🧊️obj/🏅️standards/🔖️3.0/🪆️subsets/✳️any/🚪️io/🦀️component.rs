@@ -29,7 +29,8 @@ use std::collections::HashMap;
 /// 🔢 Resolves a raw OBJ index (1-based positive, or negative = relative to the
 /// current end of the list at parse time) against `current_len` — the OBJ spec's
 /// own negative-index rule.
-async fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
     if raw > 0 {
         Ok((raw - 1) as u32)
     } else if raw < 0 {
@@ -44,14 +45,15 @@ async fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
 }
 
 /// 🧩 Parses one `f` face-vertex token (`v`, `v/vt`, `v//vn`, `v/vt/vn`).
-async fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<ObjFaceVertex, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<ObjFaceVertex, String> {
     let mut parts = token.split('/');
     let v_raw: i64 = parts.next().ok_or("empty face token")?.parse().map_err(|e| format!("face vertex index: {e}"))?;
-    let vertex = resolve_index(vertex_count, v_raw).await?;
+    let vertex = resolve_index(vertex_count, v_raw)?;
     let vt_raw = parts.next().unwrap_or("");
-    let texcoord = if vt_raw.is_empty() { None } else { Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?).await?) };
+    let texcoord = if vt_raw.is_empty() { None } else { Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?)?) };
     let vn_raw = parts.next().unwrap_or("");
-    let normal = if vn_raw.is_empty() { None } else { Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?).await?) };
+    let normal = if vn_raw.is_empty() { None } else { Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?)?) };
     Ok(ObjFaceVertex { vertex, texcoord, normal })
 }
 //#endregion 🔖️IndexResolution
@@ -60,7 +62,8 @@ async fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usi
 /// 📥 Parses a real Wavefront OBJ text body: `v`/`vt`/`vn` (incl. optional `w`), `f` (v, v/vt,
 /// v//vn, v/vt/vn, negative-relative indices, n-gons), `o`/`g` (multi-name)/`usemtl`/`mtllib`/`s`,
 /// with every comment and unrecognized statement retained in `unknown_statements`.
-pub async fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
     let mut vertices = Vec::new();
     let mut texcoords = Vec::new();
     let mut normals = Vec::new();
@@ -113,7 +116,7 @@ pub async fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
             Some("f") => {
                 let mut face_vertices = Vec::new();
                 for token in parts {
-                    face_vertices.push(parse_face_vertex(token, vertices.len(), texcoords.len(), normals.len()).await?);
+                    face_vertices.push(parse_face_vertex(token, vertices.len(), texcoords.len(), normals.len())?);
                 }
                 if face_vertices.len() < 3 {
                     return Err(format!("face has fewer than 3 vertices: {line}"));
@@ -186,7 +189,8 @@ pub async fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
 //#endregion 🔖️Decode
 
 //#region 🔖️Encode
-async fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
     match (fv.texcoord, fv.normal) {
         (Some(vt), Some(vn)) => out.push_str(&format!("{}/{}/{}", fv.vertex + 1, vt + 1, vn + 1)),
         (Some(vt), None) => out.push_str(&format!("{}/{}", fv.vertex + 1, vt + 1)),
@@ -196,7 +200,8 @@ async fn write_face_vertex(out: &mut String, fv: &ObjFaceVertex) {
 }
 
 /// 📤 Writes a real Wavefront OBJ 3.0 text body per this module's documented normal form.
-pub async fn encode_obj(snap: &ObjSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_obj(snap: &ObjSnapshot) -> String {
     let mut out = String::new();
     if let Some(lib) = &snap.mtllib {
         out.push_str(&format!("mtllib {lib}\n"));

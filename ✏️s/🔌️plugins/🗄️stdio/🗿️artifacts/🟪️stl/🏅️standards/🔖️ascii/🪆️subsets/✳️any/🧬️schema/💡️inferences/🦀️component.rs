@@ -26,7 +26,7 @@ pub struct StlInference {
 
 impl protocol::Inference<StlSnapshot> for StlInference {
     async fn infer(snapshot: &StlSnapshot) -> Self {
-        Self { bounds: compute_stl_bounds(snapshot).await }
+        Self { bounds: compute_stl_bounds(snapshot) }
     }
 }
 
@@ -65,7 +65,8 @@ impl ArtifactInferrer for crate::artifacts::stl::standards::v_ascii::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.stl.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `stl_artifact_schema_descriptor`'s registration.
-pub async fn stl_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn stl_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.stl.inference",
         inference: schema::FacetLeaves {

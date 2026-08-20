@@ -7,24 +7,27 @@ use sourcing_curate::artifacts::curate::schema::{windows::WindowsModule, Sourcin
 const EXTENSION_ID: &str = "sourcing-module-windows";
 const HOST_APP_ID: &str = "sourcing-curate";
 
-async fn bundle() -> ExtensionBundle {
+// 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
+// plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
+// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's path_scope);
+// bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
+fn bundle() -> ExtensionBundle {
     let module = WindowsModule;
-    ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", "0.1.0")
-        .extends("sourcing")
-        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-        // extension only contributes a topic (`sourcing.module`).
-        .mode(ExecutionMode::Declarative)
-        .contributes_topic(
-            "sourcing.module",
-            serde_json::json!({
-                "appId": HOST_APP_ID,
-                "moduleId": module.module_id(),
-                "label": module.label(),
-                "iconId": "window",
-                "typologyJson": serde_json::to_string(&module.typology()).unwrap_or_default(),
-                "kindsJson": serde_json::to_string(&module.demo_kinds()).unwrap_or_default(),
-            }),
-        )
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", "0.1.0").extends("sourcing");
+    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+    // extension only contributes a topic (`sourcing.module`).
+    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
+    semio_framework::io::resolve_ready(bundle.contributes_topic(
+        "sourcing.module",
+        serde_json::json!({
+            "appId": HOST_APP_ID,
+            "moduleId": module.module_id(),
+            "label": module.label(),
+            "iconId": "window",
+            "typologyJson": serde_json::to_string(&module.typology()).unwrap_or_default(),
+            "kindsJson": serde_json::to_string(&module.demo_kinds()).unwrap_or_default(),
+        }),
+    ))
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -36,7 +39,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn bundle_contributes_module_for_sourcing_curate() {
+    fn bundle_contributes_module_for_sourcing_curate() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);
         assert_eq!(manifest.extends, "sourcing");

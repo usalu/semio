@@ -21,7 +21,8 @@ pub struct SemioAnimationDuration {
 /// ⏱️ Computes [`SemioAnimationDuration`] — `duration_seconds` is the maximum `t` across every
 /// keyframe of every channel of every timeline (`0.0` for no keyframes, an honest degenerate
 /// case, not a panic); `channel_count`/`keyframe_count` are real sums across all timelines.
-pub async fn compute_semio_animation_duration(snapshot: &SemioAnimationSnapshot) -> SemioAnimationDuration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_animation_duration(snapshot: &SemioAnimationSnapshot) -> SemioAnimationDuration {
     let mut duration_seconds = 0.0f64;
     let mut channel_count = 0u32;
     let mut keyframe_count = 0u32;
@@ -46,15 +47,18 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTimeline, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 
-    async fn keyframe(t: f64) -> AnimKeyframe {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn keyframe(t: f64) -> AnimKeyframe {
         AnimKeyframe { t, value: Default::default() }
     }
 
-    async fn channel(keyframes: Vec<AnimKeyframe>) -> AnimChannel {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn channel(keyframes: Vec<AnimKeyframe>) -> AnimChannel {
         AnimChannel { target: AnimTarget { node: "n".into(), property: Default::default() }, interpolation: Default::default(), keyframes }
     }
 
-    async fn snapshot(timelines: Vec<AnimTimeline>) -> SemioAnimationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(timelines: Vec<AnimTimeline>) -> SemioAnimationSnapshot {
         SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines }
     }
 

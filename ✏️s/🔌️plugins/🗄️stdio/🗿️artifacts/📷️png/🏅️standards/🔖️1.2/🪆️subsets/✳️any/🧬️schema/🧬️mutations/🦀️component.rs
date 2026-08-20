@@ -118,12 +118,12 @@ impl Mutation<PngSnapshot> for PngMutation {
     async fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PngMutation::NoMutation => PngDiff::default(),
-            PngMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
-            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => diff::diff_set_header(base, *width, *height, *bit_depth, *color_type, *interlace).await,
-            PngMutation::SetPalette { plte } => diff::diff_set_palette(base, plte).await,
-            PngMutation::SetTransparency { trns } => diff::diff_set_transparency(base, trns).await,
-            PngMutation::SetGamma { gama } => diff::diff_set_gamma(base, *gama).await,
-            PngMutation::SetChromaticities { chrm } => diff::diff_set_chromaticities(base, *chrm).await,
+            PngMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => diff::diff_set_header(base, *width, *height, *bit_depth, *color_type, *interlace),
+            PngMutation::SetPalette { plte } => diff::diff_set_palette(base, plte),
+            PngMutation::SetTransparency { trns } => diff::diff_set_transparency(base, trns),
+            PngMutation::SetGamma { gama } => diff::diff_set_gamma(base, *gama),
+            PngMutation::SetChromaticities { chrm } => diff::diff_set_chromaticities(base, *chrm),
             PngMutation::SetSrgbIntent { srgb } => diff::diff_set_srgb_intent(base, *srgb),
             PngMutation::SetPhysicalDims { phys } => diff::diff_set_physical_dims(base, *phys),
             PngMutation::SetTimestamp { time } => diff::diff_set_timestamp(base, *time),
@@ -210,29 +210,29 @@ async fn enc_png_snapshot(s: &PngSnapshot) -> String {
     )
 }
 async fn dec_png_snapshot(s: &str) -> Result<PngSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks] = parts.as_slice() else {
         return Err(format!("png snapshot: expected 18 fields, got {}", parts.len()));
     };
     Ok(PngSnapshot {
-        schema: dec_str(schema).await?,
-        width: parse_u32(width).await?,
-        height: parse_u32(height).await?,
-        bit_depth: parse_u8(bit_depth).await?,
-        color_type: dec_color_type(color_type).await?,
+        schema: dec_str(schema)?,
+        width: parse_u32(width)?,
+        height: parse_u32(height)?,
+        bit_depth: parse_u8(bit_depth)?,
+        color_type: dec_color_type(color_type)?,
         interlace: *interlace == "1",
-        plte: decode_option(plte, |s| dec_list(s, dec_rgb)).await?,
-        trns: decode_option(trns, dec_transparency).await?,
-        gama: decode_option(gama, parse_u32).await?,
-        chrm: decode_option(chrm, dec_chromaticities).await?,
-        srgb: decode_option(srgb, dec_srgb_intent).await?,
-        phys: decode_option(phys, dec_physical_dims).await?,
-        time: decode_option(time, dec_timestamp).await?,
-        bkgd: decode_option(bkgd, dec_background).await?,
-        text_chunks: dec_list(text_chunks, dec_text_chunk).await?,
-        pixels: hex_decode(pixels).await?,
-        chunk_order: dec_list(chunk_order, dec_chunk_marker).await?,
-        unknown_chunks: dec_list(unknown_chunks, dec_chunk).await?,
+        plte: decode_option(plte, |s| dec_list(s, dec_rgb))?,
+        trns: decode_option(trns, dec_transparency)?,
+        gama: decode_option(gama, parse_u32)?,
+        chrm: decode_option(chrm, dec_chromaticities)?,
+        srgb: decode_option(srgb, dec_srgb_intent)?,
+        phys: decode_option(phys, dec_physical_dims)?,
+        time: decode_option(time, dec_timestamp)?,
+        bkgd: decode_option(bkgd, dec_background)?,
+        text_chunks: dec_list(text_chunks, dec_text_chunk)?,
+        pixels: hex_decode(pixels)?,
+        chunk_order: dec_list(chunk_order, dec_chunk_marker)?,
+        unknown_chunks: dec_list(unknown_chunks, dec_chunk)?,
     })
 }
 
@@ -268,21 +268,21 @@ async fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
     match keyword {
         "set-snapshot" => Ok(PngMutation::SetSnapshot { snapshot: dec_png_snapshot(arg("snapshot")?).await? }),
         "set-header" => {
-            Ok(PngMutation::SetHeader { width: parse_u32(arg("width")?).await?, height: parse_u32(arg("height")?).await?, bit_depth: parse_u8(arg("bit-depth")?).await?, color_type: dec_color_type(arg("color-type")?).await?, interlace: arg("interlace")? == "1" })
+            Ok(PngMutation::SetHeader { width: parse_u32(arg("width")?)?, height: parse_u32(arg("height")?)?, bit_depth: parse_u8(arg("bit-depth")?)?, color_type: dec_color_type(arg("color-type")?)?, interlace: arg("interlace")? == "1" })
         }
-        "set-palette" => Ok(PngMutation::SetPalette { plte: decode_option(arg("plte")?, |s| dec_list(s, dec_rgb)).await? }),
-        "set-transparency" => Ok(PngMutation::SetTransparency { trns: decode_option(arg("trns")?, dec_transparency).await? }),
-        "set-gamma" => Ok(PngMutation::SetGamma { gama: decode_option(arg("gama")?, parse_u32).await? }),
-        "set-chromaticities" => Ok(PngMutation::SetChromaticities { chrm: decode_option(arg("chrm")?, dec_chromaticities).await? }),
-        "set-srgb-intent" => Ok(PngMutation::SetSrgbIntent { srgb: decode_option(arg("srgb")?, dec_srgb_intent).await? }),
-        "set-physical-dims" => Ok(PngMutation::SetPhysicalDims { phys: decode_option(arg("phys")?, dec_physical_dims).await? }),
-        "set-timestamp" => Ok(PngMutation::SetTimestamp { time: decode_option(arg("time")?, dec_timestamp).await? }),
-        "set-background" => Ok(PngMutation::SetBackground { bkgd: decode_option(arg("bkgd")?, dec_background).await? }),
-        "insert-text-chunk" => Ok(PngMutation::InsertTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?).await? }),
+        "set-palette" => Ok(PngMutation::SetPalette { plte: decode_option(arg("plte")?, |s| dec_list(s, dec_rgb))? }),
+        "set-transparency" => Ok(PngMutation::SetTransparency { trns: decode_option(arg("trns")?, dec_transparency)? }),
+        "set-gamma" => Ok(PngMutation::SetGamma { gama: decode_option(arg("gama")?, parse_u32)? }),
+        "set-chromaticities" => Ok(PngMutation::SetChromaticities { chrm: decode_option(arg("chrm")?, dec_chromaticities)? }),
+        "set-srgb-intent" => Ok(PngMutation::SetSrgbIntent { srgb: decode_option(arg("srgb")?, dec_srgb_intent)? }),
+        "set-physical-dims" => Ok(PngMutation::SetPhysicalDims { phys: decode_option(arg("phys")?, dec_physical_dims)? }),
+        "set-timestamp" => Ok(PngMutation::SetTimestamp { time: decode_option(arg("time")?, dec_timestamp)? }),
+        "set-background" => Ok(PngMutation::SetBackground { bkgd: decode_option(arg("bkgd")?, dec_background)? }),
+        "insert-text-chunk" => Ok(PngMutation::InsertTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?)? }),
         "remove-text-chunk" => Ok(PngMutation::RemoveTextChunk { index: usize_arg("index")? }),
-        "set-text-chunk" => Ok(PngMutation::SetTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?).await? }),
-        "set-pixels" => Ok(PngMutation::SetPixels { pixels: hex_decode(arg("pixels")?).await? }),
-        "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk { index: usize_arg("index")?, chunk: dec_chunk(arg("chunk")?).await? }),
+        "set-text-chunk" => Ok(PngMutation::SetTextChunk { index: usize_arg("index")?, chunk: dec_text_chunk(arg("chunk")?)? }),
+        "set-pixels" => Ok(PngMutation::SetPixels { pixels: hex_decode(arg("pixels")?)? }),
+        "insert-unknown-chunk" => Ok(PngMutation::InsertUnknownChunk { index: usize_arg("index")?, chunk: dec_chunk(arg("chunk")?)? }),
         "remove-unknown-chunk" => Ok(PngMutation::RemoveUnknownChunk { index: usize_arg("index")? }),
         other => Err(format!("png mutation: unknown keyword {other:?}")),
     }
@@ -329,7 +329,7 @@ impl OpBinary for PngMutation {
                 w.write_u32_le(*width).await;
                 w.write_u32_le(*height).await;
                 w.write_u8(*bit_depth).await;
-                w.write_u8(color_type.to_u8().await).await;
+                w.write_u8(color_type.to_u8()).await;
                 w.write_u8(if *interlace { 1 } else { 0 }).await;
             }
             PngMutation::SetPalette { plte } => {
@@ -400,37 +400,37 @@ impl OpBinary for PngMutation {
         let ordinal = r.read_u8().await.map_err(op_pack_err)?;
         let mutation = match ordinal {
             0 => PngMutation::NoMutation,
-            1 => PngMutation::SetSnapshot { snapshot: diff::read_bin_snapshot(&mut r).await.map_err(op_pack_err)? },
+            1 => PngMutation::SetSnapshot { snapshot: diff::read_bin_snapshot(&mut r).map_err(op_pack_err)? },
             2 => PngMutation::SetHeader {
                 width: r.read_u32_le().await.map_err(op_pack_err)?,
                 height: r.read_u32_le().await.map_err(op_pack_err)?,
                 bit_depth: r.read_u8().await.map_err(op_pack_err)?,
-                color_type: PngColorType::from_u8(r.read_u8().await.map_err(op_pack_err)?).await.map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
+                color_type: PngColorType::from_u8(r.read_u8().await.map_err(op_pack_err)?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
                 interlace: r.read_u8().await.map_err(op_pack_err)? != 0,
             },
-            3 => PngMutation::SetPalette { plte: diff::read_bin_option(&mut r, |r| diff::read_bin_vec(r, diff::read_bin_rgb)).await.map_err(op_pack_err)? },
-            4 => PngMutation::SetTransparency { trns: diff::read_bin_option(&mut r, diff::read_bin_transparency).await.map_err(op_pack_err)? },
-            5 => PngMutation::SetGamma { gama: diff::read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(op_pack_err)? },
-            6 => PngMutation::SetChromaticities { chrm: diff::read_bin_option(&mut r, diff::read_bin_chromaticities).await.map_err(op_pack_err)? },
-            7 => PngMutation::SetSrgbIntent { srgb: diff::read_bin_option(&mut r, |r| semio_framework_plugin::resolve_ready(PngSrgbIntent::from_u8(r.read_u8()?)).map_err(|e| dsl::PackError::Malformed { what: "png op srgb intent", offset: 0, detail: e })).await.map_err(op_pack_err)? },
-            8 => PngMutation::SetPhysicalDims { phys: diff::read_bin_option(&mut r, diff::read_bin_physical_dims).await.map_err(op_pack_err)? },
-            9 => PngMutation::SetTimestamp { time: diff::read_bin_option(&mut r, diff::read_bin_timestamp).await.map_err(op_pack_err)? },
-            10 => PngMutation::SetBackground { bkgd: diff::read_bin_option(&mut r, diff::read_bin_background).await.map_err(op_pack_err)? },
+            3 => PngMutation::SetPalette { plte: diff::read_bin_option(&mut r, |r| diff::read_bin_vec(r, diff::read_bin_rgb)).map_err(op_pack_err)? },
+            4 => PngMutation::SetTransparency { trns: diff::read_bin_option(&mut r, diff::read_bin_transparency).map_err(op_pack_err)? },
+            5 => PngMutation::SetGamma { gama: diff::read_bin_option(&mut r, |r| r.read_u32_le()).map_err(op_pack_err)? },
+            6 => PngMutation::SetChromaticities { chrm: diff::read_bin_option(&mut r, diff::read_bin_chromaticities).map_err(op_pack_err)? },
+            7 => PngMutation::SetSrgbIntent { srgb: diff::read_bin_option(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png op srgb intent", offset: 0, detail: e })).map_err(op_pack_err)? },
+            8 => PngMutation::SetPhysicalDims { phys: diff::read_bin_option(&mut r, diff::read_bin_physical_dims).map_err(op_pack_err)? },
+            9 => PngMutation::SetTimestamp { time: diff::read_bin_option(&mut r, diff::read_bin_timestamp).map_err(op_pack_err)? },
+            10 => PngMutation::SetBackground { bkgd: diff::read_bin_option(&mut r, diff::read_bin_background).map_err(op_pack_err)? },
             11 => {
                 let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let chunk = diff::read_bin_text_chunk(&mut r).await.map_err(op_pack_err)?;
+                let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::InsertTextChunk { index, chunk }
             }
             12 => PngMutation::RemoveTextChunk { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },
             13 => {
                 let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let chunk = diff::read_bin_text_chunk(&mut r).await.map_err(op_pack_err)?;
+                let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::SetTextChunk { index, chunk }
             }
-            14 => PngMutation::SetPixels { pixels: diff::read_bin_blob(&mut r).await.map_err(op_pack_err)? },
+            14 => PngMutation::SetPixels { pixels: diff::read_bin_blob(&mut r).map_err(op_pack_err)? },
             15 => {
                 let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let chunk = diff::read_bin_chunk(&mut r).await.map_err(op_pack_err)?;
+                let chunk = diff::read_bin_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::InsertUnknownChunk { index, chunk }
             }
             16 => PngMutation::RemoveUnknownChunk { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },

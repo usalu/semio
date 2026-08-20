@@ -26,16 +26,18 @@ use semio_framework_3d::engine::PointClassification;
 // #region 🔖️Api
 
 /// 🏷️ `true` when `uv` lies strictly inside the closed `loop_id` boundary on `face` (winding ≠ 0).
-pub async fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
-    let surface = face_surface(body, face).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+    let surface = face_surface(body, face)?;
     let edge_samples = if matches!(surface, Surface::Plane { .. }) { 0 } else { 16 };
-    point_in_loop_sampled(body, face, loop_id, uv, tol, edge_samples).await
+    point_in_loop_sampled(body, face, loop_id, uv, tol, edge_samples)
 }
 
 /// 🏷️ `true` when `uv` lies inside the face trim (`outer` minus `inner` loops).
-pub async fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
-    let face_ent = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    let surface = face_surface(body, face).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
+    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    let surface = face_surface(body, face)?;
     let samples = match surface {
         Surface::Plane { .. } => 0,
         _ => 16,
@@ -43,43 +45,45 @@ pub async fn point_in_face_uv(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> 
     let Some(outer) = face_ent.outer else {
         return Ok(false);
     };
-    if !point_in_loop_sampled(body, face, outer, uv, tol, samples).await? {
+    if !point_in_loop_sampled(body, face, outer, uv, tol, samples)? {
         return Ok(false);
     }
     for &inner in &face_ent.inners {
-        if point_in_loop_sampled(body, face, inner, uv, tol, samples).await? {
+        if point_in_loop_sampled(body, face, inner, uv, tol, samples)? {
             return Ok(false);
         }
     }
     Ok(true)
 }
 
-async fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
-    let surface = face_surface(body, face).await?;
-    let poly = loop_uv_polygon_sampled(body, loop_id, surface, edge_samples).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_loop_sampled(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64, edge_samples: usize) -> Result<bool, KernelError> {
+    let surface = face_surface(body, face)?;
+    let poly = loop_uv_polygon_sampled(body, loop_id, surface, edge_samples)?;
     if poly.len() < 3 {
         return Ok(false);
     }
-    if point_on_uv_poly_edges(uv, &poly, tol).await {
+    if point_on_uv_poly_edges(uv, &poly, tol) {
         return Ok(false);
     }
-    Ok(uv_winding_nonzero(uv, &poly).await)
+    Ok(uv_winding_nonzero(uv, &poly))
 }
 
 /// 🏷️ Classifies `point` against `solid` via multi-ray parity with certified intersections.
-pub async fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
-    if body.solids.get(solid).await.is_none() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+    if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity("solid".into()));
     }
     if !(tol.is_finite() && tol > 0.0) {
         return Err(KernelError::InvalidInput("tolerance must be positive and finite".into()));
     }
-    let (_, dist) = closest_point_on_solid(body, solid, point).await?;
+    let (_, dist) = closest_point_on_solid(body, solid, point)?;
     if dist <= tol {
         return Ok(PointClassification::OnBoundary);
     }
-    let bvh = build_face_bvh(body, solid).await?;
-    classify_by_ray_consensus(body, solid, &bvh, point, tol).await
+    let bvh = build_face_bvh(body, solid)?;
+    classify_by_ray_consensus(body, solid, &bvh, point, tol)
 }
 
 // #endregion 🔖️Api
@@ -97,16 +101,18 @@ const RAY_RETRY_DIRS: [[f64; 3]; 6] = [
     [0.843_391_445_261_857, 0.214_298_755_144_806, 0.491_975_172_042_98],
 ];
 
-async fn retry_dir(i: usize) -> Vec3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn retry_dir(i: usize) -> Vec3 {
     let d = RAY_RETRY_DIRS[i];
-    Vec3::new(d[0], d[1], d[2]).await
+    Vec3::new(d[0], d[1], d[2])
 }
 
 // #endregion 🔖️Constants
 
 // #region 🔖️UvLoop
 
-async fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
     let mut wn = 0i32;
     let n = poly.len();
     for i in 0..n {
@@ -123,7 +129,8 @@ async fn uv_winding_nonzero(p: Pnt2, poly: &[Pnt2]) -> bool {
     wn != 0
 }
 
-async fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
     let tol2 = tol * tol;
     let n = poly.len();
     for i in 0..n {
@@ -136,34 +143,37 @@ async fn point_on_uv_poly_edges(p: Pnt2, poly: &[Pnt2], tol: f64) -> bool {
     false
 }
 
-async fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
     let ab = b - a;
     let len2 = ab.dot(ab);
     if len2 <= 0.0 {
-        return (p - a).dot(p - a).await;
+        return (p - a).dot(p - a);
     }
     let t = ((p - a).dot(ab) / len2).clamp(0.0, 1.0);
     let q = a + ab * t;
-    (p - q).dot(p - q).await
+    (p - q).dot(p - q)
 }
 
 #[cfg(test)]
-async fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
     loop_uv_polygon_sampled(body, loop_id, surface, 8)
 }
 
-async fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface, edge_samples: usize) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
-    let coedges = body.loop_coedges(loop_id).await;
+    let coedges = body.loop_coedges(loop_id);
     if edge_samples == 0 {
         let mut prev_u: Option<f64> = None;
         for coedge in coedges {
-            let (v0, _) = body.coedge_endpoints(coedge).await.ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-            let v = body.vertices.get(v0).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
-            let mut uv = surface_uv(surface, v.position).await;
-            if surface.is_u_periodic().await {
+            let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
+            let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
+            let mut uv = surface_uv(surface, v.position);
+            if surface.is_u_periodic() {
                 if let Some(pu) = prev_u {
-                    uv.x = unwrap_angle(pu, uv.x).await;
+                    uv.x = unwrap_angle(pu, uv.x);
                 }
                 prev_u = Some(uv.x);
             }
@@ -173,9 +183,9 @@ async fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface
     }
     let mut prev_u: Option<f64> = None;
     for (ci, coedge) in coedges.iter().enumerate() {
-        let co = body.coedges.get(*coedge).await.ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
-        let edge = body.edges.get(co.edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-        let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
+        let co = body.coedges.get(*coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
+        let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
         let (t0, t1) = edge.range;
         let n = edge_samples.max(2);
         for i in 0..n {
@@ -184,10 +194,10 @@ async fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface
             }
             let t = t0 + (t1 - t0) * (i as f64) / ((n - 1) as f64);
             let p = curve.eval(t);
-            let mut uv = surface_uv(surface, p.await).await;
-            if surface.is_u_periodic().await {
+            let mut uv = surface_uv(surface, p);
+            if surface.is_u_periodic() {
                 if let Some(pu) = prev_u {
-                    uv.x = unwrap_angle(pu, uv.x).await;
+                    uv.x = unwrap_angle(pu, uv.x);
                 }
                 prev_u = Some(uv.x);
             }
@@ -202,63 +212,67 @@ async fn loop_uv_polygon_sampled(body: &Body, loop_id: LoopId, surface: &Surface
     Ok(poly)
 }
 
-async fn unwrap_angle(prev: f64, u: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unwrap_angle(prev: f64, u: f64) -> f64 {
     let tau = std::f64::consts::TAU;
     let diff = u - prev;
     prev + diff - tau * ((diff + std::f64::consts::PI) / tau).floor()
 }
 
-async fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     match surface {
         Surface::Plane { frame } => {
-            let l = frame.to_local(p).await;
-            Pnt2::new(l.x, l.y).await
+            let l = frame.to_local(p);
+            Pnt2::new(l.x, l.y)
         }
         Surface::Cylinder { frame, radius: _ } => {
-            let l = frame.to_local(p).await;
-            Pnt2::new(l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU), l.z).await
+            let l = frame.to_local(p);
+            Pnt2::new(l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU), l.z)
         }
         Surface::Cone { frame, half_angle } => {
-            let l = frame.to_local(p).await;
+            let l = frame.to_local(p);
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
             let v = l.z / half_angle.tan().max(1e-15);
-            Pnt2::new(u, v).await
+            Pnt2::new(u, v)
         }
         Surface::Sphere { frame, radius: _ } => {
-            let l = (p - frame.origin).normalized().await.unwrap_or(Vec3::Z);
+            let l = (p - frame.origin).normalized().unwrap_or(Vec3::Z);
             let v = l.z.clamp(-1.0, 1.0).asin();
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
-            Pnt2::new(u, v).await
+            Pnt2::new(u, v)
         }
         Surface::Torus { frame, major_radius, minor_radius } => {
-            let l = frame.to_local(p).await;
+            let l = frame.to_local(p);
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
             let radial = (l.x * l.x + l.y * l.y).sqrt();
             let v = ((radial - *major_radius) / minor_radius.max(1e-15)).clamp(-1.0, 1.0).acos();
-            Pnt2::new(u, v).await
+            Pnt2::new(u, v)
         }
         Surface::Nurbs { .. } => {
             let dom = surface.domain();
-            Pnt2::new(dom.0 .0, dom.1 .0).await
+            Pnt2::new(dom.0 .0, dom.1 .0)
         }
     }
 }
 
-async fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
-    let face_ent = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    body.surfaces.get(face_ent.surface).await.ok_or_else(|| KernelError::MissingEntity("surface".into()))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
+    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }
 
 // #endregion 🔖️UvLoop
 
 // #region 🔖️RayCast
 
-async fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
     let mut inside_votes = 0u32;
     let mut outside_votes = 0u32;
     for i in 0..RAY_RETRY_DIRS.len() {
         let dir = retry_dir(i);
-        let crossings = count_ray_crossings(body, solid, point, dir.await, tol).await?;
+        let crossings = count_ray_crossings(body, solid, point, dir, tol)?;
         if crossings % 2 == 1 {
             inside_votes += 1;
         } else {
@@ -278,12 +292,13 @@ async fn classify_by_ray_consensus(body: &Body, solid: SolidId, _bvh: &FaceBvh, 
     }
 }
 
-async fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
-    let d = dir.normalized().await.unwrap_or(Vec3::X);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3, tol: f64) -> Result<u32, KernelError> {
+    let d = dir.normalized().unwrap_or(Vec3::X);
     let ray = Curve3::Line { origin, dir: d };
     let mut hits = 0u32;
     for face in body.solid_faces(solid) {
-        let added = face_ray_hits(body, face, &ray, origin, d, tol).await?;
+        let added = face_ray_hits(body, face, &ray, origin, d, tol)?;
         let Some(t) = added.into_iter().filter(|t| *t > RAY_T_MIN).min_by(|a, b| a.partial_cmp(b).unwrap()) else {
             continue;
         };
@@ -293,84 +308,90 @@ async fn count_ray_crossings(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec
     Ok(hits)
 }
 
-async fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
-    let surface = face_surface(body, face).await?;
-    let flipped = body.faces.get(face).await.map(|f| f.flipped).unwrap_or(false);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+    let surface = face_surface(body, face)?;
+    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
     match surface {
-        Surface::Plane { frame } => plane_face_hits(body, face, frame, flipped, origin, dir, tol).await,
-        _ => general_face_hits(body, face, surface, ray, tol).await,
+        Surface::Plane { frame } => plane_face_hits(body, face, frame, flipped, origin, dir, tol),
+        _ => general_face_hits(body, face, surface, ray, tol),
     }
 }
 
-async fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn plane_face_hits(body: &Body, face: FaceId, frame: &Frame3, flipped: bool, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Vec<f64>, KernelError> {
     let mut normal = frame.z;
     if flipped {
         normal = -normal;
     }
-    let denom_iv = Iv::exact(dir.dot(normal).await).await;
-    if denom_iv.contains_zero().await {
+    let denom_iv = Iv::exact(dir.dot(normal));
+    if denom_iv.contains_zero() {
         return Ok(vec![]);
     }
     let num = frame.origin - origin;
     let t = num.dot(normal) / dir.dot(normal);
-    let t_iv = Iv::exact(t).await.widen(tol);
-    if t_iv.await.lo <= RAY_T_MIN {
+    let t_iv = Iv::exact(t).widen(tol);
+    if t_iv.lo <= RAY_T_MIN {
         return Ok(vec![]);
     }
     let hit = origin + dir * t;
-    if point_in_face_trim(body, face, hit, tol).await? {
+    if point_in_face_trim(body, face, hit, tol)? {
         Ok(vec![t])
     } else {
         Ok(vec![])
     }
 }
 
-async fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
-    let hits = intersect_curve_surface(ray, surface, tol).await.unwrap_or_default();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn general_face_hits(body: &Body, face: FaceId, surface: &Surface, ray: &Curve3, tol: f64) -> Result<Vec<f64>, KernelError> {
+    let hits = intersect_curve_surface(ray, surface, tol).unwrap_or_default();
     let mut out = Vec::new();
     for h in hits {
         if h.t <= RAY_T_MIN {
             continue;
         }
-        if point_in_face_uv(body, face, Pnt2::new(h.u, h.v).await, tol).await? {
+        if point_in_face_uv(body, face, Pnt2::new(h.u, h.v), tol)? {
             out.push(h.t);
         }
     }
     Ok(out)
 }
 
-async fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<bool, KernelError> {
-    let surface = face_surface(body, face).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_face_trim(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> Result<bool, KernelError> {
+    let surface = face_surface(body, face)?;
     match surface {
         Surface::Sphere { .. } => {
-            let verts = face_boundary_points(body, face).await?;
+            let verts = face_boundary_points(body, face)?;
             if verts.len() < 3 {
                 return Ok(true);
             }
             let mut normal = polygon_normal(&verts);
-            if body.faces.get(face).await.map(|f| f.flipped).unwrap_or(false) {
+            if body.faces.get(face).map(|f| f.flipped).unwrap_or(false) {
                 normal = -normal;
             }
-            Ok(point_in_polygon_3d(hit, &verts, normal.await, tol).await)
+            Ok(point_in_polygon_3d(hit, &verts, normal, tol))
         }
         _ => {
             let uv = surface_uv(surface, hit);
-            point_in_face_uv(body, face, uv.await, tol).await
+            point_in_face_uv(body, face, uv, tol)
         }
     }
 }
 
-async fn face_boundary_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_boundary_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for coedge in body.face_coedges(face) {
-        let (v0, _) = body.coedge_endpoints(coedge).await.ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-        let v = body.vertices.get(v0).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
+        let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
+        let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
         pts.push(v.position);
     }
     Ok(pts)
 }
 
-async fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
     let mut n = Vec3::ZERO;
     for i in 0..verts.len() {
         let p = verts[i];
@@ -379,28 +400,29 @@ async fn polygon_normal(verts: &[Pnt3]) -> Vec3 {
         n.y += (p.z - q.z) * (p.x + q.x);
         n.z += (p.x - q.x) * (p.y + q.y);
     }
-    n.normalized().await.unwrap_or(Vec3::Z)
+    n.normalized().unwrap_or(Vec3::Z)
 }
 
-async fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> bool {
-    let n = normal.normalized().await.unwrap_or(Vec3::Z);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> bool {
+    let n = normal.normalized().unwrap_or(Vec3::Z);
     let ref_pt = verts[0];
     let mut u_axis = n.cross(Vec3::X);
-    if u_axis.await.norm() < 1e-12 {
+    if u_axis.norm() < 1e-12 {
         u_axis = n.cross(Vec3::Y);
     }
-    u_axis = u_axis.await.normalized().await.unwrap_or(Vec3::X);
-    let v_axis = n.cross(u_axis.await).await.normalized().await.unwrap_or(Vec3::Y);
+    u_axis = u_axis.normalized().unwrap_or(Vec3::X);
+    let v_axis = n.cross(u_axis).normalized().unwrap_or(Vec3::Y);
     let to_2d = |p: Pnt3| {
         let w = p - ref_pt;
         Pnt2::new(w.dot(u_axis), w.dot(v_axis))
     };
     let p2 = to_2d(hit);
     let poly: Vec<Pnt2> = verts.iter().copied().map(to_2d).collect();
-    if point_on_uv_poly_edges(p2.await, &poly, tol).await {
+    if point_on_uv_poly_edges(p2, &poly, tol) {
         return true;
     }
-    uv_winding_nonzero(p2.await, &poly).await
+    uv_winding_nonzero(p2, &poly)
 }
 
 // #endregion 🔖️RayCast
@@ -417,12 +439,14 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Trsf;
 
-    async fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {
         let got = point_in_solid(body, solid, p, Tol::DEFAULT.value()).unwrap();
         assert_eq!(got, expected, "point {p:?}");
     }
 
-    async fn oracle_inside(sdf: &Sdf, p: Pnt3) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn oracle_inside(sdf: &Sdf, p: Pnt3) -> bool {
         sdf.contains(p, 1e-6)
     }
 
@@ -456,7 +480,8 @@ mod tests {
         assert_classify(&body, solid, Pnt3::new(0.0, 0.5, 0.5), PointClassification::OnBoundary);
     }
 
-    async fn measure_to_engine(m: PointSolidClassification) -> PointClassification {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn measure_to_engine(m: PointSolidClassification) -> PointClassification {
         match m {
             PointSolidClassification::Inside => PointClassification::Inside,
             PointSolidClassification::Outside => PointClassification::Outside,

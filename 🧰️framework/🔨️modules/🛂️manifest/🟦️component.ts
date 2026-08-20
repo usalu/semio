@@ -6,6 +6,13 @@ export type { IconName };
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
 export { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology };
 export type { ShellLocale, ShellTerminology, LocalizedLabel };
+// 🧭️ `ContextMenuItemSpec`/`Effect` are hand-written types owned by sibling modules aggregated
+// alongside this one into `@semio-tech/framework` (see `🟦️glue.ts`) — that aggregation only helps
+// EXTERNAL consumers of the package; this file's own internal references (`PluginContextMenuResponse`,
+// `PluginUiRefreshResponse`) still need a real import, type-only so the cycle back through
+// `🔺️mesh/🟦️component.ts`'s own `ActionDescriptor` import from this file erases cleanly.
+import type { ContextMenuItemSpec } from "../🔺️mesh/🟦️component.ts";
+import type { Effect } from "../🎠️kernel/🟦️component.ts";
 
 // #region 🧬️GeneratedMirror
 /** 🧬️ Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -1112,6 +1119,8 @@ export function panelTabKindId(kind: PanelTabKind): string {
       return "framework.settings.general";
     case "settingsTheme":
       return "framework.settings.theme";
+    case "settingsDefaultApps":
+      return "framework.settings.defaultApps";
     case "app":
       return kind.id;
   }
@@ -1218,10 +1227,10 @@ export type PluginContextMenuSurfaceTarget = {
 export type PluginContextMenuPoint = { readonly x: number; readonly y: number };
 
 /** @emoji 🖱️ On-demand context-menu request — never cached, never batched into {@link PluginUiRefreshRequest}.
- * `menu` is the {@link UiMenuRef} the host resolved from `data-menu-id`/a scene surface convention id
+ * `menu` is the {@link MenuRef} the host resolved from `data-menu-id`/a scene surface convention id
  * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
 export type PluginContextMenuRequest = {
-  readonly menu: UiMenuRef;
+  readonly menu: MenuRef;
   readonly surface?: PluginContextMenuSurfaceTarget;
   readonly windowInstanceId?: string;
   readonly point?: PluginContextMenuPoint;

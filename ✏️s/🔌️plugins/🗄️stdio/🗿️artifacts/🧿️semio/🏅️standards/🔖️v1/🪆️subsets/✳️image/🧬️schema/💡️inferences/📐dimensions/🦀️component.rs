@@ -23,7 +23,8 @@ pub struct SemioImageDimensions {
 
 /// 📐️ Computes [`SemioImageDimensions`] from a snapshot's header fields — pure, total,
 /// O(frames) only for the length read.
-pub async fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioImageDimensions {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioImageDimensions {
     SemioImageDimensions {
         width: snapshot.width,
         height: snapshot.height,
@@ -41,7 +42,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
-    async fn snapshot(width: u32, height: u32, colorspace: SemioColorspace, bit_depth: u8, frame_count: usize) -> SemioImageSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(width: u32, height: u32, colorspace: SemioColorspace, bit_depth: u8, frame_count: usize) -> SemioImageSnapshot {
         SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width,

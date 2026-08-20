@@ -458,7 +458,7 @@ pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids
         // sync (E0728), so the await is hoisted into a plain loop before the sort (R10 residue #1).
         let mut ordered: Vec<(String, &CompositionPin)> = Vec::with_capacity(pins.len());
         for pin in pins {
-            ordered.push((pin.child_ref.to_uri().await, pin));
+            ordered.push((pin.child_ref.to_uri(), pin));
         }
         ordered.sort_by(|(a, _), (b, _)| a.cmp(b));
         input.push(0);
@@ -643,8 +643,8 @@ mod tests {
         assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
         // (2) A non-empty pin set changes the id relative to no pins at all.
-        let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").await.expect("valid test fixture uri");
-        let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").await.expect("valid test fixture uri");
+        let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
+        let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
         let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
         let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
         assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");

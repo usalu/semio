@@ -50,17 +50,19 @@ impl ArtifactDeserializer for SemioModelFromBcf {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(model_from_bcf(from).await)
+        Ok(model_from_bcf(from))
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
 /// 🕸️ Every guid referenced by `components`, first-seen order, deduped across
 /// selection/visibility-exceptions/coloring (per-list distinction flattened — see module doc).
-async fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
     for guid in &components.selection {
         if !out.contains(guid) {
             out.push(guid.clone());
@@ -80,7 +82,8 @@ async fn referenced_guids(components: &BcfComponents, out: &mut Vec<String>) {
     }
 }
 
-async fn topic_pset(topic: &BcfTopic) -> PropertySet {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn topic_pset(topic: &BcfTopic) -> PropertySet {
     let mut properties = vec![Property { key: "title".into(), value: PsetValue::Text { value: topic.title.clone() } }, Property { key: "status".into(), value: PsetValue::Text { value: topic.status.clone() } }];
     if !topic.priority.is_empty() {
         properties.push(Property { key: "priority".into(), value: PsetValue::Text { value: topic.priority.clone() } });
@@ -100,7 +103,8 @@ async fn topic_pset(topic: &BcfTopic) -> PropertySet {
     PropertySet { name: "Pset_BcfTopic".into(), properties }
 }
 
-async fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
     if topic.comments.is_empty() {
         return None;
     }
@@ -119,17 +123,18 @@ async fn comments_pset(topic: &BcfTopic) -> Option<PropertySet> {
 //#endregion 🔖️Convert
 
 //#region 🔖️Entry
-pub async fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
     let mut elements: Vec<SemioModelElement> = Vec::new();
     let mut relations: Vec<ModelRelation> = Vec::new();
     let mut known_component_ids: Vec<String> = Vec::new();
 
     for topic in &from.topics {
         let mut psets = vec![topic_pset(topic)];
-        if let Some(comments) = comments_pset(topic).await {
+        if let Some(comments) = comments_pset(topic) {
             psets.push(comments);
         }
-        elements.push(SemioModelElement { id: topic.guid.clone(), class: ElementClass::Other { name: "BcfTopic".into() }, placement: SemioTransform::identity().await, geometry: GeometryRef::None, spatial_id: None, psets });
+        elements.push(SemioModelElement { id: topic.guid.clone(), class: ElementClass::Other { name: "BcfTopic".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets });
 
         let mut refs: Vec<String> = Vec::new();
         for vp in &topic.viewpoints {
@@ -140,7 +145,7 @@ pub async fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
         for guid in &refs {
             if !known_component_ids.contains(guid) {
                 known_component_ids.push(guid.clone());
-                elements.push(SemioModelElement { id: guid.clone(), class: ElementClass::Other { name: "BcfReferencedComponent".into() }, placement: SemioTransform::identity().await, geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
+                elements.push(SemioModelElement { id: guid.clone(), class: ElementClass::Other { name: "BcfReferencedComponent".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
             }
             relations.push(ModelRelation { id: format!("rel-bcfreferences-{}-{}", topic.guid, guid), kind: RelationKind::Other { label: "BcfReferences".into() }, from: topic.guid.clone(), to: guid.clone() });
         }
@@ -156,7 +161,8 @@ mod tests {
     use super::*;
     use crate::artifacts::bcf::schema::snapshot::{BcfComment, BcfComponents as BcfComponentsT, BcfViewpoint, BcfVisibility};
 
-    async fn fixture() -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> BcfSnapshot {
         BcfSnapshot {
             schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),

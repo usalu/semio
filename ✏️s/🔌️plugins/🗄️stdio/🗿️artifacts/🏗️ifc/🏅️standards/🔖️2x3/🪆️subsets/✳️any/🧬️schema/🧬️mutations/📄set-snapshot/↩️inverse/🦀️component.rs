@@ -3,6 +3,7 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> Vec<Ifc2x3Mutation> {
-    <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> Vec<Ifc2x3Mutation> {
+    <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(mutation, base)
 }

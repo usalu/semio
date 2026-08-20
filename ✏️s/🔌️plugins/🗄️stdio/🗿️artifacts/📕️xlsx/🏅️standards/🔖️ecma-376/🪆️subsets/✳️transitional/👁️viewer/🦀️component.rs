@@ -23,12 +23,14 @@ pub const XLSX_TRANSITIONAL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio
 /// 🧮 Read-only twin of the sibling mutation-capable surface's own cell-flattening helper — see
 /// that file's doc comment for the flattening rationale. Duplicated rather than shared (viewer
 /// purity).
-pub(crate) async fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
     document.workbook.sheets.iter().flat_map(|sheet| sheet.cells.iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value.clone()))).collect()
 }
 
 /// 🔎 Read-only twin of the sibling mutation-capable surface's own cell-value renderer.
-pub(crate) async fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[String]) -> String {
     match value {
         XlsxCellValue::Number(n) => format!("{n}"),
         XlsxCellValue::SharedString(index) => shared_strings.get(*index).cloned().unwrap_or_else(|| format!("#{index}")),
@@ -97,7 +99,7 @@ impl ArtifactViewer for XlsxTransitionalViewer {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -105,14 +107,15 @@ impl ArtifactViewer for XlsxTransitionalViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_xlsx_transitional_viewer() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_xlsx_transitional_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(XLSX_TRANSITIONAL_DIALECT)
-        .await.document(["stdio", "xlsx", "transitional"])
-        .await.icon_id("table")
-        .await.mode_def(view::definition().await)
-        .await.default_mode_id(view::XLSX_TRANSITIONAL_VIEW_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(view::layout())
+        .document(["stdio", "xlsx", "transitional"])
+        .icon_id("table")
+        .mode_def(view::definition())
+        .default_mode_id(view::XLSX_TRANSITIONAL_VIEW_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(view::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -19,8 +19,9 @@ const SEMIO_MODEL_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`. The EDITABLE
 /// variant — `MeshWindowKit::editable_window_kind()` — carries the frozen `set-vertex` action.
-pub async fn definition() -> WindowKindDefinition {
-    MeshWindowKit::editable_window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    MeshWindowKit::editable_window_kind()
 }
 //#endregion 🔖️Definition
 
@@ -28,7 +29,8 @@ pub async fn definition() -> WindowKindDefinition {
 /// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
 /// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
 /// other by design).
-async fn entity_count(document: &SemioModelSnapshot) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_count(document: &SemioModelSnapshot) -> usize {
     serde_json::to_value(document)
         .ok()
         .and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0)))
@@ -36,9 +38,10 @@ async fn entity_count(document: &SemioModelSnapshot) -> usize {
         .clamp(1, 6)
 }
 
-async fn world_instances_json(document: &SemioModelSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn world_instances_json(document: &SemioModelSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count.await)
+    let instances: Vec<serde_json::Value> = (0..count)
         .map(|index| {
             serde_json::json!({
                 "id": format!("semio_model-{index}"),
@@ -54,15 +57,16 @@ async fn world_instances_json(document: &SemioModelSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn render(document: &SemioModelSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &SemioModelSnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_MODEL_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_MODEL_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
-        camera_json: world3d_camera_json(SEMIO_MODEL_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_MODEL_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_MODEL_EDIT_DEFAULT_CAMERA_FOV).await,
+        camera_json: world3d_camera_json(SEMIO_MODEL_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_MODEL_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_MODEL_EDIT_DEFAULT_CAMERA_FOV),
         meshes_json,
-        instances_json: world_instances_json(document).await,
-        selection_json: world3d_selection_json("rectangle", &[], None).await,
+        instances_json: world_instances_json(document),
+        selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view).await
+    MeshWindowKit::render(&view)
 }
 //#endregion 🔖️Render
 

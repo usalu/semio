@@ -34,17 +34,20 @@ impl Default for BcfArtifact {
 
 impl BcfArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> BcfSnapshot {
         BcfSnapshot { schema: self.schema.clone(), version: self.version.clone(), topics: self.topics.clone(), parts: self.parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: BcfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: BcfSnapshot) -> Self {
         Self { schema: snapshot.schema, version: snapshot.version, topics: snapshot.topics, parts: snapshot.parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: BcfSnapshot) {
         self.schema = snapshot.schema;
         self.version = snapshot.version;
         self.topics = snapshot.topics;
@@ -55,7 +58,8 @@ impl BcfArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.bcf`.
-pub async fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bcf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.bcf",
         artifact: schema::FacetLeaves {
@@ -120,7 +124,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::bcf::schema::mutations::apply_bcf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BcfDiff as protocol::MutationDiff<BcfSnapshot>>::apply(&diff, &self.snapshot).await?;

@@ -6,21 +6,23 @@ use crate::artifacts::dwg::schema::snapshot::decode_dwg;
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "architectural";
-pub async fn label() -> LocalizedLabel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Architectural Example", "Architekturbeispiel")
 }
 pub const ICON: &str = "file";
 pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/📄️architectural.dwg");
 
-async fn decoded_summary_json() -> String {
-    match decode_dwg(FIXTURE_BYTES).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decoded_summary_json() -> String {
+    match decode_dwg(FIXTURE_BYTES) {
         Ok(snap) => {
             format!(
                 r#"{{"fixture":"architectural.dwg","bytes":{},"version":"{}","layerCount":{},"entityCount":{},"classCount":{},"dependencyCount":{}}}"#,
                 FIXTURE_BYTES.len(),
                 snap.version,
                 snap.drawing.layers.len(),
-                snap.drawing.entities().await.len(),
+                snap.drawing.entities().len(),
                 snap.classes.len(),
                 snap.dependencies.len()
             )
@@ -29,6 +31,7 @@ async fn decoded_summary_json() -> String {
     }
 }
 
-pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), decoded_summary_json(), ICON).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn source() -> ExampleSource {
+    ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
 }

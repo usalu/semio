@@ -8,7 +8,7 @@ use std::cell::Cell;
 pub struct Add;
 
 impl Operator for Add {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         if let Some(items) = input.get("items").and_then(|v| v.as_dictionary()) {
             return add_items(items);
         }
@@ -28,7 +28,7 @@ impl Operator for Add {
 pub struct Subtract;
 
 impl Operator for Subtract {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let a = read_dict(input, "a")?;
         let b = read_dict(input, "b")?;
         match a.schema() {
@@ -45,7 +45,7 @@ impl Operator for Subtract {
 pub struct Move;
 
 impl Operator for Move {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let subject = read_dict(input, "subject")?;
         let vector = read_dict(input, "vector")?;
         let schema = subject.schema().unwrap_or("vector");
@@ -64,7 +64,7 @@ impl Operator for Move {
 pub struct Multiply;
 
 impl Operator for Multiply {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("product", number_dictionary(read_channel_number(input, "a")? * read_channel_number(input, "b")?)))
     }
 }
@@ -73,7 +73,7 @@ impl Operator for Multiply {
 pub struct Divide;
 
 impl Operator for Divide {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
             return Err(EvalError::InvalidInput("divide by zero".into()));
@@ -86,7 +86,7 @@ impl Operator for Divide {
 pub struct Power;
 
 impl Operator for Power {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("power", number_dictionary(read_channel_number(input, "a")?.powf(read_channel_number(input, "b")?))))
     }
 }
@@ -95,7 +95,7 @@ impl Operator for Power {
 pub struct Modulo;
 
 impl Operator for Modulo {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let b = read_channel_number(input, "b")?;
         if b.abs() < f64::EPSILON {
             return Err(EvalError::InvalidInput("modulo by zero".into()));
@@ -108,7 +108,7 @@ impl Operator for Modulo {
 pub struct Negate;
 
 impl Operator for Negate {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("negated", number_dictionary(-read_channel_number(input, "number")?)))
     }
 }
@@ -117,7 +117,7 @@ impl Operator for Negate {
 pub struct Abs;
 
 impl Operator for Abs {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("absolute", number_dictionary(read_channel_number(input, "number")?.abs())))
     }
 }
@@ -126,7 +126,7 @@ impl Operator for Abs {
 pub struct Sqrt;
 
 impl Operator for Sqrt {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("root", number_dictionary(read_channel_number(input, "number")?.sqrt())))
     }
 }
@@ -135,7 +135,7 @@ impl Operator for Sqrt {
 pub struct Min;
 
 impl Operator for Min {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("minimum", number_dictionary(read_channel_number(input, "a")?.min(read_channel_number(input, "b")?))))
     }
 }
@@ -144,7 +144,7 @@ impl Operator for Min {
 pub struct Max;
 
 impl Operator for Max {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("maximum", number_dictionary(read_channel_number(input, "a")?.max(read_channel_number(input, "b")?))))
     }
 }
@@ -153,7 +153,7 @@ impl Operator for Max {
 pub struct Floor;
 
 impl Operator for Floor {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("floor", number_dictionary(read_channel_number(input, "number")?.floor())))
     }
 }
@@ -162,7 +162,7 @@ impl Operator for Floor {
 pub struct Ceil;
 
 impl Operator for Ceil {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("ceiling", number_dictionary(read_channel_number(input, "number")?.ceil())))
     }
 }
@@ -171,7 +171,7 @@ impl Operator for Ceil {
 pub struct Round;
 
 impl Operator for Round {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("rounded", number_dictionary(read_channel_number(input, "number")?.round())))
     }
 }
@@ -180,7 +180,7 @@ impl Operator for Round {
 pub struct Sin;
 
 impl Operator for Sin {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("sine", number_dictionary(read_channel_number(input, "number")?.sin())))
     }
 }
@@ -189,7 +189,7 @@ impl Operator for Sin {
 pub struct Cos;
 
 impl Operator for Cos {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("cosine", number_dictionary(read_channel_number(input, "number")?.cos())))
     }
 }
@@ -198,7 +198,7 @@ impl Operator for Cos {
 pub struct Tan;
 
 impl Operator for Tan {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("tangent", number_dictionary(read_channel_number(input, "number")?.tan())))
     }
 }
@@ -207,7 +207,7 @@ impl Operator for Tan {
 pub struct Remap;
 
 impl Operator for Remap {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let value = read_channel_number(input, "value")?;
         let from_min = read_channel_number(input, "fromMin")?;
         let from_max = read_channel_number(input, "fromMax")?;
@@ -225,7 +225,7 @@ impl Operator for Remap {
 pub struct Random;
 
 impl Operator for Random {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let min = read_channel_number(input, "min")?;
         let max = read_channel_number(input, "max")?;
         let seed = read_channel_number(input, "seed").ok().map(f64::to_bits);
@@ -237,7 +237,7 @@ impl Operator for Random {
 pub struct PassThrough;
 
 impl Operator for PassThrough {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("number", number_dictionary(read_channel_number(input, "number")?)))
     }
 }
@@ -246,7 +246,7 @@ impl Operator for PassThrough {
 pub struct Sum;
 
 impl Operator for Sum {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let list = read_dict(input, "list")?;
         let mut total = 0.0;
         for index in list_indices(list) {
@@ -267,7 +267,7 @@ struct Vec3 {
 }
 
 impl Vec3 {
-    async fn new(x: f64, y: f64, z: f64) -> Self {
+    fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
 }
@@ -292,15 +292,15 @@ thread_local! {
     static ENTROPY_SEED: Cell<u64> = const { Cell::new(0) };
 }
 
-async fn number_dictionary(value: f64) -> Dictionary {
+fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-async fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
+fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
     Dictionary::with_schema(schema).insert("x", Value::Atom(Atom::Decimal(value.x))).insert("y", Value::Atom(Atom::Decimal(value.y))).insert("z", Value::Atom(Atom::Decimal(value.z)))
 }
 
-async fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
+fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
     let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
     indices.sort_unstable();
     let first = indices.first().ok_or_else(|| EvalError::MissingInput("items".into()))?;
@@ -323,49 +323,49 @@ async fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
     }
 }
 
-async fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     read_value_number(read_dict(input, key)?)
 }
 
-async fn read_value_number(input: &Dictionary) -> Result<f64, EvalError> {
+fn read_value_number(input: &Dictionary) -> Result<f64, EvalError> {
     input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("value".into()))
 }
 
-async fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
+fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
     Ok(Vec3::new(read_field_number(input, "x")?, read_field_number(input, "y")?, read_field_number(input, "z")?))
 }
 
-async fn read_field_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_field_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn list_indices(list: &Dictionary) -> Vec<usize> {
+fn list_indices(list: &Dictionary) -> Vec<usize> {
     let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
     indices.sort_unstable();
     indices
 }
 
-async fn splitmix64(seed: u64) -> u64 {
+fn splitmix64(seed: u64) -> u64 {
     let mut z = seed.wrapping_add(0x9E37_79B9_7F4A_7C15);
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
     z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
     z ^ (z >> 31)
 }
 
-async fn random_unit(seed: u64) -> f64 {
+fn random_unit(seed: u64) -> f64 {
     splitmix64(seed) as f64 / u64::MAX as f64
 }
 
-async fn entropy_seed() -> u64 {
+fn entropy_seed() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).map(|duration| duration.as_nanos() as u64).unwrap_or(0xC0FF_EE00_D15E_A5E)
 }
 
-async fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
+fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
     if let Some(seed) = explicit_seed {
         return random_unit(seed);
     }
@@ -377,103 +377,103 @@ async fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
     })
 }
 
-async fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::number_default(id, 0.0, &[operator_id])
 }
 
-async fn sum_out() -> ChannelSpec {
+fn sum_out() -> ChannelSpec {
     ChannelSpec::named("S", "Sum", "sum", "Sum")
 }
 
-async fn difference_out() -> ChannelSpec {
+fn difference_out() -> ChannelSpec {
     ChannelSpec::named("D", "Dif", "difference", "Difference")
 }
 
-async fn product_out() -> ChannelSpec {
+fn product_out() -> ChannelSpec {
     ChannelSpec::named("P", "Prd", "product", "Product")
 }
 
-async fn quotient_out() -> ChannelSpec {
+fn quotient_out() -> ChannelSpec {
     ChannelSpec::named("Q", "Quo", "quotient", "Quotient")
 }
 
-async fn power_out() -> ChannelSpec {
+fn power_out() -> ChannelSpec {
     ChannelSpec::named("P", "Pow", "power", "Power")
 }
 
-async fn modulo_out() -> ChannelSpec {
+fn modulo_out() -> ChannelSpec {
     ChannelSpec::named("M", "Mod", "modulo", "Modulo")
 }
 
-async fn negated_out() -> ChannelSpec {
+fn negated_out() -> ChannelSpec {
     ChannelSpec::named("N", "Neg", "negated", "Negated")
 }
 
-async fn absolute_out() -> ChannelSpec {
+fn absolute_out() -> ChannelSpec {
     ChannelSpec::named("A", "Abs", "absolute", "Absolute")
 }
 
-async fn root_out() -> ChannelSpec {
+fn root_out() -> ChannelSpec {
     ChannelSpec::named("R", "Roo", "root", "Root")
 }
 
-async fn floor_out() -> ChannelSpec {
+fn floor_out() -> ChannelSpec {
     ChannelSpec::named("F", "Flr", "floor", "Floor")
 }
 
-async fn ceiling_out() -> ChannelSpec {
+fn ceiling_out() -> ChannelSpec {
     ChannelSpec::named("C", "Ceil", "ceiling", "Ceiling")
 }
 
-async fn rounded_out() -> ChannelSpec {
+fn rounded_out() -> ChannelSpec {
     ChannelSpec::named("R", "Rnd", "rounded", "Rounded")
 }
 
-async fn sine_out() -> ChannelSpec {
+fn sine_out() -> ChannelSpec {
     ChannelSpec::named("S", "Sin", "sine", "Sine")
 }
 
-async fn cosine_out() -> ChannelSpec {
+fn cosine_out() -> ChannelSpec {
     ChannelSpec::named("C", "Cos", "cosine", "Cosine")
 }
 
-async fn tangent_out() -> ChannelSpec {
+fn tangent_out() -> ChannelSpec {
     ChannelSpec::named("T", "Tan", "tangent", "Tangent")
 }
 
-async fn number_out() -> ChannelSpec {
+fn number_out() -> ChannelSpec {
     ChannelSpec::named("N", "Num", "number", "Number")
 }
 
-async fn minimum_out() -> ChannelSpec {
+fn minimum_out() -> ChannelSpec {
     ChannelSpec::named("Mi", "Min", "minimum", "Minimum")
 }
 
-async fn maximum_out() -> ChannelSpec {
+fn maximum_out() -> ChannelSpec {
     ChannelSpec::named("Ma", "Max", "maximum", "Maximum")
 }
 
-async fn remapped_out() -> ChannelSpec {
+fn remapped_out() -> ChannelSpec {
     ChannelSpec::named("R", "Rem", "remapped", "Remapped")
 }
 
-async fn random_out() -> ChannelSpec {
+fn random_out() -> ChannelSpec {
     ChannelSpec::named("R", "Rnd", "random", "Random")
 }
 
-async fn vector_out() -> ChannelSpec {
+fn vector_out() -> ChannelSpec {
     ChannelSpec::named("V", "Vec", "vector", "Vector")
 }
 
-async fn point_out() -> ChannelSpec {
+fn point_out() -> ChannelSpec {
     ChannelSpec::named("P", "Pnt", "point", "Point")
 }
 
-async fn move_out() -> Vec<ChannelSpec> {
+fn move_out() -> Vec<ChannelSpec> {
     vec![point_out(), vector_out()]
 }
 
-async fn schema(id: &str, name: &str) -> Schema {
+fn schema(id: &str, name: &str) -> Schema {
     Schema {
         id: id.into(),
         module: "math".into(),
@@ -484,18 +484,18 @@ async fn schema(id: &str, name: &str) -> Schema {
     }
 }
 
-async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
+fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "math".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:➕️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
-async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schemas: Vec<&str>, produces: &[&str]) {
+fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schemas: Vec<&str>, produces: &[&str]) {
     registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: Box::new(operation) }], produces);
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all math schemas and operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     registry.register_schema(schema("point", "Point"));
     registry.register_schema(schema("vector", "Vector"));
 
@@ -591,7 +591,7 @@ pub async fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub async fn extension_manifest_json() -> String {
+pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand, FlowExtensionSetting};
     build_manifest_json(
             "math",
@@ -606,7 +606,7 @@ pub async fn extension_manifest_json() -> String {
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub async fn module_registry() -> Registry {
+pub fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -733,7 +733,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "math";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -745,21 +745,25 @@ mod extension_guest {
         topic_payload
     }
 
-    async fn bundle() -> ExtensionBundle {
+    // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
+    // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+    // path_scope); bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request.
+    // See R9.
+    fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.2.0")
-            .extends("flow")
-            .mode(ExecutionMode::Linked)
-            .contributes_topic("flow.extension", flow_topic_payload)
-            .contributes_topic("flow.extension", procedural3d_topic_payload)
-            .handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-                })?;
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            })
+        let bundle = ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.2.0").extends("flow");
+        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
+                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
+            })?;
+            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+        }))
     }
 
     semio_framework_plugin::extension_exports!(bundle);

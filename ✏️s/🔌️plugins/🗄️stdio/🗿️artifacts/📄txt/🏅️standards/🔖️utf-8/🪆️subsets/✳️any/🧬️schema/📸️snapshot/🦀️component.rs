@@ -21,7 +21,8 @@ pub enum LineEnding {
 
 impl LineEnding {
     /// 🔤️ The literal byte sequence this line ending prints as.
-    pub async fn as_str(self) -> &'static str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_str(self) -> &'static str {
         match self {
             LineEnding::Lf => "\n",
             LineEnding::CrLf => "\r\n",
@@ -65,11 +66,12 @@ impl Default for TxtSnapshot {
 impl TxtSnapshot {
     /// 🧵️ Reconstructs the full text body (lines joined by `line_ending`, with the trailing
     /// newline appended iff `trailing_newline`). Inverse of [`Self::from_body`].
-    pub async fn to_body(&self) -> String {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_body(&self) -> String {
         let sep = self.line_ending.as_str();
-        let mut out = self.lines.join(sep.await);
+        let mut out = self.lines.join(sep);
         if self.trailing_newline {
-            out.push_str(sep.await);
+            out.push_str(sep);
         }
         out
     }
@@ -77,12 +79,13 @@ impl TxtSnapshot {
     /// 🔍️ Splits a raw text body into `(lines, trailing_newline, line_ending)`. An empty body
     /// is zero lines (not one empty line) — the only case that needs special-casing, since
     /// `"".split(sep)` would otherwise yield a single empty-string element.
-    pub async fn from_body(body: &str) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_body(body: &str) -> Self {
         if body.is_empty() {
             return Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf };
         }
         let line_ending = if body.contains("\r\n") { LineEnding::CrLf } else { LineEnding::Lf };
-        let sep = line_ending.as_str().await;
+        let sep = line_ending.as_str();
         let trailing_newline = body.ends_with(sep);
         let content = if trailing_newline { &body[..body.len() - sep.len()] } else { body };
         let lines: Vec<String> = content.split(sep).map(String::from).collect();
@@ -106,10 +109,10 @@ impl store::ArtifactDsl for TxtSnapshot {
     }
 
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_body(text).await)
+        Ok(Self::from_body(text))
     }
     async fn print_dsl(&self) -> String {
-        self.to_body().await
+        self.to_body()
     }
 }
 
@@ -117,7 +120,7 @@ impl store::ArtifactPack for TxtSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
-        let raw = self.to_body().await;
+        let raw = self.to_body();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
@@ -128,7 +131,7 @@ impl store::ArtifactPack for TxtSnapshot {
         }
         let _ = options;
         let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self::from_body(&body).await)
+        Ok(Self::from_body(&body))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

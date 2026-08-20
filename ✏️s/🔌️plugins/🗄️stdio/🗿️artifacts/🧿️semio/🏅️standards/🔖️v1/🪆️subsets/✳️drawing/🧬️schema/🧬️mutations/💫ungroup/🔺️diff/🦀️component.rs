@@ -8,11 +8,12 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UngroupNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    let Some((parent, group_index)) = parent_and_index(&payload.at).await else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to ungroup into (layer root).", payload.at.layer), [payload.at.layer.to_string()]).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &UngroupNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    let Some((parent, group_index)) = parent_and_index(&payload.at) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to ungroup into (layer root).", payload.at.layer), [payload.at.layer.to_string()]);
     };
-    match node_at(base, &payload.at).await {
+    match node_at(base, &payload.at) {
         Some(DrawNode::Group { children, .. }) => {
             let added: Vec<IndexAdded<DrawNode>> = children.iter().enumerate().map(|(i, child)| IndexAdded { index: group_index + i, item: child.clone() }).collect();
             protocol::MutationOutcome::new(diff_at_path(&parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![group_index], modified: Vec::new(), added }) })))

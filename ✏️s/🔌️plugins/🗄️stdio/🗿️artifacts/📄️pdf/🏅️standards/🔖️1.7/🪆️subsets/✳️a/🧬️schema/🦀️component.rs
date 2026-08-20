@@ -25,7 +25,8 @@ pub mod derived_construction {
     /// 🌱️ Seeds a fresh snapshot with a real `/Root /OutputIntents` → `OutputIntent` object pair
     /// (`/S /GTS_PDFA1`, ISO 19005-2/-3's own conformance marker) -- a genuine, well-formed PDF/A
     /// OutputIntent, not a placeholder value that merely satisfies string equality.
-    async fn seeded_snapshot(output_intent_condition: String) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_snapshot(output_intent_condition: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -53,17 +54,20 @@ pub mod derived_construction {
     impl PdfABuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an OutputIntent condition identifier
         /// (e.g. `"sRGB IEC61966-2.1"`) up front -- there is no variant of `new` that omits it.
-        pub async fn new(output_intent_condition: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(output_intent_condition.into()).await }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(output_intent_condition: impl Into<String>) -> Self {
+            Self { snapshot: seeded_snapshot(output_intent_condition.into()) }
         }
 
-        pub async fn add_page(mut self, page: PdfPage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub async fn set_info(mut self, info: PdfInfo) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -80,7 +84,7 @@ pub mod derived_construction {
         /// regardless. Prefer `PdfABuilderConstruction::new(condition)` directly wherever the real condition is
         /// known.
         async fn empty() -> Self {
-            Self::new("sRGB IEC61966-2.1").await
+            Self::new("sRGB IEC61966-2.1")
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -97,7 +101,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -170,7 +174,8 @@ pub mod derived_analysis {
     }
 
     impl PdfALevel {
-        pub async fn as_str(self) -> &'static str {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn as_str(self) -> &'static str {
             match self {
                 PdfALevel::L2b => "2b",
                 PdfALevel::L2u => "2u",
@@ -192,12 +197,13 @@ pub mod derived_analysis {
     ///   doesn't retain a basis for. Rather than guess, this always defaults to `b`.
     /// Returns `None` when the document doesn't even carry a `GTS_PDFA1` OutputIntent -- there is no
     /// honest basis for reporting *any* PDF/A level on a document that doesn't claim to be one.
-    pub async fn detect_pdfa_level(snapshot: &PdfSnapshot) -> Option<PdfALevel> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn detect_pdfa_level(snapshot: &PdfSnapshot) -> Option<PdfALevel> {
         let objects = &snapshot.objects;
         if !has_pdfa_output_intent(objects) {
             return None;
         }
-        if !embedded_files_with_afrelationship(objects).await.is_empty() {
+        if !embedded_files_with_afrelationship(objects).is_empty() {
             Some(PdfALevel::L3b)
         } else {
             Some(PdfALevel::L2b)
@@ -214,24 +220,28 @@ pub mod derived_analysis {
     pub const CODE_EMBEDDED_FILE_AFRELATIONSHIP: &str = "stdio.pdf.a.embedded-file-missing-afrelationship";
     pub const CODE_LEVEL: &str = "stdio.pdf.a.level";
 
-    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
+            PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    async fn dict_name<'a>(dict: &'a [crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry], key: &str) -> Option<&'a str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dict_name<'a>(dict: &'a [crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
     /// 🔒️ Real, independent-of-decode scan: does any retained object look like a Standard Security
     /// Handler encryption dictionary (`/Filter /Standard` + `/V`/`/R`/`/O`/`/U`)?
-    async fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_encryption(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -243,40 +253,46 @@ pub mod derived_analysis {
     }
 
     /// 📜️ Real scan for `/S /<subtype>` action dictionaries anywhere in the retained object graph.
-    async fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
-        objects.iter().filter(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
+        objects.iter().filter(|o| o.value.as_dict().map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 📜️ Real scan for a bare `/JS` key not already caught by `/S /JavaScript` (some JS action
     /// dicts carry `/JS` without a matching `/S` when malformed/hand-authored -- PDF/A forbids the
     /// key itself, not just the well-formed `/S /JavaScript` shape).
-    async fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| !already.contains(&o.id) && semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
+        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
-    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🏳️ Real check: `/Root`'s `/OutputIntents` array contains an intent with `/S /GTS_PDFA1`.
-    async fn has_pdfa_output_intent(objects: &[PdfIndirectObject]) -> bool {
-        let Some(catalog) = find_catalog(objects).await else { return false };
-        let Some(intents) = catalog.dict_get("OutputIntents").await.and_then(|v| v.as_array()) else { return false };
-        intents.iter().any(|item| semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFA1")).unwrap_or(false))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_pdfa_output_intent(objects: &[PdfIndirectObject]) -> bool {
+        let Some(catalog) = find_catalog(objects) else { return false };
+        let Some(intents) = catalog.dict_get("OutputIntents").and_then(|v| v.as_array()) else { return false };
+        intents.iter().any(|item| resolve_item(objects, item).and_then(|o| o.as_dict()).map(|d| dict_name(d, "S") == Some("GTS_PDFA1")).unwrap_or(false))
     }
 
-    async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).await.and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     /// 🔤️ Real check: every `/Type /Font` object (simple or `/DescendantFonts` composite) resolves
     /// to a `/FontDescriptor` carrying an embedded font program. Real because `objects` retains the
     /// full logical indirect-object graph -- font dicts are genuinely present
     /// here, this is not fabricated against a field the engine doesn't parse.
-    async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
-            let Some(d) = o.value.as_dict().await else { continue };
+            let Some(d) = o.value.as_dict() else { continue };
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
@@ -287,7 +303,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -301,7 +317,8 @@ pub mod derived_analysis {
     /// 📎️ Real scan: `/Type /Filespec` objects that carry an `/EF` entry (an actual attached file
     /// stream dict, as opposed to a bare external-file reference) AND a non-empty `/AFRelationship`
     /// name. This is the A-3-only, genuinely-inspectable signal `detect_pdfa_level` keys off of.
-    async fn embedded_files_with_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn embedded_files_with_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -318,7 +335,8 @@ pub mod derived_analysis {
     /// shape is non-conformant regardless of which part the rest of the document targets -- a real,
     /// level-independent hard check rather than one gated on `detect_pdfa_level`'s (necessarily
     /// incomplete) part guess.
-    async fn embedded_files_missing_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn embedded_files_missing_afrelationship(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         objects
             .iter()
             .filter(|o| {
@@ -329,17 +347,20 @@ pub mod derived_analysis {
             .collect()
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// ℹ️ Informational-only diagnostic (`detect_pdfa_level`'s report) -- `Severity::Info`,
     /// the softest severity this fault model has.
-    async fn info(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn info(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Info, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -348,7 +369,8 @@ pub mod derived_analysis {
     /// (pre-serialization, authoritative), `PdfABuilder::build` hard-gates on this too, and the
     /// generic `SubsetValidator` (registered from `🎹️composer::register`) re-runs it post-hoc against
     /// the wire payload for the D5 validate-on-build hook.
-    pub async fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         for r in scan_encryption(objects) {
@@ -376,7 +398,7 @@ pub mod derived_analysis {
         for r in non_embedded_fonts(objects) {
             out.push(soft(CODE_FONT_NOT_EMBEDDED, format!("font object {} {} R has no FontFile/FontFile2/FontFile3 reachable from its FontDescriptor -- PDF/A requires embedded fonts", r.num, r.gen)));
         }
-        if let Some(level) = detect_pdfa_level(snapshot).await {
+        if let Some(level) = detect_pdfa_level(snapshot) {
             out.push(info(
                 CODE_LEVEL,
                 format!(
@@ -412,7 +434,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_pdf_a_conformance(snapshot).await;
+                let checks = check_pdf_a_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -428,7 +450,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfDictEntry;
 
-        async fn output_intent_objects(condition: &str) -> Vec<PdfIndirectObject> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn output_intent_objects(condition: &str) -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },

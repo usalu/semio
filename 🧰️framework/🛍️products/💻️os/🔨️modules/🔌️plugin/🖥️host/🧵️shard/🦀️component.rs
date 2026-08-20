@@ -28,7 +28,7 @@ use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, Packag
 use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
@@ -225,11 +225,21 @@ pub struct ShardLoop {
     /// Read by [`Self::granted_budget`]; an actor with no entry (never granted) falls back to the
     /// Maintenance lane's default, per that method's own doc.
     granted_budgets: HashMap<u64, semio_framework_actor::Budget>,
+    /// 🚦 terra-shard-lane (piece 1, `📓️terra-shard-lane-report.md`): the lane from the LAST
+    /// [`Envelope`] this shard has dispatched for each actor (`Self::dispatch_envelope`, which
+    /// sees every envelope bundled in a `ShardFrame::Grant` as well as every standalone
+    /// `ShardFrame::Envelope`). The kernel's DRR `Scheduler` fixes one lane per actor at
+    /// registration, so every envelope it ever routes to a given actor already carries that SAME
+    /// lane — this recovers the classification `pump_primed`'s two priority queues need WITHOUT a
+    /// breaking `ShardFrame::Grant` wire change (see [`Self::actor_lane`]'s own doc for why no
+    /// field was added). Read by [`Self::actor_lane`]; an actor with no entry (never seen an
+    /// envelope) falls back to Maintenance — same fallback convention as [`Self::granted_budget`].
+    actor_lanes: HashMap<u64, semio_framework_actor::Lane>,
 }
 
 impl ShardLoop {
     pub async fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports) -> Self {
-        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new() }
+        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new(), actor_lanes: HashMap::new() }
     }
 
     /// ⚖️ `actor`'s last [`ShardFrame::Grant`]ed budget — used for both turn execution and job
@@ -246,6 +256,28 @@ impl ShardLoop {
             Some(budget) => budget,
             None => semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance).await,
         }
+    }
+
+    /// 🚦 terra-shard-lane piece 1: true for the two lanes that must jump a shard's queue ahead of
+    /// any Background/Maintenance grant — Interactive (direct user input) and UserVisible
+    /// (visible-but-not-actively-touched UI). `pump_primed`'s two queues partition on this.
+    fn is_high_priority_lane(lane: semio_framework_actor::Lane) -> bool {
+        matches!(lane, semio_framework_actor::Lane::Interactive | semio_framework_actor::Lane::UserVisible)
+    }
+
+    /// 🚦 `actor`'s last-known scheduling lane — see [`Self::actor_lanes`]'s own doc for why this
+    /// is recovered from envelopes already on the wire rather than a new `ShardFrame::Grant` field:
+    /// a `Grant`-level `lane` field would have needed to break TWO `ShardFrame::Grant` construction
+    /// sites outside this packet's `path_scope` (`💻️os/🖥️host/🎠️activation.rs`'s
+    /// `NativeKernelRuntime::tick_and_dispatch` and `📺️renderer/🧑️‍🎨️engine/…/🎯️targets/🧊️wgpu/
+    /// 🎠️runtime.rs`'s equivalent dispatch loop — both live, both construct `ShardFrame::Grant`
+    /// directly, neither is `🔌️plugin/🖥️host/**`), and the information a `Grant`-level field would
+    /// have carried is ALREADY present per-envelope (`Envelope.lane`, set once per actor by the
+    /// same DRR `Scheduler` that would have supplied a `Grant`-level lane). See
+    /// `📓️terra-shard-lane-report.md`'s "wire change avoided" note — a `lease-request` is open
+    /// against those two files in case a `Grant`-level field is still wanted for a future packet.
+    async fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
+        self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
     }
 
     /// 📌️ Adds an already-instantiated actor to this shard's live set — called once per
@@ -269,6 +301,7 @@ impl ShardLoop {
         self.running_jobs.retain(|&(job_actor, _)| job_actor != actor.0);
         self.job_placement.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.pending_completions.remove(&actor.0);
+        self.actor_lanes.remove(&actor.0);
     }
 
     pub async fn actor_count(&self) -> usize {
@@ -306,61 +339,44 @@ impl ShardLoop {
             self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
         }
 
-        let mut driven = 0usize;
-        for (actor_id, events) in events_by_actor {
-            // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)` needs `&self`
-            // (the whole struct), which conflicts with the `&mut self.instances` borrow `instance`
-            // holds for the rest of this iteration (E0502).
-            let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id).await);
-            let Some(instance) = self.instances.get_mut(&actor_id) else {
-                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
-                continue;
-            };
-            // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future
-            // collapsed) — `.await`ed directly. This loop's own thread root (`🏃️executor.rs`'s
-            // `ShardExecutor::spawn`, `👶️child/🦀️main.rs`'s `main`) is the `block_on` boundary that
-            // turns the plain OS thread into an executor; every impl `ShardLoop` is ever handed
-            // resolves on its first poll (see `GuestRuntime`'s own doc comment), so this never
-            // actually parks.
-            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget.await).await {
-                Ok(result) => {
-                    // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
-                    // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
-                    // closes — see `running_jobs`'s own doc comment. `placement` (inline/isolated/
-                    // exclusive) is captured into `job_placement` and `Exclusive` is routed to the
-                    // FRONT of `to_step`'s per-pump order (below) — every placement still runs on
-                    // the SAME instance that spawned it (routing to a DIFFERENT pooled/exclusive
-                    // INSTANCE needs the actor pool `Kernel::activate`/`ShardTable` builds,
-                    // `design-runtime.md` §1, `🎭️actor` territory a single `ShardLoop` cannot reach
-                    // on its own — documented gap, not a silently faked one, see the K1 report's
-                    // lease-request).
-                    for effect in &result.effects {
-                        match effect {
-                            Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()).await {
-                                Ok(()) => {
-                                    self.running_jobs.insert((actor_id, *job));
-                                    self.job_placement.insert((actor_id, *job), *placement);
-                                }
-                                Err(fault) => {
-                                    self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) });
-                                }
-                            },
-                            Effect::CancelJob { job } => {
-                                if self.running_jobs.remove(&(actor_id, *job)) {
-                                    self.job_placement.remove(&(actor_id, *job));
-                                    let _ = self.runtime.cancel_job(instance, *job).await;
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    ShardOutcome::Turn { actor: actor_id, result }
-                }
-                Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
-            };
-            self.send_outcome(&outcome).await?;
-            driven += 1;
+        //#region 🚦LanePriority (terra-shard-lane piece 1)
+        // 🚦 Two priority queues, classified by `Self::actor_lane` — `pump_primed` drains
+        // `interactive_queue` EXHAUSTIVELY before taking any grant off `background_queue`, closing
+        // the head-of-line blocking `📓️terra-shard-lane-report.md` diagnosed: a shard holding both
+        // an interactive actor and dozens of CPU-bound background actors used to run whichever
+        // grant this initial drain happened to collect first (`HashMap` iteration order — never
+        // meaningfully "arrival order" to begin with), with nothing to prefer the interactive one.
+        let mut interactive_queue: VecDeque<u64> = VecDeque::new();
+        let mut background_queue: VecDeque<u64> = VecDeque::new();
+        let mut queued: BTreeSet<u64> = BTreeSet::new();
+        for &actor_id in events_by_actor.keys() {
+            self.enqueue_by_lane(actor_id, &mut interactive_queue, &mut background_queue, &mut queued).await;
         }
+
+        let mut driven = 0usize;
+        loop {
+            while let Some(actor_id) = interactive_queue.pop_front() {
+                queued.remove(&actor_id);
+                self.execute_turn_for(actor_id, &mut events_by_actor, &mut driven).await?;
+            }
+            let Some(actor_id) = background_queue.pop_front() else { break };
+            queued.remove(&actor_id);
+            self.execute_turn_for(actor_id, &mut events_by_actor, &mut driven).await?;
+
+            // 🚦 Re-check the transport BETWEEN background turns (never blocks past what is
+            // CURRENTLY buffered — same non-blocking contract `self.transport.recv()` has
+            // everywhere else in this file): an interactive grant the kernel pushed onto the wire
+            // WHILE this shard was busy running a background turn must jump the remaining
+            // background queue at THIS turn boundary, not wait for the next `pump()` call.
+            while let Some(bytes) = self.transport.recv().await {
+                self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
+            }
+            let newly_arrived: Vec<u64> = events_by_actor.keys().copied().filter(|actor_id| !queued.contains(actor_id)).collect();
+            for actor_id in newly_arrived {
+                self.enqueue_by_lane(actor_id, &mut interactive_queue, &mut background_queue, &mut queued).await;
+            }
+        }
+        //#endregion 🚦LanePriority
 
         // 💼️ Step every job still live — both envelope-driven (`Payload::JobStep`, explicit
         // external re-arming) and self-tracked (`running_jobs`, admitted from a `SpawnJob` effect
@@ -424,6 +440,100 @@ impl ShardLoop {
         Ok(driven)
     }
 
+    /// 🚦 terra-shard-lane piece 1: classifies `actor_id` by [`Self::actor_lane`] into the
+    /// interactive or background queue and marks it `queued` — shared by [`Self::pump_primed`]'s
+    /// up-front classification and its between-background-turns re-check, so both go through the
+    /// exact same rule.
+    async fn enqueue_by_lane(&self, actor_id: u64, interactive: &mut VecDeque<u64>, background: &mut VecDeque<u64>, queued: &mut BTreeSet<u64>) {
+        queued.insert(actor_id);
+        if Self::is_high_priority_lane(self.actor_lane(actor_id).await) {
+            interactive.push_back(actor_id);
+        } else {
+            background.push_back(actor_id);
+        }
+    }
+
+    /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
+    /// [`super::GuestRuntime::execute_turn`], admits any `SpawnJob`/`CancelJob` effects (unchanged
+    /// from the body this replaces — see the K1 report for that mechanism's own history), and sends
+    /// the resulting [`ShardOutcome`]. Factored out of [`Self::pump_primed`]'s old single inline
+    /// loop (terra-shard-lane piece 1) so both the interactive queue and the background re-check
+    /// can call the identical body.
+    async fn execute_turn_for(&mut self, actor_id: u64, events_by_actor: &mut HashMap<u64, Vec<Event>>, driven: &mut usize) -> Result<(), PluginHostError> {
+        let Some(events) = events_by_actor.remove(&actor_id) else { return Ok(()) };
+        // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)` needs `&self` (the
+        // whole struct), which conflicts with the `&mut self.instances` borrow `instance` holds for
+        // the rest of this call (E0502).
+        let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id).await);
+        let Some(instance) = self.instances.get_mut(&actor_id) else {
+            self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
+            return Ok(());
+        };
+        // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
+        // — `.await`ed directly. `ShardLoop`'s thread root (`🏃️executor.rs`'s `ShardExecutor::
+        // spawn`, `👶️child/🦀️main.rs`'s `main`) is the `block_on` boundary that turns the plain OS
+        // thread into an executor; every impl `ShardLoop` is ever handed resolves on its first poll
+        // (see `GuestRuntime`'s own doc comment), so this never actually parks.
+        let outcome = match self.runtime.execute_turn(instance, &events, turn_budget.await).await {
+            Ok(result) => {
+                // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
+                // generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
+                // `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive) is
+                // captured into `job_placement` and `Exclusive` is routed to the FRONT of
+                // `to_step`'s per-pump order (below) — every placement still runs on the SAME
+                // instance that spawned it (routing to a DIFFERENT pooled/exclusive INSTANCE needs
+                // the actor pool `Kernel::activate`/`ShardTable` builds, `design-runtime.md` §1,
+                // `🎭️actor` territory a single `ShardLoop` cannot reach on its own — documented gap,
+                // not a silently faked one, see the K1 report's lease-request).
+                for effect in &result.effects {
+                    match effect {
+                        Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()).await {
+                            Ok(()) => {
+                                self.running_jobs.insert((actor_id, *job));
+                                self.job_placement.insert((actor_id, *job), *placement);
+                            }
+                            Err(fault) => {
+                                self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) });
+                            }
+                        },
+                        Effect::CancelJob { job } => {
+                            if self.running_jobs.remove(&(actor_id, *job)) {
+                                self.job_placement.remove(&(actor_id, *job));
+                                let _ = self.runtime.cancel_job(instance, *job).await;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                ShardOutcome::Turn { actor: actor_id, result }
+            }
+            // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
+            // epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
+            // `WasmtimeRuntime::execute_turn`/`step_job` via `store.set_epoch_deadline`, ticked by
+            // `EpochTicker` every 1 ms) must be RE-GRANTED next tick, not treated as a failure — an
+            // epoch interrupt lands at a wasm-bytecode safe point, so the wasmtime `Store` inside
+            // `self.instances[&actor_id]` stays perfectly usable and nothing here unregisters it or
+            // clears its state. Sending `ShardOutcome::Fault` for this (the OLD behavior, still
+            // correct for every OTHER `TurnFault` variant below) would have the kernel's
+            // failure-escalation path quarantine an actor purely for being preempted by the exact
+            // per-turn wall budget this ticket's own DRR scheduler assigned it — see
+            // `📓️terra-shard-lane-report.md`.
+            Err(TurnFault::DeadlineExceeded) => ShardOutcome::Turn {
+                actor: actor_id,
+                // 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
+                // no guest-computed presence (or effects/ui_patches) to carry, unlike the two
+                // wire-shape-mismatch sites this packet's report flags (`🦀️component.rs`'s
+                // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
+                // here, there was simply nothing produced.
+                result: TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0 },
+            },
+            Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
+        };
+        self.send_outcome(&outcome).await?;
+        *driven += 1;
+        Ok(())
+    }
+
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
@@ -458,6 +568,12 @@ impl ShardLoop {
     /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
     /// documented, consistent placeholder, not an invented one-off.
     async fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+        // 🚦 terra-shard-lane piece 1: records the LAST-seen lane for `envelope.to`, covering both
+        // standalone `ShardFrame::Envelope` frames and every envelope bundled inside a
+        // `ShardFrame::Grant` (`Self::consume_frame`'s `Grant` arm calls this per envelope) — see
+        // `Self::actor_lane`'s own doc for why this, not a `ShardFrame::Grant`-level field, is where
+        // the lane classification comes from.
+        self.actor_lanes.insert(envelope.to.0, envelope.lane);
         match envelope.payload {
             Payload::Event { bytes: event_bytes } => {
                 let event: Event = serde_json::from_slice(&event_bytes)?;
@@ -707,7 +823,7 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
+        Ok(TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
         Ok(())
@@ -1331,7 +1447,7 @@ mod tests {
     //#region 🔖️BudgetBridge
     #[semio_framework_async_macros::async_test]
     async fn to_actor_turn_result_maps_status_and_carries_host_measured_usage() {
-        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999 };
+        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999 };
         let bridged = to_actor_turn_result(&kernel_result, 1234, 5678).await;
         assert_eq!(bridged.next_wake, Some(42));
         assert_eq!(bridged.status, semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() }, "status must map 1:1, and the actor crate's struct-variant Faulted (Part A) must be what this bridge constructs");
@@ -1347,9 +1463,108 @@ mod tests {
             (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
             (semio_framework::kernel::TurnStatus::CheckpointReady, semio_framework_actor::TurnStatus::CheckpointReady),
         ] {
-            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: kernel_status, fuel_used: 0 };
+            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0 };
             assert_eq!(to_actor_turn_result(&kernel_result, 0, 0).await.status, expected);
         }
     }
     //#endregion 🔖️BudgetBridge
+
+    //#region 🔖️LanePriorityAndEpochYield
+    /// 🎯️ terra-shard-lane piece 1's headline acceptance test — the mechanism, proven directly
+    /// against `ShardLoop::pump()` without needing the full native bench: a shard already loaded
+    /// with several Background-lane grants, PLUS an Interactive-lane grant for a different actor,
+    /// all bundled into the SAME `pump()` call (`grants_per_tick` covering all of them in one kernel
+    /// tick, exactly the scenario `📓️terra-shard-lane-report.md` diagnosed as head-of-line
+    /// blocking). Every background actor's scripted turn is queued FIRST on the transport — the
+    /// worst case for the OLD FIFO/HashMap-iteration-order pump — so a passing assertion that the
+    /// interactive actor's `ShardOutcome::Turn` is the FIRST one sent proves the two-queue
+    /// reordering actually reorders, not merely that it happens not to break the happy path.
+    #[semio_framework_async_macros::async_test]
+    async fn an_interactive_grant_is_executed_before_background_grants_queued_the_same_pump() {
+        const BACKGROUND_ACTORS: u64 = 5;
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let (transport, probe) = LoopbackTransport::paired().await;
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+
+        let package = PackageRef { package: PackageId("lane-priority".to_string()), hash: PackageHash([90u8; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let background_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background).await;
+
+        // 🚦 Background actors first — queued on the wire ahead of the interactive one, the exact
+        // arrival order that used to win under plain FIFO/HashMap-iteration-order draining.
+        for offset in 0..BACKGROUND_ACTORS {
+            let actor = ActorId(200 + offset);
+            let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+            shard.register(actor, instance).await;
+            mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+            let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") } };
+            let mut bytes = Vec::new();
+            ShardFrame::Grant { actor, budget: background_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await;
+            probe.push_inbound(bytes).await;
+        }
+
+        // 🚦 The interactive actor's own grant, queued LAST.
+        let interactive_actor = ActorId(999);
+        let interactive_instance = mock.instantiate(&compiled, interactive_actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        shard.register(interactive_actor, interactive_instance).await;
+        let mut interactive_turn = MockGuestRuntime::idle_turn().await;
+        interactive_turn.fuel_used = 4242;
+        mock.script_turn(interactive_actor, interactive_turn).await;
+        let interactive_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let interactive_envelope = Envelope { to: interactive_actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") } };
+        let mut interactive_bytes = Vec::new();
+        ShardFrame::Grant { actor: interactive_actor, budget: interactive_budget, envelopes: vec![interactive_envelope] }.pack_encode(&mut interactive_bytes).await;
+        probe.push_inbound(interactive_bytes).await;
+
+        let driven = pump(&mut shard).await.expect("pump");
+        assert_eq!(driven, BACKGROUND_ACTORS as usize + 1, "one turn per actor, background plus interactive");
+
+        let outbound = probe.take_outbound().await;
+        assert_eq!(outbound.len(), BACKGROUND_ACTORS as usize + 1);
+        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
+        match &outcomes[0] {
+            ShardOutcome::Turn { actor, result } => {
+                assert_eq!(*actor, interactive_actor.0, "the Interactive-lane grant must be the FIRST ShardOutcome sent, despite every Background-lane grant having been queued on the wire BEFORE it");
+                assert_eq!(result.fuel_used, 4242, "must be the interactive actor's own scripted turn, not a background one that happens to share a position");
+            }
+            other => panic!("expected the first outcome to be the interactive actor's Turn, got {other:?}"),
+        }
+    }
+
+    /// 🎯️ terra-shard-lane piece 2: a turn that raises `TurnFault::DeadlineExceeded` (what
+    /// `WasmtimeRuntime::execute_turn` raises when the epoch deadline armed from
+    /// `budget.deadline_ms` is hit — `📓️terra-shard-lane-report.md`) must surface as a graceful
+    /// `ShardOutcome::Turn{status: MoreWork}`, NEVER `ShardOutcome::Fault` — and the actor must stay
+    /// registered on the shard, ready to be re-granted on a later tick, exactly as a real epoch
+    /// interrupt (which lands at a wasm-bytecode safe point and leaves the `Store` usable) allows.
+    #[semio_framework_async_macros::async_test]
+    async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_stays_registered() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = ActorId(91);
+        let package = PackageRef { package: PackageId("epoch-yield".to_string()), hash: PackageHash([91u8; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 2, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        mock.script_deadline_exceeded(actor).await;
+
+        let (transport, probe) = LoopbackTransport::paired().await;
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+        shard.register(actor, instance).await;
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") }).await).await;
+
+        let driven = pump(&mut shard).await.expect("pump");
+        assert_eq!(driven, 1);
+
+        let outbound = probe.take_outbound().await;
+        assert_eq!(outbound.len(), 1);
+        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        match outcome {
+            ShardOutcome::Turn { actor: reported, result } => {
+                assert_eq!(reported, 91);
+                assert_eq!(result.status, semio_framework::kernel::TurnStatus::MoreWork, "a deadline-exceeded turn must yield MoreWork, not surface as a Fault the kernel would escalate/quarantine the actor for");
+            }
+            other => panic!("expected ShardOutcome::Turn{{status: MoreWork}}, got {other:?} — DeadlineExceeded must never become a Fault"),
+        }
+        assert!(shard.is_registered(actor).await, "the actor's instance must stay registered — an epoch interrupt does not lose state");
+    }
+    //#endregion 🔖️LanePriorityAndEpochYield
 }

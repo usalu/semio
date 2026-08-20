@@ -63,19 +63,21 @@ struct BrepBuilder<'a> {
 }
 
 impl<'a> BrepBuilder<'a> {
-    async fn point(&self, id: u64) -> Option<[f64; 3]> {
-        let args = self.doc.instance(id).await?.entity("CARTESIAN_POINT").await?;
-        let coords = args.get(1)?.as_list().await?;
-        Some([coords.first()?.as_real().await?, coords.get(1)?.as_real().await?, coords.get(2)?.as_real().await?])
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn point(&self, id: u64) -> Option<[f64; 3]> {
+        let args = self.doc.instance(id)?.entity("CARTESIAN_POINT")?;
+        let coords = args.get(1)?.as_list()?;
+        Some([coords.first()?.as_real()?, coords.get(1)?.as_real()?, coords.get(2)?.as_real()?])
     }
 
-    async fn vertex_point(&mut self, id: u64) -> Option<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn vertex_point(&mut self, id: u64) -> Option<usize> {
         if let Some(&idx) = self.vertex_of.get(&id) {
             return Some(idx);
         }
-        let args = self.doc.instance(id).await?.entity("VERTEX_POINT").await?;
-        let point_ref = args.get(1)?.as_ref_id().await?;
-        let [x, y, z] = self.point(point_ref).await?;
+        let args = self.doc.instance(id)?.entity("VERTEX_POINT")?;
+        let point_ref = args.get(1)?.as_ref_id()?;
+        let [x, y, z] = self.point(point_ref)?;
         let idx = self.vertices.len();
         self.vertices.push(BrepVertex { x, y, z });
         self.vertex_of.insert(id, idx);
@@ -83,65 +85,69 @@ impl<'a> BrepBuilder<'a> {
     }
 
     /// ➡️ `(start_vertex_idx, end_vertex_idx)` honoring `ORIENTED_EDGE.orientation`.
-    async fn oriented_edge_endpoints(&mut self, oriented_edge_id: u64) -> Option<(usize, usize)> {
-        let args = self.doc.instance(oriented_edge_id).await?.entity("ORIENTED_EDGE").await?;
-        let edge_ref = args.get(3)?.as_ref_id().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn oriented_edge_endpoints(&mut self, oriented_edge_id: u64) -> Option<(usize, usize)> {
+        let args = self.doc.instance(oriented_edge_id)?.entity("ORIENTED_EDGE")?;
+        let edge_ref = args.get(3)?.as_ref_id()?;
         let orientation = matches!(args.get(4), Some(Part21Value::Enum(e)) if e == "T");
-        let edge_args = self.doc.instance(edge_ref).await?.entity("EDGE_CURVE").await?;
-        let start_ref = edge_args.get(1)?.as_ref_id().await?;
-        let end_ref = edge_args.get(2)?.as_ref_id().await?;
+        let edge_args = self.doc.instance(edge_ref)?.entity("EDGE_CURVE")?;
+        let start_ref = edge_args.get(1)?.as_ref_id()?;
+        let end_ref = edge_args.get(2)?.as_ref_id()?;
         if let Some(geom_ref) = edge_args.get(3).and_then(Part21Value::as_ref_id) {
-            if let Some((geom_type, _)) = self.doc.instance(geom_ref).await.and_then(|i| i.primary()) {
+            if let Some((geom_type, _)) = self.doc.instance(geom_ref).and_then(|i| i.primary()) {
                 if !geom_type.eq_ignore_ascii_case("LINE") {
                     self.issues.push(BrepIssue { entity_id: edge_ref, reason: format!("edge geometry {geom_type} is not a straight LINE; endpoints used as a control-polygon degrade, not a true curve tessellation") });
                 }
             }
         }
-        let start = self.vertex_point(start_ref).await?;
-        let end = self.vertex_point(end_ref).await?;
+        let start = self.vertex_point(start_ref)?;
+        let end = self.vertex_point(end_ref)?;
         Some(if orientation { (start, end) } else { (end, start) })
     }
 
-    async fn edge_loop(&mut self, edge_loop_id: u64) -> Option<Vec<usize>> {
-        let args = self.doc.instance(edge_loop_id).await?.entity("EDGE_LOOP").await?;
-        let edges = args.get(1)?.as_list().await?.to_vec();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn edge_loop(&mut self, edge_loop_id: u64) -> Option<Vec<usize>> {
+        let args = self.doc.instance(edge_loop_id)?.entity("EDGE_LOOP")?;
+        let edges = args.get(1)?.as_list()?.to_vec();
         let mut indices = Vec::with_capacity(edges.len());
         for e in &edges {
-            let oe_id = e.as_ref_id().await?;
-            let (start, _end) = self.oriented_edge_endpoints(oe_id).await?;
+            let oe_id = e.as_ref_id()?;
+            let (start, _end) = self.oriented_edge_endpoints(oe_id)?;
             indices.push(start);
         }
         Some(indices)
     }
 
-    async fn face_bound_loop(&mut self, bound_id: u64) -> Option<Vec<usize>> {
-        let inst = self.doc.instance(bound_id).await?;
-        let (bound_type, args) = inst.primary().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn face_bound_loop(&mut self, bound_id: u64) -> Option<Vec<usize>> {
+        let inst = self.doc.instance(bound_id)?;
+        let (bound_type, args) = inst.primary()?;
         if !(bound_type.eq_ignore_ascii_case("FACE_BOUND") || bound_type.eq_ignore_ascii_case("FACE_OUTER_BOUND")) {
             return None;
         }
-        let loop_ref = args.get(1)?.as_ref_id().await?;
+        let loop_ref = args.get(1)?.as_ref_id()?;
         let orientation = matches!(args.get(2), Some(Part21Value::Enum(e)) if e == "T");
-        let mut indices = self.edge_loop(loop_ref).await?;
+        let mut indices = self.edge_loop(loop_ref)?;
         if !orientation {
             indices.reverse();
         }
         Some(indices)
     }
 
-    async fn advanced_face(&mut self, face_id: u64) -> Option<BrepFace> {
-        let args = self.doc.instance(face_id).await?.entity("ADVANCED_FACE").await?;
-        let bounds = args.get(1)?.as_list().await?.to_vec();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn advanced_face(&mut self, face_id: u64) -> Option<BrepFace> {
+        let args = self.doc.instance(face_id)?.entity("ADVANCED_FACE")?;
+        let bounds = args.get(1)?.as_list()?.to_vec();
         if let Some(geom_ref) = args.get(2).and_then(Part21Value::as_ref_id) {
-            if let Some((geom_type, _)) = self.doc.instance(geom_ref).await.and_then(|i| i.primary()) {
+            if let Some((geom_type, _)) = self.doc.instance(geom_ref).and_then(|i| i.primary()) {
                 if !geom_type.eq_ignore_ascii_case("PLANE") {
                     self.issues.push(BrepIssue { entity_id: face_id, reason: format!("face geometry {geom_type} is not a PLANE; curved-surface tessellation is out of scope, face skipped") });
                     return None;
                 }
             }
         }
-        let outer = bounds.first()?.as_ref_id().await?;
-        let indices = self.face_bound_loop(outer).await?;
+        let outer = bounds.first()?.as_ref_id()?;
+        let indices = self.face_bound_loop(outer)?;
         if indices.len() < 3 {
             self.issues.push(BrepIssue { entity_id: face_id, reason: "face bound resolved to fewer than 3 vertices".into() });
             return None;
@@ -153,7 +159,8 @@ impl<'a> BrepBuilder<'a> {
 /// 🧐️ Derives a `BrepMeshView` from the generic Part-21 graph. Real walk, not a scraper:
 /// prefers `CLOSED_SHELL`s' own face lists; falls back to every `ADVANCED_FACE` in the document
 /// when no shell groups them (still real data, just ungrouped).
-pub async fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
     let mut builder = BrepBuilder { doc, vertex_of: HashMap::new(), vertices: Vec::new(), issues: Vec::new() };
     let mut face_ids: Vec<u64> = Vec::new();
     for shell in doc.by_type("CLOSED_SHELL") {
@@ -172,7 +179,7 @@ pub async fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
     }
     let mut faces = Vec::new();
     for id in face_ids {
-        if let Some(face) = builder.advanced_face(id).await {
+        if let Some(face) = builder.advanced_face(id) {
             faces.push(face);
         } else if builder.issues.iter().all(|i| i.entity_id != id) {
             builder.issues.push(BrepIssue { entity_id: id, reason: "face could not be resolved to a supported polygon".into() });
@@ -183,7 +190,8 @@ pub async fn analyze_brep_mesh(doc: &Part21Document) -> BrepMeshView {
 //#endregion 🔖️Analyze
 
 //#region 🔖️Write
-async fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
     if indices.len() < 3 {
         return None;
     }
@@ -200,20 +208,23 @@ async fn face_normal(mesh: &BrepMesh, indices: &[usize]) -> Option<[f64; 3]> {
     Some([nx / len, ny / len, nz / len])
 }
 
-async fn s(text: &str) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn s(text: &str) -> Part21Value {
     Part21Value::Str(text.to_string())
 }
-async fn xyz(v: [f64; 3]) -> Part21Value {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xyz(v: [f64; 3]) -> Part21Value {
     Part21Value::List(vec![Part21Value::Real(v[0].into()), Part21Value::Real(v[1].into()), Part21Value::Real(v[2].into())])
 }
 
 /// 📤️ Regenerates a real, minimal AP214 `EDGE_LOOP`-based faceted b-rep from a `BrepMesh` —
 /// the inverse of `analyze_brep_mesh` for planar faces (used by cross-plugin producers, e.g.
 /// the cad plugin's step export, so nothing outside this module hand-rolls Part-21 text).
-pub async fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
-    let mut b = Part21Builder::new().await;
-    let point_ids: Vec<u64> = mesh.vertices.iter().map(|v| semio_framework_plugin::resolve_ready(b.alloc("CARTESIAN_POINT", vec![s(""), xyz([v.x, v.y, v.z])]))).collect();
-    let vertex_ids: Vec<u64> = point_ids.iter().map(|&p| semio_framework_plugin::resolve_ready(b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(p)]))).collect();
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
+    let mut b = Part21Builder::new();
+    let point_ids: Vec<u64> = mesh.vertices.iter().map(|v| b.alloc("CARTESIAN_POINT", vec![s(""), xyz([v.x, v.y, v.z])])).collect();
+    let vertex_ids: Vec<u64> = point_ids.iter().map(|&p| b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(p)])).collect();
 
     let mut face_ids = Vec::new();
     for face in &mesh.faces {
@@ -230,32 +241,32 @@ pub async fn brep_mesh_to_part21(mesh: &BrepMesh) -> Part21Document {
             let (dx, dy, dz) = (pb.x - pa.x, pb.y - pa.y, pb.z - pa.z);
             let len = (dx * dx + dy * dy + dz * dz).sqrt();
             let dir = if len > 1e-12 { [dx / len, dy / len, dz / len] } else { [1.0, 0.0, 0.0] };
-            let dir_id = b.alloc("DIRECTION", vec![s("").await, xyz(dir).await]);
-            let vec_id = b.alloc("VECTOR", vec![s("").await, Part21Value::Ref(dir_id.await), Part21Value::Real(len.into())]);
-            let line_id = b.alloc("LINE", vec![s("").await, Part21Value::Ref(point_ids[a]), Part21Value::Ref(vec_id.await)]);
-            let edge_id = b.alloc("EDGE_CURVE", vec![s("").await, Part21Value::Ref(va), Part21Value::Ref(vb), Part21Value::Ref(line_id.await), Part21Value::Enum("T".into())]);
-            let oe_id = b.alloc("ORIENTED_EDGE", vec![s("").await, Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_id.await), Part21Value::Enum("T".into())]);
-            oriented_edges.push(Part21Value::Ref(oe_id.await));
+            let dir_id = b.alloc("DIRECTION", vec![s(""), xyz(dir)]);
+            let vec_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(len.into())]);
+            let line_id = b.alloc("LINE", vec![s(""), Part21Value::Ref(point_ids[a]), Part21Value::Ref(vec_id)]);
+            let edge_id = b.alloc("EDGE_CURVE", vec![s(""), Part21Value::Ref(va), Part21Value::Ref(vb), Part21Value::Ref(line_id), Part21Value::Enum("T".into())]);
+            let oe_id = b.alloc("ORIENTED_EDGE", vec![s(""), Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_id), Part21Value::Enum("T".into())]);
+            oriented_edges.push(Part21Value::Ref(oe_id));
         }
-        let loop_id = b.alloc("EDGE_LOOP", vec![s("").await, Part21Value::List(oriented_edges)]);
-        let bound_id = b.alloc("FACE_OUTER_BOUND", vec![s("").await, Part21Value::Ref(loop_id.await), Part21Value::Enum("T".into())]);
-        let normal = face_normal(mesh, &face.indices).await.unwrap_or([0.0, 0.0, 1.0]);
-        let normal_id = b.alloc("DIRECTION", vec![s("").await, xyz(normal).await]);
+        let loop_id = b.alloc("EDGE_LOOP", vec![s(""), Part21Value::List(oriented_edges)]);
+        let bound_id = b.alloc("FACE_OUTER_BOUND", vec![s(""), Part21Value::Ref(loop_id), Part21Value::Enum("T".into())]);
+        let normal = face_normal(mesh, &face.indices).unwrap_or([0.0, 0.0, 1.0]);
+        let normal_id = b.alloc("DIRECTION", vec![s(""), xyz(normal)]);
         let origin = &mesh.vertices[face.indices[0]];
-        let origin_id = b.alloc("CARTESIAN_POINT", vec![s("").await, xyz([origin.x, origin.y, origin.z]).await]);
-        let axis_id = b.alloc("AXIS2_PLACEMENT_3D", vec![s("").await, Part21Value::Ref(origin_id.await), Part21Value::Ref(normal_id.await), Part21Value::Unset]);
-        let plane_id = b.alloc("PLANE", vec![s("").await, Part21Value::Ref(axis_id.await)]);
-        let face_id = b.alloc("ADVANCED_FACE", vec![s("").await, Part21Value::List(vec![Part21Value::Ref(bound_id.await)]), Part21Value::Ref(plane_id.await), Part21Value::Enum("T".into())]);
-        face_ids.push(Part21Value::Ref(face_id.await));
+        let origin_id = b.alloc("CARTESIAN_POINT", vec![s(""), xyz([origin.x, origin.y, origin.z])]);
+        let axis_id = b.alloc("AXIS2_PLACEMENT_3D", vec![s(""), Part21Value::Ref(origin_id), Part21Value::Ref(normal_id), Part21Value::Unset]);
+        let plane_id = b.alloc("PLANE", vec![s(""), Part21Value::Ref(axis_id)]);
+        let face_id = b.alloc("ADVANCED_FACE", vec![s(""), Part21Value::List(vec![Part21Value::Ref(bound_id)]), Part21Value::Ref(plane_id), Part21Value::Enum("T".into())]);
+        face_ids.push(Part21Value::Ref(face_id));
     }
-    let shell_id = b.alloc("CLOSED_SHELL", vec![s("").await, Part21Value::List(face_ids)]);
-    b.alloc("MANIFOLD_SOLID_BREP", vec![s("").await, Part21Value::Ref(shell_id.await)]);
+    let shell_id = b.alloc("CLOSED_SHELL", vec![s(""), Part21Value::List(face_ids)]);
+    b.alloc("MANIFOLD_SOLID_BREP", vec![s(""), Part21Value::Ref(shell_id)]);
 
     b.build(Part21Header {
-        file_description: vec![Part21Value::List(vec![s("").await]), s("2;1").await],
-        file_name: vec![s("semio.step").await, s("").await, Part21Value::List(vec![s("").await]), Part21Value::List(vec![s("").await]), s("semio").await, s("").await, s("").await],
-        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN").await])],
-    }).await
+        file_description: vec![Part21Value::List(vec![s("")]), s("2;1")],
+        file_name: vec![s("semio.step"), s(""), Part21Value::List(vec![s("")]), Part21Value::List(vec![s("")]), s("semio"), s(""), s("")],
+        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN")])],
+    })
 }
 //#endregion 🔖️Write
 

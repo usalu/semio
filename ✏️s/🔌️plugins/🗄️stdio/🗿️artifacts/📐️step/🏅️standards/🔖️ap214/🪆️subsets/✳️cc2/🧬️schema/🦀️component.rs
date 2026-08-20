@@ -43,7 +43,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -74,7 +74,8 @@ pub mod derived_construction {
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
         use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::CODE_LADDER;
 
-        async fn conforming_snapshot() -> StepSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_snapshot() -> StepSnapshot {
             StepSnapshot::from_part21_document(Part21Document {
                 header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
                 instances: vec![
@@ -126,11 +127,13 @@ pub mod derived_analysis {
     pub const CODE_PRODUCT_CHAIN: &str = "stdio.step.cc2.product-definition-chain";
     pub const CODE_LADDER: &str = "stdio.step.cc2.representation-above-rung";
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -139,7 +142,8 @@ pub mod derived_analysis {
     /// authoritative), `StepCc2Builder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (from `🎹️composer::register`) re-runs it post-hoc against the wire payload
     /// for the D5 validate-on-build hook.
-    pub async fn check_cc2_conformance(snapshot: &StepSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_cc2_conformance(snapshot: &StepSnapshot) -> Vec<Diagnostic> {
         let doc = snapshot.to_part21_document();
         let mut out = Vec::new();
         if !file_schema_contains(&doc, "AUTOMOTIVE_DESIGN") {
@@ -176,7 +180,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_cc2_conformance(snapshot).await;
+                let checks = check_cc2_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -192,7 +196,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
-        async fn base_doc() -> Part21Document {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn base_doc() -> Part21Document {
             Part21Document {
                 header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
                 instances: vec![

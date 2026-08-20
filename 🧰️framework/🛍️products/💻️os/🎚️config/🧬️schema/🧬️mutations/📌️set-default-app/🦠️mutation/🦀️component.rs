@@ -35,11 +35,11 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     }
 
     async fn label(&self) -> String {
-        format!("Set default {} for \"{}\"", self.role.as_str().await, self.dialect.to_coordinate().await)
+        format!("Set default {} for \"{}\"", self.role.as_str().await, self.dialect.to_coordinate())
     }
 
     async fn target(&self) -> Vec<String> {
-        vec![self.dialect.to_coordinate().await, self.role.as_str().await.to_string()]
+        vec![self.dialect.to_coordinate(), self.role.as_str().await.to_string()]
     }
 }
 //#endregion 🔖️Mutation

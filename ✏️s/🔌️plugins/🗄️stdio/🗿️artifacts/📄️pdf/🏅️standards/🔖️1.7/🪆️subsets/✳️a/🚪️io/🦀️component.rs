@@ -58,7 +58,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_pdf_a_conformance(&snapshot).await,
+                Some(snapshot) => check_pdf_a_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.pdf.a.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -73,7 +73,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfAValidator>)
     }
 
@@ -85,8 +86,9 @@ pub mod derived_composition {
     /// registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()`),
     /// matching how `✳️any`'s own entry is registered.
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -98,7 +100,8 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        async fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
             // 🩹 Mirrors the hand-built classic-xref fixtures already used by `⚙️engine`'s own test
             // module: a real one-page PDF plus one extra indirect object (referenced from
             // `/OpenAction` so it's genuinely reachable, not just incidentally present in the xref
@@ -130,7 +133,8 @@ pub mod derived_composition {
         /// hand-crafted raw PDF bytes through `Text(hex)` is how this test genuinely exercises the
         /// real `engine::decode_pdf` → full-object-graph-retention → PDF/A hard-gate pipeline
         /// end-to-end through the actual `ArtifactComposition::compose` surface.
-        async fn hex_encode(bytes: &[u8]) -> String {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn hex_encode(bytes: &[u8]) -> String {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 

@@ -11,13 +11,13 @@ pub const ICON_TINY: f32 = 14.0;
 
 pub const TRANSPARENT: Rgba = Rgba::new(0.0, 0.0, 0.0, 0.0);
 
-pub async fn push_chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
+pub fn push_chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
     let hair = theme.stroke_hairline;
     push_chrome_border(draw, rect, hair, theme.border_normal, true, true, true, true);
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per border edge/style flag; grouping into a struct is a T2 restructure, out of scope")]
-pub async fn push_chrome_border(draw: &mut DrawList, rect: Rect, stroke: f32, color: Rgba, top: bool, right: bool, bottom: bool, left: bool) {
+pub fn push_chrome_border(draw: &mut DrawList, rect: Rect, stroke: f32, color: Rgba, top: bool, right: bool, bottom: bool, left: bool) {
     if top {
         draw.push_solid([rect.x, rect.y, rect.w, stroke], color);
     }
@@ -32,11 +32,11 @@ pub async fn push_chrome_border(draw: &mut DrawList, rect: Rect, stroke: f32, co
     }
 }
 
-pub async fn push_window_cap_border(draw: &mut DrawList, rect: Rect, stroke: f32, color: Rgba) {
+pub fn push_window_cap_border(draw: &mut DrawList, rect: Rect, stroke: f32, color: Rgba) {
     push_chrome_border(draw, rect, stroke, color, true, true, false, true);
 }
 
-pub async fn push_control_border(draw: &mut DrawList, rect: Rect, theme: &Theme, border: Rgba, bg: Rgba) {
+pub fn push_control_border(draw: &mut DrawList, rect: Rect, theme: &Theme, border: Rgba, bg: Rgba) {
     if bg.a > 0.0 {
         draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
     }
@@ -47,19 +47,19 @@ pub async fn push_control_border(draw: &mut DrawList, rect: Rect, theme: &Theme,
     draw.push_solid([rect.x + rect.w - hair, rect.y, hair, rect.h], border);
 }
 
-pub async fn push_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
+pub fn push_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
         draw.push_textured([x, y, size, size], uv, color);
     }
 }
 
-pub async fn measure_action_item(atlas: &mut FontAtlas, theme: &Theme, icon: bool, label: Option<&str>) -> f32 {
+pub fn measure_action_item(atlas: &mut FontAtlas, theme: &Theme, icon: bool, label: Option<&str>) -> f32 {
     let icon_w = if icon { ICON_TINY + theme.gap_standard } else { 0.0 };
     let text_w = label.map_or(0.0, |value| atlas.measure_text(value, theme.font_size_small).0);
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
-pub async fn chrome_item_bg(theme: &Theme, active: bool, hovered: bool) -> Rgba {
+pub fn chrome_item_bg(theme: &Theme, active: bool, hovered: bool) -> Rgba {
     if active {
         if hovered {
             theme.accent_hover
@@ -73,7 +73,7 @@ pub async fn chrome_item_bg(theme: &Theme, active: bool, hovered: bool) -> Rgba 
     }
 }
 
-pub async fn chrome_item_text(theme: &Theme, active: bool, hovered: bool) -> Rgba {
+pub fn chrome_item_text(theme: &Theme, active: bool, hovered: bool) -> Rgba {
     if active {
         theme.active_foreground
     } else if hovered {
@@ -83,11 +83,11 @@ pub async fn chrome_item_text(theme: &Theme, active: bool, hovered: bool) -> Rgb
     }
 }
 
-pub async fn item_bg(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
+pub fn item_bg(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
     chrome_item_bg(theme, pressed, hovered)
 }
 
-pub async fn item_text(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
+pub fn item_text(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
     chrome_item_text(theme, pressed, hovered)
 }
 
@@ -98,7 +98,7 @@ pub async fn item_text(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
 /// vocabulary, not raw draw calls): this fn is for whoever paints a window's own content chrome
 /// (e.g. a title bar inside the canvas itself) and wants the same badge there. Pure paint helper —
 /// it does not decide WHEN to show the badge (`role_chrome::ChromeRole::is_read_only`'s job).
-pub async fn push_read_only_badge(draw: &mut DrawList, icons: &IconAtlas, theme: &Theme, rect: Rect) {
+pub fn push_read_only_badge(draw: &mut DrawList, icons: &IconAtlas, theme: &Theme, rect: Rect) {
     let size = ICON_TINY;
     let margin = theme.padding_standard;
     let x = rect.x + rect.w - size - margin;

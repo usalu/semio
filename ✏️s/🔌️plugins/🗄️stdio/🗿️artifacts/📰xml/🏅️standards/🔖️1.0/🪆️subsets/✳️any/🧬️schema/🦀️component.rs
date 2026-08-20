@@ -27,17 +27,20 @@ impl Default for XmlArtifact {
 
 impl XmlArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> XmlSnapshot {
         XmlSnapshot { schema: self.schema.clone(), doc: self.doc.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: XmlSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: XmlSnapshot) -> Self {
         Self { schema: snapshot.schema, doc: snapshot.doc }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: XmlSnapshot) {
         self.schema = snapshot.schema;
         self.doc = snapshot.doc;
     }
@@ -46,7 +49,8 @@ impl XmlArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.xml`.
-pub async fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xml_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.xml",
         artifact: schema::FacetLeaves {
@@ -111,7 +115,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -187,7 +191,8 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_xml_snapshot() -> XmlSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_xml_snapshot() -> XmlSnapshot {
     XmlSnapshot::default()
 }
 
@@ -200,7 +205,8 @@ pub async fn empty_xml_snapshot() -> XmlSnapshot {
 /// instruction. The single source of truth for
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).
-pub async fn demo_xml_snapshot() -> XmlSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_xml_snapshot() -> XmlSnapshot {
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
     use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
     let root = XmlNode::Element {
@@ -283,7 +289,8 @@ mod tests {
     }
 
     //#region 🔖️Fixtures
-    async fn sample_snapshot() -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -307,7 +314,8 @@ mod tests {
     /// instance -- so `removed` is exercised at the top-level children triple and `added` at the
     /// nested triple inside the modified child, while that same modified child's OWN diff
     /// (name+attributes+children all `Some`) is the "modified-in-every-field" collection entry.
-    async fn sweep_a() -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -327,7 +335,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -352,7 +361,8 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    async fn sample_mutations() -> Vec<XmlMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_mutations() -> Vec<XmlMutation> {
         vec![
             XmlMutation::NoMutation,
             XmlMutation::SetSnapshot { snapshot: sweep_b() },
@@ -409,7 +419,8 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
         XmlSnapshot {
             schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -425,7 +436,8 @@ mod tests {
         }
     }
 
-    async fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -433,7 +445,8 @@ mod tests {
         absorbed
     }
 
-    async fn root_children_diff(diff: &XmlDiff) -> &crate::artifacts::xml::schema::diff::XmlChildrenDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn root_children_diff(diff: &XmlDiff) -> &crate::artifacts::xml::schema::diff::XmlChildrenDiff {
         match diff.root.as_ref().expect("root diff present") {
             XmlNodeDiff::Element(e) => e.children.as_ref().expect("children diff present"),
             other => panic!("expected element diff, got {other:?}"),

@@ -4,20 +4,18 @@
 import type { IconName } from "@semio-tech/assets";
 import {
   type ActionDescriptor,
-  type UiStackNode,
-  type UiTreeNode,
-  type UiControlNode,
-  type UiFieldNode,
-  type UiGroupNode,
-  type UiInspectorFieldGroup,
-  type UiNode,
-  type UiSectionNode,
-  type UiTreeItemNode,
-  type UiTreeSectionNode,
   type CanvasPickTarget,
   type CanvasHoverFocus,
   type NamedLayout,
   type WindowLayout,
+  type WindowLayoutWindowNode,
+  type UiPresence,
+  type UiStatus,
+  type Component,
+  type LayoutSpec,
+  type StyleSpec,
+  type AccessibilitySpec,
+  type BuiltNode,
   UI_INSPECTOR_MIXED_PLACEHOLDER,
 } from "../🛂️manifest/🟦️component.ts";
 
@@ -67,7 +65,7 @@ export function panelTabFirstDraggableElementId(tabId: string): string {
 //#endregion 🆔️ElementId
 
 //#region 🧭️UiPresence
-const DEFAULT_UI_PRESENCE: UiPresence = { state: "normal", status: "idle", hover: false, selected: false };
+const DEFAULT_UI_PRESENCE: UiPresence = { state: "normal", status: "idle", hover: false, selected: false, color: null, peers: [] };
 
 /** @emoji 🧭️ Resolves optional wire-format `presence` to the shared default inert model. */
 export function resolveUiPresence(presence?: UiPresence): UiPresence {
@@ -88,16 +86,44 @@ export function windowMeasureChromeStatus(measure: { readonly loading?: boolean;
 }
 
 /** @emoji 🧭️ Shared presence stamp for shell surfaces waiting on `refreshUi`. */
-export const UI_PENDING_PRESENCE: UiPresence = { state: "normal", status: "loading", hover: false, selected: false };
+export const UI_PENDING_PRESENCE: UiPresence = { state: "normal", status: "loading", hover: false, selected: false, color: null, peers: [] };
 
-/** @emoji 🦴 Declarative placeholder node while a window body is still loading. */
-export function pendingWindowUiNode(): UiStackNode {
-  return { type: "stack", direction: "column", children: [], presence: UI_PENDING_PRESENCE };
+/** 🧬️ Contract-neutral defaults for a freshly authored {@link BuiltNode} — every field a record
+ * carries besides `key`/`component`/`children`, at the value that serializes away for free
+ * (`BuiltNode`'s own docstring: "every field ... serializes away at its default"). */
+const DEFAULT_BUILT_LAYOUT: LayoutSpec = { kind: "leaf", width: "hug", height: "hug" };
+const DEFAULT_BUILT_STYLE: StyleSpec = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
+const DEFAULT_BUILT_ACCESSIBILITY: AccessibilitySpec = { label: null, description: null, live: "off", shortcut: null, hidden: false };
+
+/** 🧱️ Stamps a {@link BuiltNode} from a `component` + optional `children`, filling every other field
+ * with the shared defaults above — the small hand-rolled twin of the (not-yet-ported-to-TS) Rust
+ * builder DSL `BuiltNode`'s own docstring describes. */
+function builtNode(key: string, component: Component, children: readonly BuiltNode[] = []): BuiltNode {
+  return {
+    key,
+    component,
+    layout: DEFAULT_BUILT_LAYOUT,
+    style: DEFAULT_BUILT_STYLE,
+    activity: "idle",
+    disabled: false,
+    accessibility: DEFAULT_BUILT_ACCESSIBILITY,
+    bindings: [],
+    menu: null,
+    children: [...children],
+  };
+}
+
+/** @emoji 🦴 Declarative placeholder node while a window body is still loading. `activity: "loading"`
+ * is the contract's own mechanism for this (see `Activity`'s docstring: "was `UiStatus` on the old
+ * wgpu target's `UiPresence`") — never a `presence` field baked into the node, which the new contract
+ * deliberately keeps as a separate, document-external channel (`UiPresenceOverlayContext`). */
+export function pendingWindowUiNode(): BuiltNode {
+  return { ...builtNode("pending", { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }), activity: "loading" };
 }
 
 /** @emoji 🦴 Declarative placeholder node while a panel tab body is still loading. */
-export function pendingPanelUiNode(): UiTreeNode {
-  return { type: "tree", sections: [], presence: UI_PENDING_PRESENCE };
+export function pendingPanelUiNode(): BuiltNode {
+  return { ...builtNode("pending", { type: "tree", interactionDomain: null }), activity: "loading" };
 }
 //#endregion 🧭️UiPresence
 
@@ -649,114 +675,24 @@ export function uiInspectorMixedSlider(values: readonly number[]): { readonly va
   return uiInspectorMixedNumber(values);
 }
 
-/** @emoji 🔢️ Builds an editable number-stepper field row, computing the mixed/uniform display from
- * `values` via {@link uiInspectorMixedNumber}. `action` is merged into both `onAbsolute` (typed
- * entry, dispatched with `{value}`) and `onDelta` (nudge buttons, `{delta}`) — the patch handler
- * branches on whichever key the dispatched action actually carries. */
-export function uiInspectorStepperField(id: string, label: string, values: readonly number[], step: number, action: ActionDescriptor): UiFieldNode {
-  const mixed = uiInspectorMixedNumber(values);
-  return {
-    type: "field",
-    id,
-    label,
-    child: { type: "numberStepper", id, value: mixed.value, step, uniform: mixed.uniform, onAbsolute: action, onDelta: action },
-  };
-}
-
-/** @emoji 🔘️ Builds an editable boolean toggle field row, computing the mixed/uniform display from
- * `values` via {@link uiInspectorMixedToggle}. */
-export function uiInspectorToggleField(id: string, label: string, iconId: IconName, values: readonly boolean[], action: ActionDescriptor): UiFieldNode {
-  const mixed = uiInspectorMixedToggle(values);
-  return {
-    type: "field",
-    id,
-    label,
-    child: { type: "toggle", id, iconId, pressed: mixed.pressed, onChange: action },
-  };
-}
-
-/** @emoji 📐️ Builds a nested `Origin`-style group: a parent tree item labeled `label` containing
- * three {@link uiInspectorStepperField} children (`X`/`Y`/`Z`), each computing its own per-axis
- * mixed state independently — a multi-selection that agrees on X but not Y shows only Y as "Mixed".
- * `axisAction(axis)` builds the per-axis {@link ActionDescriptor}; callers typically merge
- * `{field: "<id>.x"}` etc. into its `args` so the patch handler can dot-path into the right
- * component with `value` (absolute) or `delta` (relative, offset-preserving across multi-select). */
-export function uiInspectorVec3Group(
-  id: string,
-  label: string,
-  values: readonly (readonly [number, number, number])[],
-  step: number,
-  axisAction: (axis: "x" | "y" | "z") => ActionDescriptor,
-): UiGroupNode {
-  const xs = values.map((v) => v[0]);
-  const ys = values.map((v) => v[1]);
-  const zs = values.map((v) => v[2]);
-  return {
-    type: "group",
-    id,
-    label,
-    defaultOpen: true,
-    children: [
-      uiInspectorStepperField(`${id}.x`, "X", xs, step, axisAction("x")),
-      uiInspectorStepperField(`${id}.y`, "Y", ys, step, axisAction("y")),
-      uiInspectorStepperField(`${id}.z`, "Z", zs, step, axisAction("z")),
-    ],
-  };
-}
-
-export function uiInspectorGroupsToTree(groups: readonly UiInspectorFieldGroup[]): UiTreeNode {
-  return uiDeclarativeSectionsToTree(
-    groups
-      .filter((group) => group.fields.length > 0)
-      .map((group) => ({
-        type: "section" as const,
-        id: group.id,
-        label: group.label,
-        defaultOpen: group.defaultOpen ?? true,
-        children: group.fields,
-      })),
-  );
-}
-
-const UI_CONTROL_NODE_TYPES = new Set(["input", "select", "toggle", "button", "keyValue", "slider", "numberStepper", "ring", "iconSelect"]);
-
-function isUiControlNode(node: UiNode): node is UiControlNode {
-  return UI_CONTROL_NODE_TYPES.has(node.type);
-}
-
-export function uiDeclarativeSectionsToTree(sections: readonly UiSectionNode[]): UiTreeNode {
-  const treeSections: UiTreeSectionNode[] = sections.map((section) => ({
-    id: section.id,
-    label: section.label,
-    defaultOpen: section.defaultOpen ?? true,
-    items: section.children.map((child, index) => uiDeclarativeChildToTreeItem(child, `${section.id}.${index}`)),
-  }));
-  return {
-    type: "tree",
-    sections: treeSections.length ? treeSections : [{ id: "empty", items: [{ id: "empty", label: "—" }] }],
-  };
-}
-
-function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeItemNode {
-  if (node.type === "text") return { id: `${fallbackId}.text`, label: node.value };
-  if (node.type === "field") {
-    if (node.child.type === "text") return { id: node.id, label: node.label, description: node.child.value };
-    return { id: node.id, label: node.label, control: isUiControlNode(node.child) ? node.child : undefined };
-  }
-  if (node.type === "button") return { id: node.id ?? fallbackId, label: node.label, control: node };
-  if (node.type === "group") {
-    return {
-      id: node.id,
-      label: node.label,
-      defaultOpen: node.defaultOpen,
-      items: node.children.map((child, index) => uiDeclarativeChildToTreeItem(child, `${node.id}.${index}`)),
-    };
-  }
-  if (node.type === "input" || node.type === "select" || node.type === "toggle" || node.type === "keyValue" || node.type === "slider" || node.type === "numberStepper" || node.type === "ring" || node.type === "iconSelect") {
-    return { id: "id" in node ? String(node.id) : fallbackId, label: "", control: node };
-  }
-  if (node.type === "separator") return { id: `${fallbackId}.sep`, label: "—" };
-  return { id: fallbackId, label: node.type };
-}
+// 🚧️ `uiInspectorStepperField`/`uiInspectorToggleField`/`uiInspectorVec3Group`/
+// `uiInspectorGroupsToTree`/`uiDeclarativeSectionsToTree`/`uiDeclarativeChildToTreeItem`/
+// `isUiControlNode`/`UI_CONTROL_NODE_TYPES` (an "editable field embedded inside a tree row"
+// inspector-panel builder) were removed here, not migrated — found NOT tractable within this
+// packet's scope, for two independent reasons, both real gaps rather than a syntax rename:
+// (1) `Interpreter/🟦️component.tsx`'s current `TreeView`/`treeItemToTreeData` (see its `#region
+//     Tree`) never recurses into a non-`treeItem` child as an inline row control — the rendering
+//     path this subsystem's output would need does not exist yet, so a type-correct `BuiltNode`
+//     tree here would still be a dead, unrenderable shape, not a working feature.
+// (2) Every field needs a real `ActionBinding` (`{trigger, action: ActionId, args, capability}`),
+//     and `ActionId` is `{scope, name, version}` — versioned — while the old call sites here only
+//     ever had an `ActionDescriptor` (`{controllerId, action, args?}`, no version). Picking a
+//     version is a product decision (which registered action, which version), not a mechanical
+//     rename, and not mine to invent.
+// The only consumer was `ShellHost/🟦️component.tsx` (registrar-only, already broken end to end on
+// the old `UiNode` shape independent of this), so nothing else in the tree references these names.
+// `uiInspectorMixedText`/`Number`/`Select`/`Toggle`/`Slider`/`uiInspectorAllEqual` above (the pure
+// mixed-value math, no `UiNode` typing) are untouched and still compile — whoever rebuilds this
+// panel on the new contract can reuse them directly.
 
 // #endregion 🖥️Platform

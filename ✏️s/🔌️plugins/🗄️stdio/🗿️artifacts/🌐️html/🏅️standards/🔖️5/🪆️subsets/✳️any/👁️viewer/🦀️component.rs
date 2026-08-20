@@ -57,7 +57,7 @@ impl ArtifactViewer for HtmlViewer {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -65,14 +65,15 @@ impl ArtifactViewer for HtmlViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_html_viewer() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_html_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(HTML_DIALECT)
-        .await.document(["semio", "html"])
-        .await.icon_id("file-text")
-        .await.mode_def(view::definition().await)
-        .await.default_mode_id(view::MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(view::layout())
+        .document(["semio", "html"])
+        .icon_id("file-text")
+        .mode_def(view::definition())
+        .default_mode_id(view::MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(view::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

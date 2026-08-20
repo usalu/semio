@@ -22,7 +22,8 @@ pub struct JpgDimensions {
 }
 
 /// 📐️ Computes [`JpgDimensions`] from a snapshot's canonical/SOF fields — pure, total, O(1).
-pub async fn compute_jpg_dimensions(snapshot: &JpgSnapshot) -> JpgDimensions {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_jpg_dimensions(snapshot: &JpgSnapshot) -> JpgDimensions {
     let bit_depth = snapshot.frame.as_ref().map(|frame| frame.precision as u32).unwrap_or(8);
     JpgDimensions { width: snapshot.width, height: snapshot.height, bit_depth, has_alpha: false, pixel_count: snapshot.width as u64 * snapshot.height as u64 }
 }

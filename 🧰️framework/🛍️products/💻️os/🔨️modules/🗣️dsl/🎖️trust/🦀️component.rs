@@ -8,15 +8,15 @@
 pub struct Sanitized<T>(T);
 
 impl<T> Sanitized<T> {
-    pub(crate) async fn new_trusted(value: T) -> Self {
+    pub(crate) fn new_trusted(value: T) -> Self {
         Self(value)
     }
 
-    pub async fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.0
     }
 
-    pub async fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.0
     }
 }
@@ -27,15 +27,15 @@ impl<T> Sanitized<T> {
 pub struct SchemaValid<T>(T);
 
 impl<T> SchemaValid<T> {
-    pub async fn new_trusted(value: T) -> Self {
+    pub fn new_trusted(value: T) -> Self {
         Self(value)
     }
 
-    pub async fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.0
     }
 
-    pub async fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.0
     }
 }

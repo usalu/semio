@@ -87,31 +87,39 @@ pub enum SemioAnimationMutation {
 //#region 🔖️DiffBuilders
 /// 🧱️ Wraps a per-timeline `AnimTimelineDiff` into a full `SemioAnimationDiff` — the innermost
 /// layer of the nested-diff tree every non-collection-root mutation ultimately builds on.
-async fn diff_timeline_field(index: usize, diff: AnimTimelineDiff) -> SemioAnimationDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_timeline_field(index: usize, diff: AnimTimelineDiff) -> SemioAnimationDiff {
     SemioAnimationDiff { timelines: Some(IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }) }
 }
-async fn diff_channel_collection(timeline_index: usize, channels: IndexedTripleDiff<AnimChannelDiff, AnimChannel>) -> SemioAnimationDiff {
-    diff_timeline_field(timeline_index, AnimTimelineDiff { name: None, channels: Some(channels) }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_channel_collection(timeline_index: usize, channels: IndexedTripleDiff<AnimChannelDiff, AnimChannel>) -> SemioAnimationDiff {
+    diff_timeline_field(timeline_index, AnimTimelineDiff { name: None, channels: Some(channels) })
 }
-async fn diff_channel_field(timeline_index: usize, index: usize, diff: AnimChannelDiff) -> SemioAnimationDiff {
-    diff_channel_collection(timeline_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_channel_field(timeline_index: usize, index: usize, diff: AnimChannelDiff) -> SemioAnimationDiff {
+    diff_channel_collection(timeline_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
 }
-async fn diff_keyframe_collection(timeline_index: usize, channel_index: usize, keyframes: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>) -> SemioAnimationDiff {
-    diff_channel_field(timeline_index, channel_index, AnimChannelDiff { target: None, interpolation: None, keyframes: Some(keyframes) }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_keyframe_collection(timeline_index: usize, channel_index: usize, keyframes: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>) -> SemioAnimationDiff {
+    diff_channel_field(timeline_index, channel_index, AnimChannelDiff { target: None, interpolation: None, keyframes: Some(keyframes) })
 }
-async fn diff_keyframe_field(timeline_index: usize, channel_index: usize, index: usize, diff: AnimKeyframeDiff) -> SemioAnimationDiff {
-    diff_keyframe_collection(timeline_index, channel_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_keyframe_field(timeline_index: usize, channel_index: usize, index: usize, diff: AnimKeyframeDiff) -> SemioAnimationDiff {
+    diff_keyframe_collection(timeline_index, channel_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
 }
 //#endregion 🔖️DiffBuilders
 
 //#region 🔖️BaseAccessors
-async fn timeline_at(base: &SemioAnimationSnapshot, i: usize) -> Option<&AnimTimeline> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn timeline_at(base: &SemioAnimationSnapshot, i: usize) -> Option<&AnimTimeline> {
     base.timelines.get(i)
 }
-async fn channel_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize) -> Option<&AnimChannel> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn channel_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize) -> Option<&AnimChannel> {
     base.timelines.get(ti).and_then(|t| t.channels.get(ci))
 }
-async fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -> Option<&AnimKeyframe> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -> Option<&AnimKeyframe> {
     base.timelines.get(ti).and_then(|t| t.channels.get(ci)).and_then(|c| c.keyframes.get(ki))
 }
 //#endregion 🔖️BaseAccessors
@@ -123,14 +131,14 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
         use SemioAnimationMutation::*;
         protocol::MutationOutcome::new(match self {
             NoMutation => SemioAnimationDiff::default(),
-            SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             InsertTimeline { index, timeline } => SemioAnimationDiff { timelines: Some(IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: timeline.clone() }], ..Default::default() }) },
             RemoveTimeline { index } => SemioAnimationDiff { timelines: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }) },
-            SetTimelineName { index, name } => diff_timeline_field(*index, AnimTimelineDiff { name: Some(name.clone()), channels: None }).await,
-            InsertChannel { timeline_index, index, channel } => diff_channel_collection(*timeline_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: channel.clone() }], ..Default::default() }).await,
-            RemoveChannel { timeline_index, index } => diff_channel_collection(*timeline_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }).await,
-            SetChannelTarget { timeline_index, index, target } => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: Some(target.clone()), interpolation: None, keyframes: None }).await,
-            SetChannelInterpolation { timeline_index, index, interpolation } => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: None, interpolation: Some(*interpolation), keyframes: None }).await,
+            SetTimelineName { index, name } => diff_timeline_field(*index, AnimTimelineDiff { name: Some(name.clone()), channels: None }),
+            InsertChannel { timeline_index, index, channel } => diff_channel_collection(*timeline_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: channel.clone() }], ..Default::default() }),
+            RemoveChannel { timeline_index, index } => diff_channel_collection(*timeline_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
+            SetChannelTarget { timeline_index, index, target } => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: Some(target.clone()), interpolation: None, keyframes: None }),
+            SetChannelInterpolation { timeline_index, index, interpolation } => diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: None, interpolation: Some(*interpolation), keyframes: None }),
             InsertKeyframe { timeline_index, channel_index, index, keyframe } => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: keyframe.clone() }], ..Default::default() }),
             RemoveKeyframe { timeline_index, channel_index, index } => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
             SetKeyframeTime { timeline_index, channel_index, index, t } => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: Some(*t), value: None }),
@@ -144,36 +152,36 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
             NoMutation => vec![NoMutation],
             SetSnapshot { .. } => vec![SetSnapshot { snapshot: base.clone() }],
             InsertTimeline { index, .. } => vec![RemoveTimeline { index: *index }],
-            RemoveTimeline { index } => match timeline_at(base, *index).await {
+            RemoveTimeline { index } => match timeline_at(base, *index) {
                 Some(t) => vec![InsertTimeline { index: *index, timeline: t.clone() }],
                 None => vec![NoMutation],
             },
-            SetTimelineName { index, .. } => vec![SetTimelineName { index: *index, name: timeline_at(base, *index).await.and_then(|t| t.name.clone()) }],
+            SetTimelineName { index, .. } => vec![SetTimelineName { index: *index, name: timeline_at(base, *index).and_then(|t| t.name.clone()) }],
             InsertChannel { timeline_index, index, .. } => vec![RemoveChannel { timeline_index: *timeline_index, index: *index }],
-            RemoveChannel { timeline_index, index } => match channel_at(base, *timeline_index, *index).await {
+            RemoveChannel { timeline_index, index } => match channel_at(base, *timeline_index, *index) {
                 Some(c) => vec![InsertChannel { timeline_index: *timeline_index, index: *index, channel: c.clone() }],
                 None => vec![NoMutation],
             },
-            SetChannelTarget { timeline_index, index, .. } => match channel_at(base, *timeline_index, *index).await {
+            SetChannelTarget { timeline_index, index, .. } => match channel_at(base, *timeline_index, *index) {
                 Some(c) => vec![SetChannelTarget { timeline_index: *timeline_index, index: *index, target: c.target.clone() }],
                 None => vec![NoMutation],
             },
-            SetChannelInterpolation { timeline_index, index, .. } => match channel_at(base, *timeline_index, *index).await {
+            SetChannelInterpolation { timeline_index, index, .. } => match channel_at(base, *timeline_index, *index) {
                 Some(c) => vec![SetChannelInterpolation { timeline_index: *timeline_index, index: *index, interpolation: c.interpolation }],
                 None => vec![NoMutation],
             },
             InsertKeyframe { timeline_index, channel_index, index, .. } => {
                 vec![RemoveKeyframe { timeline_index: *timeline_index, channel_index: *channel_index, index: *index }]
             }
-            RemoveKeyframe { timeline_index, channel_index, index } => match keyframe_at(base, *timeline_index, *channel_index, *index).await {
+            RemoveKeyframe { timeline_index, channel_index, index } => match keyframe_at(base, *timeline_index, *channel_index, *index) {
                 Some(k) => vec![InsertKeyframe { timeline_index: *timeline_index, channel_index: *channel_index, index: *index, keyframe: k.clone() }],
                 None => vec![NoMutation],
             },
-            SetKeyframeTime { timeline_index, channel_index, index, .. } => match keyframe_at(base, *timeline_index, *channel_index, *index).await {
+            SetKeyframeTime { timeline_index, channel_index, index, .. } => match keyframe_at(base, *timeline_index, *channel_index, *index) {
                 Some(k) => vec![SetKeyframeTime { timeline_index: *timeline_index, channel_index: *channel_index, index: *index, t: k.t }],
                 None => vec![NoMutation],
             },
-            SetKeyframeValue { timeline_index, channel_index, index, .. } => match keyframe_at(base, *timeline_index, *channel_index, *index).await {
+            SetKeyframeValue { timeline_index, channel_index, index, .. } => match keyframe_at(base, *timeline_index, *channel_index, *index) {
                 Some(k) => vec![SetKeyframeValue { timeline_index: *timeline_index, channel_index: *channel_index, index: *index, value: k.value.clone() }],
                 None => vec![NoMutation],
             },
@@ -183,9 +191,10 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub async fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
-    let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
+    let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 
 //#region SnapshotLit
@@ -195,16 +204,18 @@ pub async fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapsho
 /// the old whole-enum `serde_json::to_string`/`from_str` passthrough — a real JSON-transfer-ban
 /// violation the brief specifically flagged as a recurring pattern to check for (confirmed present
 /// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
-async fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
 }
-async fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAnimationSnapshot { schema: dec_str(schema).await?, timelines: dec_list(timelines, dec_timeline).await? })
+    Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
 }
 //#endregion SnapshotLit
 
@@ -263,8 +274,8 @@ impl OpText for SemioAnimationMutation {
                 "RT" => Ok(RemoveTimeline { index: parse_usize(rest)? }),
                 "TN" => {
                     let (index, name) = rest.split_once(',').ok_or_else(|| "TN: missing comma".to_string())?;
-                    let parts = semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(name)?, ','));
-                    let name = match semio_framework_plugin::resolve_ready(parts.as_slice()) {
+                    let parts = split_top_level(strip_brackets(name)?, ',');
+                    let name = match parts.as_slice() {
                         ["0"] => None,
                         [tag, value] if *tag == "1" => Some(dec_str(value)?),
                         other => return Err(format!("TN: bad option shape {other:?}")),
@@ -273,7 +284,7 @@ impl OpText for SemioAnimationMutation {
                 }
                 "IC" => {
                     let parts = split_top_level(rest, ',');
-                    let [ti, index, rest_channel @ ..] = semio_framework_plugin::resolve_ready(parts.await.as_slice()) else { return Err("IC: expected 3+ fields".to_string()) };
+                    let [ti, index, rest_channel @ ..] = parts.as_slice() else { return Err("IC: expected 3+ fields".to_string()) };
                     let channel = rest_channel.join(",");
                     Ok(InsertChannel { timeline_index: parse_usize(ti)?, index: parse_usize(index)?, channel: dec_channel(&channel)? })
                 }
@@ -283,7 +294,7 @@ impl OpText for SemioAnimationMutation {
                 }
                 "CT" => {
                     let parts = split_top_level(rest, ',');
-                    let [ti, index, rest_target @ ..] = semio_framework_plugin::resolve_ready(parts.await.as_slice()) else { return Err("CT: expected 3+ fields".to_string()) };
+                    let [ti, index, rest_target @ ..] = parts.as_slice() else { return Err("CT: expected 3+ fields".to_string()) };
                     Ok(SetChannelTarget { timeline_index: parse_usize(ti)?, index: parse_usize(index)?, target: dec_target(&rest_target.join(","))? })
                 }
                 "CI" => {
@@ -293,7 +304,7 @@ impl OpText for SemioAnimationMutation {
                 }
                 "IK" => {
                     let parts = split_top_level(rest, ',');
-                    let [ti, ci, index, rest_kf @ ..] = semio_framework_plugin::resolve_ready(parts.await.as_slice()) else { return Err("IK: expected 4+ fields".to_string()) };
+                    let [ti, ci, index, rest_kf @ ..] = parts.as_slice() else { return Err("IK: expected 4+ fields".to_string()) };
                     Ok(InsertKeyframe { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)?, keyframe: dec_keyframe(&rest_kf.join(","))? })
                 }
                 "RK" => {
@@ -308,7 +319,7 @@ impl OpText for SemioAnimationMutation {
                 }
                 "KV" => {
                     let parts = split_top_level(rest, ',');
-                    let [ti, ci, index, rest_value @ ..] = semio_framework_plugin::resolve_ready(parts.await.as_slice()) else { return Err("KV: expected 4+ fields".to_string()) };
+                    let [ti, ci, index, rest_value @ ..] = parts.as_slice() else { return Err("KV: expected 4+ fields".to_string()) };
                     Ok(SetKeyframeValue { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)?, value: dec_value(&rest_value.join(","))? })
                 }
                 other => Err(format!("op: unknown tag {other:?}")),
@@ -321,7 +332,8 @@ impl OpText for SemioAnimationMutation {
 /// 🏷️ `SemioAnimationMutation` variant ordinals — declaration order, 0-12 (matches
 /// `parse_op`'s own keyword match). Used by the real `OpBinary` frame below.
 const OP_KEYWORDS: [&str; 13] = ["N", "S", "IT", "RT", "TN", "IC", "RC", "CT", "CI", "IK", "RK", "KT", "KV"];
-async fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
     use SemioAnimationMutation::*;
     match m {
         NoMutation => 0,
@@ -354,7 +366,7 @@ impl OpBinary for SemioAnimationMutation {
             Some((_, rest)) => rest,
             None => "",
         };
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(args.as_bytes());
         Ok(out)
     }
@@ -376,7 +388,8 @@ impl OpBinary for SemioAnimationMutation {
 /// conformance-law tests can reuse them, same promotion pattern every prior semio wave's report
 /// documents (a private item of a child `mod tests` isn't visible to a sibling module).
 #[cfg(test)]
-async fn fixture() -> SemioAnimationSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fixture() -> SemioAnimationSnapshot {
     SemioAnimationSnapshot {
         timelines: vec![AnimTimeline {
             name: Some("walk".into()),
@@ -391,7 +404,8 @@ async fn fixture() -> SemioAnimationSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
     let base = fixture();
     use SemioAnimationMutation::*;
     vec![

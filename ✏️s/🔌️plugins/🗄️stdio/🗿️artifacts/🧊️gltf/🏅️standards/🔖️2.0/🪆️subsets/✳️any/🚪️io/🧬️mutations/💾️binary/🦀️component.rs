@@ -7,14 +7,15 @@ use crate::artifacts::gltf::schema::modules::mutation_dispatch::{validate_gltf_m
 
 const BINARY_MARKER: u8 = 0x47;
 
-async fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "GLTF mutation envelope", offset, detail: detail.into() }
 }
 
 impl protocol::OpBinary for GltfMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let envelope = self.envelope();
-        validate_gltf_mutation_envelope(envelope.await).await.map_err(|error| malformed(0, error.to_string()))?;
+        validate_gltf_mutation_envelope(envelope).map_err(|error| malformed(0, error.to_string()))?;
         let mut writer = dsl::ByteWriter::new().await;
         writer.write_u8(store::pack_rt::OP_BINARY_FORMAT).await;
         writer.write_u8(BINARY_MARKER).await;
@@ -31,13 +32,13 @@ impl protocol::OpBinary for GltfMutation {
         let mut reader = dsl::ByteReader::new(bytes).await;
         let format = reader.read_u8().await.map_err(|error| malformed(0, error.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
-            return Err(malformed(0, format!("expected format {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)).await);
+            return Err(malformed(0, format!("expected format {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
         }
         let marker = reader.read_u8().await.map_err(|error| malformed(1, error.to_string()))?;
         if marker != BINARY_MARKER {
-            return Err(malformed(1, "unknown envelope marker").await);
+            return Err(malformed(1, "unknown envelope marker"));
         }
-        let phase = GltfMutationPhase::from_binary_tag(reader.read_u8().await.map_err(|error| malformed(2, error.to_string()))?).await.map_err(|error| malformed(2, error.to_string()))?;
+        let phase = GltfMutationPhase::from_binary_tag(reader.read_u8().await.map_err(|error| malformed(2, error.to_string()))?).map_err(|error| malformed(2, error.to_string()))?;
         let id_len = usize::try_from(reader.read_varint_u64().await.map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "command id length exceeds usize"))?;
         if id_len == 0 || id_len > GLTF_MUTATION_MAX_COMMAND_ID_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation command id"));
@@ -50,10 +51,10 @@ impl protocol::OpBinary for GltfMutation {
         }
         let payload = reader.read_bytes(payload_len).await.map_err(|error| malformed(3, error.to_string()))?.to_vec();
         if reader.remaining().await != 0 {
-            return Err(malformed((bytes.len() - reader.remaining().await) as u64, "trailing bytes").await);
+            return Err(malformed((bytes.len() - reader.remaining().await) as u64, "trailing bytes"));
         }
         let envelope = GltfMutationEnvelope { command_id, version, phase, payload };
-        validate_gltf_mutation_envelope(&envelope).await.map_err(|error| malformed(0, error.to_string()))?;
-        GltfMutation::from_transport(envelope).await.map_err(|error| malformed(0, error.to_string()))
+        validate_gltf_mutation_envelope(&envelope).map_err(|error| malformed(0, error.to_string()))?;
+        GltfMutation::from_transport(envelope).map_err(|error| malformed(0, error.to_string()))
     }
 }

@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep:
 /// `register()` calls) — out of this ticket's `✳️brep/`-only edit scope, same boundary
 /// `✳️brep/🚪️io/🦀️component.rs`'s own conformance-law doc comment already notes for the composer
 /// registration. Flagged under `## sharedFileRequests` in the wave report, not wired here.
-pub async fn semio_brep_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_brep_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.brep.inference",
         inference: schema::FacetLeaves {

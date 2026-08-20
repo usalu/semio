@@ -49,7 +49,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -104,11 +104,13 @@ pub mod derived_analysis {
     pub const CODE_TILED_NOT_BASELINE: &str = "stdio.tiff.baseline.tiled-not-baseline";
     pub const CODE_MISSING_STRIP_OFFSETS: &str = "stdio.tiff.baseline.missing-strip-offsets";
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn ifd0_u32_list(snapshot: &TiffSnapshot, tag: u16) -> Vec<u32> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ifd0_u32_list(snapshot: &TiffSnapshot, tag: u16) -> Vec<u32> {
         match snapshot.ifds.first().and_then(|ifd| ifd.entries.iter().find(|t| t.tag == tag)) {
             Some(t) => match &t.values {
                 TiffValues::Short(v) => v.iter().map(|&x| x as u32).collect(),
@@ -122,7 +124,8 @@ pub mod derived_analysis {
     /// 🛡️ Real Baseline TIFF conformance check against one already-decoded `TiffSnapshot`. Shared
     /// single source of truth: `TiffBaselineComposer::compose` and the registered
     /// `SubsetValidator` both call this.
-    pub async fn check_tiff_baseline_conformance(snapshot: &TiffSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_tiff_baseline_conformance(snapshot: &TiffSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         let Some(ifd0) = snapshot.ifds.first() else {
@@ -140,17 +143,17 @@ pub mod derived_analysis {
             _ => out.push(soft(CODE_DEGENERATE_RASTER, "IFD 0 has no ImageWidth/ImageLength tag".into())),
         }
 
-        if let Some(&c) = ifd0_u32_list(snapshot, TAG_COMPRESSION).await.first() {
+        if let Some(&c) = ifd0_u32_list(snapshot, TAG_COMPRESSION).first() {
             if c != 1 && c != 2 && c != 32773 {
                 out.push(soft(CODE_UNSUPPORTED_COMPRESSION, format!("Compression {c} is not one of Baseline TIFF's {{1 none, 2 CCITT G3 1D, 32773 PackBits}}")));
             }
         }
-        if let Some(&p) = ifd0_u32_list(snapshot, TAG_PHOTOMETRIC).await.first() {
+        if let Some(&p) = ifd0_u32_list(snapshot, TAG_PHOTOMETRIC).first() {
             if p > 3 {
                 out.push(soft(CODE_UNSUPPORTED_PHOTOMETRIC, format!("PhotometricInterpretation {p} is not one of Baseline TIFF's {{0,1,2,3}}")));
             }
         }
-        let bits = ifd0_u32_list(snapshot, TAG_BITS_PER_SAMPLE).await;
+        let bits = ifd0_u32_list(snapshot, TAG_BITS_PER_SAMPLE);
         if bits.iter().any(|&b| b != 1 && b != 4 && b != 8) {
             out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE, format!("BitsPerSample {bits:?} has a value outside Baseline TIFF's {{1,4,8}}")));
         }
@@ -194,11 +197,13 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag};
 
-        async fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
             TiffTag { tag: id, kind, values }
         }
 
-        async fn snapshot_with(width: u32, height: u32, pixels: Vec<u8>) -> TiffSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn snapshot_with(width: u32, height: u32, pixels: Vec<u8>) -> TiffSnapshot {
             TiffSnapshot {
                 schema: "stdio.tiff".into(),
                 byte_order: TiffByteOrder::LittleEndian,

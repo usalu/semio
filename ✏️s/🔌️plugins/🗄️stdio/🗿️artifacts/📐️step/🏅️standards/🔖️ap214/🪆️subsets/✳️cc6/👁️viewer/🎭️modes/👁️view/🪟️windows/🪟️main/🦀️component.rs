@@ -20,8 +20,9 @@ const STEP_CC6_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by the surface root's `create_*_viewer`.
-pub async fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
@@ -30,7 +31,8 @@ pub async fn definition() -> WindowKindDefinition {
 /// array field, clamped to a small display range — real (not fabricated), deliberately generic so
 /// this same shape replicates uniformly across every subset this window kit serves without coupling
 /// to field names a live peer ticket may still be refactoring.
-async fn entity_count(document: &StepSnapshot) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_count(document: &StepSnapshot) -> usize {
     serde_json::to_value(document)
         .ok()
         .and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0)))
@@ -38,9 +40,10 @@ async fn entity_count(document: &StepSnapshot) -> usize {
         .clamp(1, 6)
 }
 
-async fn world_instances_json(document: &StepSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn world_instances_json(document: &StepSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count.await)
+    let instances: Vec<serde_json::Value> = (0..count)
         .map(|index| {
             serde_json::json!({
                 "id": format!("step_cc6-{index}"),
@@ -58,15 +61,16 @@ async fn world_instances_json(document: &StepSnapshot) -> String {
 
 /// 👁️ Pure `StepSnapshot -> UiNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
-pub async fn render(document: &StepSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &StepSnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": STEP_CC6_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(STEP_CC6_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
-        camera_json: world3d_camera_json(STEP_CC6_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC6_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC6_VIEW_DEFAULT_CAMERA_FOV).await,
+        camera_json: world3d_camera_json(STEP_CC6_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC6_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC6_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,
-        instances_json: world_instances_json(document).await,
-        selection_json: world3d_selection_json("rectangle", &[], None).await,
+        instances_json: world_instances_json(document),
+        selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view).await
+    MeshWindowKit::render(&view)
 }
 //#endregion 🔖️Render
 

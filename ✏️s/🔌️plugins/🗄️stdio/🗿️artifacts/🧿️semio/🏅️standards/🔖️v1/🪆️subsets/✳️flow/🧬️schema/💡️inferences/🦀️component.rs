@@ -29,7 +29,7 @@ pub struct SemioFlowInference {
 
 impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
     async fn infer(snapshot: &SemioFlowSnapshot) -> Self {
-        Self { topology: compute_semio_flow_topology(snapshot).await }
+        Self { topology: compute_semio_flow_topology(snapshot) }
     }
 }
 
@@ -60,7 +60,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::flow:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_flow_artifact_schema_descriptor`'s registration.
-pub async fn semio_flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.flow.inference",
         inference: schema::FacetLeaves {

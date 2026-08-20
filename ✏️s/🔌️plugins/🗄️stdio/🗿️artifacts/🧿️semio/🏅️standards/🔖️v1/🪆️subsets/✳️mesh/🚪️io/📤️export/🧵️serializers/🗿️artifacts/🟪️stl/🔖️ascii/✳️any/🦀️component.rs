@@ -24,18 +24,21 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
 
 //#region 🔖️NormalMath
-async fn face_normal(v0: SemioPoint3, v1: SemioPoint3, v2: SemioPoint3) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn face_normal(v0: SemioPoint3, v1: SemioPoint3, v2: SemioPoint3) -> [f64; 3] {
     let e1 = [v1.x - v0.x, v1.y - v0.y, v1.z - v0.z];
     let e2 = [v2.x - v0.x, v2.y - v0.y, v2.z - v0.z];
     let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-    normalize(n).await
+    normalize(n)
 }
 
-async fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3] {
-    normalize([(n0.x + n1.x + n2.x) / 3.0, (n0.y + n1.y + n2.y) / 3.0, (n0.z + n1.z + n2.z) / 3.0]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3] {
+    normalize([(n0.x + n1.x + n2.x) / 3.0, (n0.y + n1.y + n2.y) / 3.0, (n0.z + n1.z + n2.z) / 3.0])
 }
 
-async fn normalize(v: [f64; 3]) -> [f64; 3] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize(v: [f64; 3]) -> [f64; 3] {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len > 1e-12 {
         [v[0] / len, v[1] / len, v[2] / len]
@@ -84,9 +87,9 @@ impl ArtifactSerializer for SemioMeshToStl {
                             *prim.normals.get(i1 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i1} out of bounds", prim.id)))?,
                             *prim.normals.get(i2 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i2} out of bounds", prim.id)))?,
                         );
-                        average_normal(n0, n1, n2).await
+                        average_normal(n0, n1, n2)
                     } else {
-                        face_normal(v0, v1, v2).await
+                        face_normal(v0, v1, v2)
                     };
                     triangles.push(StlTriangle { normal, vertices: [[v0.x, v0.y, v0.z], [v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z]] });
                 }
@@ -105,7 +108,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn sample_semio_mesh() -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio_mesh() -> SemioMeshSnapshot {
         SemioMeshSnapshot {
             schema: "stdio.semio.mesh".into(),
             meshes: vec![SemioMesh {

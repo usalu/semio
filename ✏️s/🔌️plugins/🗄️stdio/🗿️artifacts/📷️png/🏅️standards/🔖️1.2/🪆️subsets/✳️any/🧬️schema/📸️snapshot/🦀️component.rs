@@ -24,7 +24,8 @@ pub enum PngColorType {
 }
 
 impl PngColorType {
-    pub async fn from_u8(v: u8) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_u8(v: u8) -> Result<Self, String> {
         match v {
             0 => Ok(PngColorType::Grayscale),
             2 => Ok(PngColorType::Rgb),
@@ -34,7 +35,8 @@ impl PngColorType {
             _ => Err(format!("png: unsupported color type {v}")),
         }
     }
-    pub async fn to_u8(self) -> u8 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_u8(self) -> u8 {
         match self {
             PngColorType::Grayscale => 0,
             PngColorType::Rgb => 2,
@@ -44,7 +46,8 @@ impl PngColorType {
         }
     }
     /// 🔢️ Samples per pixel before any palette indirection.
-    pub async fn samples_per_pixel(self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn samples_per_pixel(self) -> usize {
         match self {
             PngColorType::Grayscale | PngColorType::Palette => 1,
             PngColorType::Rgb => 3,
@@ -105,7 +108,8 @@ pub enum PngSrgbIntent {
 }
 
 impl PngSrgbIntent {
-    pub async fn from_u8(v: u8) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_u8(v: u8) -> Result<Self, String> {
         match v {
             0 => Ok(PngSrgbIntent::Perceptual),
             1 => Ok(PngSrgbIntent::RelativeColorimetric),
@@ -114,7 +118,8 @@ impl PngSrgbIntent {
             _ => Err(format!("png sRGB: unsupported rendering intent {v}")),
         }
     }
-    pub async fn to_u8(self) -> u8 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_u8(self) -> u8 {
         match self {
             PngSrgbIntent::Perceptual => 0,
             PngSrgbIntent::RelativeColorimetric => 1,
@@ -342,11 +347,11 @@ impl store::ArtifactDsl for PngSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::png::engine::decode_png(&bytes).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::png::engine::decode_png(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::png::engine::encode_png(self).await.unwrap_or_default();
+        let bytes = crate::artifacts::png::engine::encode_png(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -356,7 +361,7 @@ impl store::ArtifactDsl for PngSnapshot {
 impl store::ArtifactPack for PngSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::png::engine::encode_png(self).await.map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::png::engine::encode_png(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -367,7 +372,7 @@ impl store::ArtifactPack for PngSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::png::engine::decode_png(&inner).await.map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::png::engine::decode_png(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
 //#endregion HandcraftedArtifactCodecs

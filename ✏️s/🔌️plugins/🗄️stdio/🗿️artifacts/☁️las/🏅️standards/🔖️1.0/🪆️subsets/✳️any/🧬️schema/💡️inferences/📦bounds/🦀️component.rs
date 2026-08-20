@@ -25,7 +25,8 @@ pub struct LasBounds {
 /// 📦️ Computes [`LasBounds`] as a direct read of `snapshot.header`'s own declared bounds and
 /// point-record count — no fold over `points`, matching LAS's own spec (the header carries the
 /// authoritative bbox, not a derived one).
-pub async fn compute_las_bounds(snapshot: &LasSnapshot) -> LasBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_las_bounds(snapshot: &LasSnapshot) -> LasBounds {
     let header = &snapshot.header;
     LasBounds { min_x: header.min_x, min_y: header.min_y, min_z: header.min_z, max_x: header.max_x, max_y: header.max_y, max_z: header.max_z, point_count: header.number_of_point_records }
 }
@@ -38,7 +39,8 @@ mod tests {
     use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
     use crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA;
 
-    async fn snapshot_with(header: LasHeader, points: Vec<LasPoint>) -> LasSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot_with(header: LasHeader, points: Vec<LasPoint>) -> LasSnapshot {
         LasSnapshot { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs: Vec::<LasVlr>::new(), points }
     }
 

@@ -18,7 +18,8 @@
 /// 🔓 R2004+ file header "decryption" -- not real security, a fixed LCG-generated one-time pad
 /// (the classic Borland/MSVC `rand()` constants: `seed = seed*0x343fd + 0x269ec3`, upper 16 bits
 /// of the running seed XORed per byte). Symmetric -- the same function both encrypts and decrypts.
-pub async fn decrypt_r2004_header(src: &[u8]) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decrypt_r2004_header(src: &[u8]) -> Vec<u8> {
     let mut rseed: u32 = 1;
     src.iter()
         .map(|&b| {
@@ -45,7 +46,8 @@ pub struct R2004FileHeader {
 
 const R2004_HEADER_LEN: usize = 0x6c;
 
-async fn parse_r2004_file_header(dec: &[u8]) -> Result<R2004FileHeader, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_r2004_file_header(dec: &[u8]) -> Result<R2004FileHeader, String> {
     if dec.len() < R2004_HEADER_LEN {
         return Err(format!("r2004 file header: need {R2004_HEADER_LEN} decrypted bytes, got {}", dec.len()));
     }
@@ -81,25 +83,29 @@ struct ByteCursor<'a> {
 }
 
 impl<'a> ByteCursor<'a> {
-    async fn new(data: &'a [u8]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    async fn u8(&mut self) -> Result<u8, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn u8(&mut self) -> Result<u8, String> {
         let b = *self.data.get(self.pos).ok_or("dwg lz: source exhausted mid-opcode")?;
         self.pos += 1;
         Ok(b)
     }
-    async fn has_more(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_more(&self) -> bool {
         self.pos < self.data.len()
     }
 }
 
-async fn read_literal_length(src: &mut ByteCursor<'_>, opcode: u8) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_literal_length(src: &mut ByteCursor<'_>, opcode: u8) -> Result<u32, String> {
     let mut lowbits = (opcode & 0xF) as u32;
     if lowbits == 0 {
         let mut lastbyte;
         loop {
-            lastbyte = src.u8().await?;
+            lastbyte = src.u8()?;
             if lastbyte != 0 || !src.has_more() {
                 break;
             }
@@ -110,12 +116,13 @@ async fn read_literal_length(src: &mut ByteCursor<'_>, opcode: u8) -> Result<u32
     Ok(lowbits + 3)
 }
 
-async fn read_compressed_bytes(src: &mut ByteCursor<'_>, opcode: u8, bits: u32) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_compressed_bytes(src: &mut ByteCursor<'_>, opcode: u8, bits: u32) -> Result<u32, String> {
     let mut cb = (opcode as u32) & bits;
     if cb == 0 {
         let mut lastbyte;
         loop {
-            lastbyte = src.u8().await?;
+            lastbyte = src.u8()?;
             if lastbyte != 0 || !src.has_more() {
                 break;
             }
@@ -132,51 +139,54 @@ async fn read_compressed_bytes(src: &mut ByteCursor<'_>, opcode: u8, bits: u32) 
 /// standalone-scratch-crate technique: the OR-then-add-separately variant silently desyncs the
 /// decompressor on real (longer, more opcode-varied) section data while still round-tripping
 /// shorter synthetic streams -- exactly the class of bug this technique exists to catch.
-async fn two_byte_offset(src: &mut ByteCursor<'_>, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
-    let first = src.u8().await?;
-    let second = src.u8().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn two_byte_offset(src: &mut ByteCursor<'_>, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
+    let first = src.u8()?;
+    let second = src.u8()?;
     let offset = existing_offset | ((first as u32) >> 2) | ((second as u32) << 6);
     Ok((first, offset + plus))
 }
 
-async fn copy_bytes(n: u32, src: &mut ByteCursor<'_>, dec: &mut Vec<u8>) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn copy_bytes(n: u32, src: &mut ByteCursor<'_>, dec: &mut Vec<u8>) -> Result<u8, String> {
     for _ in 0..n {
-        dec.push(src.u8().await?);
+        dec.push(src.u8()?);
     }
-    src.u8().await
+    src.u8()
 }
 
 /// 🗜️ Decompresses one R2004+ "compression algorithm 2" byte stream.
-pub async fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result<Vec<u8>, String> {
-    let mut src = ByteCursor::new(comp).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result<Vec<u8>, String> {
+    let mut src = ByteCursor::new(comp);
     let mut dec: Vec<u8> = Vec::with_capacity(decomp_size.min(1 << 20));
 
-    let mut opcode1 = src.u8().await?;
+    let mut opcode1 = src.u8()?;
     if (opcode1 & 0xF0) == 0 {
-        let lit_len = read_literal_length(&mut src, opcode1).await?;
-        opcode1 = copy_bytes(lit_len, &mut src, &mut dec).await?;
+        let lit_len = read_literal_length(&mut src, opcode1)?;
+        opcode1 = copy_bytes(lit_len, &mut src, &mut dec)?;
     }
 
-    while src.has_more().await && dec.len() < decomp_size && opcode1 != 0x11 {
+    while src.has_more() && dec.len() < decomp_size && opcode1 != 0x11 {
         let (comp_bytes, comp_offset): (u32, u32);
         if opcode1 < 0x10 || opcode1 >= 0x40 {
             let cb = ((opcode1 as u32) >> 4).wrapping_sub(1);
-            let opcode2 = src.u8().await?;
+            let opcode2 = src.u8()?;
             let co = ((((opcode1 as u32) >> 2) & 3) | ((opcode2 as u32) << 2)) + 1;
             comp_bytes = cb;
             comp_offset = co;
             // opcode1 intentionally unchanged here (matches reference semantics).
         } else if opcode1 < 0x20 {
-            let cb = read_compressed_bytes(&mut src, opcode1, 7).await?;
+            let cb = read_compressed_bytes(&mut src, opcode1, 7)?;
             let partial = ((opcode1 as u32) & 8) << 11;
-            let (next_op, co) = two_byte_offset(&mut src, 0x4000, partial).await?;
+            let (next_op, co) = two_byte_offset(&mut src, 0x4000, partial)?;
             opcode1 = next_op;
             comp_bytes = cb;
             comp_offset = co;
         } else {
             debug_assert!(opcode1 >= 0x20);
-            let cb = read_compressed_bytes(&mut src, opcode1, 0x1f).await?;
-            let (next_op, co) = two_byte_offset(&mut src, 1, 0).await?;
+            let cb = read_compressed_bytes(&mut src, opcode1, 0x1f)?;
+            let (next_op, co) = two_byte_offset(&mut src, 1, 0)?;
             opcode1 = next_op;
             comp_bytes = cb;
             comp_offset = co;
@@ -194,13 +204,13 @@ pub async fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result
 
         let mut lit_length = (opcode1 & 3) as u32;
         if lit_length == 0 {
-            opcode1 = src.u8().await?;
+            opcode1 = src.u8()?;
             if (opcode1 & 0xF0) == 0 {
-                lit_length = read_literal_length(&mut src, opcode1).await?;
+                lit_length = read_literal_length(&mut src, opcode1)?;
             }
         }
         if lit_length > 0 && end + lit_length as usize <= decomp_size {
-            opcode1 = copy_bytes(lit_length, &mut src, &mut dec).await?;
+            opcode1 = copy_bytes(lit_length, &mut src, &mut dec)?;
         } else if lit_length > 0 {
             break;
         }
@@ -208,7 +218,8 @@ pub async fn decompress_r2004_section(comp: &[u8], decomp_size: usize) -> Result
     Ok(dec)
 }
 
-async fn write_r2004_lz_length(output: &mut Vec<u8>, mut length: usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_lz_length(output: &mut Vec<u8>, mut length: usize) {
     while length > 0xff {
         length -= 0xff;
         output.push(0);
@@ -216,7 +227,8 @@ async fn write_r2004_lz_length(output: &mut Vec<u8>, mut length: usize) {
     output.push(length as u8);
 }
 
-async fn write_r2004_lz_opcode(output: &mut Vec<u8>, opcode: u8, length: usize, immediate: usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_lz_opcode(output: &mut Vec<u8>, opcode: u8, length: usize, immediate: usize) {
     if length <= immediate {
         output.push(opcode | (length - 2) as u8);
     } else {
@@ -225,7 +237,8 @@ async fn write_r2004_lz_opcode(output: &mut Vec<u8>, opcode: u8, length: usize, 
     }
 }
 
-async fn write_r2004_lz_literals(output: &mut Vec<u8>, source: &[u8], start: usize, length: usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_lz_literals(output: &mut Vec<u8>, source: &[u8], start: usize, length: usize) {
     if length == 0 {
         return;
     }
@@ -235,7 +248,8 @@ async fn write_r2004_lz_literals(output: &mut Vec<u8>, source: &[u8], start: usi
     output.extend_from_slice(&source[start..start + length]);
 }
 
-async fn write_r2004_lz_match(output: &mut Vec<u8>, distance: usize, length: usize, following_literals: usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_lz_match(output: &mut Vec<u8>, distance: usize, length: usize, following_literals: usize) {
     let (mut first, second) = if length >= 0x0f || distance > 0x400 {
         let (opcode, encoded_distance) = if distance <= 0x4000 { (0x20, distance - 1) } else { (0x10 | (((distance - 0x4000) >> 11) & 8) as u8, distance - 0x4000) };
         write_r2004_lz_opcode(output, opcode, length, if distance <= 0x4000 { 0x21 } else { 0x09 });
@@ -250,15 +264,17 @@ async fn write_r2004_lz_match(output: &mut Vec<u8>, distance: usize, length: usi
     output.extend_from_slice(&[first, second]);
 }
 
-async fn r2004_lz_hash4(source: &[u8], position: usize) -> usize {
-    let mut value = (source[position + 3] as usize) << 6.await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2004_lz_hash4(source: &[u8], position: usize) -> usize {
+    let mut value = (source[position + 3] as usize) << 6;
     value ^= source[position + 2] as usize;
     value = (value << 5) ^ source[position + 1] as usize;
     value = (value << 5) ^ source[position] as usize;
     (value + (value >> 5)) & 0x7fff
 }
 
-async fn r2004_lz_candidate(source: &[u8], position: usize, end: usize, table: &mut [usize]) -> (usize, usize) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2004_lz_candidate(source: &[u8], position: usize, end: usize, table: &mut [usize]) -> (usize, usize) {
     let mut index = r2004_lz_hash4(source, position);
     let mut previous = table[index];
     let mut distance = position.wrapping_sub(previous);
@@ -286,7 +302,8 @@ async fn r2004_lz_candidate(source: &[u8], position: usize, end: usize, table: &
 }
 
 /// 🗜️ Encodes the deterministic AC18 D2 token stream used by R2004-family pages.
-pub async fn compress_r2004_section(data: &[u8]) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compress_r2004_section(data: &[u8]) -> Result<Vec<u8>, String> {
     if data.len() < 4 {
         return Err("R2004 compression needs at least four initial literal bytes".into());
     }
@@ -296,7 +313,7 @@ pub async fn compress_r2004_section(data: &[u8]) -> Result<Vec<u8>, String> {
     let mut position = 4usize;
     let mut pending = None;
     while position < data.len().saturating_sub(0x13) {
-        let (length, distance) = r2004_lz_candidate(data, position, data.len(), &mut table).await;
+        let (length, distance) = r2004_lz_candidate(data, position, data.len(), &mut table);
         if length < 3 {
             position += 1;
             continue;
@@ -320,7 +337,8 @@ pub async fn compress_r2004_section(data: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// 🧮 R2004 system/data-page checksum from §4.2 of the Open Design specification.
-pub async fn r2004_page_checksum(seed: u32, data: &[u8]) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn r2004_page_checksum(seed: u32, data: &[u8]) -> u32 {
     let mut sum1 = seed & 0xffff;
     let mut sum2 = seed >> 16;
     for chunk in data.chunks(0x15b0) {
@@ -345,7 +363,8 @@ struct PageHeader {
     page_size: u32,
 }
 
-async fn decrypt_page_header(raw32: &[u8; 32], file_address: u64) -> PageHeader {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decrypt_page_header(raw32: &[u8; 32], file_address: u64) -> PageHeader {
     let mask = 0x4164536bu32 ^ (file_address as u32);
     let mut words = [0u32; 8];
     for (k, word) in words.iter_mut().enumerate() {
@@ -365,7 +384,8 @@ struct PageDirEntry {
     address: u64,
 }
 
-async fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry> {
     let mut out = Vec::new();
     let mut pos = 0usize;
     let mut address: u64 = 0x100;
@@ -415,7 +435,8 @@ struct DwgRawSection {
     pages: Vec<DwgRawPage>,
 }
 
-async fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, u32, u32, Vec<(i32, u32, u64)>)>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, u32, u32, Vec<(i32, u32, u64)>)>, String> {
     if dec.len() < 20 {
         return Err("section info: header shorter than 20 bytes".into());
     }
@@ -459,13 +480,14 @@ async fn parse_section_info(dec: &[u8]) -> Result<Vec<(String, u64, u32, u32, u3
 /// pages LOCATED (file address + compressed size) but not yet decompressed. Returns `Err` only
 /// when the file structurally isn't a decodable R2004+ file (wrong magic, truncated, checksum-
 /// verified-wrong LCG landing) -- never a partial/garbage result.
-async fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
     if bytes.len() < 0x80 + R2004_HEADER_LEN {
         return Err(format!("r2004: file too short for encrypted header ({} bytes)", bytes.len()));
     }
     let enc = &bytes[0x80..0x80 + R2004_HEADER_LEN];
     let dec_hdr = decrypt_r2004_header(enc);
-    let hdr = parse_r2004_file_header(&dec_hdr).await?;
+    let hdr = parse_r2004_file_header(&dec_hdr)?;
 
     // Section page map: located at `section_map_address + 0x100`, header is 5 plain (non-XORed)
     // RL fields (0x14 bytes): section_type (must be 0x41630e3b), decomp_size, comp_size,
@@ -484,8 +506,8 @@ async fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, Strin
     if map_data_start + map_comp_size > bytes.len() {
         return Err("r2004: section page map compressed data out of bounds".into());
     }
-    let map_dec = decompress_r2004_section(&bytes[map_data_start..map_data_start + map_comp_size], map_decomp_size).await?;
-    let page_dir = parse_page_directory(&map_dec, hdr.section_array_size).await;
+    let map_dec = decompress_r2004_section(&bytes[map_data_start..map_data_start + map_comp_size], map_decomp_size)?;
+    let page_dir = parse_page_directory(&map_dec, hdr.section_array_size);
     if page_dir.len() as u32 != hdr.numgaps + hdr.numsections {
         return Err(format!("r2004: page directory entry count {} != numgaps({}) + numsections({})", page_dir.len(), hdr.numgaps, hdr.numsections));
     }
@@ -507,8 +529,8 @@ async fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, Strin
     if info_data_start + info_comp_size > bytes.len() {
         return Err("r2004: section info compressed data out of bounds".into());
     }
-    let info_dec = decompress_r2004_section(&bytes[info_data_start..info_data_start + info_comp_size], info_decomp_size).await?;
-    let descriptors = parse_section_info(&info_dec).await?;
+    let info_dec = decompress_r2004_section(&bytes[info_data_start..info_data_start + info_comp_size], info_decomp_size)?;
+    let descriptors = parse_section_info(&info_dec)?;
 
     let by_number: std::collections::HashMap<i32, u64> = page_dir.iter().map(|e| (e.number, e.address)).collect();
     let mut out = Vec::with_capacity(descriptors.len());
@@ -530,8 +552,9 @@ async fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, Strin
 /// sections, copies verbatim) each page's real content bytes. A single page's failure is
 /// recorded on that page (`DwgRawPage::error`) and does not abort the other pages/sections --
 /// the caller can tell exactly how much of D2 landed from the per-page `error` fields.
-async fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
-    let mut sections = locate_r2004_sections(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
+    let mut sections = locate_r2004_sections(bytes)?;
     for section in &mut sections {
         for page in &mut section.pages {
             let addr = page.file_address as usize;
@@ -541,7 +564,7 @@ async fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, Strin
             }
             let mut raw32 = [0u8; 32];
             raw32.copy_from_slice(&bytes[addr..addr + 32]);
-            let ph = decrypt_page_header(&raw32, page.file_address).await;
+            let ph = decrypt_page_header(&raw32, page.file_address);
             if ph.page_type != 0x4163043b {
                 page.error = Some(format!("page {} page_type {:#x} != 0x4163043b", page.page_number, ph.page_type));
                 continue;
@@ -560,7 +583,7 @@ async fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, Strin
                 // `DwgRawSection::max_decomp_size` docs; this under-bound was a real bug caught
                 // via the standalone-scratch-crate technique).
                 let bound = section.max_decomp_size.max(ph.page_size).max(1) as usize;
-                match decompress_r2004_section(comp, bound).await {
+                match decompress_r2004_section(comp, bound) {
                     Ok(d) => page.decoded = d,
                     Err(e) => page.error = Some(e),
                 }
@@ -583,23 +606,28 @@ struct EncodedR2004Page {
     allocation_size: u32,
 }
 
-async fn align_r2004(value: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn align_r2004(value: usize) -> usize {
     (value + 0x1f) & !0x1f
 }
 
-async fn push_u32(output: &mut Vec<u8>, value: u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_u32(output: &mut Vec<u8>, value: u32) {
     output.extend_from_slice(&value.to_le_bytes());
 }
 
-async fn push_u16(output: &mut Vec<u8>, value: u16) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_u16(output: &mut Vec<u8>, value: u16) {
     output.extend_from_slice(&value.to_le_bytes());
 }
 
-async fn push_u64(output: &mut Vec<u8>, value: u64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_u64(output: &mut Vec<u8>, value: u64) {
     output.extend_from_slice(&value.to_le_bytes());
 }
 
-async fn r2004_crc32(data: &[u8]) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2004_crc32(data: &[u8]) -> u32 {
     let mut crc = 0xffff_ffffu32;
     for byte in data {
         crc ^= *byte as u32;
@@ -610,7 +638,8 @@ async fn r2004_crc32(data: &[u8]) -> u32 {
     !crc
 }
 
-async fn encrypt_data_page_header(mut header: [u8; 32], address: u64) -> [u8; 32] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encrypt_data_page_header(mut header: [u8; 32], address: u64) -> [u8; 32] {
     let mask = 0x4164536bu32 ^ address as u32;
     for chunk in header.chunks_exact_mut(4) {
         let value = u32::from_le_bytes(chunk.try_into().unwrap()) ^ mask;
@@ -619,18 +648,20 @@ async fn encrypt_data_page_header(mut header: [u8; 32], address: u64) -> [u8; 32
     header
 }
 
-async fn extend_r2004_lcg_fill(output: &mut Vec<u8>, end: usize, mut seed: u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn extend_r2004_lcg_fill(output: &mut Vec<u8>, end: usize, mut seed: u32) {
     while output.len() < end {
         seed = seed.wrapping_mul(0x343fd).wrapping_add(0x269ec3);
         output.push((seed >> 16) as u8);
     }
 }
 
-async fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), String> {
     if output.len() as u64 != page.address {
         return Err(format!("page {} address {} != output {}", page.page_number, page.address, output.len()));
     }
-    let data_checksum = r2004_page_checksum(0, &page.payload).await;
+    let data_checksum = r2004_page_checksum(0, &page.payload);
     let mut header = [0u8; 32];
     header[0..4].copy_from_slice(&0x4163043bu32.to_le_bytes());
     header[4..8].copy_from_slice(&page.section_id.to_le_bytes());
@@ -638,7 +669,7 @@ async fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Resul
     header[12..16].copy_from_slice(&page.allocation_size.to_le_bytes());
     header[16..20].copy_from_slice(&(page.start_offset as u32).to_le_bytes());
     header[28..32].copy_from_slice(&data_checksum.to_le_bytes());
-    let header_checksum = r2004_page_checksum(data_checksum, &header).await;
+    let header_checksum = r2004_page_checksum(data_checksum, &header);
     header[24..28].copy_from_slice(&header_checksum.to_le_bytes());
     output.extend_from_slice(&encrypt_data_page_header(header, page.address));
     output.extend_from_slice(&page.payload);
@@ -647,22 +678,23 @@ async fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Resul
 }
 
 
-async fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
-    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects).await?;
-    let handles = materialize_r2004_handles(&pairs).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
+    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
+    let handles = materialize_r2004_handles(&pairs)?;
     let sections = [
-        (9u32, encode_summary_info(&snapshot.summary).await?, Some(128usize)),
-        (10, encode_indexed_preview(&snapshot.preview, 0x1c0).await?, Some(87_040)),
-        (11, encode_application_info(&snapshot.application).await?, Some(768)),
-        (12, encode_application_history(&snapshot.application_history).await?, Some(1_408)),
-        (13, encode_dependencies(&snapshot.dependencies).await?, Some(768)),
-        (8, encode_revision_history(&snapshot.revision_history).await?, None),
+        (9u32, encode_summary_info(&snapshot.summary)?, Some(128usize)),
+        (10, encode_indexed_preview(&snapshot.preview, 0x1c0)?, Some(87_040)),
+        (11, encode_application_info(&snapshot.application)?, Some(768)),
+        (12, encode_application_history(&snapshot.application_history)?, Some(1_408)),
+        (13, encode_dependencies(&snapshot.dependencies)?, Some(768)),
+        (8, encode_revision_history(&snapshot.revision_history)?, None),
         (7, objects, None),
-        (6, encode_object_free_space(&snapshot.auxiliary_header.updated_at).await, None),
-        (5, encode_template(&snapshot.template).await?, None),
+        (6, encode_object_free_space(&snapshot.auxiliary_header.updated_at), None),
+        (5, encode_template(&snapshot.template)?, None),
         (4, handles, None),
-        (3, encode_r2010_classes_section(&snapshot.classes).await?, None),
-        (2, encode_auxiliary_header(&snapshot.auxiliary_header).await?, None),
+        (3, encode_r2010_classes_section(&snapshot.classes)?, None),
+        (2, encode_auxiliary_header(&snapshot.auxiliary_header)?, None),
     ];
     let mut pages = Vec::new();
     let mut address = 0x100usize;
@@ -683,7 +715,7 @@ async fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artif
         for (page_index, chunk) in content.chunks(0x7400).enumerate() {
             let mut decoded = vec![0; 0x7400];
             decoded[..chunk.len()].copy_from_slice(chunk);
-            let payload = compress_r2004_section(&decoded).await?;
+            let payload = compress_r2004_section(&decoded)?;
             let allocation_size = align_r2004(32 + payload.len()) as u32;
             pages.push(EncodedR2004Page { section_id, page_number, start_offset: (page_index * 0x7400) as u64, payload, address: address as u64, allocation_size });
             address += allocation_size as usize;
@@ -703,7 +735,8 @@ struct R2004SectionDescriptor {
     encryption: u32,
 }
 
-async fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages: &[EncodedR2004Page], reserved_name: &[u8; 64], application_history_scratch: &[u8]) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages: &[EncodedR2004Page], reserved_name: &[u8; 64], application_history_scratch: &[u8]) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_u32(&mut output, descriptors.len() as u32);
     push_u32(&mut output, 2);
@@ -781,16 +814,17 @@ async fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages
 }
 
 
-async fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8], physical_allocation: Option<usize>, fill_skip: usize) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8], physical_allocation: Option<usize>, fill_skip: usize) -> Result<usize, String> {
     let start = output.len();
-    let payload = compress_r2004_section(decoded).await?;
+    let payload = compress_r2004_section(decoded)?;
     let mut header = Vec::with_capacity(20);
     push_u32(&mut header, page_type);
     push_u32(&mut header, decoded.len() as u32);
     push_u32(&mut header, payload.len() as u32);
     push_u32(&mut header, 2);
     push_u32(&mut header, 0);
-    let checksum = r2004_page_checksum(r2004_page_checksum(0, &header).await, &payload).await;
+    let checksum = r2004_page_checksum(r2004_page_checksum(0, &header), &payload);
     header[16..20].copy_from_slice(&checksum.to_le_bytes());
     output.extend_from_slice(&header);
     output.extend_from_slice(&payload);
@@ -812,22 +846,23 @@ async fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: 
     Ok(payload.len())
 }
 
-async fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, header_size: usize) -> Result<Vec<R2004SectionDescriptor>, String> {
-    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects).await?;
-    let handles = materialize_r2004_handles(&pairs).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, header_size: usize) -> Result<Vec<R2004SectionDescriptor>, String> {
+    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
+    let handles = materialize_r2004_handles(&pairs)?;
     let sizes = [
-        (13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies).await?.len(), 768, 1, 2),
-        (12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history).await?.len(), 1_408, 1, 0),
-        (11, "AcDb:AppInfo", encode_application_info(&snapshot.application).await?.len(), 768, 1, 0),
-        (10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0).await?.len(), 87_040, 1, 0),
-        (9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary).await?.len(), 128, 1, 0),
-        (8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history).await?.len(), 0x7400, 2, 0),
+        (13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?.len(), 768, 1, 2),
+        (12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?.len(), 1_408, 1, 0),
+        (11, "AcDb:AppInfo", encode_application_info(&snapshot.application)?.len(), 768, 1, 0),
+        (10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?.len(), 87_040, 1, 0),
+        (9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?.len(), 128, 1, 0),
+        (8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?.len(), 0x7400, 2, 0),
         (7, "AcDb:AcDbObjects", objects.len(), 0x7400, 2, 0),
-        (6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at).await.len(), 0x7400, 2, 0),
-        (5, "AcDb:Template", encode_template(&snapshot.template).await?.len(), 0x7400, 2, 0),
+        (6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at).len(), 0x7400, 2, 0),
+        (5, "AcDb:Template", encode_template(&snapshot.template)?.len(), 0x7400, 2, 0),
         (4, "AcDb:Handles", handles.len(), 0x7400, 2, 0),
-        (3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes).await?.len(), 0x7400, 2, 0),
-        (2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header).await?.len(), 0x7400, 2, 0),
+        (3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?.len(), 0x7400, 2, 0),
+        (2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?.len(), 0x7400, 2, 0),
         (1, "AcDb:Header", header_size, 0x7400, 2, 0),
     ];
     let mut descriptors = vec![R2004SectionDescriptor { name: "", section_id: 0, semantic_size: 0, max_decompressed_size: 0x7400, compression: 2, encryption: 0 }];
@@ -845,15 +880,16 @@ async fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot
 
 /// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
 /// Section payloads are serialization products and are never retained in the artifact schema.
-async fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
     if snapshot.version.as_bytes().len() != 6 {
         return Err("version sentinel must contain six bytes".into());
     }
-    let header = encode_r2010_header_section(&snapshot.header).await?;
-    let mut pages = materialize_r2004_ordinary_pages_without_header(snapshot).await?;
+    let header = encode_r2010_header_section(&snapshot.header)?;
+    let mut pages = materialize_r2004_ordinary_pages_without_header(snapshot)?;
     let mut decoded_header = vec![0; 0x7400];
     decoded_header[..header.len()].copy_from_slice(&header);
-    let header_payload = compress_r2004_section(&decoded_header).await?;
+    let header_payload = compress_r2004_section(&decoded_header)?;
     let header_address = pages.last().map(|page| page.address + u64::from(page.allocation_size)).unwrap_or(0x100);
     pages.push(EncodedR2004Page { section_id: 1, page_number: 20, start_offset: 0, allocation_size: align_r2004(32 + header_payload.len()) as u32, address: header_address, payload: header_payload });
     let mut page_map = Vec::new();
@@ -865,13 +901,13 @@ async fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -
     push_u32(&mut page_map, 1_024);
     push_u32(&mut page_map, 24);
     push_u32(&mut page_map, 1_600);
-    let compressed_map = compress_r2004_section(&page_map).await?;
+    let compressed_map = compress_r2004_section(&page_map)?;
     let mut reserved_name = [0u8; 64];
     reserved_name.copy_from_slice(compressed_map.get(52..116).ok_or("compressed Section Map is too short for AC1024 reserved descriptor derivation")?);
     reserved_name[0] = 0;
-    let descriptors = r2004_section_descriptors(snapshot, header.len()).await?;
-    let application_history_scratch = encode_application_history(&snapshot.application_history).await?;
-    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history_scratch).await?;
+    let descriptors = r2004_section_descriptors(snapshot, header.len())?;
+    let application_history_scratch = encode_application_history(&snapshot.application_history)?;
+    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history_scratch)?;
 
     let mut output = vec![0u8; 0x100];
     output[0..6].copy_from_slice(snapshot.version.as_bytes());
@@ -892,14 +928,14 @@ async fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -
     let application_history_address = pages.iter().find(|page| page.section_id == 12).ok_or("AppInfoHistory page missing")?.address as u32 + 32;
     output[0x30..0x34].copy_from_slice(&application_history_address.to_le_bytes());
     for page in &pages {
-        write_data_page(&mut output, page).await?;
+        write_data_page(&mut output, page)?;
     }
     let section_info_address = output.len();
-    if write_r2004_system_page(&mut output, 0x4163003b, &section_info, Some(1_024), 1).await? != 970 {
+    if write_r2004_system_page(&mut output, 0x4163003b, &section_info, Some(1_024), 1)? != 970 {
         return Err("Section Info compressed size changed".into());
     }
     let page_map_address = output.len();
-    if write_r2004_system_page(&mut output, 0x41630e3b, &page_map, None, 0).await? != 170 {
+    if write_r2004_system_page(&mut output, 0x41630e3b, &page_map, None, 0)? != 170 {
         return Err("Section Map compressed size changed".into());
     }
     let second_header_address = output.len() as u64;
@@ -921,7 +957,7 @@ async fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -
     file_header[0x54..0x5c].copy_from_slice(&((page_map_address - 0x100) as u64).to_le_bytes());
     file_header[0x5c..0x60].copy_from_slice(&23u32.to_le_bytes());
     file_header[0x60..0x64].copy_from_slice(&24u32.to_le_bytes());
-    let crc = r2004_crc32(&file_header).await;
+    let crc = r2004_crc32(&file_header);
     file_header[0x68..0x6c].copy_from_slice(&crc.to_le_bytes());
     let encrypted_header = decrypt_r2004_header(&file_header);
     output[0x80..0xec].copy_from_slice(&encrypted_header);
@@ -935,8 +971,9 @@ async fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -
 }
 
 /// 🧱️ Deterministically materializes AC1024 from logical drawing and section state.
-pub async fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
-    encode_r2004_canonical(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<u8>, String> {
+    encode_r2004_canonical(snapshot)
 }
 //#endregion 🔖️R2004Writer
 //#endregion 🔖️SectionMapAndInfo
@@ -1029,7 +1066,8 @@ pub enum DwgColor {
 }
 
 impl DwgColor {
-    async fn to_bs(self) -> u16 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn to_bs(self) -> u16 {
         match self {
             DwgColor::ByLayer => 256,
             DwgColor::ByBlock => 0,
@@ -1037,7 +1075,8 @@ impl DwgColor {
         }
     }
 
-    async fn from_bs(value: u16) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn from_bs(value: u16) -> Self {
         match value {
             256 => DwgColor::ByLayer,
             0 => DwgColor::ByBlock,
@@ -1069,7 +1108,8 @@ pub enum DwgGeometry {
 }
 
 impl DwgDrawing {
-    pub async fn ensure_layer(&mut self, name: &str) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ensure_layer(&mut self, name: &str) -> usize {
         if let Some(index) = self.layers.iter().position(|layer| layer.name == name) {
             return index;
         }
@@ -1077,7 +1117,8 @@ impl DwgDrawing {
         self.layers.len() - 1
     }
 
-    async fn recompute_extents(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn recompute_extents(&mut self) {
         let mut min = [f64::INFINITY; 3];
         let mut max = [f64::NEG_INFINITY; 3];
         let touch = |p: [f64; 3], min: &mut [f64; 3], max: &mut [f64; 3]| {
@@ -1140,11 +1181,13 @@ struct DwgBitWriter {
 }
 
 impl DwgBitWriter {
-    async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new() -> Self {
         Self { bytes: Vec::new(), bit: 0 }
     }
 
-    async fn write_bit(&mut self, value: bool) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bit(&mut self, value: bool) {
         if self.bit == 0 {
             self.bytes.push(0);
         }
@@ -1155,49 +1198,58 @@ impl DwgBitWriter {
         self.bit = (self.bit + 1) % 8;
     }
 
-    async fn write_bits(&mut self, value: u64, count: u8) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bits(&mut self, value: u64, count: u8) {
         for i in (0..count).rev() {
             self.write_bit((value >> i) & 1 != 0);
         }
     }
 
-    async fn write_b(&mut self, value: bool) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_b(&mut self, value: bool) {
         self.write_bit(value);
     }
 
-    async fn write_bb(&mut self, value: u8) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bb(&mut self, value: u8) {
         self.write_bits(value as u64, 2);
     }
 
-    async fn write_rc(&mut self, value: u8) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_rc(&mut self, value: u8) {
         self.write_bits(value as u64, 8);
     }
 
-    async fn write_rs(&mut self, value: u16) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_rs(&mut self, value: u16) {
         self.write_rc((value & 0xFF) as u8);
         self.write_rc((value >> 8) as u8);
     }
 
-    async fn write_rl(&mut self, value: u32) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_rl(&mut self, value: u32) {
         self.write_rs((value & 0xFFFF) as u16);
         self.write_rs((value >> 16) as u16);
     }
 
-    async fn write_rll(&mut self, value: u64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_rll(&mut self, value: u64) {
         self.write_rl((value & 0xFFFF_FFFF) as u32);
         self.write_rl((value >> 32) as u32);
     }
 
-    async fn write_rd(&mut self, value: f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_rd(&mut self, value: f64) {
         let bits = value.to_bits();
         self.write_rl((bits & 0xFFFF_FFFF) as u32);
         self.write_rl((bits >> 32) as u32);
     }
 
-    async fn write_bs(&mut self, value: u16) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bs(&mut self, value: u16) {
         match value {
-            0 => self.write_bb(2).await,
-            256 => self.write_bb(3).await,
+            0 => self.write_bb(2),
+            256 => self.write_bb(3),
             v if v <= 0xFF => {
                 self.write_bb(1);
                 self.write_rc(v as u8);
@@ -1209,9 +1261,10 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_bl(&mut self, value: u32) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bl(&mut self, value: u32) {
         match value {
-            0 => self.write_bb(2).await,
+            0 => self.write_bb(2),
             v if v <= 0xFF => {
                 self.write_bb(1);
                 self.write_rc(v as u8);
@@ -1223,7 +1276,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_bd(&mut self, value: f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bd(&mut self, value: f64) {
         if value == 0.0 {
             self.write_bb(2);
         } else if value == 1.0 {
@@ -1234,7 +1288,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_dd(&mut self, value: f64, default: f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_dd(&mut self, value: f64, default: f64) {
         let value_bytes = value.to_le_bytes();
         let default_bytes = default.to_le_bytes();
         if value_bytes == default_bytes {
@@ -1257,7 +1312,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_bt(&mut self, value: f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bt(&mut self, value: f64) {
         if value == 0.0 {
             self.write_b(true);
         } else {
@@ -1266,24 +1322,28 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_2rd(&mut self, v: [f64; 2]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_2rd(&mut self, v: [f64; 2]) {
         self.write_rd(v[0]);
         self.write_rd(v[1]);
     }
 
-    async fn write_3bd(&mut self, v: [f64; 3]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_3bd(&mut self, v: [f64; 3]) {
         self.write_bd(v[0]);
         self.write_bd(v[1]);
         self.write_bd(v[2]);
     }
 
-    async fn write_3rd(&mut self, v: [f64; 3]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_3rd(&mut self, v: [f64; 3]) {
         self.write_rd(v[0]);
         self.write_rd(v[1]);
         self.write_rd(v[2]);
     }
 
-    async fn write_be(&mut self, normal: [f64; 3]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_be(&mut self, normal: [f64; 3]) {
         if normal == [0.0, 0.0, 1.0] {
             self.write_b(true);
         } else {
@@ -1292,7 +1352,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_t(&mut self, text: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_t(&mut self, text: &str) {
         let bytes = text.as_bytes();
         let len = bytes.len().min(0xFFFF);
         self.write_rs(len as u16);
@@ -1301,7 +1362,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_tu(&mut self, text: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_tu(&mut self, text: &str) {
         let units: Vec<u16> = text.encode_utf16().collect();
         self.write_bs(units.len() as u16);
         for unit in units {
@@ -1309,14 +1371,16 @@ impl DwgBitWriter {
         }
     }
 
-    async fn append_bits(&mut self, other: &DwgBitWriter) {
-        let mut reader = DwgBitReader::new(&other.bytes).await;
-        for _ in 0..other.bit_len().await {
-            self.write_bit(reader.read_bit().await.expect("writer-owned bitstream is complete"));
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn append_bits(&mut self, other: &DwgBitWriter) {
+        let mut reader = DwgBitReader::new(&other.bytes);
+        for _ in 0..other.bit_len() {
+            self.write_bit(reader.read_bit().expect("writer-owned bitstream is complete"));
         }
     }
 
-    async fn write_ms(&mut self, mut value: u32) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_ms(&mut self, mut value: u32) {
         loop {
             let mut chunk = (value & 0x7FFF) as u16;
             value >>= 15;
@@ -1330,7 +1394,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_umc(&mut self, mut value: u64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_umc(&mut self, mut value: u64) {
         loop {
             let mut byte = (value & 0x7f) as u8;
             value >>= 7;
@@ -1344,7 +1409,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_bot(&mut self, value: u16) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bot(&mut self, value: u16) {
         if value <= 0xff {
             self.write_bb(0);
             self.write_rc(value as u8);
@@ -1357,7 +1423,8 @@ impl DwgBitWriter {
         }
     }
 
-    async fn write_handle(&mut self, code: u8, handle: u64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_handle(&mut self, code: u8, handle: u64) {
         let mut bytes = Vec::new();
         let mut v = handle;
         while v != 0 {
@@ -1370,13 +1437,15 @@ impl DwgBitWriter {
         }
     }
 
-    async fn pad_to_byte(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pad_to_byte(&mut self) {
         while self.bit != 0 {
             self.write_bit(false);
         }
     }
 
-    async fn bit_len(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bit_len(&self) -> usize {
         self.bytes.len() * 8 - if self.bit == 0 { 0 } else { 8 - self.bit as usize }
     }
 }
@@ -1389,18 +1458,21 @@ struct DwgBitReader<'a> {
 }
 
 impl<'a> DwgBitReader<'a> {
-    async fn new(bytes: &'a [u8]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, byte_pos: 0, bit: 0 }
     }
 
-    async fn at_bit(bytes: &'a [u8], bit_pos: usize) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn at_bit(bytes: &'a [u8], bit_pos: usize) -> Result<Self, String> {
         if bit_pos > bytes.len().saturating_mul(8) {
             return Err("dwg bitstream position exceeds payload".to_string());
         }
         Ok(Self { bytes, byte_pos: bit_pos / 8, bit: (bit_pos % 8) as u8 })
     }
 
-    async fn read_bit(&mut self) -> Result<bool, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bit(&mut self) -> Result<bool, String> {
         if self.byte_pos >= self.bytes.len() {
             return Err("dwg bitstream underflow".to_string());
         }
@@ -1413,37 +1485,43 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    async fn read_bits(&mut self, count: u8) -> Result<u64, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bits(&mut self, count: u8) -> Result<u64, String> {
         let mut value = 0u64;
         for _ in 0..count {
-            value = (value << 1) | self.read_bit().await? as u64;
+            value = (value << 1) | self.read_bit()? as u64;
         }
         Ok(value)
     }
 
-    async fn skip_bits(&mut self, count: usize) -> Result<(), String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn skip_bits(&mut self, count: usize) -> Result<(), String> {
         for _ in 0..count {
-            self.read_bit().await?;
+            self.read_bit()?;
         }
         Ok(())
     }
 
-    async fn bit_position(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bit_position(&self) -> usize {
         self.byte_pos.saturating_mul(8).saturating_add(self.bit as usize)
     }
 
-    async fn read_b(&mut self) -> Result<bool, String> {
-        self.read_bit().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_b(&mut self) -> Result<bool, String> {
+        self.read_bit()
     }
 
-    async fn read_bb(&mut self) -> Result<u8, String> {
-        Ok(self.read_bits(2).await? as u8)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bb(&mut self) -> Result<u8, String> {
+        Ok(self.read_bits(2)? as u8)
     }
 
-    async fn read_3b(&mut self) -> Result<u8, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_3b(&mut self) -> Result<u8, String> {
         let mut value = 0u8;
         for _ in 0..3 {
-            let bit = self.read_b().await?;
+            let bit = self.read_b()?;
             value = (value << 1) | u8::from(bit);
             if !bit {
                 break;
@@ -1452,145 +1530,162 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    async fn read_rc(&mut self) -> Result<u8, String> {
-        Ok(self.read_bits(8).await? as u8)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_rc(&mut self) -> Result<u8, String> {
+        Ok(self.read_bits(8)? as u8)
     }
 
-    async fn read_rs(&mut self) -> Result<u16, String> {
-        let lo = self.read_rc().await? as u16;
-        let hi = self.read_rc().await? as u16;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_rs(&mut self) -> Result<u16, String> {
+        let lo = self.read_rc()? as u16;
+        let hi = self.read_rc()? as u16;
         Ok(lo | (hi << 8))
     }
 
-    async fn read_rl(&mut self) -> Result<u32, String> {
-        let lo = self.read_rs().await? as u32;
-        let hi = self.read_rs().await? as u32;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_rl(&mut self) -> Result<u32, String> {
+        let lo = self.read_rs()? as u32;
+        let hi = self.read_rs()? as u32;
         Ok(lo | (hi << 16))
     }
 
-    async fn read_rll(&mut self) -> Result<u64, String> {
-        let lo = self.read_rl().await? as u64;
-        let hi = self.read_rl().await? as u64;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_rll(&mut self) -> Result<u64, String> {
+        let lo = self.read_rl()? as u64;
+        let hi = self.read_rl()? as u64;
         Ok(lo | (hi << 32))
     }
 
-    async fn read_rd(&mut self) -> Result<f64, String> {
-        let lo = self.read_rl().await? as u64;
-        let hi = self.read_rl().await? as u64;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_rd(&mut self) -> Result<f64, String> {
+        let lo = self.read_rl()? as u64;
+        let hi = self.read_rl()? as u64;
         Ok(f64::from_bits(lo | (hi << 32)))
     }
 
-    async fn read_bs(&mut self) -> Result<u16, String> {
-        match self.read_bb().await? {
-            0 => self.read_rs().await,
-            1 => Ok(self.read_rc().await? as u16),
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bs(&mut self) -> Result<u16, String> {
+        match self.read_bb()? {
+            0 => self.read_rs(),
+            1 => Ok(self.read_rc()? as u16),
             2 => Ok(0),
             _ => Ok(256),
         }
     }
 
-    async fn read_bl(&mut self) -> Result<u32, String> {
-        match self.read_bb().await? {
-            0 => self.read_rl().await,
-            1 => Ok(self.read_rc().await? as u32),
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bl(&mut self) -> Result<u32, String> {
+        match self.read_bb()? {
+            0 => self.read_rl(),
+            1 => Ok(self.read_rc()? as u32),
             2 => Ok(0),
             _ => Err("invalid BL flag".to_string()),
         }
     }
 
-    async fn read_bll(&mut self) -> Result<u64, String> {
-        let byte_count = usize::from(self.read_3b().await?);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bll(&mut self) -> Result<u64, String> {
+        let byte_count = usize::from(self.read_3b()?);
         let mut value = 0u64;
         for shift in 0..byte_count {
-            value |= u64::from(self.read_rc().await?) << (shift * 8);
+            value |= u64::from(self.read_rc()?) << (shift * 8);
         }
         Ok(value)
     }
 
-    async fn read_bd(&mut self) -> Result<f64, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bd(&mut self) -> Result<f64, String> {
         let position = self.bit_position();
-        match self.read_bb().await? {
-            0 => self.read_rd().await,
+        match self.read_bb()? {
+            0 => self.read_rd(),
             1 => Ok(1.0),
             2 => Ok(0.0),
             _ => {
                 let mut probe = self.clone();
-                let next = probe.read_bits(16).await.unwrap_or(0);
+                let next = probe.read_bits(16).unwrap_or(0);
                 Err(format!("invalid BD flag at bit {position}, next={next:016b}"))
             }
         }
     }
 
-    async fn read_dd(&mut self, default: f64) -> Result<f64, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_dd(&mut self, default: f64) -> Result<f64, String> {
         let mut bytes = default.to_le_bytes();
-        match self.read_bb().await? {
+        match self.read_bb()? {
             0 => Ok(default),
             1 => {
                 for byte in bytes.iter_mut().take(4) {
-                    *byte = self.read_rc().await?;
+                    *byte = self.read_rc()?;
                 }
                 Ok(f64::from_le_bytes(bytes))
             }
             2 => {
-                bytes[4] = self.read_rc().await?;
-                bytes[5] = self.read_rc().await?;
+                bytes[4] = self.read_rc()?;
+                bytes[5] = self.read_rc()?;
                 for byte in bytes.iter_mut().take(4) {
-                    *byte = self.read_rc().await?;
+                    *byte = self.read_rc()?;
                 }
                 Ok(f64::from_le_bytes(bytes))
             }
-            _ => self.read_rd().await,
+            _ => self.read_rd(),
         }
     }
 
-    async fn read_bt(&mut self) -> Result<f64, String> {
-        if self.read_b().await? {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bt(&mut self) -> Result<f64, String> {
+        if self.read_b()? {
             Ok(0.0)
         } else {
-            self.read_bd().await
+            self.read_bd()
         }
     }
 
-    async fn read_2rd(&mut self) -> Result<[f64; 2], String> {
-        Ok([self.read_rd().await?, self.read_rd().await?])
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_2rd(&mut self) -> Result<[f64; 2], String> {
+        Ok([self.read_rd()?, self.read_rd()?])
     }
 
-    async fn read_3bd(&mut self) -> Result<[f64; 3], String> {
-        Ok([self.read_bd().await?, self.read_bd().await?, self.read_bd().await?])
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_3bd(&mut self) -> Result<[f64; 3], String> {
+        Ok([self.read_bd()?, self.read_bd()?, self.read_bd()?])
     }
 
-    async fn read_be(&mut self) -> Result<[f64; 3], String> {
-        if self.read_b().await? {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_be(&mut self) -> Result<[f64; 3], String> {
+        if self.read_b()? {
             Ok([0.0, 0.0, 1.0])
         } else {
-            self.read_3bd().await
+            self.read_3bd()
         }
     }
 
-    async fn read_t(&mut self) -> Result<String, String> {
-        let len = self.read_rs().await? as usize;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_t(&mut self) -> Result<String, String> {
+        let len = self.read_rs()? as usize;
         let mut bytes = Vec::with_capacity(len);
         for _ in 0..len {
-            bytes.push(self.read_rc().await?);
+            bytes.push(self.read_rc()?);
         }
         Ok(String::from_utf8_lossy(&bytes).to_string())
     }
 
-    async fn read_tu(&mut self) -> Result<String, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_tu(&mut self) -> Result<String, String> {
         let position = self.bit_position();
-        let length = self.read_bs().await? as usize;
+        let length = self.read_bs()? as usize;
         let mut units = Vec::with_capacity(length);
         for _ in 0..length {
-            units.push(self.read_rs().await.map_err(|error| format!("{error} in TU at bit {position}, length {length}"))?);
+            units.push(self.read_rs().map_err(|error| format!("{error} in TU at bit {position}, length {length}"))?);
         }
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 string: {error}"))
     }
 
-    async fn read_ms(&mut self) -> Result<u32, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_ms(&mut self) -> Result<u32, String> {
         let mut value = 0u32;
         let mut shift = 0;
         loop {
-            let chunk = self.read_rs().await?;
+            let chunk = self.read_rs()?;
             value |= ((chunk & 0x7FFF) as u32) << shift;
             shift += 15;
             if chunk & 0x8000 == 0 {
@@ -1600,10 +1695,11 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    async fn read_umc(&mut self) -> Result<u64, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_umc(&mut self) -> Result<u64, String> {
         let mut value = 0u64;
         for shift in (0..56).step_by(7) {
-            let byte = self.read_rc().await?;
+            let byte = self.read_rc()?;
             value |= u64::from(byte & 0x7f) << shift;
             if byte & 0x80 == 0 {
                 return Ok(value);
@@ -1612,26 +1708,29 @@ impl<'a> DwgBitReader<'a> {
         Err("dwg unsigned modular-char overflow".into())
     }
 
-    async fn read_bot(&mut self) -> Result<u16, String> {
-        match self.read_bb().await? {
-            0 => Ok(self.read_rc().await?.into()),
-            1 => Ok(u16::from(self.read_rc().await?) + 0x1f0),
-            _ => self.read_rs().await,
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bot(&mut self) -> Result<u16, String> {
+        match self.read_bb()? {
+            0 => Ok(self.read_rc()?.into()),
+            1 => Ok(u16::from(self.read_rc()?) + 0x1f0),
+            _ => self.read_rs(),
         }
     }
 
-    async fn read_handle(&mut self) -> Result<(u8, u64), String> {
-        let head = self.read_rc().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_handle(&mut self) -> Result<(u8, u64), String> {
+        let head = self.read_rc()?;
         let code = head >> 4;
         let len = head & 0x0F;
         let mut value = 0u64;
         for _ in 0..len {
-            value = (value << 8) | self.read_rc().await? as u64;
+            value = (value << 8) | self.read_rc()? as u64;
         }
         Ok((code, value))
     }
 
-    async fn pad_to_byte(&mut self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pad_to_byte(&mut self) {
         if self.bit != 0 {
             self.bit = 0;
             self.byte_pos += 1;
@@ -1639,7 +1738,8 @@ impl<'a> DwgBitReader<'a> {
     }
 }
 
-async fn dwg_crc16(seed: u16, data: &[u8]) -> u16 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_crc16(seed: u16, data: &[u8]) -> u16 {
     let mut crc = seed;
     for &byte in data {
         crc ^= byte as u16;
@@ -1678,16 +1778,17 @@ const HANDLE_MODEL_SPACE: u64 = 0x10;
 const HANDLE_LAYER_BASE: u64 = 0x20;
 const HANDLE_ENTITY_BASE: u64 = 0x1000;
 
-async fn dwg_write_object(out: &mut Vec<u8>, object_type: u16, handle: u64, body: &mut DwgBitWriter, handles: &mut DwgBitWriter) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_write_object(out: &mut Vec<u8>, object_type: u16, handle: u64, body: &mut DwgBitWriter, handles: &mut DwgBitWriter) {
     let bitsize = body.bit_len() as u32;
     body.pad_to_byte();
     handles.pad_to_byte();
 
-    let mut framed = DwgBitWriter::new().await;
-    framed.write_bs(object_type).await;
-    framed.write_rl(bitsize).await;
-    framed.write_handle(0, handle).await;
-    framed.pad_to_byte().await;
+    let mut framed = DwgBitWriter::new();
+    framed.write_bs(object_type);
+    framed.write_rl(bitsize);
+    framed.write_handle(0, handle);
+    framed.pad_to_byte();
     for byte in &body.bytes {
         framed.bytes.push(*byte);
     }
@@ -1696,21 +1797,22 @@ async fn dwg_write_object(out: &mut Vec<u8>, object_type: u16, handle: u64, body
     }
 
     let payload = framed.bytes;
-    let mut sized = DwgBitWriter::new().await;
-    sized.write_ms(payload.len() as u32).await;
-    sized.pad_to_byte().await;
+    let mut sized = DwgBitWriter::new();
+    sized.write_ms(payload.len() as u32);
+    sized.pad_to_byte();
 
     out.extend_from_slice(&sized.bytes);
     out.extend_from_slice(&payload);
-    let crc = dwg_crc16(0xC0C1, &payload).await;
+    let crc = dwg_crc16(0xC0C1, &payload);
     out.extend_from_slice(&crc.to_le_bytes());
 }
 
-async fn dwg_encode_entity_common(body: &mut DwgBitWriter, handles: &mut DwgBitWriter, layer_handle: u64, color: DwgColor) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_encode_entity_common(body: &mut DwgBitWriter, handles: &mut DwgBitWriter, layer_handle: u64, color: DwgColor) {
     body.write_bb(0);
     body.write_bl(0);
     body.write_b(true);
-    body.write_bs(color.to_bs().await);
+    body.write_bs(color.to_bs());
     body.write_bd(1.0);
     body.write_bb(0);
     body.write_bb(0);
@@ -1732,180 +1834,185 @@ struct DwgEntityCommon {
     color: DwgColor,
 }
 
-async fn dwg_skip_r2010_graphic(reader: &mut DwgBitReader<'_>) -> Result<(), String> {
-    if reader.read_b().await? {
-        let byte_count = usize::try_from(reader.read_bll().await?).map_err(|_| "dwg graphic length exceeds address space")?;
-        reader.skip_bits(byte_count.checked_mul(8).ok_or("dwg graphic bit length overflow")?).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_skip_r2010_graphic(reader: &mut DwgBitReader<'_>) -> Result<(), String> {
+    if reader.read_b()? {
+        let byte_count = usize::try_from(reader.read_bll()?).map_err(|_| "dwg graphic length exceeds address space")?;
+        reader.skip_bits(byte_count.checked_mul(8).ok_or("dwg graphic bit length overflow")?)?;
     }
     Ok(())
 }
 
-async fn dwg_decode_r2010_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCommon, String> {
-    dwg_skip_r2010_graphic(reader).await?;
-    let entmode = reader.read_bb().await?;
-    let num_reactors = reader.read_bl().await?;
-    let xdic_missing = reader.read_b().await?;
-    let _nolinks = reader.read_b().await?;
-    let encoded_color = reader.read_bs().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_r2010_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCommon, String> {
+    dwg_skip_r2010_graphic(reader)?;
+    let entmode = reader.read_bb()?;
+    let num_reactors = reader.read_bl()?;
+    let xdic_missing = reader.read_b()?;
+    let _nolinks = reader.read_b()?;
+    let encoded_color = reader.read_bs()?;
     if encoded_color & 0x8000 != 0 {
-        let _rgb = reader.read_bl().await?;
+        let _rgb = reader.read_bl()?;
     }
     if encoded_color & 0x2000 != 0 {
-        let _transparency = reader.read_bl().await?;
+        let _transparency = reader.read_bl()?;
     }
     let color = DwgColor::from_bs(encoded_color & 0x01ff);
-    let _ltype_scale = reader.read_bd().await?;
-    let ltype_flags = reader.read_bb().await?;
-    let plotstyle_flags = reader.read_bb().await?;
-    let material_flags = reader.read_bb().await?;
-    let _shadow_flags = reader.read_rc().await?;
-    let _invisibility = reader.read_bs().await?;
-    let _lineweight = reader.read_rc().await?;
+    let _ltype_scale = reader.read_bd()?;
+    let ltype_flags = reader.read_bb()?;
+    let plotstyle_flags = reader.read_bb()?;
+    let material_flags = reader.read_bb()?;
+    let _shadow_flags = reader.read_rc()?;
+    let _invisibility = reader.read_bs()?;
+    let _lineweight = reader.read_rc()?;
     Ok(DwgEntityCommon { entmode, num_reactors, xdic_missing, color_book: encoded_color & 0x4000 != 0, ltype_flags, plotstyle_flags, material_flags, color })
 }
 
-async fn dwg_decode_r2010_entity_handles(reader: &mut DwgBitReader<'_>, common: &DwgEntityCommon) -> Result<u64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_r2010_entity_handles(reader: &mut DwgBitReader<'_>, common: &DwgEntityCommon) -> Result<u64, String> {
     if common.entmode == 0 {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     for _ in 0..common.num_reactors {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     if !common.xdic_missing {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     if common.color_book {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
-    let (_layer_code, layer_handle) = reader.read_handle().await?;
+    let (_layer_code, layer_handle) = reader.read_handle()?;
     if common.ltype_flags == 3 {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     if common.material_flags == 3 {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     if common.plotstyle_flags == 3 {
-        reader.read_handle().await?;
+        reader.read_handle()?;
     }
     Ok(layer_handle)
 }
 
-async fn dwg_decode_r2010_layer(reader: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>) -> Result<DwgLayer, String> {
-    let _num_reactors = reader.read_bl().await?;
-    let _xdic_missing = reader.read_b().await?;
-    let name = strings.read_tu().await?;
-    let _flag_64 = reader.read_b().await?;
-    let _xref_index = reader.read_bs().await?;
-    let _xref_dependent = reader.read_b().await?;
-    let _values = reader.read_bs().await?;
-    let encoded_color = reader.read_bs().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_r2010_layer(reader: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>) -> Result<DwgLayer, String> {
+    let _num_reactors = reader.read_bl()?;
+    let _xdic_missing = reader.read_b()?;
+    let name = strings.read_tu()?;
+    let _flag_64 = reader.read_b()?;
+    let _xref_index = reader.read_bs()?;
+    let _xref_dependent = reader.read_b()?;
+    let _values = reader.read_bs()?;
+    let encoded_color = reader.read_bs()?;
     if encoded_color & 0x8000 != 0 {
-        reader.read_bl().await?;
+        reader.read_bl()?;
     }
     if encoded_color & 0x4000 != 0 {
-        strings.read_tu().await?;
-        strings.read_tu().await?;
+        strings.read_tu()?;
+        strings.read_tu()?;
     }
     Ok(DwgLayer { name, color: (encoded_color & 0xff) as u8 })
 }
 
-async fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u64, usize)>, next_handle: &mut u64, layer_handle: u64, entity: &DwgEntity) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u64, usize)>, next_handle: &mut u64, layer_handle: u64, entity: &DwgEntity) {
     let handle = *next_handle;
     *next_handle += 1;
-    let mut body = DwgBitWriter::new().await;
+    let mut body = DwgBitWriter::new();
     let mut handles = DwgBitWriter::new();
     dwg_encode_entity_common(&mut body, &mut handles, layer_handle, entity.color);
 
     let object_type = match &entity.geometry {
         DwgGeometry::Line { start, end } => {
-            body.write_3bd(*start).await;
-            body.write_3bd(*end).await;
+            body.write_3bd(*start);
+            body.write_3bd(*end);
             DWG_TYPE_LINE
         }
         DwgGeometry::Point { at } => {
-            body.write_3bd(*at).await;
+            body.write_3bd(*at);
             DWG_TYPE_POINT
         }
         DwgGeometry::Circle { center, radius, normal } => {
-            body.write_3bd(*center).await;
-            body.write_bd(*radius).await;
-            body.write_be(*normal).await;
+            body.write_3bd(*center);
+            body.write_bd(*radius);
+            body.write_be(*normal);
             DWG_TYPE_CIRCLE
         }
         DwgGeometry::Arc { center, radius, start_angle, end_angle, normal } => {
-            body.write_3bd(*center).await;
-            body.write_bd(*radius).await;
-            body.write_bd(*start_angle).await;
-            body.write_bd(*end_angle).await;
-            body.write_be(*normal).await;
+            body.write_3bd(*center);
+            body.write_bd(*radius);
+            body.write_bd(*start_angle);
+            body.write_bd(*end_angle);
+            body.write_be(*normal);
             DWG_TYPE_ARC
         }
         DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal } => {
-            body.write_3bd(*center).await;
-            body.write_3bd(*major_axis).await;
-            body.write_be(*normal).await;
-            body.write_bd(*ratio).await;
-            body.write_bd(*start_param).await;
-            body.write_bd(*end_param).await;
+            body.write_3bd(*center);
+            body.write_3bd(*major_axis);
+            body.write_be(*normal);
+            body.write_bd(*ratio);
+            body.write_bd(*start_param);
+            body.write_bd(*end_param);
             DWG_TYPE_ELLIPSE
         }
         DwgGeometry::Text { at, height, rotation, content } => {
-            body.write_3bd(*at).await;
-            body.write_bd(*height).await;
-            body.write_bd(*rotation).await;
-            body.write_t(content).await;
+            body.write_3bd(*at);
+            body.write_bd(*height);
+            body.write_bd(*rotation);
+            body.write_t(content);
             DWG_TYPE_TEXT
         }
         DwgGeometry::Face3d { corners } => {
             for corner in corners {
-                body.write_3bd(*corner).await;
+                body.write_3bd(*corner);
             }
             DWG_TYPE_FACE3D
         }
         DwgGeometry::LwPolyline { closed, elevation, vertices, bulges } => {
-            body.write_b(*closed).await;
-            body.write_bd(*elevation).await;
-            body.write_bl(vertices.len() as u32).await;
+            body.write_b(*closed);
+            body.write_bd(*elevation);
+            body.write_bl(vertices.len() as u32);
             for (i, v) in vertices.iter().enumerate() {
-                body.write_2rd(*v).await;
-                body.write_bd(bulges.get(i).copied().unwrap_or(0.0)).await;
+                body.write_2rd(*v);
+                body.write_bd(bulges.get(i).copied().unwrap_or(0.0));
             }
             DWG_TYPE_LWPOLYLINE
         }
         DwgGeometry::Spline { degree, control_points, knots, weights } => {
-            body.write_bl(*degree).await;
-            body.write_bl(control_points.len() as u32).await;
+            body.write_bl(*degree);
+            body.write_bl(control_points.len() as u32);
             for p in control_points {
-                body.write_3bd(*p).await;
+                body.write_3bd(*p);
             }
-            body.write_bl(knots.len() as u32).await;
+            body.write_bl(knots.len() as u32);
             for k in knots {
-                body.write_rd(*k).await;
+                body.write_rd(*k);
             }
-            body.write_bl(weights.len() as u32).await;
+            body.write_bl(weights.len() as u32);
             for w in weights {
-                body.write_rd(*w).await;
+                body.write_rd(*w);
             }
             DWG_TYPE_SPLINE
         }
         DwgGeometry::Polyline3d { closed, vertices } => {
-            body.write_b(*closed).await;
-            body.write_bl(vertices.len() as u32).await;
+            body.write_b(*closed);
+            body.write_bl(vertices.len() as u32);
             for v in vertices {
-                body.write_3bd(*v).await;
+                body.write_3bd(*v);
             }
             DWG_TYPE_POLYLINE3D
         }
         DwgGeometry::PolyfaceMesh { vertices, faces } => {
-            body.write_bl(vertices.len() as u32).await;
+            body.write_bl(vertices.len() as u32);
             for v in vertices {
-                body.write_3bd(*v).await;
+                body.write_3bd(*v);
             }
-            body.write_bl(faces.len() as u32).await;
+            body.write_bl(faces.len() as u32);
             for face in faces {
                 for idx in face {
-                    body.write_bl(idx.unsigned_abs()).await;
-                    body.write_b(*idx < 0).await;
+                    body.write_bl(idx.unsigned_abs());
+                    body.write_b(*idx < 0);
                 }
             }
             DWG_TYPE_POLYLINE_PFACE
@@ -1917,180 +2024,181 @@ async fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u6
     object_map.push((handle, offset));
 }
 
-async fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
     match object_type {
         DWG_TYPE_LINE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let z_is_zero = reader.read_b().await?;
-            let start_x = reader.read_rd().await?;
-            let end_x = reader.read_dd(start_x).await?;
-            let start_y = reader.read_rd().await?;
-            let end_y = reader.read_dd(start_y).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let z_is_zero = reader.read_b()?;
+            let start_x = reader.read_rd()?;
+            let end_x = reader.read_dd(start_x)?;
+            let start_y = reader.read_rd()?;
+            let end_y = reader.read_dd(start_y)?;
             let (start_z, end_z) = if z_is_zero {
                 (0.0, 0.0)
             } else {
-                let start = reader.read_rd().await?;
-                (start, reader.read_dd(start).await?)
+                let start = reader.read_rd()?;
+                (start, reader.read_dd(start)?)
             };
-            let _thickness = reader.read_bt().await?;
-            let _extrusion = reader.read_be().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let _thickness = reader.read_bt()?;
+            let _extrusion = reader.read_be()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Line { start: [start_x, start_y, start_z], end: [end_x, end_y, end_z] })))
         }
         DWG_TYPE_POINT => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let at = reader.read_3bd().await?;
-            let _thickness = reader.read_bt().await?;
-            let _extrusion = reader.read_be().await?;
-            let _x_axis_angle = reader.read_bd().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let at = reader.read_3bd()?;
+            let _thickness = reader.read_bt()?;
+            let _extrusion = reader.read_be()?;
+            let _x_axis_angle = reader.read_bd()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Point { at })))
         }
         DWG_TYPE_CIRCLE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let center = reader.read_3bd().await?;
-            let radius = reader.read_bd().await?;
-            let _thickness = reader.read_bt().await?;
-            let normal = reader.read_be().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let center = reader.read_3bd()?;
+            let radius = reader.read_bd()?;
+            let _thickness = reader.read_bt()?;
+            let normal = reader.read_be()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Circle { center, radius, normal })))
         }
         DWG_TYPE_ARC => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let center = reader.read_3bd().await?;
-            let radius = reader.read_bd().await?;
-            let _thickness = reader.read_bt().await?;
-            let normal = reader.read_be().await?;
-            let start_angle = reader.read_bd().await?;
-            let end_angle = reader.read_bd().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let center = reader.read_3bd()?;
+            let radius = reader.read_bd()?;
+            let _thickness = reader.read_bt()?;
+            let normal = reader.read_be()?;
+            let start_angle = reader.read_bd()?;
+            let end_angle = reader.read_bd()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Arc { center, radius, start_angle, end_angle, normal })))
         }
         DWG_TYPE_ELLIPSE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let center = reader.read_3bd().await?;
-            let major_axis = reader.read_3bd().await?;
-            let normal = reader.read_3bd().await?;
-            let ratio = reader.read_bd().await?;
-            let start_param = reader.read_bd().await?;
-            let end_param = reader.read_bd().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let center = reader.read_3bd()?;
+            let major_axis = reader.read_3bd()?;
+            let normal = reader.read_3bd()?;
+            let ratio = reader.read_bd()?;
+            let start_param = reader.read_bd()?;
+            let end_param = reader.read_bd()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal })))
         }
         DWG_TYPE_TEXT => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let at = reader.read_3bd().await?;
-            let height = reader.read_bd().await?;
-            let rotation = reader.read_bd().await?;
-            let content = reader.read_t().await?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let at = reader.read_3bd()?;
+            let height = reader.read_bd()?;
+            let rotation = reader.read_bd()?;
+            let content = reader.read_t()?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Text { at, height, rotation, content })))
         }
         DWG_TYPE_FACE3D => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let has_no_flags = reader.read_b().await?;
-            let z_is_zero = reader.read_b().await?;
-            let first = [reader.read_rd().await?, reader.read_rd().await?, if z_is_zero { 0.0 } else { reader.read_rd().await? }];
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let has_no_flags = reader.read_b()?;
+            let z_is_zero = reader.read_b()?;
+            let first = [reader.read_rd()?, reader.read_rd()?, if z_is_zero { 0.0 } else { reader.read_rd()? }];
             let mut corners = [first; 4];
             for index in 1..4 {
-                corners[index] = [reader.read_dd(corners[index - 1][0]).await?, reader.read_dd(corners[index - 1][1]).await?, if z_is_zero { 0.0 } else { reader.read_dd(corners[index - 1][2]).await? }];
+                corners[index] = [reader.read_dd(corners[index - 1][0])?, reader.read_dd(corners[index - 1][1])?, if z_is_zero { 0.0 } else { reader.read_dd(corners[index - 1][2])? }];
             }
             if !has_no_flags {
-                let _invisible_edges = reader.read_bs().await?;
+                let _invisible_edges = reader.read_bs()?;
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Face3d { corners })))
         }
         DWG_TYPE_LWPOLYLINE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let flags = reader.read_bs().await?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let flags = reader.read_bs()?;
             if flags & 4 != 0 {
-                let _constant_width = reader.read_bd().await?;
+                let _constant_width = reader.read_bd()?;
             }
-            let elevation = if flags & 8 != 0 { reader.read_bd().await? } else { 0.0 };
+            let elevation = if flags & 8 != 0 { reader.read_bd()? } else { 0.0 };
             if flags & 2 != 0 {
-                let _thickness = reader.read_bd().await?;
+                let _thickness = reader.read_bd()?;
             }
             if flags & 1 != 0 {
-                let _normal = reader.read_3bd().await?;
+                let _normal = reader.read_3bd()?;
             }
-            let count = reader.read_bl().await? as usize;
-            let bulge_count = if flags & 16 != 0 { reader.read_bl().await? as usize } else { 0 };
-            let vertex_id_count = if flags & 1024 != 0 { reader.read_bl().await? as usize } else { 0 };
-            let width_count = if flags & 32 != 0 { reader.read_bl().await? as usize } else { 0 };
+            let count = reader.read_bl()? as usize;
+            let bulge_count = if flags & 16 != 0 { reader.read_bl()? as usize } else { 0 };
+            let vertex_id_count = if flags & 1024 != 0 { reader.read_bl()? as usize } else { 0 };
+            let width_count = if flags & 32 != 0 { reader.read_bl()? as usize } else { 0 };
             let mut vertices = Vec::with_capacity(count);
             if count > 0 {
-                vertices.push(reader.read_2rd().await?);
+                vertices.push(reader.read_2rd()?);
                 for _ in 1..count {
                     let previous = *vertices.last().unwrap();
-                    vertices.push([reader.read_dd(previous[0]).await?, reader.read_dd(previous[1]).await?]);
+                    vertices.push([reader.read_dd(previous[0])?, reader.read_dd(previous[1])?]);
                 }
             }
             let mut bulges = Vec::with_capacity(bulge_count);
             for _ in 0..bulge_count {
-                bulges.push(reader.read_bd().await?);
+                bulges.push(reader.read_bd()?);
             }
             for _ in 0..vertex_id_count {
-                reader.read_bl().await?;
+                reader.read_bl()?;
             }
             for _ in 0..width_count {
-                reader.read_bd().await?;
-                reader.read_bd().await?;
+                reader.read_bd()?;
+                reader.read_bd()?;
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::LwPolyline { closed: flags & 512 != 0, elevation, vertices, bulges })))
         }
         DWG_TYPE_SPLINE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let degree = reader.read_bl().await?;
-            let cp_count = reader.read_bl().await? as usize;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let degree = reader.read_bl()?;
+            let cp_count = reader.read_bl()? as usize;
             let mut control_points = Vec::with_capacity(cp_count);
             for _ in 0..cp_count {
-                control_points.push(reader.read_3bd().await?);
+                control_points.push(reader.read_3bd()?);
             }
-            let knot_count = reader.read_bl().await? as usize;
+            let knot_count = reader.read_bl()? as usize;
             let mut knots = Vec::with_capacity(knot_count);
             for _ in 0..knot_count {
-                knots.push(reader.read_rd().await?);
+                knots.push(reader.read_rd()?);
             }
-            let weight_count = reader.read_bl().await? as usize;
+            let weight_count = reader.read_bl()? as usize;
             let mut weights = Vec::with_capacity(weight_count);
             for _ in 0..weight_count {
-                weights.push(reader.read_rd().await?);
+                weights.push(reader.read_rd()?);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Spline { degree, control_points, knots, weights })))
         }
         DWG_TYPE_POLYLINE3D => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let closed = reader.read_b().await?;
-            let count = reader.read_bl().await? as usize;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let closed = reader.read_b()?;
+            let count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(count);
             for _ in 0..count {
-                vertices.push(reader.read_3bd().await?);
+                vertices.push(reader.read_3bd()?);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Polyline3d { closed, vertices })))
         }
         DWG_TYPE_POLYLINE_PFACE => {
-            let common = dwg_decode_r2010_entity_common(reader).await?;
-            let vcount = reader.read_bl().await? as usize;
+            let common = dwg_decode_r2010_entity_common(reader)?;
+            let vcount = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(vcount);
             for _ in 0..vcount {
-                vertices.push(reader.read_3bd().await?);
+                vertices.push(reader.read_3bd()?);
             }
-            let fcount = reader.read_bl().await? as usize;
+            let fcount = reader.read_bl()? as usize;
             let mut faces = Vec::with_capacity(fcount);
             for _ in 0..fcount {
                 let mut face = [0i32; 4];
                 for slot in face.iter_mut() {
-                    let magnitude = reader.read_bl().await? as i32;
-                    let negative = reader.read_b().await?;
+                    let magnitude = reader.read_bl()? as i32;
+                    let negative = reader.read_b()?;
                     *slot = if negative { -magnitude } else { magnitude };
                 }
                 faces.push(face);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common).await?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::PolyfaceMesh { vertices, faces })))
         }
         _ => Ok(None),
@@ -2098,93 +2206,96 @@ async fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>
 }
 
 //#region SemioEntityDecode
-async fn dwg_decode_semio_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
-    let _entity_mode = reader.read_bb().await?;
-    let _reactor_count = reader.read_bl().await?;
-    let _no_links = reader.read_b().await?;
-    let color = DwgColor::from_bs(reader.read_bs().await?);
-    let _linetype_scale = reader.read_bd().await?;
-    let _linetype_flags = reader.read_bb().await?;
-    let _plot_style_flags = reader.read_bb().await?;
-    let _invisibility = reader.read_bs().await?;
-    let _lineweight = reader.read_rc().await?;
-    Ok(color.await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_semio_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+    let _entity_mode = reader.read_bb()?;
+    let _reactor_count = reader.read_bl()?;
+    let _no_links = reader.read_b()?;
+    let color = DwgColor::from_bs(reader.read_bs()?);
+    let _linetype_scale = reader.read_bd()?;
+    let _linetype_flags = reader.read_bb()?;
+    let _plot_style_flags = reader.read_bb()?;
+    let _invisibility = reader.read_bs()?;
+    let _lineweight = reader.read_rc()?;
+    Ok(color)
 }
 
-async fn dwg_decode_semio_entity_handles(handles: &mut DwgBitReader<'_>) -> Result<u64, String> {
-    let (_owner_code, _owner_handle) = handles.read_handle().await?;
-    let (_layer_code, layer_handle) = handles.read_handle().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_semio_entity_handles(handles: &mut DwgBitReader<'_>) -> Result<u64, String> {
+    let (_owner_code, _owner_handle) = handles.read_handle()?;
+    let (_layer_code, layer_handle) = handles.read_handle()?;
     Ok(layer_handle)
 }
 
-async fn dwg_decode_semio_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_semio_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
     let color = match object_type {
         DWG_TYPE_LINE | DWG_TYPE_POINT | DWG_TYPE_CIRCLE | DWG_TYPE_ARC | DWG_TYPE_ELLIPSE | DWG_TYPE_LWPOLYLINE | DWG_TYPE_SPLINE | DWG_TYPE_TEXT | DWG_TYPE_FACE3D | DWG_TYPE_POLYLINE3D | DWG_TYPE_POLYLINE_PFACE => {
-            dwg_decode_semio_entity_common(reader).await?
+            dwg_decode_semio_entity_common(reader)?
         }
         _ => return Ok(None),
     };
     let geometry = match object_type {
-        DWG_TYPE_LINE => DwgGeometry::Line { start: reader.read_3bd().await?, end: reader.read_3bd().await? },
-        DWG_TYPE_POINT => DwgGeometry::Point { at: reader.read_3bd().await? },
-        DWG_TYPE_CIRCLE => DwgGeometry::Circle { center: reader.read_3bd().await?, radius: reader.read_bd().await?, normal: reader.read_be().await? },
-        DWG_TYPE_ARC => DwgGeometry::Arc { center: reader.read_3bd().await?, radius: reader.read_bd().await?, start_angle: reader.read_bd().await?, end_angle: reader.read_bd().await?, normal: reader.read_be().await? },
-        DWG_TYPE_ELLIPSE => DwgGeometry::Ellipse { center: reader.read_3bd().await?, major_axis: reader.read_3bd().await?, normal: reader.read_be().await?, ratio: reader.read_bd().await?, start_param: reader.read_bd().await?, end_param: reader.read_bd().await? },
-        DWG_TYPE_TEXT => DwgGeometry::Text { at: reader.read_3bd().await?, height: reader.read_bd().await?, rotation: reader.read_bd().await?, content: reader.read_t().await? },
-        DWG_TYPE_FACE3D => DwgGeometry::Face3d { corners: [reader.read_3bd().await?, reader.read_3bd().await?, reader.read_3bd().await?, reader.read_3bd().await?] },
+        DWG_TYPE_LINE => DwgGeometry::Line { start: reader.read_3bd()?, end: reader.read_3bd()? },
+        DWG_TYPE_POINT => DwgGeometry::Point { at: reader.read_3bd()? },
+        DWG_TYPE_CIRCLE => DwgGeometry::Circle { center: reader.read_3bd()?, radius: reader.read_bd()?, normal: reader.read_be()? },
+        DWG_TYPE_ARC => DwgGeometry::Arc { center: reader.read_3bd()?, radius: reader.read_bd()?, start_angle: reader.read_bd()?, end_angle: reader.read_bd()?, normal: reader.read_be()? },
+        DWG_TYPE_ELLIPSE => DwgGeometry::Ellipse { center: reader.read_3bd()?, major_axis: reader.read_3bd()?, normal: reader.read_be()?, ratio: reader.read_bd()?, start_param: reader.read_bd()?, end_param: reader.read_bd()? },
+        DWG_TYPE_TEXT => DwgGeometry::Text { at: reader.read_3bd()?, height: reader.read_bd()?, rotation: reader.read_bd()?, content: reader.read_t()? },
+        DWG_TYPE_FACE3D => DwgGeometry::Face3d { corners: [reader.read_3bd()?, reader.read_3bd()?, reader.read_3bd()?, reader.read_3bd()?] },
         DWG_TYPE_LWPOLYLINE => {
-            let closed = reader.read_b().await?;
-            let elevation = reader.read_bd().await?;
-            let count = reader.read_bl().await? as usize;
+            let closed = reader.read_b()?;
+            let elevation = reader.read_bd()?;
+            let count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(count);
             let mut bulges = Vec::with_capacity(count);
             for _ in 0..count {
-                vertices.push(reader.read_2rd().await?);
-                bulges.push(reader.read_bd().await?);
+                vertices.push(reader.read_2rd()?);
+                bulges.push(reader.read_bd()?);
             }
             DwgGeometry::LwPolyline { closed, elevation, vertices, bulges }
         }
         DWG_TYPE_SPLINE => {
-            let degree = reader.read_bl().await?;
-            let control_point_count = reader.read_bl().await? as usize;
+            let degree = reader.read_bl()?;
+            let control_point_count = reader.read_bl()? as usize;
             let mut control_points = Vec::with_capacity(control_point_count);
             for _ in 0..control_point_count {
-                control_points.push(reader.read_3bd().await?);
+                control_points.push(reader.read_3bd()?);
             }
-            let knot_count = reader.read_bl().await? as usize;
+            let knot_count = reader.read_bl()? as usize;
             let mut knots = Vec::with_capacity(knot_count);
             for _ in 0..knot_count {
-                knots.push(reader.read_rd().await?);
+                knots.push(reader.read_rd()?);
             }
-            let weight_count = reader.read_bl().await? as usize;
+            let weight_count = reader.read_bl()? as usize;
             let mut weights = Vec::with_capacity(weight_count);
             for _ in 0..weight_count {
-                weights.push(reader.read_rd().await?);
+                weights.push(reader.read_rd()?);
             }
             DwgGeometry::Spline { degree, control_points, knots, weights }
         }
         DWG_TYPE_POLYLINE3D => {
-            let closed = reader.read_b().await?;
-            let count = reader.read_bl().await? as usize;
+            let closed = reader.read_b()?;
+            let count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(count);
             for _ in 0..count {
-                vertices.push(reader.read_3bd().await?);
+                vertices.push(reader.read_3bd()?);
             }
             DwgGeometry::Polyline3d { closed, vertices }
         }
         DWG_TYPE_POLYLINE_PFACE => {
-            let vertex_count = reader.read_bl().await? as usize;
+            let vertex_count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(vertex_count);
             for _ in 0..vertex_count {
-                vertices.push(reader.read_3bd().await?);
+                vertices.push(reader.read_3bd()?);
             }
-            let face_count = reader.read_bl().await? as usize;
+            let face_count = reader.read_bl()? as usize;
             let mut faces = Vec::with_capacity(face_count);
             for _ in 0..face_count {
                 let mut face = [0i32; 4];
                 for index in &mut face {
-                    let magnitude = reader.read_bl().await? as i32;
-                    *index = if reader.read_b().await? { -magnitude } else { magnitude };
+                    let magnitude = reader.read_bl()? as i32;
+                    *index = if reader.read_b()? { -magnitude } else { magnitude };
                 }
                 faces.push(face);
             }
@@ -2192,7 +2303,7 @@ async fn dwg_decode_semio_entity(object_type: u16, reader: &mut DwgBitReader<'_>
         }
         _ => unreachable!(),
     };
-    Ok(Some((dwg_decode_semio_entity_handles(handles).await?, color, geometry)))
+    Ok(Some((dwg_decode_semio_entity_handles(handles)?, color, geometry)))
 }
 //#endregion SemioEntityDecode
 //#endregion DwgObjects
@@ -2206,7 +2317,8 @@ const DWG_SENTINEL_CLASSES_END: [u8; 16] = [0x72, 0x5E, 0x3B, 0x47, 0x3B, 0x56, 
 const DWG_SENTINEL_FILE_HEADER_END: [u8; 16] = [0x95, 0xA0, 0x4E, 0x28, 0x99, 0x82, 0x1A, 0xE5, 0x5E, 0x41, 0xE0, 0x5F, 0x9D, 0x3A, 0x4D, 0x00];
 
 /// 📐️ Serializes a drawing to a semio DWG (AC1015-flavored) byte stream.
-pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
     let mut drawing = drawing.clone();
     if drawing.layers.is_empty() {
         drawing.layers.push(DwgLayer::default());
@@ -2219,9 +2331,9 @@ pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
 
     for (i, layer) in drawing.layers.iter().enumerate() {
         let handle = layer_handles[i];
-        let mut body = DwgBitWriter::new().await;
-        body.write_t(&layer.name).await;
-        body.write_rc(layer.color).await;
+        let mut body = DwgBitWriter::new();
+        body.write_t(&layer.name);
+        body.write_rc(layer.color);
         let mut handles = DwgBitWriter::new();
         let offset = objects_bytes.len();
         dwg_write_object(&mut objects_bytes, DWG_TYPE_LAYER, handle, &mut body, &mut handles);
@@ -2234,13 +2346,13 @@ pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
         dwg_encode_entity(&mut objects_bytes, &mut object_map, &mut next_handle, layer_handle, entity);
     }
 
-    let mut header_body = DwgBitWriter::new().await;
-    header_body.write_3rd(drawing.extmin).await;
-    header_body.write_3rd(drawing.extmax).await;
-    header_body.write_handle(0, next_handle).await;
-    header_body.pad_to_byte().await;
+    let mut header_body = DwgBitWriter::new();
+    header_body.write_3rd(drawing.extmin);
+    header_body.write_3rd(drawing.extmax);
+    header_body.write_handle(0, next_handle);
+    header_body.pad_to_byte();
     let header_payload = header_body.bytes;
-    let header_crc = dwg_crc16(0xC0C1, &header_payload).await;
+    let header_crc = dwg_crc16(0xC0C1, &header_payload);
 
     let mut header_section = Vec::new();
     header_section.extend_from_slice(&DWG_SENTINEL_HEADER_VARS_BEGIN);
@@ -2252,7 +2364,7 @@ pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
     let mut classes_section = Vec::new();
     classes_section.extend_from_slice(&DWG_SENTINEL_CLASSES_BEGIN);
     classes_section.extend_from_slice(&0u32.to_le_bytes());
-    classes_section.extend_from_slice(&dwg_crc16(0xC0C1, &[]).await.to_le_bytes());
+    classes_section.extend_from_slice(&dwg_crc16(0xC0C1, &[]).to_le_bytes());
     classes_section.extend_from_slice(&DWG_SENTINEL_CLASSES_END);
 
     let header_vars_offset = DWG_FILE_HEADER_LEN;
@@ -2266,7 +2378,7 @@ pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
         map_section.extend_from_slice(&handle.to_le_bytes());
         map_section.extend_from_slice(&((objects_offset + local_offset) as u64).to_le_bytes());
     }
-    let map_crc = dwg_crc16(0xC0C1, &map_section).await;
+    let map_crc = dwg_crc16(0xC0C1, &map_section);
     map_section.extend_from_slice(&map_crc.to_le_bytes());
 
     let mut file_header = Vec::new();
@@ -2294,7 +2406,8 @@ pub async fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
 //#endregion DwgWrite
 
 //#region DwgRead
-async fn r2004_section_data(section: &DwgRawSection) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2004_section_data(section: &DwgRawSection) -> Result<Vec<u8>, String> {
     let mut data = vec![0; section.declared_size as usize];
     for page in &section.pages {
         if let Some(error) = &page.error {
@@ -2316,63 +2429,75 @@ struct DwgSectionCursor<'a> {
 }
 
 impl<'a> DwgSectionCursor<'a> {
-    async fn new(bytes: &'a [u8]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, position: 0 }
     }
 
-    async fn take(&mut self, length: usize) -> Result<&'a [u8], String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn take(&mut self, length: usize) -> Result<&'a [u8], String> {
         let end = self.position.checked_add(length).ok_or("DWG section cursor overflow")?;
         let bytes = self.bytes.get(self.position..end).ok_or_else(|| format!("DWG section value at {} needs {length} bytes, only {} remain", self.position, self.bytes.len().saturating_sub(self.position)))?;
         self.position = end;
         Ok(bytes)
     }
 
-    async fn u16(&mut self) -> Result<u16, String> {
-        Ok(u16::from_le_bytes(self.take(2).await?.try_into().unwrap()))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn u16(&mut self) -> Result<u16, String> {
+        Ok(u16::from_le_bytes(self.take(2)?.try_into().unwrap()))
     }
 
-    async fn u8(&mut self) -> Result<u8, String> {
-        Ok(self.take(1).await?[0])
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn u8(&mut self) -> Result<u8, String> {
+        Ok(self.take(1)?[0])
     }
 
-    async fn i32(&mut self) -> Result<i32, String> {
-        Ok(i32::from_le_bytes(self.take(4).await?.try_into().unwrap()))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn i32(&mut self) -> Result<i32, String> {
+        Ok(i32::from_le_bytes(self.take(4)?.try_into().unwrap()))
     }
 
-    async fn u32(&mut self) -> Result<u32, String> {
-        Ok(u32::from_le_bytes(self.take(4).await?.try_into().unwrap()))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn u32(&mut self) -> Result<u32, String> {
+        Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
     }
 
-    async fn u64(&mut self) -> Result<u64, String> {
-        Ok(u64::from_le_bytes(self.take(8).await?.try_into().unwrap()))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn u64(&mut self) -> Result<u64, String> {
+        Ok(u64::from_le_bytes(self.take(8)?.try_into().unwrap()))
     }
 
-    async fn utf16_z(&mut self) -> Result<String, String> {
-        let count = usize::from(self.u16().await?);
-        let units = self.take(count.checked_mul(2).ok_or("DWG UTF-16 length overflow")?).await?.chunks_exact(2).map(|unit| u16::from_le_bytes([unit[0], unit[1]])).take_while(|unit| *unit != 0).collect::<Vec<_>>();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn utf16_z(&mut self) -> Result<String, String> {
+        let count = usize::from(self.u16()?);
+        let units = self.take(count.checked_mul(2).ok_or("DWG UTF-16 length overflow")?)?.chunks_exact(2).map(|unit| u16::from_le_bytes([unit[0], unit[1]])).take_while(|unit| *unit != 0).collect::<Vec<_>>();
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 string: {error}"))
     }
 
-    async fn utf16_bytes(&mut self) -> Result<String, String> {
-        let byte_count = self.u32().await? as usize;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn utf16_bytes(&mut self) -> Result<String, String> {
+        let byte_count = self.u32()? as usize;
         if byte_count % 2 != 0 {
             return Err("DWG UTF-16 byte string has an odd length".into());
         }
-        let units = self.take(byte_count).await?.chunks_exact(2).map(|unit| u16::from_le_bytes([unit[0], unit[1]])).collect::<Vec<_>>();
+        let units = self.take(byte_count)?.chunks_exact(2).map(|unit| u16::from_le_bytes([unit[0], unit[1]])).collect::<Vec<_>>();
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 byte string: {error}"))
     }
 
-    async fn bytes_z(&mut self) -> Result<String, String> {
-        let count = usize::from(self.u16().await?);
-        let bytes = self.take(count).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bytes_z(&mut self) -> Result<String, String> {
+        let count = usize::from(self.u16()?);
+        let bytes = self.take(count)?;
         Ok(String::from_utf8_lossy(bytes.strip_suffix(&[0]).unwrap_or(bytes)).into_owned())
     }
 
-    async fn has_more(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_more(&self) -> bool {
         self.position < self.bytes.len()
     }
 
-    async fn finish(self, section: &str) -> Result<(), String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn finish(self, section: &str) -> Result<(), String> {
         if self.position == self.bytes.len() {
             Ok(())
         } else {
@@ -2381,7 +2506,8 @@ impl<'a> DwgSectionCursor<'a> {
     }
 }
 
-async fn push_utf16_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_utf16_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
     let units = value.encode_utf16().collect::<Vec<_>>();
     let count = units.len().checked_add(1).ok_or("DWG UTF-16 string length overflow")?;
     push_u16(output, u16::try_from(count).map_err(|_| "DWG UTF-16 string exceeds u16 length")?);
@@ -2392,7 +2518,8 @@ async fn push_utf16_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
     Ok(())
 }
 
-async fn push_utf16_bytes(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_utf16_bytes(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
     let units = value.encode_utf16().collect::<Vec<_>>();
     push_u32(output, u32::try_from(units.len().checked_mul(2).ok_or("DWG UTF-16 byte length overflow")?).map_err(|_| "DWG UTF-16 byte string exceeds u32 length")?);
     for unit in units {
@@ -2401,7 +2528,8 @@ async fn push_utf16_bytes(output: &mut Vec<u8>, value: &str) -> Result<(), Strin
     Ok(())
 }
 
-async fn push_bytes_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_bytes_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
     let count = value.len().checked_add(1).ok_or("DWG byte string length overflow")?;
     push_u16(output, u16::try_from(count).map_err(|_| "DWG byte string exceeds u16 length")?);
     output.extend_from_slice(value.as_bytes());
@@ -2409,11 +2537,13 @@ async fn push_bytes_z(output: &mut Vec<u8>, value: &str) -> Result<(), String> {
     Ok(())
 }
 
-async fn checksum_text(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn checksum_text(bytes: &[u8]) -> String {
     bytes.iter().enumerate().map(|(index, byte)| format!("{}{:02x}", if [4, 6, 8, 10].contains(&index) { "-" } else { "" }, byte)).collect::<Vec<_>>().join("")
 }
 
-async fn checksum_bytes(value: &str) -> Result<[u8; 16], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn checksum_bytes(value: &str) -> Result<[u8; 16], String> {
     if value.is_empty() {
         return Ok([0; 16]);
     }
@@ -2428,34 +2558,36 @@ async fn checksum_bytes(value: &str) -> Result<[u8; 16], String> {
     Ok(bytes)
 }
 
-async fn decode_summary_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgSummaryInfo, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_summary_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgSummaryInfo, String> {
     use crate::artifacts::dwg::{DwgCustomProperty, DwgJulianDate, DwgSummaryInfo};
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let title = cursor.utf16_z().await?;
-    let subject = cursor.utf16_z().await?;
-    let author = cursor.utf16_z().await?;
-    let keywords = cursor.utf16_z().await?;
-    let comments = cursor.utf16_z().await?;
-    let last_saved_by = cursor.utf16_z().await?;
-    let revision_number = cursor.utf16_z().await?;
-    let hyperlink_base = cursor.utf16_z().await?;
-    let total_editing_time = cursor.u64().await?;
-    let created_at = DwgJulianDate { days: cursor.u32().await?, milliseconds: cursor.u32().await? };
-    let modified_at = DwgJulianDate { days: cursor.u32().await?, milliseconds: cursor.u32().await? };
-    let property_count = usize::from(cursor.u16().await?);
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let title = cursor.utf16_z()?;
+    let subject = cursor.utf16_z()?;
+    let author = cursor.utf16_z()?;
+    let keywords = cursor.utf16_z()?;
+    let comments = cursor.utf16_z()?;
+    let last_saved_by = cursor.utf16_z()?;
+    let revision_number = cursor.utf16_z()?;
+    let hyperlink_base = cursor.utf16_z()?;
+    let total_editing_time = cursor.u64()?;
+    let created_at = DwgJulianDate { days: cursor.u32()?, milliseconds: cursor.u32()? };
+    let modified_at = DwgJulianDate { days: cursor.u32()?, milliseconds: cursor.u32()? };
+    let property_count = usize::from(cursor.u16()?);
     let mut custom_properties = Vec::with_capacity(property_count);
     for _ in 0..property_count {
-        custom_properties.push(DwgCustomProperty { key: cursor.utf16_z().await?, value: cursor.utf16_z().await? });
+        custom_properties.push(DwgCustomProperty { key: cursor.utf16_z()?, value: cursor.utf16_z()? });
     }
-    let _reserved_one = cursor.u32().await?;
-    let _reserved_two = cursor.u32().await?;
+    let _reserved_one = cursor.u32()?;
+    let _reserved_two = cursor.u32()?;
     Ok(DwgSummaryInfo { title, subject, author, keywords, comments, last_saved_by, revision_number, hyperlink_base, total_editing_time, created_at, modified_at, custom_properties })
 }
 
-async fn encode_summary_info(summary: &crate::artifacts::dwg::DwgSummaryInfo) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_summary_info(summary: &crate::artifacts::dwg::DwgSummaryInfo) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     for value in [&summary.title, &summary.subject, &summary.author, &summary.keywords, &summary.comments, &summary.last_saved_by, &summary.revision_number, &summary.hyperlink_base] {
-        push_utf16_z(&mut output, value).await?;
+        push_utf16_z(&mut output, value)?;
     }
     push_u64(&mut output, summary.total_editing_time);
     push_u32(&mut output, summary.created_at.days);
@@ -2464,72 +2596,76 @@ async fn encode_summary_info(summary: &crate::artifacts::dwg::DwgSummaryInfo) ->
     push_u32(&mut output, summary.modified_at.milliseconds);
     push_u16(&mut output, u16::try_from(summary.custom_properties.len()).map_err(|_| "DWG summary has too many custom properties")?);
     for property in &summary.custom_properties {
-        push_utf16_z(&mut output, &property.key).await?;
-        push_utf16_z(&mut output, &property.value).await?;
+        push_utf16_z(&mut output, &property.key)?;
+        push_utf16_z(&mut output, &property.value)?;
     }
     push_u32(&mut output, 0);
     push_u32(&mut output, 0);
     Ok(output)
 }
 
-async fn decode_application_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgApplicationInfo, String> {
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let _format = cursor.u32().await?;
-    let name = cursor.utf16_z().await?;
-    let _field_count = cursor.u32().await?;
-    let version_checksum = checksum_text(cursor.take(16).await?);
-    let version = cursor.utf16_z().await?;
-    let comment_checksum = checksum_text(cursor.take(16).await?);
-    let comment = cursor.utf16_z().await?;
-    let product_checksum = checksum_text(cursor.take(16).await?);
-    let product = cursor.utf16_z().await?;
-    let application_version = if cursor.has_more().await { cursor.bytes_z().await? } else { String::new() };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_application_info(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgApplicationInfo, String> {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let _format = cursor.u32()?;
+    let name = cursor.utf16_z()?;
+    let _field_count = cursor.u32()?;
+    let version_checksum = checksum_text(cursor.take(16)?);
+    let version = cursor.utf16_z()?;
+    let comment_checksum = checksum_text(cursor.take(16)?);
+    let comment = cursor.utf16_z()?;
+    let product_checksum = checksum_text(cursor.take(16)?);
+    let product = cursor.utf16_z()?;
+    let application_version = if cursor.has_more() { cursor.bytes_z()? } else { String::new() };
     Ok(crate::artifacts::dwg::DwgApplicationInfo { name, version_checksum, version, comment_checksum, comment, product_checksum, product, application_version })
 }
 
-async fn encode_application_info(application: &crate::artifacts::dwg::DwgApplicationInfo) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_application_info(application: &crate::artifacts::dwg::DwgApplicationInfo) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_u32(&mut output, 3);
-    push_utf16_z(&mut output, &application.name).await?;
+    push_utf16_z(&mut output, &application.name)?;
     push_u32(&mut output, 3);
-    output.extend_from_slice(&checksum_bytes(&application.version_checksum).await?);
-    push_utf16_z(&mut output, &application.version).await?;
-    output.extend_from_slice(&checksum_bytes(&application.comment_checksum).await?);
-    push_utf16_z(&mut output, &application.comment).await?;
-    output.extend_from_slice(&checksum_bytes(&application.product_checksum).await?);
-    push_utf16_z(&mut output, &application.product).await?;
+    output.extend_from_slice(&checksum_bytes(&application.version_checksum)?);
+    push_utf16_z(&mut output, &application.version)?;
+    output.extend_from_slice(&checksum_bytes(&application.comment_checksum)?);
+    push_utf16_z(&mut output, &application.comment)?;
+    output.extend_from_slice(&checksum_bytes(&application.product_checksum)?);
+    push_utf16_z(&mut output, &application.product)?;
     if !application.application_version.is_empty() {
-        push_bytes_z(&mut output, &application.application_version).await?;
+        push_bytes_z(&mut output, &application.application_version)?;
     }
     Ok(output)
 }
 
-async fn decode_dependencies(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgDependency>, String> {
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let feature_count = cursor.u32().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_dependencies(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgDependency>, String> {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let feature_count = cursor.u32()? as usize;
     let mut features = Vec::with_capacity(feature_count);
     for _ in 0..feature_count {
-        features.push(cursor.utf16_bytes().await?);
+        features.push(cursor.utf16_bytes()?);
     }
-    let file_count = cursor.u32().await? as usize;
+    let file_count = cursor.u32()? as usize;
     let mut dependencies = Vec::with_capacity(file_count);
     for _ in 0..file_count {
-        let full_path = cursor.utf16_bytes().await?;
-        let relative_path = cursor.utf16_bytes().await?;
-        let fingerprint = cursor.utf16_bytes().await?;
-        let version = cursor.utf16_bytes().await?;
-        let feature_index = cursor.u32().await? as usize;
-        let timestamp = cursor.u32().await?;
-        let file_size = cursor.u32().await?;
-        let affects_graphics = cursor.u16().await? != 0;
-        let reference_count = cursor.u32().await?;
+        let full_path = cursor.utf16_bytes()?;
+        let relative_path = cursor.utf16_bytes()?;
+        let fingerprint = cursor.utf16_bytes()?;
+        let version = cursor.utf16_bytes()?;
+        let feature_index = cursor.u32()? as usize;
+        let timestamp = cursor.u32()?;
+        let file_size = cursor.u32()?;
+        let affects_graphics = cursor.u16()? != 0;
+        let reference_count = cursor.u32()?;
         let feature = features.get(feature_index).cloned().ok_or("DWG dependency feature index is out of bounds")?;
         dependencies.push(crate::artifacts::dwg::DwgDependency { feature, full_path, relative_path, fingerprint, version, timestamp, file_size, affects_graphics, reference_count });
     }
     Ok(dependencies)
 }
 
-async fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependency]) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependency]) -> Result<Vec<u8>, String> {
     let mut features = Vec::<String>::new();
     for dependency in dependencies {
         if !features.contains(&dependency.feature) {
@@ -2539,14 +2675,14 @@ async fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependenc
     let mut output = Vec::new();
     push_u32(&mut output, u32::try_from(features.len()).map_err(|_| "DWG dependency feature count exceeds u32")?);
     for feature in &features {
-        push_utf16_bytes(&mut output, feature).await?;
+        push_utf16_bytes(&mut output, feature)?;
     }
     push_u32(&mut output, u32::try_from(dependencies.len()).map_err(|_| "DWG dependency count exceeds u32")?);
     for dependency in dependencies {
-        push_utf16_bytes(&mut output, &dependency.full_path).await?;
-        push_utf16_bytes(&mut output, &dependency.relative_path).await?;
-        push_utf16_bytes(&mut output, &dependency.fingerprint).await?;
-        push_utf16_bytes(&mut output, &dependency.version).await?;
+        push_utf16_bytes(&mut output, &dependency.full_path)?;
+        push_utf16_bytes(&mut output, &dependency.relative_path)?;
+        push_utf16_bytes(&mut output, &dependency.fingerprint)?;
+        push_utf16_bytes(&mut output, &dependency.version)?;
         push_u32(&mut output, features.iter().position(|feature| feature == &dependency.feature).ok_or("DWG dependency feature is missing")? as u32);
         push_u32(&mut output, dependency.timestamp);
         push_u32(&mut output, dependency.file_size);
@@ -2556,10 +2692,11 @@ async fn encode_dependencies(dependencies: &[crate::artifacts::dwg::DwgDependenc
     Ok(output)
 }
 
-async fn decode_template(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgTemplate, String> {
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let description = cursor.utf16_z().await?;
-    let measurement = match cursor.u16().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_template(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgTemplate, String> {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let description = cursor.utf16_z()?;
+    let measurement = match cursor.u16()? {
         0 => crate::artifacts::dwg::DwgMeasurement::English,
         1 => crate::artifacts::dwg::DwgMeasurement::Metric,
         value => return Err(format!("unsupported DWG measurement value {value}")),
@@ -2567,9 +2704,10 @@ async fn decode_template(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgTempl
     Ok(crate::artifacts::dwg::DwgTemplate { description, measurement })
 }
 
-async fn encode_template(template: &crate::artifacts::dwg::DwgTemplate) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_template(template: &crate::artifacts::dwg::DwgTemplate) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
-    push_utf16_z(&mut output, &template.description).await?;
+    push_utf16_z(&mut output, &template.description)?;
     push_u16(
         &mut output,
         match template.measurement {
@@ -2580,43 +2718,44 @@ async fn encode_template(template: &crate::artifacts::dwg::DwgTemplate) -> Resul
     Ok(output)
 }
 
-async fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgAuxiliaryHeader, DwgCompatibilityProfile, DwgJulianDate, DwgVersionStamp};
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    if [cursor.u8().await?, cursor.u8().await?, cursor.u8().await?] != [255, 119, 1] {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    if [cursor.u8()?, cursor.u8()?, cursor.u8()?] != [255, 119, 1] {
         return Err("unsupported auxiliary-header intro".into());
     }
-    let version = cursor.u16().await?;
-    let maintenance = cursor.u16().await?;
+    let version = cursor.u16()?;
+    let maintenance = cursor.u16()?;
     if version != 29 || maintenance != 2 {
         return Err(format!("unsupported auxiliary-header target {version}.{maintenance}"));
     }
-    let total_saves = cursor.u32().await?;
-    if cursor.i32().await? != -1 {
+    let total_saves = cursor.u32()?;
+    if cursor.i32()? != -1 {
         return Err("auxiliary-header minus-one marker changed".into());
     }
-    let save_partition_one = cursor.u16().await?;
-    let save_partition_two = cursor.u16().await?;
-    let save_generation = cursor.u32().await?;
-    let legacy_stamp_one = DwgVersionStamp { version: cursor.u16().await?, maintenance: cursor.u16().await? };
-    let legacy_stamp_two = DwgVersionStamp { version: cursor.u16().await?, maintenance: cursor.u16().await? };
-    let profile_shorts = [cursor.u16().await?, cursor.u16().await?, cursor.u16().await?, cursor.u16().await?, cursor.u16().await?, cursor.u16().await?];
-    let profile_longs = [cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?];
+    let save_partition_one = cursor.u16()?;
+    let save_partition_two = cursor.u16()?;
+    let save_generation = cursor.u32()?;
+    let legacy_stamp_one = DwgVersionStamp { version: cursor.u16()?, maintenance: cursor.u16()? };
+    let legacy_stamp_two = DwgVersionStamp { version: cursor.u16()?, maintenance: cursor.u16()? };
+    let profile_shorts = [cursor.u16()?, cursor.u16()?, cursor.u16()?, cursor.u16()?, cursor.u16()?, cursor.u16()?];
+    let profile_longs = [cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?];
     if profile_shorts != [4, 1381, 261, 2600, 0, 1] || profile_longs != [0, 0, 0, 16_908_544, 65_538] {
         return Err("unsupported auxiliary-header compatibility profile".into());
     }
-    let created_at = DwgJulianDate { days: cursor.u32().await?, milliseconds: cursor.u32().await? };
-    let updated_at = DwgJulianDate { days: cursor.u32().await?, milliseconds: cursor.u32().await? };
-    let handle_seed = cursor.u64().await?;
-    if cursor.u16().await? != 0 {
+    let created_at = DwgJulianDate { days: cursor.u32()?, milliseconds: cursor.u32()? };
+    let updated_at = DwgJulianDate { days: cursor.u32()?, milliseconds: cursor.u32()? };
+    let handle_seed = cursor.u64()?;
+    if cursor.u16()? != 0 {
         return Err("auxiliary-header reserved handle marker changed".into());
     }
-    let terminal_save_generation = cursor.u16().await?;
-    let terminal = [cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?, cursor.u32().await?];
+    let terminal_save_generation = cursor.u16()?;
+    let terminal = [cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?, cursor.u32()?];
     if terminal != [0, 0, 0, total_saves, 0, 0, 0, 0] {
         return Err("auxiliary-header terminal profile changed".into());
     }
-    cursor.finish("AcDb:AuxHeader").await?;
+    cursor.finish("AcDb:AuxHeader")?;
     Ok(DwgAuxiliaryHeader {
         total_saves,
         save_partition_one,
@@ -2632,7 +2771,8 @@ async fn decode_auxiliary_header(bytes: &[u8]) -> Result<crate::artifacts::dwg::
     })
 }
 
-async fn encode_auxiliary_header(value: &crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_auxiliary_header(value: &crate::artifacts::dwg::schema::snapshot::DwgAuxiliaryHeader) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgCompatibilityProfile;
     if value.compatibility_profile != DwgCompatibilityProfile::Autocad2009 {
         return Err("unsupported auxiliary-header compatibility profile".into());
@@ -2671,20 +2811,22 @@ async fn encode_auxiliary_header(value: &crate::artifacts::dwg::schema::snapshot
     Ok(output)
 }
 
-async fn decode_revision_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory, String> {
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let format_major = cursor.u32().await?;
-    let format_minor = cursor.u32().await?;
-    let count = cursor.u32().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_revision_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory, String> {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let format_major = cursor.u32()?;
+    let format_minor = cursor.u32()?;
+    let count = cursor.u32()? as usize;
     let mut revisions = Vec::with_capacity(count);
     for _ in 0..count {
-        revisions.push(cursor.u32().await?);
+        revisions.push(cursor.u32()?);
     }
-    cursor.finish("AcDb:RevHistory").await?;
+    cursor.finish("AcDb:RevHistory")?;
     Ok(crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory { format_major, format_minor, revisions })
 }
 
-async fn encode_revision_history(value: &crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_revision_history(value: &crate::artifacts::dwg::schema::snapshot::DwgRevisionHistory) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     push_u32(&mut output, value.format_major);
     push_u32(&mut output, value.format_minor);
@@ -2698,43 +2840,44 @@ async fn encode_revision_history(value: &crate::artifacts::dwg::schema::snapshot
 const DWG_PREVIEW_BEGIN: [u8; 16] = [0x1f, 0x25, 0x6d, 0x07, 0xd4, 0x36, 0x28, 0x28, 0x9d, 0x57, 0xca, 0x3f, 0x9d, 0x44, 0x10, 0x2b];
 const DWG_PREVIEW_END: [u8; 16] = [0xe0, 0xda, 0x92, 0xf8, 0x2b, 0xc9, 0xd7, 0xd7, 0x62, 0xa8, 0x35, 0xc0, 0x62, 0xbb, 0xef, 0xd4];
 
-async fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgIndexedPreview, DwgPreviewOrigin, DwgRgba};
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    if cursor.take(16).await? != DWG_PREVIEW_BEGIN {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    if cursor.take(16)? != DWG_PREVIEW_BEGIN {
         return Err("preview start sentinel changed".into());
     }
-    if cursor.u32().await? as usize != bytes.len() - 36 || cursor.u8().await? != 2 {
+    if cursor.u32()? as usize != bytes.len() - 36 || cursor.u8()? != 2 {
         return Err("preview record envelope changed".into());
     }
-    let (code_one, start_one, size_one) = (cursor.u8().await?, cursor.u32().await?, cursor.u32().await?);
-    let (code_two, start_two, size_two) = (cursor.u8().await?, cursor.u32().await?, cursor.u32().await?);
+    let (code_one, start_one, size_one) = (cursor.u8()?, cursor.u32()?, cursor.u32()?);
+    let (code_two, start_two, size_two) = (cursor.u8()?, cursor.u32()?, cursor.u32()?);
     if (code_one, size_one, code_two) != (1, 80, 2) || start_two != start_one + 80 || size_two != 86_056 {
         return Err("unsupported preview record table".into());
     }
-    if cursor.take(80).await?.iter().any(|byte| *byte != 0) {
+    if cursor.take(80)?.iter().any(|byte| *byte != 0) {
         return Err("preview header record changed".into());
     }
-    let header_size = cursor.u32().await?;
-    let width = cursor.i32().await?;
-    let height = cursor.i32().await?;
-    let planes = cursor.u16().await?;
-    let depth = cursor.u16().await?;
-    let compression = cursor.u32().await?;
-    let image_size = cursor.u32().await?;
-    let x_resolution = cursor.i32().await?;
-    let y_resolution = cursor.i32().await?;
-    let colors = cursor.u32().await?;
-    let important = cursor.u32().await?;
+    let header_size = cursor.u32()?;
+    let width = cursor.i32()?;
+    let height = cursor.i32()?;
+    let planes = cursor.u16()?;
+    let depth = cursor.u16()?;
+    let compression = cursor.u32()?;
+    let image_size = cursor.u32()?;
+    let x_resolution = cursor.i32()?;
+    let y_resolution = cursor.i32()?;
+    let colors = cursor.u32()?;
+    let important = cursor.u32()?;
     if header_size != 40 || width <= 0 || height <= 0 || planes != 1 || depth != 8 || compression != 0 || x_resolution != 0 || y_resolution != 0 || colors != 256 || important != 0 {
         return Err("unsupported indexed preview bitmap header".into());
     }
     let mut palette = Vec::with_capacity(256);
     for _ in 0..256 {
-        let blue = cursor.u8().await?;
-        let green = cursor.u8().await?;
-        let red = cursor.u8().await?;
-        let alpha = cursor.u8().await?;
+        let blue = cursor.u8()?;
+        let green = cursor.u8()?;
+        let red = cursor.u8()?;
+        let alpha = cursor.u8()?;
         palette.push(DwgRgba { red, green, blue, alpha });
     }
     let width = width as usize;
@@ -2746,8 +2889,8 @@ async fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::s
     let mut pixel_indices = Vec::with_capacity(width * height);
     let mut background_palette_index = None;
     for _ in 0..height {
-        pixel_indices.extend_from_slice(cursor.take(width).await?);
-        let padding = cursor.take(stride - width).await?;
+        pixel_indices.extend_from_slice(cursor.take(width)?);
+        let padding = cursor.take(stride - width)?;
         if let Some(index) = padding.first().copied() {
             if padding.iter().any(|value| *value != index) {
                 return Err("preview row padding is inconsistent".into());
@@ -2757,14 +2900,15 @@ async fn decode_indexed_preview(bytes: &[u8]) -> Result<crate::artifacts::dwg::s
             }
         }
     }
-    if cursor.take(16).await? != DWG_PREVIEW_END {
+    if cursor.take(16)? != DWG_PREVIEW_END {
         return Err("preview end sentinel changed".into());
     }
-    cursor.finish("AcDb:Preview").await?;
+    cursor.finish("AcDb:Preview")?;
     Ok(DwgIndexedPreview { width: width as u32, height: height as u32, origin: DwgPreviewOrigin::BottomUp, palette, pixel_indices, background_palette_index: background_palette_index.unwrap_or(0) })
 }
 
-async fn encode_indexed_preview(value: &crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, payload_address: u32) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_indexed_preview(value: &crate::artifacts::dwg::schema::snapshot::DwgIndexedPreview, payload_address: u32) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgPreviewOrigin;
     if value.origin != DwgPreviewOrigin::BottomUp || value.palette.len() != 256 {
         return Err("AC1024 preview requires a bottom-up 256-color indexed bitmap".into());
@@ -2811,11 +2955,13 @@ async fn encode_indexed_preview(value: &crate::artifacts::dwg::schema::snapshot:
     Ok(output)
 }
 
-async fn decode_digest128(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_digest128(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-async fn encode_digest128(value: &str) -> Result<[u8; 16], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_digest128(value: &str) -> Result<[u8; 16], String> {
     if value.len() != 32 {
         return Err("128-bit identifier must contain 32 hex digits".into());
     }
@@ -2826,7 +2972,8 @@ async fn encode_digest128(value: &str) -> Result<[u8; 16], String> {
     Ok(output)
 }
 
-async fn render_application_properties(format_identifier: &str, properties: &[crate::artifacts::dwg::schema::snapshot::DwgApplicationProperty]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn render_application_properties(format_identifier: &str, properties: &[crate::artifacts::dwg::schema::snapshot::DwgApplicationProperty]) -> String {
     use crate::artifacts::dwg::schema::snapshot::DwgApplicationPropertyKind;
     let mut output = format!("<prop_set fmt_id=\"{{{format_identifier}}}\">");
     for property in properties {
@@ -2840,31 +2987,33 @@ async fn render_application_properties(format_identifier: &str, properties: &[cr
     output
 }
 
-async fn render_product_information(value: &crate::artifacts::dwg::schema::snapshot::DwgProductInformation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn render_product_information(value: &crate::artifacts::dwg::schema::snapshot::DwgProductInformation) -> String {
     format!(
         "\"<ProductInformation name =\\\"{}\\\" build_version=\\\"{}\\\" registry_version=\\\"{}\\\" install_id_string=\\\"{}\\\" registry_localeID=\\\"{}\\\"/>\"",
         value.name, value.build_version, value.registry_version, value.install_id, value.locale_id
     )
 }
 
-async fn decode_application_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_application_history(bytes: &[u8]) -> Result<crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgApplicationHistory, DwgApplicationProperty, DwgApplicationPropertyKind, DwgProductInformation};
-    let mut cursor = DwgSectionCursor::new(bytes).await;
-    let history_identifier_one = decode_digest128(cursor.take(16).await?);
-    let history_identifier_two = decode_digest128(cursor.take(16).await?);
-    let class_version = cursor.u32().await?;
-    if cursor.utf16_z().await? != "AppInfoDataList" || cursor.u32().await? != 4 {
+    let mut cursor = DwgSectionCursor::new(bytes);
+    let history_identifier_one = decode_digest128(cursor.take(16)?);
+    let history_identifier_two = decode_digest128(cursor.take(16)?);
+    let class_version = cursor.u32()?;
+    if cursor.utf16_z()? != "AppInfoDataList" || cursor.u32()? != 4 {
         return Err("unsupported application-history list".into());
     }
-    let application_version_digest = decode_digest128(cursor.take(16).await?);
-    let application_version = cursor.utf16_z().await?;
-    let trust_comment_digest = decode_digest128(cursor.take(16).await?);
-    let trust_comment = cursor.utf16_z().await?;
-    let property_set_digest = decode_digest128(cursor.take(16).await?);
-    let rendered_properties = cursor.utf16_z().await?;
-    let product_digest = decode_digest128(cursor.take(16).await?);
-    let rendered_product = cursor.utf16_z().await?;
-    cursor.finish("AcDb:AppInfoHistory").await?;
+    let application_version_digest = decode_digest128(cursor.take(16)?);
+    let application_version = cursor.utf16_z()?;
+    let trust_comment_digest = decode_digest128(cursor.take(16)?);
+    let trust_comment = cursor.utf16_z()?;
+    let property_set_digest = decode_digest128(cursor.take(16)?);
+    let rendered_properties = cursor.utf16_z()?;
+    let product_digest = decode_digest128(cursor.take(16)?);
+    let rendered_product = cursor.utf16_z()?;
+    cursor.finish("AcDb:AppInfoHistory")?;
     let property_format_identifier = "f29f85e0-4ff9-1068-ab91-08002b27b3d9".to_string();
     let properties = vec![
         DwgApplicationProperty { id: 8, kind: DwgApplicationPropertyKind::String, value: "Brian".into() },
@@ -2896,26 +3045,28 @@ async fn decode_application_history(bytes: &[u8]) -> Result<crate::artifacts::dw
     })
 }
 
-async fn encode_application_history(value: &crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_application_history(value: &crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
-    output.extend_from_slice(&encode_digest128(&value.history_identifier_one).await?);
-    output.extend_from_slice(&encode_digest128(&value.history_identifier_two).await?);
+    output.extend_from_slice(&encode_digest128(&value.history_identifier_one)?);
+    output.extend_from_slice(&encode_digest128(&value.history_identifier_two)?);
     push_u32(&mut output, value.class_version);
-    push_utf16_z(&mut output, "AppInfoDataList").await?;
+    push_utf16_z(&mut output, "AppInfoDataList")?;
     push_u32(&mut output, 4);
     for (digest, rendered) in [
         (&value.application_version_digest, value.application_version.clone()),
         (&value.trust_comment_digest, value.trust_comment.clone()),
-        (&value.property_set_digest, render_application_properties(&value.property_format_identifier, &value.properties).await),
-        (&value.product_digest, render_product_information(&value.product).await),
+        (&value.property_set_digest, render_application_properties(&value.property_format_identifier, &value.properties)),
+        (&value.product_digest, render_product_information(&value.product)),
     ] {
-        output.extend_from_slice(&encode_digest128(digest).await?);
-        push_utf16_z(&mut output, &rendered).await?;
+        output.extend_from_slice(&encode_digest128(digest)?);
+        push_utf16_z(&mut output, &rendered)?;
     }
     Ok(output)
 }
 
-async fn encode_object_free_space(updated: &crate::artifacts::dwg::DwgJulianDate) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_object_free_space(updated: &crate::artifacts::dwg::DwgJulianDate) -> Vec<u8> {
     let mut output = Vec::with_capacity(89);
     push_u64(&mut output, 0);
     push_u64(&mut output, 679);
@@ -2932,113 +3083,122 @@ async fn encode_object_free_space(updated: &crate::artifacts::dwg::DwgJulianDate
 const DWG_HEADER_BEGIN: [u8; 16] = [0xcf, 0x7b, 0x1f, 0x23, 0xfd, 0xde, 0x38, 0xa9, 0x5f, 0x7c, 0x68, 0xb8, 0x4e, 0x6d, 0x33, 0x5f];
 const DWG_HEADER_END: [u8; 16] = [0x30, 0x84, 0xe0, 0xdc, 0x02, 0x21, 0xc7, 0x56, 0xa0, 0x83, 0x97, 0x47, 0xb1, 0x92, 0xcc, 0xa0];
 
-async fn header_point3(value: &[f64], name: &str) -> Result<[f64; 3], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn header_point3(value: &[f64], name: &str) -> Result<[f64; 3], String> {
     value.try_into().map_err(|_| format!("{name} must contain three coordinates"))
 }
 
-async fn header_point2(value: &[f64], name: &str) -> Result<[f64; 2], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn header_point2(value: &[f64], name: &str) -> Result<[f64; 2], String> {
     value.try_into().map_err(|_| format!("{name} must contain two coordinates"))
 }
 
-async fn write_header_time(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::DwgJulianDate) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_header_time(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::DwgJulianDate) {
     writer.write_bl(value.days);
     writer.write_bl(value.milliseconds);
 }
 
-async fn read_header_time(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::DwgJulianDate, String> {
-    Ok(crate::artifacts::dwg::DwgJulianDate { days: reader.read_bl().await?, milliseconds: reader.read_bl().await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_header_time(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::DwgJulianDate, String> {
+    Ok(crate::artifacts::dwg::DwgJulianDate { days: reader.read_bl()?, milliseconds: reader.read_bl()? })
 }
 
-async fn write_header_color(writer: &mut DwgBitWriter, index: u16, rgb: u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_header_color(writer: &mut DwgBitWriter, index: u16, rgb: u32) {
     writer.write_bs(index);
     writer.write_bl(rgb);
     writer.write_rc(0);
 }
 
-async fn read_header_color(reader: &mut DwgBitReader<'_>, expected_rgb: u32, name: &str) -> Result<u16, String> {
-    let index = reader.read_bs().await?;
-    let rgb = reader.read_bl().await?;
-    let flags = reader.read_rc().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_header_color(reader: &mut DwgBitReader<'_>, expected_rgb: u32, name: &str) -> Result<u16, String> {
+    let index = reader.read_bs()?;
+    let rgb = reader.read_bl()?;
+    let flags = reader.read_rc()?;
     if rgb != expected_rgb || flags != 0 {
         return Err(format!("unsupported AC1024 Header color {name} index={index} rgb={rgb:#x} flags={flags:#x}"));
     }
     Ok(index)
 }
 
-async fn write_header_space(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, name: &str) -> Result<(), String> {
-    writer.write_3bd(header_point3(&value.insertion_base, &format!("{name} insertion base")).await?);
-    writer.write_3bd(header_point3(&value.extents_minimum, &format!("{name} extents minimum")).await?);
-    writer.write_3bd(header_point3(&value.extents_maximum, &format!("{name} extents maximum")).await?);
-    writer.write_2rd(header_point2(&value.limits_minimum, &format!("{name} limits minimum")).await?);
-    writer.write_2rd(header_point2(&value.limits_maximum, &format!("{name} limits maximum")).await?);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_header_space(writer: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, name: &str) -> Result<(), String> {
+    writer.write_3bd(header_point3(&value.insertion_base, &format!("{name} insertion base"))?);
+    writer.write_3bd(header_point3(&value.extents_minimum, &format!("{name} extents minimum"))?);
+    writer.write_3bd(header_point3(&value.extents_maximum, &format!("{name} extents maximum"))?);
+    writer.write_2rd(header_point2(&value.limits_minimum, &format!("{name} limits minimum"))?);
+    writer.write_2rd(header_point2(&value.limits_maximum, &format!("{name} limits maximum"))?);
     writer.write_bd(value.elevation);
-    writer.write_3bd(header_point3(&value.ucs_origin, &format!("{name} UCS origin")).await?);
-    writer.write_3bd(header_point3(&value.ucs_x_axis, &format!("{name} UCS X axis")).await?);
-    writer.write_3bd(header_point3(&value.ucs_y_axis, &format!("{name} UCS Y axis")).await?);
+    writer.write_3bd(header_point3(&value.ucs_origin, &format!("{name} UCS origin"))?);
+    writer.write_3bd(header_point3(&value.ucs_x_axis, &format!("{name} UCS X axis"))?);
+    writer.write_3bd(header_point3(&value.ucs_y_axis, &format!("{name} UCS Y axis"))?);
     writer.write_bs(value.ucs_orthographic_view);
     for (point, suffix) in [(&value.ucs_origin_top, "top"), (&value.ucs_origin_bottom, "bottom"), (&value.ucs_origin_left, "left"), (&value.ucs_origin_right, "right"), (&value.ucs_origin_front, "front"), (&value.ucs_origin_back, "back")] {
-        writer.write_3bd(header_point3(point, &format!("{name} UCS {suffix}")).await?);
+        writer.write_3bd(header_point3(point, &format!("{name} UCS {suffix}"))?);
     }
     Ok(())
 }
 
-async fn read_header_space(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_header_space(reader: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgHeaderSpaceGeometry;
     Ok(DwgHeaderSpaceGeometry {
-        insertion_base: reader.read_3bd().await.map_err(|error| format!("insertion base: {error}"))?.to_vec(),
-        extents_minimum: reader.read_3bd().await.map_err(|error| format!("extents minimum: {error}"))?.to_vec(),
-        extents_maximum: reader.read_3bd().await.map_err(|error| format!("extents maximum: {error}"))?.to_vec(),
-        limits_minimum: reader.read_2rd().await?.to_vec(),
-        limits_maximum: reader.read_2rd().await?.to_vec(),
-        elevation: reader.read_bd().await.map_err(|error| format!("elevation: {error}"))?,
-        ucs_origin: reader.read_3bd().await.map_err(|error| format!("UCS origin: {error}"))?.to_vec(),
-        ucs_x_axis: reader.read_3bd().await.map_err(|error| format!("UCS X axis: {error}"))?.to_vec(),
-        ucs_y_axis: reader.read_3bd().await.map_err(|error| format!("UCS Y axis: {error}"))?.to_vec(),
-        ucs_orthographic_view: reader.read_bs().await?,
-        ucs_origin_top: reader.read_3bd().await.map_err(|error| format!("UCS top: {error}"))?.to_vec(),
-        ucs_origin_bottom: reader.read_3bd().await.map_err(|error| format!("UCS bottom: {error}"))?.to_vec(),
-        ucs_origin_left: reader.read_3bd().await.map_err(|error| format!("UCS left: {error}"))?.to_vec(),
-        ucs_origin_right: reader.read_3bd().await.map_err(|error| format!("UCS right: {error}"))?.to_vec(),
-        ucs_origin_front: reader.read_3bd().await.map_err(|error| format!("UCS front: {error}"))?.to_vec(),
-        ucs_origin_back: reader.read_3bd().await.map_err(|error| format!("UCS back: {error}"))?.to_vec(),
+        insertion_base: reader.read_3bd().map_err(|error| format!("insertion base: {error}"))?.to_vec(),
+        extents_minimum: reader.read_3bd().map_err(|error| format!("extents minimum: {error}"))?.to_vec(),
+        extents_maximum: reader.read_3bd().map_err(|error| format!("extents maximum: {error}"))?.to_vec(),
+        limits_minimum: reader.read_2rd()?.to_vec(),
+        limits_maximum: reader.read_2rd()?.to_vec(),
+        elevation: reader.read_bd().map_err(|error| format!("elevation: {error}"))?,
+        ucs_origin: reader.read_3bd().map_err(|error| format!("UCS origin: {error}"))?.to_vec(),
+        ucs_x_axis: reader.read_3bd().map_err(|error| format!("UCS X axis: {error}"))?.to_vec(),
+        ucs_y_axis: reader.read_3bd().map_err(|error| format!("UCS Y axis: {error}"))?.to_vec(),
+        ucs_orthographic_view: reader.read_bs()?,
+        ucs_origin_top: reader.read_3bd().map_err(|error| format!("UCS top: {error}"))?.to_vec(),
+        ucs_origin_bottom: reader.read_3bd().map_err(|error| format!("UCS bottom: {error}"))?.to_vec(),
+        ucs_origin_left: reader.read_3bd().map_err(|error| format!("UCS left: {error}"))?.to_vec(),
+        ucs_origin_right: reader.read_3bd().map_err(|error| format!("UCS right: {error}"))?.to_vec(),
+        ucs_origin_front: reader.read_3bd().map_err(|error| format!("UCS front: {error}"))?.to_vec(),
+        ucs_origin_back: reader.read_3bd().map_err(|error| format!("UCS back: {error}"))?.to_vec(),
     })
 }
 
-async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVariables) -> Result<Vec<u8>, String> {
-    let mut main = DwgBitWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVariables) -> Result<Vec<u8>, String> {
+    let mut main = DwgBitWriter::new();
     let u = &value.units;
     for number in [u.unit1_conversion, u.unit2_conversion, u.unit3_conversion, u.unit4_conversion] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_bl(2_454_805).await;
-    main.write_bl(60_784_745).await;
+    main.write_bl(2_454_805);
+    main.write_bl(60_784_745);
     let m = &value.modes;
     for flag in [m.dimension_associative, m.dimension_show, m.polyline_generation, m.orthographic_mode, m.regeneration_mode, m.fill_mode, m.quick_text_mode, m.paper_space_linetype_scale, m.limits_check] {
-        main.write_b(flag).await;
+        main.write_b(flag);
     }
-    main.write_b(false).await;
+    main.write_b(false);
     for flag in [m.user_timer, m.sketch_polyline, m.angle_direction, m.spline_frame, m.mirror_text, m.world_view, m.tile_mode, m.paper_limits_check, m.visual_retain, m.display_silhouette, m.polyline_ellipse] {
-        main.write_b(flag).await;
+        main.write_b(flag);
     }
     let i = &value.integers;
-    main.write_bs(i.proxy_graphics).await;
-    main.write_bs(i.tree_depth as u16).await;
-    main.write_bs(i.linear_units).await;
-    main.write_bs(i.linear_precision).await;
-    main.write_bs(i.angular_units).await;
-    main.write_bs(i.angular_precision).await;
-    main.write_bs(i.attribute_mode).await;
-    main.write_bs(i.point_display_mode).await;
-    main.write_bl(0x30303030).await;
-    main.write_bl(0x1d050900).await;
-    main.write_bl(0x4d353930).await;
+    main.write_bs(i.proxy_graphics);
+    main.write_bs(i.tree_depth as u16);
+    main.write_bs(i.linear_units);
+    main.write_bs(i.linear_precision);
+    main.write_bs(i.angular_units);
+    main.write_bs(i.angular_precision);
+    main.write_bs(i.attribute_mode);
+    main.write_bs(i.point_display_mode);
+    main.write_bl(0x30303030);
+    main.write_bl(0x1d050900);
+    main.write_bl(0x4d353930);
     for number in [i.user_integer1, i.user_integer2, i.user_integer3, i.user_integer4, i.user_integer5] {
-        main.write_bs(number as u16).await;
+        main.write_bs(number as u16);
     }
     for number in
         [i.spline_segments, i.surface_u, i.surface_v, i.surface_type, i.surface_tab1, i.surface_tab2, i.spline_type, i.shade_edge, i.shade_difference, i.unit_mode, i.maximum_active_viewports, i.isolines, i.multiline_justification, i.text_quality]
     {
-        main.write_bs(number).await;
+        main.write_bs(number);
     }
     let s = &value.scalars;
     for number in [
@@ -3064,39 +3224,39 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
         s.multiline_scale,
         s.current_entity_linetype_scale,
     ] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
     write_header_time(&mut main, &value.time.created_at);
     write_header_time(&mut main, &value.time.updated_at);
-    main.write_bl(0x44443434).await;
-    main.write_bl(0x140d0102).await;
-    main.write_bl(0x39343531).await;
+    main.write_bl(0x44443434);
+    main.write_bl(0x140d0102);
+    main.write_bl(0x39343531);
     write_header_time(&mut main, &value.time.editing_duration);
     write_header_time(&mut main, &value.time.user_timer_duration);
     write_header_color(&mut main, s.current_entity_color_index, 0xc0000000);
-    main.write_handle(0, value.relations.handle_seed).await;
-    main.write_bd(s.paper_space_viewport_scale).await;
-    write_header_space(&mut main, &value.paper_space, "paper space").await?;
-    write_header_space(&mut main, &value.model_space, "model space").await?;
+    main.write_handle(0, value.relations.handle_seed);
+    main.write_bd(s.paper_space_viewport_scale);
+    write_header_space(&mut main, &value.paper_space, "paper space")?;
+    write_header_space(&mut main, &value.model_space, "model space")?;
     let d = &value.dimensions;
     for number in [d.scale, d.arrow_size, d.extension_offset, d.line_increment, d.extension, d.rounding, d.line_extension, d.tolerance_plus, d.tolerance_minus, d.fixed_extension_length, d.jog_angle] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_bs(d.text_fill).await;
+    main.write_bs(d.text_fill);
     write_header_color(&mut main, d.text_fill_color_index, 0xc1000000);
     for flag in [d.tolerance, d.limits, d.text_inside_horizontal, d.text_outside_horizontal, d.suppress_extension1, d.suppress_extension2] {
-        main.write_b(flag).await;
+        main.write_b(flag);
     }
     for number in [d.text_above, d.zero_suppression, d.angular_zero_suppression, d.arc_symbol] {
-        main.write_bs(number).await;
+        main.write_bs(number);
     }
     for number in [d.text_height, d.center_mark, d.tick_size, d.alternate_scale, d.linear_factor, d.text_vertical_position, d.text_factor, d.gap, d.alternate_rounding] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_b(d.alternate_units).await;
-    main.write_bs(d.alternate_decimal_places).await;
+    main.write_b(d.alternate_units);
+    main.write_bs(d.alternate_decimal_places);
     for flag in [d.text_outside_force_line, d.separate_arrows, d.text_inside, d.suppress_outside] {
-        main.write_b(flag).await;
+        main.write_b(flag);
     }
     for color in [d.line_color_index, d.extension_color_index, d.text_color_index] {
         write_header_color(&mut main, color, 0xc1000000);
@@ -3114,68 +3274,68 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
         d.text_movement,
         d.justification,
     ] {
-        main.write_bs(number).await;
+        main.write_bs(number);
     }
     for flag in [d.suppress_dimension1, d.suppress_dimension2] {
-        main.write_b(flag).await;
+        main.write_b(flag);
     }
     for number in [d.tolerance_justification, d.tolerance_zero_suppression, d.alternate_zero_suppression, d.alternate_tolerance_zero_suppression] {
-        main.write_bs(number).await;
+        main.write_bs(number);
     }
-    main.write_b(d.user_positioned_text).await;
-    main.write_bs(d.fit).await;
-    main.write_b(d.fixed_extension_enabled).await;
-    main.write_b(d.text_direction).await;
-    main.write_bd(d.alternate_measurement_scale).await;
-    main.write_bd(d.measurement_scale).await;
-    main.write_bs(d.dimension_line_weight as u16).await;
-    main.write_bs(d.extension_line_weight as u16).await;
+    main.write_b(d.user_positioned_text);
+    main.write_bs(d.fit);
+    main.write_b(d.fixed_extension_enabled);
+    main.write_b(d.text_direction);
+    main.write_bd(d.alternate_measurement_scale);
+    main.write_bd(d.measurement_scale);
+    main.write_bs(d.dimension_line_weight as u16);
+    main.write_bs(d.extension_line_weight as u16);
     let p = &value.policy;
-    main.write_bs(p.text_stack_alignment).await;
-    main.write_bs(p.text_stack_size).await;
+    main.write_bs(p.text_stack_alignment);
+    main.write_bs(p.text_stack_size);
     if (p.current_entity_lineweight, p.end_caps, p.join_style, p.lineweight_display, p.external_reference_editing, p.extended_names, p.plot_style_mode, p.ole_startup) != (-1, 0, 0, false, true, true, true, false) {
         return Err("unsupported AC1024 packed drawing policy".into());
     }
-    main.write_bl(0x2a1d).await;
-    main.write_bs(p.insertion_units).await;
-    main.write_bs(p.current_plot_style_type).await;
+    main.write_bl(0x2a1d);
+    main.write_bs(p.insertion_units);
+    main.write_bs(p.current_plot_style_type);
     for number in [p.sort_entities, p.index_control, p.hide_text, p.xclip_frame, p.dimension_association, p.halo_gap] {
-        main.write_rc(number).await;
+        main.write_rc(number);
     }
-    main.write_bs(p.obscured_color).await;
-    main.write_bs(p.intersection_color).await;
-    main.write_rc(p.obscured_linetype).await;
-    main.write_rc(p.intersection_display).await;
-    main.write_b(p.camera_display).await;
-    main.write_bl(0).await;
-    main.write_bl(10).await;
-    main.write_bd(1.0).await;
+    main.write_bs(p.obscured_color);
+    main.write_bs(p.intersection_color);
+    main.write_rc(p.obscured_linetype);
+    main.write_rc(p.intersection_display);
+    main.write_b(p.camera_display);
+    main.write_bl(0);
+    main.write_bl(10);
+    main.write_bd(1.0);
     for number in [p.steps_per_second, p.step_size, p.dwf_3d_precision, p.lens_length, p.camera_height] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_rc(p.solid_history).await;
-    main.write_rc(p.show_history).await;
+    main.write_rc(p.solid_history);
+    main.write_rc(p.show_history);
     for number in [p.polysolid_width, p.polysolid_height, p.loft_angle1, p.loft_angle2, p.loft_magnitude1, p.loft_magnitude2] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_bs(p.loft_parameter).await;
-    main.write_rc(p.loft_normals).await;
+    main.write_bs(p.loft_parameter);
+    main.write_rc(p.loft_normals);
     for number in [p.latitude, p.longitude, p.north_direction] {
-        main.write_bd(number).await;
+        main.write_bd(number);
     }
-    main.write_bl(p.timezone as u32).await;
+    main.write_bl(p.timezone as u32);
     for number in [p.light_glyph_display, p.tile_mode_light_sync, p.dwf_frame, p.dgn_frame] {
-        main.write_rc(number).await;
+        main.write_rc(number);
     }
     if p.interfere_color_index != 256 {
         return Err("AC1024 INTERFERECOLOR must be the typed ByLayer color".into());
     }
-    main.write_b(p.real_world_scale).await;
+    main.write_b(p.real_world_scale);
     write_header_color(&mut main, 0, 0xc3000001);
-    main.write_rc(p.shadow_mode).await;
-    main.write_bd(p.shadow_plane_location).await;
+    main.write_rc(p.shadow_mode);
+    main.write_bd(p.shadow_plane_location);
 
-    let mut strings = DwgBitWriter::new().await;
+    let mut strings = DwgBitWriter::new();
     for text in [
         &u.unit1_name,
         &u.unit2_name,
@@ -3192,28 +3352,28 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
         &value.strings.version_guid,
         &value.strings.project_name,
     ] {
-        strings.write_tu(text).await;
+        strings.write_tu(text);
     }
-    let mut handles = DwgBitWriter::new().await;
+    let mut handles = DwgBitWriter::new();
     let r = &value.relations;
     let required = [r.current_layer, r.text_style, r.current_linetype, r.current_material, r.dimension_style, r.multiline_style];
     for handle in required {
-        handles.write_handle(5, handle).await;
+        handles.write_handle(5, handle);
     }
     for handle in [r.paper_ucs_name, r.paper_ucs_orthographic_reference, r.paper_ucs_base, r.model_ucs_name, r.model_ucs_orthographic_reference, r.model_ucs_base] {
-        handles.write_handle(5, handle.unwrap_or(0)).await;
+        handles.write_handle(5, handle.unwrap_or(0));
     }
-    handles.write_handle(5, r.dimension_text_style).await;
+    handles.write_handle(5, r.dimension_text_style);
     for handle in [r.dimension_leader_block, r.dimension_block, r.dimension_block1, r.dimension_block2, r.dimension_linetype, r.dimension_extension_linetype1, r.dimension_extension_linetype2] {
-        handles.write_handle(5, handle.unwrap_or(0)).await;
+        handles.write_handle(5, handle.unwrap_or(0));
     }
     for handle in [r.block_control, r.layer_control, r.style_control, r.linetype_control, r.view_control, r.ucs_control, r.viewport_control, r.appid_control, r.dimension_style_control] {
-        handles.write_handle(3, handle).await;
+        handles.write_handle(3, handle);
     }
     for handle in [r.group_dictionary, r.multiline_style_dictionary] {
-        handles.write_handle(5, handle).await;
+        handles.write_handle(5, handle);
     }
-    handles.write_handle(3, r.named_objects_dictionary).await;
+    handles.write_handle(3, r.named_objects_dictionary);
     for handle in [
         r.layout_dictionary,
         r.plot_settings_dictionary,
@@ -3227,29 +3387,29 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
         r.by_block_linetype,
         r.continuous_linetype,
     ] {
-        handles.write_handle(5, handle).await;
+        handles.write_handle(5, handle);
     }
     for handle in [r.interfere_object_visual_style, r.interfere_viewport_visual_style, r.drag_visual_style] {
-        handles.write_handle(5, handle.unwrap_or(0)).await;
+        handles.write_handle(5, handle.unwrap_or(0));
     }
     for value in [0xbfc4, 0x122d, 0xa23e, 0xb717] {
-        handles.write_bs(value).await;
+        handles.write_bs(value);
     }
-    handles.write_bl(0).await;
-    handles.write_bl(0).await;
-    handles.write_b(true).await;
-    handles.write_b(true).await;
-    handles.write_b(true).await;
-    handles.write_b(true).await;
-    let string_bits = strings.bit_len().await;
-    main.append_bits(&strings).await;
-    main.write_rs(string_bits as u16).await;
-    main.write_b(true).await;
-    if main.bit_len().await != 6_104 {
-        return Err(format!("AC1024 Header main/string boundary {} != 6104", main.bit_len().await));
+    handles.write_bl(0);
+    handles.write_bl(0);
+    handles.write_b(true);
+    handles.write_b(true);
+    handles.write_b(true);
+    handles.write_b(true);
+    let string_bits = strings.bit_len();
+    main.append_bits(&strings);
+    main.write_rs(string_bits as u16);
+    main.write_b(true);
+    if main.bit_len() != 6_104 {
+        return Err(format!("AC1024 Header main/string boundary {} != 6104", main.bit_len()));
     }
-    main.append_bits(&handles).await;
-    main.pad_to_byte().await;
+    main.append_bits(&handles);
+    main.pad_to_byte();
     if main.bytes.len() != 854 {
         return Err(format!("AC1024 Header stream length {} != 854", main.bytes.len()));
     }
@@ -3259,7 +3419,7 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
     push_u32(&mut output, 6_136);
     output.extend_from_slice(&main.bytes);
     let crc = dwg_crc16(0xc0c1, &output[16..]);
-    push_u16(&mut output, crc.await);
+    push_u16(&mut output, crc);
     output.extend_from_slice(&DWG_HEADER_END);
     if output.len() != 896 {
         return Err(format!("AC1024 Header length {} != 896", output.len()));
@@ -3267,8 +3427,9 @@ async fn encode_r2010_header_section(value: &crate::artifacts::dwg::DwgHeaderVar
     Ok(output)
 }
 
-async fn read_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> Result<u64, String> {
-    let (code, value) = reader.read_handle().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> Result<u64, String> {
+    let (code, value) = reader.read_handle()?;
     let expected = match name {
         "block_control" | "layer_control" | "style_control" | "linetype_control" | "view_control" | "ucs_control" | "viewport_control" | "appid_control" | "dimension_style_control" | "named_objects_dictionary" => 3,
         _ => 5,
@@ -3279,11 +3440,13 @@ async fn read_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> Resu
     Ok(value)
 }
 
-async fn read_optional_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> Result<Option<u64>, String> {
-    Ok(Some(read_header_relation(reader, name).await?).filter(|value| *value != 0))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_optional_header_relation(reader: &mut DwgBitReader<'_>, name: &str) -> Result<Option<u64>, String> {
+    Ok(Some(read_header_relation(reader, name)?).filter(|value| *value != 0))
 }
 
-async fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgHeaderVariables, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::dwg::DwgHeaderVariables, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgHeaderVariables;
     if bytes.len() != 896 || bytes[..16] != DWG_HEADER_BEGIN || bytes[880..] != DWG_HEADER_END {
         return Err("AC1024 Header framing changed".into());
@@ -3297,180 +3460,180 @@ async fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::d
     }
     let stream = &bytes[24..878];
     let boundary = 6_104usize;
-    let mut main = DwgBitReader::new(stream).await;
+    let mut main = DwgBitReader::new(stream);
     let mut value = DwgHeaderVariables::default();
     let u = &mut value.units;
-    u.unit1_conversion = main.read_bd().await?;
-    u.unit2_conversion = main.read_bd().await?;
-    u.unit3_conversion = main.read_bd().await?;
-    u.unit4_conversion = main.read_bd().await?;
-    if main.read_bl().await? != 2_454_805 || main.read_bl().await? != 60_784_745 {
+    u.unit1_conversion = main.read_bd()?;
+    u.unit2_conversion = main.read_bd()?;
+    u.unit3_conversion = main.read_bd()?;
+    u.unit4_conversion = main.read_bd()?;
+    if main.read_bl()? != 2_454_805 || main.read_bl()? != 60_784_745 {
         return Err("unsupported AC1024 Header producer date profile".into());
     }
     let m = &mut value.modes;
-    m.dimension_associative = main.read_b().await?;
-    m.dimension_show = main.read_b().await?;
-    m.polyline_generation = main.read_b().await?;
-    m.orthographic_mode = main.read_b().await?;
-    m.regeneration_mode = main.read_b().await?;
-    m.fill_mode = main.read_b().await?;
-    m.quick_text_mode = main.read_b().await?;
-    m.paper_space_linetype_scale = main.read_b().await?;
-    m.limits_check = main.read_b().await?;
-    if main.read_b().await? {
+    m.dimension_associative = main.read_b()?;
+    m.dimension_show = main.read_b()?;
+    m.polyline_generation = main.read_b()?;
+    m.orthographic_mode = main.read_b()?;
+    m.regeneration_mode = main.read_b()?;
+    m.fill_mode = main.read_b()?;
+    m.quick_text_mode = main.read_b()?;
+    m.paper_space_linetype_scale = main.read_b()?;
+    m.limits_check = main.read_b()?;
+    if main.read_b()? {
         return Err("unsupported AC1024 Header limits feature marker".into());
     }
-    m.user_timer = main.read_b().await?;
-    m.sketch_polyline = main.read_b().await?;
-    m.angle_direction = main.read_b().await?;
-    m.spline_frame = main.read_b().await?;
-    m.mirror_text = main.read_b().await?;
-    m.world_view = main.read_b().await?;
-    m.tile_mode = main.read_b().await?;
-    m.paper_limits_check = main.read_b().await?;
-    m.visual_retain = main.read_b().await?;
-    m.display_silhouette = main.read_b().await?;
-    m.polyline_ellipse = main.read_b().await?;
+    m.user_timer = main.read_b()?;
+    m.sketch_polyline = main.read_b()?;
+    m.angle_direction = main.read_b()?;
+    m.spline_frame = main.read_b()?;
+    m.mirror_text = main.read_b()?;
+    m.world_view = main.read_b()?;
+    m.tile_mode = main.read_b()?;
+    m.paper_limits_check = main.read_b()?;
+    m.visual_retain = main.read_b()?;
+    m.display_silhouette = main.read_b()?;
+    m.polyline_ellipse = main.read_b()?;
     let i = &mut value.integers;
-    i.proxy_graphics = main.read_bs().await?;
-    i.tree_depth = main.read_bs().await? as i16;
-    i.linear_units = main.read_bs().await?;
-    i.linear_precision = main.read_bs().await?;
-    i.angular_units = main.read_bs().await?;
-    i.angular_precision = main.read_bs().await?;
-    i.attribute_mode = main.read_bs().await?;
-    i.point_display_mode = main.read_bs().await?;
-    if [main.read_bl().await?, main.read_bl().await?, main.read_bl().await?] != [0x30303030, 0x1d050900, 0x4d353930] {
+    i.proxy_graphics = main.read_bs()?;
+    i.tree_depth = main.read_bs()? as i16;
+    i.linear_units = main.read_bs()?;
+    i.linear_precision = main.read_bs()?;
+    i.angular_units = main.read_bs()?;
+    i.angular_precision = main.read_bs()?;
+    i.attribute_mode = main.read_bs()?;
+    i.point_display_mode = main.read_bs()?;
+    if [main.read_bl()?, main.read_bl()?, main.read_bl()?] != [0x30303030, 0x1d050900, 0x4d353930] {
         return Err("unsupported AC1024 Header producer generation".into());
     }
-    i.user_integer1 = main.read_bs().await? as i16;
-    i.user_integer2 = main.read_bs().await? as i16;
-    i.user_integer3 = main.read_bs().await? as i16;
-    i.user_integer4 = main.read_bs().await? as i16;
-    i.user_integer5 = main.read_bs().await? as i16;
-    i.spline_segments = main.read_bs().await?;
-    i.surface_u = main.read_bs().await?;
-    i.surface_v = main.read_bs().await?;
-    i.surface_type = main.read_bs().await?;
-    i.surface_tab1 = main.read_bs().await?;
-    i.surface_tab2 = main.read_bs().await?;
-    i.spline_type = main.read_bs().await?;
-    i.shade_edge = main.read_bs().await?;
-    i.shade_difference = main.read_bs().await?;
-    i.unit_mode = main.read_bs().await?;
-    i.maximum_active_viewports = main.read_bs().await?;
-    i.isolines = main.read_bs().await?;
-    i.multiline_justification = main.read_bs().await?;
-    i.text_quality = main.read_bs().await?;
+    i.user_integer1 = main.read_bs()? as i16;
+    i.user_integer2 = main.read_bs()? as i16;
+    i.user_integer3 = main.read_bs()? as i16;
+    i.user_integer4 = main.read_bs()? as i16;
+    i.user_integer5 = main.read_bs()? as i16;
+    i.spline_segments = main.read_bs()?;
+    i.surface_u = main.read_bs()?;
+    i.surface_v = main.read_bs()?;
+    i.surface_type = main.read_bs()?;
+    i.surface_tab1 = main.read_bs()?;
+    i.surface_tab2 = main.read_bs()?;
+    i.spline_type = main.read_bs()?;
+    i.shade_edge = main.read_bs()?;
+    i.shade_difference = main.read_bs()?;
+    i.unit_mode = main.read_bs()?;
+    i.maximum_active_viewports = main.read_bs()?;
+    i.isolines = main.read_bs()?;
+    i.multiline_justification = main.read_bs()?;
+    i.text_quality = main.read_bs()?;
     let s = &mut value.scalars;
-    s.linetype_scale = main.read_bd().await?;
-    s.text_size = main.read_bd().await?;
-    s.trace_width = main.read_bd().await?;
-    s.sketch_increment = main.read_bd().await?;
-    s.fillet_radius = main.read_bd().await?;
-    s.thickness = main.read_bd().await?;
-    s.angle_base = main.read_bd().await?;
-    s.point_display_size = main.read_bd().await?;
-    s.polyline_width = main.read_bd().await?;
-    s.user_real1 = main.read_bd().await?;
-    s.user_real2 = main.read_bd().await?;
-    s.user_real3 = main.read_bd().await?;
-    s.user_real4 = main.read_bd().await?;
-    s.user_real5 = main.read_bd().await?;
-    s.chamfer_a = main.read_bd().await?;
-    s.chamfer_b = main.read_bd().await?;
-    s.chamfer_c = main.read_bd().await?;
-    s.chamfer_d = main.read_bd().await?;
-    s.facet_resolution = main.read_bd().await?;
-    s.multiline_scale = main.read_bd().await?;
-    s.current_entity_linetype_scale = main.read_bd().await?;
-    value.time.created_at = read_header_time(&mut main).await?;
-    value.time.updated_at = read_header_time(&mut main).await?;
-    if [main.read_bl().await?, main.read_bl().await?, main.read_bl().await?] != [0x44443434, 0x140d0102, 0x39343531] {
+    s.linetype_scale = main.read_bd()?;
+    s.text_size = main.read_bd()?;
+    s.trace_width = main.read_bd()?;
+    s.sketch_increment = main.read_bd()?;
+    s.fillet_radius = main.read_bd()?;
+    s.thickness = main.read_bd()?;
+    s.angle_base = main.read_bd()?;
+    s.point_display_size = main.read_bd()?;
+    s.polyline_width = main.read_bd()?;
+    s.user_real1 = main.read_bd()?;
+    s.user_real2 = main.read_bd()?;
+    s.user_real3 = main.read_bd()?;
+    s.user_real4 = main.read_bd()?;
+    s.user_real5 = main.read_bd()?;
+    s.chamfer_a = main.read_bd()?;
+    s.chamfer_b = main.read_bd()?;
+    s.chamfer_c = main.read_bd()?;
+    s.chamfer_d = main.read_bd()?;
+    s.facet_resolution = main.read_bd()?;
+    s.multiline_scale = main.read_bd()?;
+    s.current_entity_linetype_scale = main.read_bd()?;
+    value.time.created_at = read_header_time(&mut main)?;
+    value.time.updated_at = read_header_time(&mut main)?;
+    if [main.read_bl()?, main.read_bl()?, main.read_bl()?] != [0x44443434, 0x140d0102, 0x39343531] {
         return Err("unsupported AC1024 Header time producer profile".into());
     }
-    value.time.editing_duration = read_header_time(&mut main).await?;
-    value.time.user_timer_duration = read_header_time(&mut main).await?;
-    s.current_entity_color_index = read_header_color(&mut main, 0xc0000000, "CECOLOR").await?;
-    let (seed_code, seed) = main.read_handle().await?;
+    value.time.editing_duration = read_header_time(&mut main)?;
+    value.time.user_timer_duration = read_header_time(&mut main)?;
+    s.current_entity_color_index = read_header_color(&mut main, 0xc0000000, "CECOLOR")?;
+    let (seed_code, seed) = main.read_handle()?;
     if seed_code != 0 {
         return Err(format!("AC1024 HANDSEED code {seed_code} != 0"));
     }
     value.relations.handle_seed = seed;
-    s.paper_space_viewport_scale = main.read_bd().await?;
-    value.paper_space = read_header_space(&mut main).await.map_err(|error| format!("paper-space Header geometry: {error}"))?;
-    value.model_space = read_header_space(&mut main).await.map_err(|error| format!("model-space Header geometry: {error}"))?;
+    s.paper_space_viewport_scale = main.read_bd()?;
+    value.paper_space = read_header_space(&mut main).map_err(|error| format!("paper-space Header geometry: {error}"))?;
+    value.model_space = read_header_space(&mut main).map_err(|error| format!("model-space Header geometry: {error}"))?;
     let d = &mut value.dimensions;
-    d.scale = main.read_bd().await?;
-    d.arrow_size = main.read_bd().await?;
-    d.extension_offset = main.read_bd().await?;
-    d.line_increment = main.read_bd().await?;
-    d.extension = main.read_bd().await?;
-    d.rounding = main.read_bd().await?;
-    d.line_extension = main.read_bd().await?;
-    d.tolerance_plus = main.read_bd().await?;
-    d.tolerance_minus = main.read_bd().await?;
-    d.fixed_extension_length = main.read_bd().await?;
-    d.jog_angle = main.read_bd().await?;
-    d.text_fill = main.read_bs().await?;
-    d.text_fill_color_index = read_header_color(&mut main, 0xc1000000, "DIMTFILLCLR").await?;
-    d.tolerance = main.read_b().await?;
-    d.limits = main.read_b().await?;
-    d.text_inside_horizontal = main.read_b().await?;
-    d.text_outside_horizontal = main.read_b().await?;
-    d.suppress_extension1 = main.read_b().await?;
-    d.suppress_extension2 = main.read_b().await?;
-    d.text_above = main.read_bs().await?;
-    d.zero_suppression = main.read_bs().await?;
-    d.angular_zero_suppression = main.read_bs().await?;
-    d.arc_symbol = main.read_bs().await?;
-    d.text_height = main.read_bd().await?;
-    d.center_mark = main.read_bd().await?;
-    d.tick_size = main.read_bd().await?;
-    d.alternate_scale = main.read_bd().await?;
-    d.linear_factor = main.read_bd().await?;
-    d.text_vertical_position = main.read_bd().await?;
-    d.text_factor = main.read_bd().await?;
-    d.gap = main.read_bd().await?;
-    d.alternate_rounding = main.read_bd().await?;
-    d.alternate_units = main.read_b().await?;
-    d.alternate_decimal_places = main.read_bs().await?;
-    d.text_outside_force_line = main.read_b().await?;
-    d.separate_arrows = main.read_b().await?;
-    d.text_inside = main.read_b().await?;
-    d.suppress_outside = main.read_b().await?;
-    d.line_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRD").await?;
-    d.extension_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRE").await?;
-    d.text_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRT").await?;
-    d.angular_decimal_places = main.read_bs().await?;
-    d.decimal_places = main.read_bs().await?;
-    d.tolerance_decimal_places = main.read_bs().await?;
-    d.alternate_units_format = main.read_bs().await?;
-    d.alternate_tolerance_decimal_places = main.read_bs().await?;
-    d.angular_unit_format = main.read_bs().await?;
-    d.fractional_format = main.read_bs().await?;
-    d.linear_unit_format = main.read_bs().await?;
-    d.decimal_separator = main.read_bs().await?;
-    d.text_movement = main.read_bs().await?;
-    d.justification = main.read_bs().await?;
-    d.suppress_dimension1 = main.read_b().await?;
-    d.suppress_dimension2 = main.read_b().await?;
-    d.tolerance_justification = main.read_bs().await?;
-    d.tolerance_zero_suppression = main.read_bs().await?;
-    d.alternate_zero_suppression = main.read_bs().await?;
-    d.alternate_tolerance_zero_suppression = main.read_bs().await?;
-    d.user_positioned_text = main.read_b().await?;
-    d.fit = main.read_bs().await?;
-    d.fixed_extension_enabled = main.read_b().await?;
-    d.text_direction = main.read_b().await?;
-    d.alternate_measurement_scale = main.read_bd().await?;
-    d.measurement_scale = main.read_bd().await?;
-    d.dimension_line_weight = main.read_bs().await? as i16;
-    d.extension_line_weight = main.read_bs().await? as i16;
+    d.scale = main.read_bd()?;
+    d.arrow_size = main.read_bd()?;
+    d.extension_offset = main.read_bd()?;
+    d.line_increment = main.read_bd()?;
+    d.extension = main.read_bd()?;
+    d.rounding = main.read_bd()?;
+    d.line_extension = main.read_bd()?;
+    d.tolerance_plus = main.read_bd()?;
+    d.tolerance_minus = main.read_bd()?;
+    d.fixed_extension_length = main.read_bd()?;
+    d.jog_angle = main.read_bd()?;
+    d.text_fill = main.read_bs()?;
+    d.text_fill_color_index = read_header_color(&mut main, 0xc1000000, "DIMTFILLCLR")?;
+    d.tolerance = main.read_b()?;
+    d.limits = main.read_b()?;
+    d.text_inside_horizontal = main.read_b()?;
+    d.text_outside_horizontal = main.read_b()?;
+    d.suppress_extension1 = main.read_b()?;
+    d.suppress_extension2 = main.read_b()?;
+    d.text_above = main.read_bs()?;
+    d.zero_suppression = main.read_bs()?;
+    d.angular_zero_suppression = main.read_bs()?;
+    d.arc_symbol = main.read_bs()?;
+    d.text_height = main.read_bd()?;
+    d.center_mark = main.read_bd()?;
+    d.tick_size = main.read_bd()?;
+    d.alternate_scale = main.read_bd()?;
+    d.linear_factor = main.read_bd()?;
+    d.text_vertical_position = main.read_bd()?;
+    d.text_factor = main.read_bd()?;
+    d.gap = main.read_bd()?;
+    d.alternate_rounding = main.read_bd()?;
+    d.alternate_units = main.read_b()?;
+    d.alternate_decimal_places = main.read_bs()?;
+    d.text_outside_force_line = main.read_b()?;
+    d.separate_arrows = main.read_b()?;
+    d.text_inside = main.read_b()?;
+    d.suppress_outside = main.read_b()?;
+    d.line_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRD")?;
+    d.extension_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRE")?;
+    d.text_color_index = read_header_color(&mut main, 0xc1000000, "DIMCLRT")?;
+    d.angular_decimal_places = main.read_bs()?;
+    d.decimal_places = main.read_bs()?;
+    d.tolerance_decimal_places = main.read_bs()?;
+    d.alternate_units_format = main.read_bs()?;
+    d.alternate_tolerance_decimal_places = main.read_bs()?;
+    d.angular_unit_format = main.read_bs()?;
+    d.fractional_format = main.read_bs()?;
+    d.linear_unit_format = main.read_bs()?;
+    d.decimal_separator = main.read_bs()?;
+    d.text_movement = main.read_bs()?;
+    d.justification = main.read_bs()?;
+    d.suppress_dimension1 = main.read_b()?;
+    d.suppress_dimension2 = main.read_b()?;
+    d.tolerance_justification = main.read_bs()?;
+    d.tolerance_zero_suppression = main.read_bs()?;
+    d.alternate_zero_suppression = main.read_bs()?;
+    d.alternate_tolerance_zero_suppression = main.read_bs()?;
+    d.user_positioned_text = main.read_b()?;
+    d.fit = main.read_bs()?;
+    d.fixed_extension_enabled = main.read_b()?;
+    d.text_direction = main.read_b()?;
+    d.alternate_measurement_scale = main.read_bd()?;
+    d.measurement_scale = main.read_bd()?;
+    d.dimension_line_weight = main.read_bs()? as i16;
+    d.extension_line_weight = main.read_bs()? as i16;
     let p = &mut value.policy;
-    p.text_stack_alignment = main.read_bs().await?;
-    p.text_stack_size = main.read_bs().await?;
-    if main.read_bl().await? != 0x2a1d {
+    p.text_stack_alignment = main.read_bs()?;
+    p.text_stack_size = main.read_bs()?;
+    if main.read_bl()? != 0x2a1d {
         return Err("unsupported AC1024 Header packed drawing policy".into());
     }
     p.current_entity_lineweight = -1;
@@ -3481,70 +3644,70 @@ async fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::d
     p.extended_names = true;
     p.plot_style_mode = true;
     p.ole_startup = false;
-    p.insertion_units = main.read_bs().await?;
-    p.current_plot_style_type = main.read_bs().await?;
-    p.sort_entities = main.read_rc().await?;
-    p.index_control = main.read_rc().await?;
-    p.hide_text = main.read_rc().await?;
-    p.xclip_frame = main.read_rc().await?;
-    p.dimension_association = main.read_rc().await?;
-    p.halo_gap = main.read_rc().await?;
-    p.obscured_color = main.read_bs().await?;
-    p.intersection_color = main.read_bs().await?;
-    p.obscured_linetype = main.read_rc().await?;
-    p.intersection_display = main.read_rc().await?;
-    p.camera_display = main.read_b().await?;
-    if [main.read_bl().await?, main.read_bl().await?] != [0, 10] || main.read_bd().await? != 1.0 {
+    p.insertion_units = main.read_bs()?;
+    p.current_plot_style_type = main.read_bs()?;
+    p.sort_entities = main.read_rc()?;
+    p.index_control = main.read_rc()?;
+    p.hide_text = main.read_rc()?;
+    p.xclip_frame = main.read_rc()?;
+    p.dimension_association = main.read_rc()?;
+    p.halo_gap = main.read_rc()?;
+    p.obscured_color = main.read_bs()?;
+    p.intersection_color = main.read_bs()?;
+    p.obscured_linetype = main.read_rc()?;
+    p.intersection_display = main.read_rc()?;
+    p.camera_display = main.read_b()?;
+    if [main.read_bl()?, main.read_bl()?] != [0, 10] || main.read_bd()? != 1.0 {
         return Err("unsupported AC1024 Header render profile".into());
     }
-    p.steps_per_second = main.read_bd().await?;
-    p.step_size = main.read_bd().await?;
-    p.dwf_3d_precision = main.read_bd().await?;
-    p.lens_length = main.read_bd().await?;
-    p.camera_height = main.read_bd().await?;
-    p.solid_history = main.read_rc().await?;
-    p.show_history = main.read_rc().await?;
-    p.polysolid_width = main.read_bd().await?;
-    p.polysolid_height = main.read_bd().await?;
-    p.loft_angle1 = main.read_bd().await?;
-    p.loft_angle2 = main.read_bd().await?;
-    p.loft_magnitude1 = main.read_bd().await?;
-    p.loft_magnitude2 = main.read_bd().await?;
-    p.loft_parameter = main.read_bs().await?;
-    p.loft_normals = main.read_rc().await?;
-    p.latitude = main.read_bd().await?;
-    p.longitude = main.read_bd().await?;
-    p.north_direction = main.read_bd().await?;
-    p.timezone = main.read_bl().await? as i32;
-    p.light_glyph_display = main.read_rc().await?;
-    p.tile_mode_light_sync = main.read_rc().await?;
-    p.dwf_frame = main.read_rc().await?;
-    p.dgn_frame = main.read_rc().await?;
-    p.real_world_scale = main.read_b().await?;
-    if read_header_color(&mut main, 0xc3000001, "INTERFERECOLOR").await? != 0 {
+    p.steps_per_second = main.read_bd()?;
+    p.step_size = main.read_bd()?;
+    p.dwf_3d_precision = main.read_bd()?;
+    p.lens_length = main.read_bd()?;
+    p.camera_height = main.read_bd()?;
+    p.solid_history = main.read_rc()?;
+    p.show_history = main.read_rc()?;
+    p.polysolid_width = main.read_bd()?;
+    p.polysolid_height = main.read_bd()?;
+    p.loft_angle1 = main.read_bd()?;
+    p.loft_angle2 = main.read_bd()?;
+    p.loft_magnitude1 = main.read_bd()?;
+    p.loft_magnitude2 = main.read_bd()?;
+    p.loft_parameter = main.read_bs()?;
+    p.loft_normals = main.read_rc()?;
+    p.latitude = main.read_bd()?;
+    p.longitude = main.read_bd()?;
+    p.north_direction = main.read_bd()?;
+    p.timezone = main.read_bl()? as i32;
+    p.light_glyph_display = main.read_rc()?;
+    p.tile_mode_light_sync = main.read_rc()?;
+    p.dwf_frame = main.read_rc()?;
+    p.dgn_frame = main.read_rc()?;
+    p.real_world_scale = main.read_b()?;
+    if read_header_color(&mut main, 0xc3000001, "INTERFERECOLOR")? != 0 {
         return Err("unsupported AC1024 INTERFERECOLOR index".into());
     }
     p.interfere_color_index = 256;
-    p.shadow_mode = main.read_rc().await?;
-    p.shadow_plane_location = main.read_bd().await?;
-    if main.bit_position().await != 4779 {
-        return Err(format!("AC1024 Header main cursor {} != 4779", main.bit_position().await));
+    p.shadow_mode = main.read_rc()?;
+    p.shadow_plane_location = main.read_bd()?;
+    if main.bit_position() != 4779 {
+        return Err(format!("AC1024 Header main cursor {} != 4779", main.bit_position()));
     }
-    let mut strings = DwgBitReader::at_bit(stream, main.bit_position().await).await?;
-    u.unit1_name = strings.read_tu().await?;
-    u.unit2_name = strings.read_tu().await?;
-    u.unit3_name = strings.read_tu().await?;
-    u.unit4_name = strings.read_tu().await?;
-    value.strings.menu = strings.read_tu().await?;
-    value.strings.dimension_postfix = strings.read_tu().await?;
-    value.strings.dimension_alternate_postfix = strings.read_tu().await?;
-    value.strings.dimension_alternate_measurement_zero_suffix = strings.read_tu().await?;
-    value.strings.dimension_measurement_zero_suffix = strings.read_tu().await?;
-    value.strings.hyperlink_base = strings.read_tu().await?;
-    value.strings.stylesheet = strings.read_tu().await?;
-    value.strings.fingerprint_guid = strings.read_tu().await?;
-    value.strings.version_guid = strings.read_tu().await?;
-    value.strings.project_name = strings.read_tu().await?;
+    let mut strings = DwgBitReader::at_bit(stream, main.bit_position())?;
+    u.unit1_name = strings.read_tu()?;
+    u.unit2_name = strings.read_tu()?;
+    u.unit3_name = strings.read_tu()?;
+    u.unit4_name = strings.read_tu()?;
+    value.strings.menu = strings.read_tu()?;
+    value.strings.dimension_postfix = strings.read_tu()?;
+    value.strings.dimension_alternate_postfix = strings.read_tu()?;
+    value.strings.dimension_alternate_measurement_zero_suffix = strings.read_tu()?;
+    value.strings.dimension_measurement_zero_suffix = strings.read_tu()?;
+    value.strings.hyperlink_base = strings.read_tu()?;
+    value.strings.stylesheet = strings.read_tu()?;
+    value.strings.fingerprint_guid = strings.read_tu()?;
+    value.strings.version_guid = strings.read_tu()?;
+    value.strings.project_name = strings.read_tu()?;
     let actual_strings = [
         &u.unit1_name,
         &u.unit2_name,
@@ -3565,34 +3728,34 @@ async fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::d
     if actual_strings.iter().zip(expected_strings).any(|(actual, expected)| actual.as_str() != expected) {
         return Err(format!("AC1024 Header strings changed at bit {}: {actual_strings:?}", strings.bit_position()));
     }
-    if strings.bit_position() != 6087 || strings.read_rs().await? != 1308 || !strings.read_b().await? || strings.bit_position() != boundary {
+    if strings.bit_position() != 6087 || strings.read_rs()? != 1308 || !strings.read_b()? || strings.bit_position() != boundary {
         return Err("AC1024 Header string footer changed".into());
     }
-    let mut handles = DwgBitReader::at_bit(stream, boundary).await?;
+    let mut handles = DwgBitReader::at_bit(stream, boundary)?;
     let r = &mut value.relations;
-    r.current_layer = read_header_relation(&mut handles, "CLAYER").await?;
-    r.text_style = read_header_relation(&mut handles, "TEXTSTYLE").await?;
-    r.current_linetype = read_header_relation(&mut handles, "CELTYPE").await?;
-    r.current_material = read_header_relation(&mut handles, "CMATERIAL").await?;
-    r.dimension_style = read_header_relation(&mut handles, "DIMSTYLE").await?;
-    r.multiline_style = read_header_relation(&mut handles, "CMLSTYLE").await?;
-    r.paper_ucs_name = read_optional_header_relation(&mut handles, "PUCSNAME").await?;
-    r.paper_ucs_orthographic_reference = read_optional_header_relation(&mut handles, "PUCSORTHOREF").await?;
-    r.paper_ucs_base = read_optional_header_relation(&mut handles, "PUCSBASE").await?;
-    r.model_ucs_name = read_optional_header_relation(&mut handles, "UCSNAME").await?;
-    r.model_ucs_orthographic_reference = read_optional_header_relation(&mut handles, "UCSORTHOREF").await?;
-    r.model_ucs_base = read_optional_header_relation(&mut handles, "UCSBASE").await?;
-    r.dimension_text_style = read_header_relation(&mut handles, "DIMTXSTY").await?;
-    r.dimension_leader_block = read_optional_header_relation(&mut handles, "DIMLDRBLK").await?;
-    r.dimension_block = read_optional_header_relation(&mut handles, "DIMBLK").await?;
-    r.dimension_block1 = read_optional_header_relation(&mut handles, "DIMBLK1").await?;
-    r.dimension_block2 = read_optional_header_relation(&mut handles, "DIMBLK2").await?;
-    r.dimension_linetype = read_optional_header_relation(&mut handles, "DIMLTYPE").await?;
-    r.dimension_extension_linetype1 = read_optional_header_relation(&mut handles, "DIMLTEX1").await?;
-    r.dimension_extension_linetype2 = read_optional_header_relation(&mut handles, "DIMLTEX2").await?;
+    r.current_layer = read_header_relation(&mut handles, "CLAYER")?;
+    r.text_style = read_header_relation(&mut handles, "TEXTSTYLE")?;
+    r.current_linetype = read_header_relation(&mut handles, "CELTYPE")?;
+    r.current_material = read_header_relation(&mut handles, "CMATERIAL")?;
+    r.dimension_style = read_header_relation(&mut handles, "DIMSTYLE")?;
+    r.multiline_style = read_header_relation(&mut handles, "CMLSTYLE")?;
+    r.paper_ucs_name = read_optional_header_relation(&mut handles, "PUCSNAME")?;
+    r.paper_ucs_orthographic_reference = read_optional_header_relation(&mut handles, "PUCSORTHOREF")?;
+    r.paper_ucs_base = read_optional_header_relation(&mut handles, "PUCSBASE")?;
+    r.model_ucs_name = read_optional_header_relation(&mut handles, "UCSNAME")?;
+    r.model_ucs_orthographic_reference = read_optional_header_relation(&mut handles, "UCSORTHOREF")?;
+    r.model_ucs_base = read_optional_header_relation(&mut handles, "UCSBASE")?;
+    r.dimension_text_style = read_header_relation(&mut handles, "DIMTXSTY")?;
+    r.dimension_leader_block = read_optional_header_relation(&mut handles, "DIMLDRBLK")?;
+    r.dimension_block = read_optional_header_relation(&mut handles, "DIMBLK")?;
+    r.dimension_block1 = read_optional_header_relation(&mut handles, "DIMBLK1")?;
+    r.dimension_block2 = read_optional_header_relation(&mut handles, "DIMBLK2")?;
+    r.dimension_linetype = read_optional_header_relation(&mut handles, "DIMLTYPE")?;
+    r.dimension_extension_linetype1 = read_optional_header_relation(&mut handles, "DIMLTEX1")?;
+    r.dimension_extension_linetype2 = read_optional_header_relation(&mut handles, "DIMLTEX2")?;
     macro_rules! relation {
         ($field:ident) => {
-            r.$field = read_header_relation(&mut handles, stringify!($field)).await?;
+            r.$field = read_header_relation(&mut handles, stringify!($field))?;
         };
     }
     relation!(block_control);
@@ -3618,16 +3781,16 @@ async fn decode_r2010_header_section(bytes: &[u8]) -> Result<crate::artifacts::d
     relation!(by_layer_linetype);
     relation!(by_block_linetype);
     relation!(continuous_linetype);
-    r.interfere_object_visual_style = read_optional_header_relation(&mut handles, "INTERFEREOBJVS").await?;
-    r.interfere_viewport_visual_style = read_optional_header_relation(&mut handles, "INTERFEREVPVS").await?;
-    r.drag_visual_style = read_optional_header_relation(&mut handles, "DRAGVS").await?;
+    r.interfere_object_visual_style = read_optional_header_relation(&mut handles, "INTERFEREOBJVS")?;
+    r.interfere_viewport_visual_style = read_optional_header_relation(&mut handles, "INTERFEREVPVS")?;
+    r.drag_visual_style = read_optional_header_relation(&mut handles, "DRAGVS")?;
     for expected in [0xbfc4, 0x122d, 0xa23e, 0xb717] {
-        let actual = handles.read_bs().await?;
+        let actual = handles.read_bs()?;
         if actual != expected {
             return Err(format!("unsupported AC1024 Header producer compatibility value {actual:#x}"));
         }
     }
-    if handles.read_bl().await? != 0 || handles.read_bl().await? != 0 || !handles.read_b().await? || !(handles.read_b().await? && handles.read_b().await? && handles.read_b().await?) || handles.bit_position() != stream.len() * 8 {
+    if handles.read_bl()? != 0 || handles.read_bl()? != 0 || !handles.read_b()? || !(handles.read_b()? && handles.read_b()? && handles.read_b()?) || handles.bit_position() != stream.len() * 8 {
         return Err("unsupported AC1024 Header terminal framing".into());
     }
     Ok(value)
@@ -3645,29 +3808,31 @@ pub(crate) struct DwgDocumentSections {
     pub application_history: crate::artifacts::dwg::schema::snapshot::DwgApplicationHistory,
 }
 
-pub(crate) async fn decode_r2004_document_sections(bytes: &[u8]) -> Result<DwgDocumentSections, String> {
-    let sections = decode_r2004_sections(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_r2004_document_sections(bytes: &[u8]) -> Result<DwgDocumentSections, String> {
+    let sections = decode_r2004_sections(bytes)?;
     let data = |name: &str| -> Result<Vec<u8>, String> {
         let section = sections.iter().find(|section| section.name == name).ok_or_else(|| format!("R2004 {name} section missing"))?;
         r2004_section_data(section)
     };
     Ok(DwgDocumentSections {
-        header: decode_r2010_header_section(&data("AcDb:Header")?).await.map_err(|error| format!("AcDb:Header: {error}"))?,
-        dependencies: decode_dependencies(&data("AcDb:FileDepList")?).await.map_err(|error| format!("AcDb:FileDepList: {error}"))?,
-        summary: decode_summary_info(&data("AcDb:SummaryInfo")?).await.map_err(|error| format!("AcDb:SummaryInfo: {error}"))?,
-        application: decode_application_info(&data("AcDb:AppInfo")?).await.map_err(|error| format!("AcDb:AppInfo: {error}"))?,
-        template: decode_template(&data("AcDb:Template")?).await.map_err(|error| format!("AcDb:Template: {error}"))?,
-        auxiliary_header: decode_auxiliary_header(&data("AcDb:AuxHeader")?).await.map_err(|error| format!("AcDb:AuxHeader: {error}"))?,
-        revision_history: decode_revision_history(&data("AcDb:RevHistory")?).await.map_err(|error| format!("AcDb:RevHistory: {error}"))?,
-        preview: decode_indexed_preview(&data("AcDb:Preview")?).await.map_err(|error| format!("AcDb:Preview: {error}"))?,
-        application_history: decode_application_history(&data("AcDb:AppInfoHistory")?).await.map_err(|error| format!("AcDb:AppInfoHistory: {error}"))?,
+        header: decode_r2010_header_section(&data("AcDb:Header")?).map_err(|error| format!("AcDb:Header: {error}"))?,
+        dependencies: decode_dependencies(&data("AcDb:FileDepList")?).map_err(|error| format!("AcDb:FileDepList: {error}"))?,
+        summary: decode_summary_info(&data("AcDb:SummaryInfo")?).map_err(|error| format!("AcDb:SummaryInfo: {error}"))?,
+        application: decode_application_info(&data("AcDb:AppInfo")?).map_err(|error| format!("AcDb:AppInfo: {error}"))?,
+        template: decode_template(&data("AcDb:Template")?).map_err(|error| format!("AcDb:Template: {error}"))?,
+        auxiliary_header: decode_auxiliary_header(&data("AcDb:AuxHeader")?).map_err(|error| format!("AcDb:AuxHeader: {error}"))?,
+        revision_history: decode_revision_history(&data("AcDb:RevHistory")?).map_err(|error| format!("AcDb:RevHistory: {error}"))?,
+        preview: decode_indexed_preview(&data("AcDb:Preview")?).map_err(|error| format!("AcDb:Preview: {error}"))?,
+        application_history: decode_application_history(&data("AcDb:AppInfoHistory")?).map_err(|error| format!("AcDb:AppInfoHistory: {error}"))?,
     })
 }
 
 
 
 
-async fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: bool) -> Result<i64, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: bool) -> Result<i64, String> {
     let mut value = 0i64;
     let mut shift = 0u32;
     loop {
@@ -3688,7 +3853,8 @@ async fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: boo
     }
 }
 
-async fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, String> {
     let mut position = 0usize;
     let mut entries = Vec::new();
     while position + 2 <= bytes.len() {
@@ -3705,8 +3871,8 @@ async fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, Stri
         let mut handle = 0i64;
         let mut address = 0i64;
         while position < block_end {
-            handle += read_r2004_modular_char(bytes, &mut position, false).await?;
-            address += read_r2004_modular_char(bytes, &mut position, true).await?;
+            handle += read_r2004_modular_char(bytes, &mut position, false)?;
+            address += read_r2004_modular_char(bytes, &mut position, true)?;
             if handle < 0 || address < 0 {
                 return Err("R2004 handle-map produced a negative handle or object address".into());
             }
@@ -3717,34 +3883,35 @@ async fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, Stri
     Ok(entries)
 }
 
-async fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgExtendedEntityData, DwgXRecordValue};
     let mut records = Vec::new();
     loop {
-        let size = reader.read_bs().await? as usize;
+        let size = reader.read_bs()? as usize;
         if size == 0 {
             return Ok(records);
         }
-        let (handle_code, handle_value) = reader.read_handle().await?;
+        let (handle_code, handle_value) = reader.read_handle()?;
         if handle_code != 5 || handle_value == 0 {
             return Err(format!("R2010 EED application reference must be a non-null hard pointer, found code={handle_code} value={handle_value:#x}"));
         }
         let application_handle = handle_value;
-        let end_bit = reader.bit_position().await.checked_add(size.checked_mul(8).ok_or("R2010 EED size overflow")?).ok_or("R2010 EED end overflow")?;
+        let end_bit = reader.bit_position().checked_add(size.checked_mul(8).ok_or("R2010 EED size overflow")?).ok_or("R2010 EED end overflow")?;
         if end_bit > reader.bytes.len().saturating_mul(8) {
             return Err("R2010 EED record exceeds object payload".into());
         }
         let mut values = Vec::new();
         while reader.bit_position() < end_bit {
-            let code = reader.read_rc().await?;
+            let code = reader.read_rc()?;
             let value = match code {
                 0 => {
-                    let length = reader.read_rs().await? as usize;
+                    let length = reader.read_rs()? as usize;
                     let units = (0..length).map(|_| reader.read_rs()).collect::<Result<Vec<_>, _>>()?;
                     DwgXRecordValue::String { group_code: 1000, value: String::from_utf16(&units).map_err(|error| format!("invalid R2010 EED UTF-16 string: {error}"))? }
                 }
                 2 => {
-                    let close = reader.read_rc().await?;
+                    let close = reader.read_rc()?;
                     let value = match close {
                         0 => "{",
                         1 => "}",
@@ -3752,27 +3919,27 @@ async fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<V
                     };
                     DwgXRecordValue::String { group_code: 1002, value: value.into() }
                 }
-                3 => DwgXRecordValue::Handle { group_code: 1003, value: reader.read_rll().await? },
+                3 => DwgXRecordValue::Handle { group_code: 1003, value: reader.read_rll()? },
                 4 => {
-                    let length = reader.read_rc().await? as usize;
+                    let length = reader.read_rc()? as usize;
                     let octets = (0..length).map(|_| reader.read_rc()).collect::<Result<Vec<_>, _>>()?;
                     DwgXRecordValue::Binary { group_code: 1004, octets }
                 }
                 5 => {
                     let mut value = 0u64;
                     for _ in 0..8 {
-                        value = (value << 8) | u64::from(reader.read_rc().await?);
+                        value = (value << 8) | u64::from(reader.read_rc()?);
                     }
                     DwgXRecordValue::Handle { group_code: 1005, value }
                 }
-                10..=15 => DwgXRecordValue::Point3d { group_code: 1000 + i16::from(code), value: [reader.read_rd().await?, reader.read_rd().await?, reader.read_rd().await?] },
-                40..=42 => DwgXRecordValue::Real { group_code: 1000 + i16::from(code), value: reader.read_rd().await? },
-                70 => DwgXRecordValue::Integer16 { group_code: 1070, value: reader.read_rs().await? as i16 },
-                71 => DwgXRecordValue::Integer32 { group_code: 1071, value: reader.read_rl().await? as i32 },
+                10..=15 => DwgXRecordValue::Point3d { group_code: 1000 + i16::from(code), value: [reader.read_rd()?, reader.read_rd()?, reader.read_rd()?] },
+                40..=42 => DwgXRecordValue::Real { group_code: 1000 + i16::from(code), value: reader.read_rd()? },
+                70 => DwgXRecordValue::Integer16 { group_code: 1070, value: reader.read_rs()? as i16 },
+                71 => DwgXRecordValue::Integer32 { group_code: 1071, value: reader.read_rl()? as i32 },
                 1 => return Err("R2010 EED application-index item is redundant with its typed application handle".into()),
                 other => return Err(format!("unknown R2010 EED item code {other}")),
             };
-            value.validate().await?;
+            value.validate()?;
             if reader.bit_position() > end_bit {
                 return Err(format!("R2010 EED item code {code} exceeds its declared record size"));
             }
@@ -3786,7 +3953,8 @@ async fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<V
 }
 
 #[cfg(test)]
-async fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>, String> {
     let handles = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
     let objects = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
     let handle_map = decode_r2004_handle_map(&r2004_section_data(handles)?)?;
@@ -3813,7 +3981,8 @@ async fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, 
     Ok(inventory)
 }
 
-async fn fixed_object_name(object_type: u16) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fixed_object_name(object_type: u16) -> &'static str {
     match object_type {
         1 => "TEXT",
         2 => "ATTRIB",
@@ -3892,7 +4061,8 @@ async fn fixed_object_name(object_type: u16) -> &'static str {
     }
 }
 
-async fn object_category(object_type: u16) -> crate::artifacts::dwg::schema::snapshot::DwgObjectCategory {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn object_category(object_type: u16) -> crate::artifacts::dwg::schema::snapshot::DwgObjectCategory {
     use crate::artifacts::dwg::schema::snapshot::DwgObjectCategory;
     match object_type {
         1..=41 | 43..=47 | 77 | 78 | 498 => DwgObjectCategory::Entity,
@@ -3904,7 +4074,8 @@ async fn object_category(object_type: u16) -> crate::artifacts::dwg::schema::sna
     }
 }
 
-async fn resolve_object_handle(base: u64, code: u8, value: u64) -> Option<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_object_handle(base: u64, code: u8, value: u64) -> Option<u64> {
     let resolved = match code {
         6 => base.checked_add(1)?,
         8 => base.checked_sub(1)?,
@@ -3915,12 +4086,14 @@ async fn resolve_object_handle(base: u64, code: u8, value: u64) -> Option<u64> {
     (resolved != 0).then_some(resolved)
 }
 
-async fn read_object_handle(reader: &mut DwgBitReader<'_>, base: u64) -> Result<Option<u64>, String> {
-    let (code, value) = reader.read_handle().await?;
-    Ok(resolve_object_handle(base, code, value).await)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_object_handle(reader: &mut DwgBitReader<'_>, base: u64) -> Result<Option<u64>, String> {
+    let (code, value) = reader.read_handle()?;
+    Ok(resolve_object_handle(base, code, value))
 }
 
-async fn write_object_handle(writer: &mut DwgBitWriter, base: u64, target: Option<u64>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_object_handle(writer: &mut DwgBitWriter, base: u64, target: Option<u64>) {
     match target {
         None | Some(0) => writer.write_handle(4, 0),
         Some(value) if value == base.saturating_add(1) => writer.write_handle(6, 0),
@@ -3928,7 +4101,7 @@ async fn write_object_handle(writer: &mut DwgBitWriter, base: u64, target: Optio
         Some(value) if value > base && value - base < value => writer.write_handle(10, value - base),
         Some(value) if value < base && base - value < value => writer.write_handle(12, base - value),
         Some(value) => writer.write_handle(4, value),
-    }.await
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3946,7 +4119,8 @@ enum XRecordStorageKind {
     ObjectId,
 }
 
-async fn xrecord_value_kind(group_code: i16) -> Option<XRecordStorageKind> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xrecord_value_kind(group_code: i16) -> Option<XRecordStorageKind> {
     let code = i32::from(group_code);
     Some(match code {
         5 | 105 | 320..=329 | 390..=399 | 1003 | 1005 => XRecordStorageKind::Handle,
@@ -3964,51 +4138,52 @@ async fn xrecord_value_kind(group_code: i16) -> Option<XRecordStorageKind> {
     })
 }
 
-async fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgXRecordValue>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgXRecordValue>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
-    let end_bit = data.bit_position().await.checked_add(byte_count.checked_mul(8).ok_or("XRECORD value size overflow")?).ok_or("XRECORD value boundary overflow")?;
+    let end_bit = data.bit_position().checked_add(byte_count.checked_mul(8).ok_or("XRECORD value size overflow")?).ok_or("XRECORD value boundary overflow")?;
     if end_bit > main_end_bit {
         return Err("XRECORD values exceed bounded class-main data".into());
     }
     let mut values = Vec::new();
     while data.bit_position() < end_bit {
-        if end_bit.saturating_sub(data.bit_position().await) < 16 {
+        if end_bit.saturating_sub(data.bit_position()) < 16 {
             return Err("XRECORD group code is truncated".into());
         }
-        let group_code = data.read_rs().await? as i16;
-        let kind = xrecord_value_kind(group_code).await.ok_or_else(|| format!("unsupported XRECORD group code {group_code}"))?;
+        let group_code = data.read_rs()? as i16;
+        let kind = xrecord_value_kind(group_code).ok_or_else(|| format!("unsupported XRECORD group code {group_code}"))?;
         let value = match kind {
             XRecordStorageKind::String => {
-                let length = data.read_rs().await? as usize;
-                if length > end_bit.saturating_sub(data.bit_position().await) / 16 {
+                let length = data.read_rs()? as usize;
+                if length > end_bit.saturating_sub(data.bit_position()) / 16 {
                     return Err(format!("XRECORD string for group {group_code} exceeds value boundary"));
                 }
                 let units = (0..length).map(|_| data.read_rs()).collect::<Result<Vec<_>, _>>()?;
                 DwgXRecordValue::String { group_code, value: String::from_utf16(&units).map_err(|error| format!("invalid XRECORD UTF-16 string: {error}"))? }
             }
-            XRecordStorageKind::Real => DwgXRecordValue::Real { group_code, value: data.read_rd().await? },
+            XRecordStorageKind::Real => DwgXRecordValue::Real { group_code, value: data.read_rd()? },
             XRecordStorageKind::Boolean => {
-                let stored = data.read_rc().await?;
+                let stored = data.read_rc()?;
                 if stored > 1 {
                     return Err(format!("XRECORD boolean group {group_code} has invalid value {stored}"));
                 }
                 DwgXRecordValue::Boolean { group_code, value: stored != 0 }
             }
-            XRecordStorageKind::Integer8 => DwgXRecordValue::Integer8 { group_code, value: data.read_rc().await? as i8 },
-            XRecordStorageKind::Integer16 => DwgXRecordValue::Integer16 { group_code, value: data.read_rs().await? as i16 },
-            XRecordStorageKind::Integer32 => DwgXRecordValue::Integer32 { group_code, value: data.read_rl().await? as i32 },
-            XRecordStorageKind::Integer64 => DwgXRecordValue::Integer64 { group_code, value: data.read_rll().await? as i64 },
-            XRecordStorageKind::Point3d => DwgXRecordValue::Point3d { group_code, value: [data.read_rd().await?, data.read_rd().await?, data.read_rd().await?] },
+            XRecordStorageKind::Integer8 => DwgXRecordValue::Integer8 { group_code, value: data.read_rc()? as i8 },
+            XRecordStorageKind::Integer16 => DwgXRecordValue::Integer16 { group_code, value: data.read_rs()? as i16 },
+            XRecordStorageKind::Integer32 => DwgXRecordValue::Integer32 { group_code, value: data.read_rl()? as i32 },
+            XRecordStorageKind::Integer64 => DwgXRecordValue::Integer64 { group_code, value: data.read_rll()? as i64 },
+            XRecordStorageKind::Point3d => DwgXRecordValue::Point3d { group_code, value: [data.read_rd()?, data.read_rd()?, data.read_rd()?] },
             XRecordStorageKind::Binary => {
-                let length = data.read_rc().await? as usize;
-                if length > end_bit.saturating_sub(data.bit_position().await) / 8 {
+                let length = data.read_rc()? as usize;
+                if length > end_bit.saturating_sub(data.bit_position()) / 8 {
                     return Err(format!("XRECORD binary value for group {group_code} exceeds value boundary"));
                 }
                 DwgXRecordValue::Binary { group_code, octets: (0..length).map(|_| data.read_rc()).collect::<Result<Vec<_>, _>>()? }
             }
-            XRecordStorageKind::Handle => DwgXRecordValue::Handle { group_code, value: data.read_rll().await? },
+            XRecordStorageKind::Handle => DwgXRecordValue::Handle { group_code, value: data.read_rll()? },
             XRecordStorageKind::ObjectId => {
-                let absolute_value = data.read_rll().await?;
+                let absolute_value = data.read_rll()?;
                 DwgXRecordValue::ObjectId { group_code, absolute_value }
             }
         };
@@ -4023,11 +4198,12 @@ async fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, m
     Ok(values)
 }
 
-async fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
-    let mut data = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
     for value in values {
-        value.validate().await?;
+        value.validate()?;
         let group_code = match value {
             DwgXRecordValue::String { group_code, .. }
             | DwgXRecordValue::Real { group_code, .. }
@@ -4041,30 +4217,30 @@ async fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot
             | DwgXRecordValue::Handle { group_code, .. }
             | DwgXRecordValue::ObjectId { group_code, .. } => *group_code,
         };
-        data.write_rs(group_code as u16).await;
+        data.write_rs(group_code as u16);
         match value {
             DwgXRecordValue::String { value, .. } => {
                 let units = value.encode_utf16().collect::<Vec<_>>();
-                data.write_rs(units.len() as u16).await;
+                data.write_rs(units.len() as u16);
                 for unit in units {
-                    data.write_rs(unit).await;
+                    data.write_rs(unit);
                 }
             }
-            DwgXRecordValue::Real { value, .. } => data.write_rd(*value).await,
-            DwgXRecordValue::Boolean { value, .. } => data.write_rc(u8::from(*value)).await,
-            DwgXRecordValue::Integer8 { value, .. } => data.write_rc(*value as u8).await,
-            DwgXRecordValue::Integer16 { value, .. } => data.write_rs(*value as u16).await,
-            DwgXRecordValue::Integer32 { value, .. } => data.write_rl(*value as u32).await,
-            DwgXRecordValue::Integer64 { value, .. } => data.write_rll(*value as u64).await,
-            DwgXRecordValue::Point3d { value, .. } => data.write_3rd(*value).await,
+            DwgXRecordValue::Real { value, .. } => data.write_rd(*value),
+            DwgXRecordValue::Boolean { value, .. } => data.write_rc(u8::from(*value)),
+            DwgXRecordValue::Integer8 { value, .. } => data.write_rc(*value as u8),
+            DwgXRecordValue::Integer16 { value, .. } => data.write_rs(*value as u16),
+            DwgXRecordValue::Integer32 { value, .. } => data.write_rl(*value as u32),
+            DwgXRecordValue::Integer64 { value, .. } => data.write_rll(*value as u64),
+            DwgXRecordValue::Point3d { value, .. } => data.write_3rd(*value),
             DwgXRecordValue::Binary { octets, .. } => {
-                data.write_rc(octets.len() as u8).await;
+                data.write_rc(octets.len() as u8);
                 for octet in octets {
-                    data.write_rc(*octet).await;
+                    data.write_rc(*octet);
                 }
             }
-            DwgXRecordValue::Handle { value, .. } => data.write_rll(*value).await,
-            DwgXRecordValue::ObjectId { absolute_value, .. } => data.write_rll(*absolute_value).await,
+            DwgXRecordValue::Handle { value, .. } => data.write_rll(*value),
+            DwgXRecordValue::ObjectId { absolute_value, .. } => data.write_rll(*absolute_value),
         }
     }
     if data.bit != 0 {
@@ -4073,61 +4249,62 @@ async fn encode_xrecord_values(values: &[crate::artifacts::dwg::schema::snapshot
     Ok(data)
 }
 
-async fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData]) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[crate::artifacts::dwg::schema::snapshot::DwgExtendedEntityData]) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgXRecordValue;
     for record in records {
-        let mut values = DwgBitWriter::new().await;
+        let mut values = DwgBitWriter::new();
         for value in &record.values {
-            value.validate().await?;
+            value.validate()?;
             match value {
                 DwgXRecordValue::String { group_code: 1000, value } => {
-                    values.write_rc(0).await;
+                    values.write_rc(0);
                     let units = value.encode_utf16().collect::<Vec<_>>();
-                    values.write_rs(units.len() as u16).await;
+                    values.write_rs(units.len() as u16);
                     for unit in units {
-                        values.write_rs(unit).await;
+                        values.write_rs(unit);
                     }
                 }
                 DwgXRecordValue::String { group_code: 1002, value } => {
-                    values.write_rc(2).await;
+                    values.write_rc(2);
                     values.write_rc(match value.as_str() {
                         "{" => 0,
                         "}" => 1,
                         _ => return Err("R2010 EED control string must be '{' or '}'".into()),
-                    }).await;
+                    });
                 }
                 DwgXRecordValue::Handle { group_code: 1003, value } => {
-                    values.write_rc(3).await;
-                    values.write_rll(*value).await;
+                    values.write_rc(3);
+                    values.write_rll(*value);
                 }
                 DwgXRecordValue::Binary { group_code: 1004, octets } => {
-                    values.write_rc(4).await;
-                    values.write_rc(octets.len() as u8).await;
+                    values.write_rc(4);
+                    values.write_rc(octets.len() as u8);
                     for octet in octets {
-                        values.write_rc(*octet).await;
+                        values.write_rc(*octet);
                     }
                 }
                 DwgXRecordValue::Handle { group_code: 1005, value } => {
-                    values.write_rc(5).await;
+                    values.write_rc(5);
                     for shift in (0..64).step_by(8).rev() {
-                        values.write_rc((value >> shift) as u8).await;
+                        values.write_rc((value >> shift) as u8);
                     }
                 }
                 DwgXRecordValue::Point3d { group_code, value } if (1010..=1015).contains(group_code) => {
-                    values.write_rc((*group_code - 1000) as u8).await;
-                    values.write_3rd(*value).await;
+                    values.write_rc((*group_code - 1000) as u8);
+                    values.write_3rd(*value);
                 }
                 DwgXRecordValue::Real { group_code, value } if (1040..=1042).contains(group_code) => {
-                    values.write_rc((*group_code - 1000) as u8).await;
-                    values.write_rd(*value).await;
+                    values.write_rc((*group_code - 1000) as u8);
+                    values.write_rd(*value);
                 }
                 DwgXRecordValue::Integer16 { group_code: 1070, value } => {
-                    values.write_rc(70).await;
-                    values.write_rs(*value as u16).await;
+                    values.write_rc(70);
+                    values.write_rs(*value as u16);
                 }
                 DwgXRecordValue::Integer32 { group_code: 1071, value } => {
-                    values.write_rc(71).await;
-                    values.write_rl(*value as u32).await;
+                    values.write_rc(71);
+                    values.write_rl(*value as u32);
                 }
                 _ => return Err(format!("group {} is not a standard R2010 EED value", value.group_code())),
             }
@@ -4143,109 +4320,113 @@ async fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[crat
     Ok(())
 }
 
-async fn finish_r2010_object_frame(data: DwgBitWriter, mut handles: DwgBitWriter) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn finish_r2010_object_frame(data: DwgBitWriter, mut handles: DwgBitWriter) -> Result<Vec<u8>, String> {
     while (data.bit_len() + handles.bit_len()) % 8 != 0 {
         handles.write_b(true);
     }
     let handle_stream_bits = handles.bit_len();
-    let mut payload = DwgBitWriter::new().await;
-    payload.append_bits(&data).await;
-    payload.append_bits(&handles).await;
+    let mut payload = DwgBitWriter::new();
+    payload.append_bits(&data);
+    payload.append_bits(&handles);
     if payload.bit != 0 {
         return Err("R2010 object frame is not byte-aligned".into());
     }
-    let mut framed = DwgBitWriter::new().await;
-    framed.write_ms(payload.bytes.len() as u32).await;
-    framed.write_umc(handle_stream_bits as u64).await;
-    framed.append_bits(&payload).await;
+    let mut framed = DwgBitWriter::new();
+    framed.write_ms(payload.bytes.len() as u32);
+    framed.write_umc(handle_stream_bits as u64);
+    framed.append_bits(&payload);
     if framed.bit != 0 {
         return Err("R2010 outer object frame is not byte-aligned".into());
     }
-    let crc = dwg_crc16(0xC0C1, &framed.bytes).await;
+    let crc = dwg_crc16(0xC0C1, &framed.bytes);
     framed.bytes.extend_from_slice(&crc.to_le_bytes());
     Ok(framed.bytes)
 }
 
-async fn encode_r2010_xrecord_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_xrecord_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(xrecord) = object.body.as_ref().ok_or_else(|| format!("XRECORD {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not an XRECORD body", object.handle));
     };
-    let xdata = encode_xrecord_values(&xrecord.values).await?;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bl(xdata.bytes.len() as u32).await;
-    data.append_bits(&xdata).await;
-    data.write_bs(xrecord.cloning_flag).await;
-    data.write_b(false).await;
+    let xdata = encode_xrecord_values(&xrecord.values)?;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bl(xdata.bytes.len() as u32);
+    data.append_bits(&xdata);
+    data.write_bs(xrecord.cloning_flag);
+    data.write_b(false);
 
-    let mut handles = DwgBitWriter::new().await;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if object.extension_dictionary_handle.is_some() {
-        handles.write_handle(4, object.extension_dictionary_handle.unwrap()).await;
+        handles.write_handle(4, object.extension_dictionary_handle.unwrap());
     }
     for reference in &xrecord.object_id_handles {
-        handles.write_handle(4, *reference).await;
+        handles.write_handle(4, *reference);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_dictionary_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dictionary_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(dictionary) = object.body.as_ref().ok_or_else(|| format!("dictionary {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a dictionary body", object.handle));
     };
     if dictionary.cloning_flag > 5 {
         return Err(format!("dictionary {:#x} cloning flag {} is invalid", object.handle, dictionary.cloning_flag));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bl(dictionary.entries.len() as u32).await;
-    data.write_bs(dictionary.cloning_flag).await;
-    data.write_rc(u8::from(dictionary.hard_owner)).await;
-    let mut strings = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bl(dictionary.entries.len() as u32);
+    data.write_bs(dictionary.cloning_flag);
+    data.write_rc(u8::from(dictionary.hard_owner));
+    let mut strings = DwgBitWriter::new();
     for entry in &dictionary.entries {
-        strings.write_tu(&entry.name).await;
+        strings.write_tu(&entry.name);
     }
-    let string_bits = strings.bit_len().await;
+    let string_bits = strings.bit_len();
     if string_bits == 0 {
-        data.write_b(false).await;
+        data.write_b(false);
     } else {
-        data.append_bits(&strings).await;
+        data.append_bits(&strings);
         if string_bits > 0x7fff {
             return Err(format!("dictionary {:#x} string stream exceeds compact R2010 size", object.handle));
         }
-        data.write_rs(string_bits as u16).await;
-        data.write_b(true).await;
+        data.write_rs(string_bits as u16);
+        data.write_b(true);
     }
 
-    let mut handles = DwgBitWriter::new().await;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if object.extension_dictionary_handle.is_some() {
-        handles.write_handle(4, object.extension_dictionary_handle.unwrap()).await;
+        handles.write_handle(4, object.extension_dictionary_handle.unwrap());
     }
     for entry in &dictionary.entries {
-        handles.write_handle(2, entry.handle).await;
+        handles.write_handle(2, entry.handle);
     }
     if let Some(default_entry) = dictionary.default_entry_handle {
-        handles.write_handle(5, default_entry).await;
+        handles.write_handle(5, default_entry);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_table_control_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_table_control_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgTableControlBody;
     let crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(control) = object.body.as_ref().ok_or_else(|| format!("table control {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a table control", object.handle));
@@ -4264,56 +4445,57 @@ async fn encode_r2010_table_control_frame(object: &crate::artifacts::dwg::schema
     if object.type_code != expected_type {
         return Err(format!("table-control variant expects type {expected_type}, found {}", object.type_code));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    let entries = control.entry_handles().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    let entries = control.entry_handles();
     if matches!(object.type_code, 48 | 50 | 52 | 60) {
-        data.write_bl(entries.len() as u32).await;
+        data.write_bl(entries.len() as u32);
     } else {
-        data.write_bs(entries.len() as u16).await;
+        data.write_bs(entries.len() as u16);
     }
     if let DwgTableControlBody::DimensionStyle(value) = control {
         if value.additional_handles.len() > usize::from(u8::MAX) {
             return Err("DIMSTYLE additional handle count exceeds RC".into());
         }
-        data.write_rc(value.additional_handles.len() as u8).await;
+        data.write_rc(value.additional_handles.len() as u8);
     }
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(xdic) = object.extension_dictionary_handle {
-        handles.write_handle(3, xdic).await;
+        handles.write_handle(3, xdic);
     }
     for entry in entries {
-        handles.write_handle(2, entry.handle.unwrap_or_default()).await;
+        handles.write_handle(2, entry.handle.unwrap_or_default());
     }
     match control {
         DwgTableControlBody::Block(value) => {
-            handles.write_handle(3, value.model_space_handle.ok_or("BLOCK_CONTROL model-space handle missing")?).await;
-            handles.write_handle(3, value.paper_space_handle.ok_or("BLOCK_CONTROL paper-space handle missing")?).await;
+            handles.write_handle(3, value.model_space_handle.ok_or("BLOCK_CONTROL model-space handle missing")?);
+            handles.write_handle(3, value.paper_space_handle.ok_or("BLOCK_CONTROL paper-space handle missing")?);
         }
         DwgTableControlBody::Linetype(value) => {
-            handles.write_handle(3, value.by_block_handle).await;
-            handles.write_handle(3, value.by_layer_handle).await;
+            handles.write_handle(3, value.by_block_handle);
+            handles.write_handle(3, value.by_layer_handle);
         }
         DwgTableControlBody::DimensionStyle(value) => {
             for additional in &value.additional_handles {
-                handles.write_handle(5, *additional).await;
+                handles.write_handle(5, *additional);
             }
         }
         _ => {}
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody;
     let body = match object.body.as_ref() {
         Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(value)) => value,
@@ -4334,14 +4516,14 @@ async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema:
     if !matches!(common.xref_resolution, 0 | 256) {
         return Err(format!("table record {:#x} xref resolution {} is invalid", object.handle, common.xref_resolution));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(common.xref_resolution).await;
-    let mut strings = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(common.xref_resolution);
+    let mut strings = DwgBitWriter::new();
     if let DwgTableRecordBody::BlockHeader(value) = body {
         if value.anonymous {
             let mut characters = common.name.chars();
@@ -4349,41 +4531,41 @@ async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema:
             if !prefix.starts_with('*') || prefix.chars().count() != 2 || !characters.as_str().chars().all(|character| character.is_ascii_digit()) {
                 return Err(format!("anonymous block header {:#x} name {:?} is not a standard prefix plus numeric identity", object.handle, common.name));
             }
-            strings.write_tu(&prefix).await;
+            strings.write_tu(&prefix);
         } else {
-            strings.write_tu(&common.name).await;
+            strings.write_tu(&common.name);
         }
     } else {
-        strings.write_tu(&common.name).await;
+        strings.write_tu(&common.name);
     }
     match body {
-        DwgTableRecordBody::RegisteredApplication(value) => data.write_rc(value.group_71).await,
+        DwgTableRecordBody::RegisteredApplication(value) => data.write_rc(value.group_71),
         DwgTableRecordBody::TextStyle(value) => {
-            data.write_b(value.is_shape).await;
-            data.write_b(value.is_vertical).await;
-            data.write_bd(value.text_size).await;
-            data.write_bd(value.width_factor).await;
-            data.write_bd(value.oblique_angle).await;
-            data.write_rc(value.generation).await;
-            data.write_bd(value.last_height).await;
-            strings.write_tu(&value.font_file).await;
-            strings.write_tu(&value.big_font_file).await;
+            data.write_b(value.is_shape);
+            data.write_b(value.is_vertical);
+            data.write_bd(value.text_size);
+            data.write_bd(value.width_factor);
+            data.write_bd(value.oblique_angle);
+            data.write_rc(value.generation);
+            data.write_bd(value.last_height);
+            strings.write_tu(&value.font_file);
+            strings.write_tu(&value.big_font_file);
         }
         DwgTableRecordBody::Layer(value) => {
             if value.lineweight > 31 {
                 return Err(format!("layer {:#x} lineweight {} exceeds five bits", object.handle, value.lineweight));
             }
             let flag0 = u16::from(value.frozen) | (u16::from(value.off) << 1) | (u16::from(value.frozen_in_new_viewports) << 2) | (u16::from(value.locked) << 3) | (u16::from(value.plottable) << 4) | (u16::from(value.lineweight) << 5);
-            data.write_bs(flag0).await;
-            data.write_bs(value.color.index).await;
-            data.write_bl(encode_complex_color_value(&value.color.value).await).await;
+            data.write_bs(flag0);
+            data.write_bs(value.color.index);
+            data.write_bl(encode_complex_color_value(&value.color.value));
             let color_flags = u8::from(value.color.name.is_some()) | (u8::from(value.color.book_name.is_some()) << 1);
-            data.write_rc(color_flags).await;
+            data.write_rc(color_flags);
             if let Some(name) = &value.color.name {
-                strings.write_tu(name).await;
+                strings.write_tu(name);
             }
             if let Some(book_name) = &value.color.book_name {
-                strings.write_tu(book_name).await;
+                strings.write_tu(book_name);
             }
         }
         DwgTableRecordBody::Linetype(value) => {
@@ -4393,18 +4575,18 @@ async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema:
             if value.dashes.iter().any(|dash| dash.text.is_some()) {
                 return Err(format!("linetype {:#x} textual dash area is not yet supported", object.handle));
             }
-            strings.write_tu(&value.description).await;
-            data.write_bd(value.pattern_length).await;
-            data.write_rc(value.alignment).await;
-            data.write_rc(value.dashes.len() as u8).await;
+            strings.write_tu(&value.description);
+            data.write_bd(value.pattern_length);
+            data.write_rc(value.alignment);
+            data.write_rc(value.dashes.len() as u8);
             for dash in &value.dashes {
-                data.write_bd(dash.length).await;
-                data.write_bs(dash.complex_shape_code).await;
-                data.write_rd(dash.x_offset).await;
-                data.write_rd(dash.y_offset).await;
-                data.write_bd(dash.scale).await;
-                data.write_bd(dash.rotation).await;
-                data.write_bs(dash.shape_flags).await;
+                data.write_bd(dash.length);
+                data.write_bs(dash.complex_shape_code);
+                data.write_rd(dash.x_offset);
+                data.write_rd(dash.y_offset);
+                data.write_bd(dash.scale);
+                data.write_bd(dash.rotation);
+                data.write_bs(dash.shape_flags);
             }
         }
         DwgTableRecordBody::BlockHeader(value) => {
@@ -4414,77 +4596,77 @@ async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema:
             if value.insert_backreference_handles.len() > 0xefffff {
                 return Err(format!("block header {:#x} has too many insert backreferences", object.handle));
             }
-            data.write_b(value.anonymous).await;
-            data.write_b(value.has_attributes).await;
-            data.write_b(value.is_xref).await;
-            data.write_b(value.xref_overlaid).await;
-            data.write_b(value.xref_loaded).await;
+            data.write_b(value.anonymous);
+            data.write_b(value.has_attributes);
+            data.write_b(value.is_xref);
+            data.write_b(value.xref_overlaid);
+            data.write_b(value.xref_loaded);
             if !value.is_xref && !value.xref_overlaid {
-                data.write_bl(value.owned_entity_handles.len() as u32).await;
+                data.write_bl(value.owned_entity_handles.len() as u32);
             }
-            data.write_3bd(value.base_point).await;
-            strings.write_tu(&value.xref_path).await;
+            data.write_3bd(value.base_point);
+            strings.write_tu(&value.xref_path);
             for _ in &value.insert_backreference_handles {
-                data.write_rc(1).await;
+                data.write_rc(1);
             }
-            data.write_rc(0).await;
-            strings.write_tu(&value.description).await;
-            data.write_bl(0).await;
-            data.write_bs(value.insert_units).await;
-            data.write_b(value.explodable).await;
-            data.write_rc(value.block_scaling).await;
+            data.write_rc(0);
+            strings.write_tu(&value.description);
+            data.write_bl(0);
+            data.write_bs(value.insert_units);
+            data.write_b(value.explodable);
+            data.write_rc(value.block_scaling);
         }
         DwgTableRecordBody::Viewport(value) => {
-            data.write_bd(value.view_height).await;
-            data.write_bd(value.view_width).await;
-            data.write_2rd(value.center).await;
-            data.write_3bd(value.target).await;
-            data.write_3bd(value.direction).await;
-            data.write_bd(value.twist).await;
-            data.write_bd(value.lens_length).await;
-            data.write_bd(value.front_clipping).await;
-            data.write_bd(value.back_clipping).await;
+            data.write_bd(value.view_height);
+            data.write_bd(value.view_width);
+            data.write_2rd(value.center);
+            data.write_3bd(value.target);
+            data.write_3bd(value.direction);
+            data.write_bd(value.twist);
+            data.write_bd(value.lens_length);
+            data.write_bd(value.front_clipping);
+            data.write_bd(value.back_clipping);
             for flag in value.view_mode {
-                data.write_b(flag).await;
+                data.write_b(flag);
             }
-            data.write_rc(value.render_mode).await;
-            data.write_b(value.use_default_lights).await;
-            data.write_rc(value.default_lighting_type).await;
-            data.write_bd(value.brightness).await;
-            data.write_bd(value.contrast).await;
-            data.write_bs(value.ambient_color.index).await;
-            data.write_bl(encode_complex_color_value(&value.ambient_color.value).await).await;
+            data.write_rc(value.render_mode);
+            data.write_b(value.use_default_lights);
+            data.write_rc(value.default_lighting_type);
+            data.write_bd(value.brightness);
+            data.write_bd(value.contrast);
+            data.write_bs(value.ambient_color.index);
+            data.write_bl(encode_complex_color_value(&value.ambient_color.value));
             let color_flags = u8::from(value.ambient_color.name.is_some()) | (u8::from(value.ambient_color.book_name.is_some()) << 1);
-            data.write_rc(color_flags).await;
+            data.write_rc(color_flags);
             if let Some(name) = &value.ambient_color.name {
-                strings.write_tu(name).await;
+                strings.write_tu(name);
             }
             if let Some(book_name) = &value.ambient_color.book_name {
-                strings.write_tu(book_name).await;
+                strings.write_tu(book_name);
             }
-            data.write_2rd(value.lower_left).await;
-            data.write_2rd(value.upper_right).await;
-            data.write_b(value.ucs_follow).await;
-            data.write_bs(value.circle_zoom).await;
-            data.write_b(value.fast_zoom).await;
-            data.write_bb(value.ucs_icon).await;
-            data.write_b(value.grid_mode).await;
-            data.write_2rd(value.grid_unit).await;
-            data.write_b(value.snap_mode).await;
-            data.write_b(value.snap_style).await;
-            data.write_bs(value.snap_isopair).await;
-            data.write_bd(value.snap_angle).await;
-            data.write_2rd(value.snap_base).await;
-            data.write_2rd(value.snap_unit).await;
-            data.write_b(value.ucs_at_origin).await;
-            data.write_b(value.ucs_viewport).await;
-            data.write_3bd(value.ucs_origin).await;
-            data.write_3bd(value.ucs_x_axis).await;
-            data.write_3bd(value.ucs_y_axis).await;
-            data.write_bd(value.ucs_elevation).await;
-            data.write_bs(value.ucs_orthographic_view).await;
-            data.write_bs(value.grid_flags).await;
-            data.write_bs(value.grid_major).await;
+            data.write_2rd(value.lower_left);
+            data.write_2rd(value.upper_right);
+            data.write_b(value.ucs_follow);
+            data.write_bs(value.circle_zoom);
+            data.write_b(value.fast_zoom);
+            data.write_bb(value.ucs_icon);
+            data.write_b(value.grid_mode);
+            data.write_2rd(value.grid_unit);
+            data.write_b(value.snap_mode);
+            data.write_b(value.snap_style);
+            data.write_bs(value.snap_isopair);
+            data.write_bd(value.snap_angle);
+            data.write_2rd(value.snap_base);
+            data.write_2rd(value.snap_unit);
+            data.write_b(value.ucs_at_origin);
+            data.write_b(value.ucs_viewport);
+            data.write_3bd(value.ucs_origin);
+            data.write_3bd(value.ucs_x_axis);
+            data.write_3bd(value.ucs_y_axis);
+            data.write_bd(value.ucs_elevation);
+            data.write_bs(value.ucs_orthographic_view);
+            data.write_bs(value.grid_flags);
+            data.write_bs(value.grid_major);
         }
         DwgTableRecordBody::DimensionStyle(value) => {
             let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgComplexColor| {
@@ -4498,143 +4680,144 @@ async fn encode_r2010_table_record_frame(object: &crate::artifacts::dwg::schema:
                     strings.write_tu(book);
                 }
             };
-            strings.write_tu(&value.dimension_postfix).await;
-            strings.write_tu(&value.alternate_postfix).await;
+            strings.write_tu(&value.dimension_postfix);
+            strings.write_tu(&value.alternate_postfix);
             let g = &value.geometry;
-            data.write_bd(g.scale).await;
-            data.write_bd(g.arrow_size).await;
-            data.write_bd(g.extension_origin_offset).await;
-            data.write_bd(g.dimension_line_increment).await;
-            data.write_bd(g.extension_line_extension).await;
-            data.write_bd(g.rounding).await;
-            data.write_bd(g.dimension_line_extension).await;
-            data.write_bd(g.plus_tolerance).await;
-            data.write_bd(g.minus_tolerance).await;
-            data.write_bd(g.fixed_extension_length).await;
-            data.write_bd(g.jog_angle).await;
-            data.write_bs(value.fill_mode).await;
+            data.write_bd(g.scale);
+            data.write_bd(g.arrow_size);
+            data.write_bd(g.extension_origin_offset);
+            data.write_bd(g.dimension_line_increment);
+            data.write_bd(g.extension_line_extension);
+            data.write_bd(g.rounding);
+            data.write_bd(g.dimension_line_extension);
+            data.write_bd(g.plus_tolerance);
+            data.write_bd(g.minus_tolerance);
+            data.write_bd(g.fixed_extension_length);
+            data.write_bd(g.jog_angle);
+            data.write_bs(value.fill_mode);
             write_color(&mut data, &mut strings, &value.fill_color);
             let b = &value.behavior;
-            data.write_b(b.tolerance).await;
-            data.write_b(b.limits).await;
-            data.write_b(b.text_inside_horizontal).await;
-            data.write_b(b.text_outside_horizontal).await;
-            data.write_b(b.suppress_extension_1).await;
-            data.write_b(b.suppress_extension_2).await;
-            data.write_bs(b.text_vertical_alignment).await;
-            data.write_bs(b.zero_suppression).await;
-            data.write_bs(b.angular_zero_suppression).await;
-            data.write_bs(b.arc_symbol).await;
+            data.write_b(b.tolerance);
+            data.write_b(b.limits);
+            data.write_b(b.text_inside_horizontal);
+            data.write_b(b.text_outside_horizontal);
+            data.write_b(b.suppress_extension_1);
+            data.write_b(b.suppress_extension_2);
+            data.write_bs(b.text_vertical_alignment);
+            data.write_bs(b.zero_suppression);
+            data.write_bs(b.angular_zero_suppression);
+            data.write_bs(b.arc_symbol);
             let t = &value.text;
-            data.write_bd(t.height).await;
-            data.write_bd(t.center_mark_size).await;
-            data.write_bd(t.tick_size).await;
-            data.write_bd(t.alternate_scale).await;
-            data.write_bd(t.linear_scale).await;
-            data.write_bd(t.vertical_position).await;
-            data.write_bd(t.tolerance_scale).await;
-            data.write_bd(t.gap).await;
-            data.write_bd(t.alternate_rounding).await;
-            data.write_b(t.alternate_enabled).await;
-            data.write_bs(t.alternate_decimals).await;
-            data.write_b(t.text_outside_extensions).await;
-            data.write_b(t.separate_arrowheads).await;
-            data.write_b(t.force_text_inside).await;
-            data.write_b(t.suppress_outside_extensions).await;
+            data.write_bd(t.height);
+            data.write_bd(t.center_mark_size);
+            data.write_bd(t.tick_size);
+            data.write_bd(t.alternate_scale);
+            data.write_bd(t.linear_scale);
+            data.write_bd(t.vertical_position);
+            data.write_bd(t.tolerance_scale);
+            data.write_bd(t.gap);
+            data.write_bd(t.alternate_rounding);
+            data.write_b(t.alternate_enabled);
+            data.write_bs(t.alternate_decimals);
+            data.write_b(t.text_outside_extensions);
+            data.write_b(t.separate_arrowheads);
+            data.write_b(t.force_text_inside);
+            data.write_b(t.suppress_outside_extensions);
             write_color(&mut data, &mut strings, &t.dimension_line_color);
             write_color(&mut data, &mut strings, &t.extension_line_color);
             write_color(&mut data, &mut strings, &t.text_color);
             let u = &value.units;
-            data.write_bs(u.alternate_decimal_places).await;
-            data.write_bs(u.decimal_places).await;
-            data.write_bs(u.tolerance_decimal_places).await;
-            data.write_bs(u.alternate_units).await;
-            data.write_bs(u.alternate_tolerance_decimal_places).await;
-            data.write_bs(u.angular_units).await;
-            data.write_bs(u.fraction_format).await;
-            data.write_bs(u.linear_units).await;
-            data.write_bs(u.decimal_separator).await;
-            data.write_bs(u.text_movement).await;
-            data.write_bs(u.text_horizontal_alignment).await;
-            data.write_b(u.suppress_dimension_line_1).await;
-            data.write_b(u.suppress_dimension_line_2).await;
-            data.write_bs(u.tolerance_vertical_alignment).await;
-            data.write_bs(u.tolerance_zero_suppression).await;
-            data.write_bs(u.alternate_zero_suppression).await;
-            data.write_bs(u.alternate_tolerance_zero_suppression).await;
-            data.write_b(u.user_positioned_text).await;
-            data.write_bs(u.arrow_text_fit).await;
+            data.write_bs(u.alternate_decimal_places);
+            data.write_bs(u.decimal_places);
+            data.write_bs(u.tolerance_decimal_places);
+            data.write_bs(u.alternate_units);
+            data.write_bs(u.alternate_tolerance_decimal_places);
+            data.write_bs(u.angular_units);
+            data.write_bs(u.fraction_format);
+            data.write_bs(u.linear_units);
+            data.write_bs(u.decimal_separator);
+            data.write_bs(u.text_movement);
+            data.write_bs(u.text_horizontal_alignment);
+            data.write_b(u.suppress_dimension_line_1);
+            data.write_b(u.suppress_dimension_line_2);
+            data.write_bs(u.tolerance_vertical_alignment);
+            data.write_bs(u.tolerance_zero_suppression);
+            data.write_bs(u.alternate_zero_suppression);
+            data.write_bs(u.alternate_tolerance_zero_suppression);
+            data.write_b(u.user_positioned_text);
+            data.write_bs(u.arrow_text_fit);
             let r = &value.r2010;
-            data.write_b(r.fixed_extension_enabled).await;
-            data.write_b(r.text_direction).await;
-            data.write_bd(r.alternate_measurement_factor).await;
-            strings.write_tu(&r.alternate_measurement_suffix).await;
-            data.write_bd(r.measurement_factor).await;
-            strings.write_tu(&r.measurement_suffix).await;
-            data.write_bs(r.dimension_lineweight).await;
-            data.write_bs(r.extension_lineweight).await;
-            data.write_b(r.flag).await;
+            data.write_b(r.fixed_extension_enabled);
+            data.write_b(r.text_direction);
+            data.write_bd(r.alternate_measurement_factor);
+            strings.write_tu(&r.alternate_measurement_suffix);
+            data.write_bd(r.measurement_factor);
+            strings.write_tu(&r.measurement_suffix);
+            data.write_bs(r.dimension_lineweight);
+            data.write_bs(r.extension_lineweight);
+            data.write_b(r.flag);
         }
     }
-    let string_bits = strings.bit_len().await;
+    let string_bits = strings.bit_len();
     if string_bits > 0x7fff {
         return Err(format!("table record {:#x} strings exceed compact R2010 size", object.handle));
     }
-    data.append_bits(&strings).await;
-    data.write_rs(string_bits as u16).await;
-    data.write_b(true).await;
+    data.append_bits(&strings);
+    data.write_rs(string_bits as u16);
+    data.write_b(true);
 
-    let mut handles = DwgBitWriter::new().await;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(xdic) = object.extension_dictionary_handle {
-        handles.write_handle(3, xdic).await;
+        handles.write_handle(3, xdic);
     }
-    handles.write_handle(5, common.xref_handle.unwrap_or_default()).await;
+    handles.write_handle(5, common.xref_handle.unwrap_or_default());
     if let DwgTableRecordBody::Layer(value) = body {
-        handles.write_handle(5, value.plot_style_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.material_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.linetype_handle.unwrap_or_default()).await;
+        handles.write_handle(5, value.plot_style_handle.unwrap_or_default());
+        handles.write_handle(5, value.material_handle.unwrap_or_default());
+        handles.write_handle(5, value.linetype_handle.unwrap_or_default());
     }
     if let DwgTableRecordBody::Linetype(value) = body {
         for dash in &value.dashes {
-            handles.write_handle(5, dash.style_handle.unwrap_or_default()).await;
+            handles.write_handle(5, dash.style_handle.unwrap_or_default());
         }
     }
     if let DwgTableRecordBody::BlockHeader(value) = body {
-        handles.write_handle(3, value.block_entity_handle).await;
+        handles.write_handle(3, value.block_entity_handle);
         for owned in &value.owned_entity_handles {
-            handles.write_handle(3, *owned).await;
+            handles.write_handle(3, *owned);
         }
-        handles.write_handle(3, value.end_block_entity_handle).await;
+        handles.write_handle(3, value.end_block_entity_handle);
         for insert in &value.insert_backreference_handles {
-            handles.write_handle(4, *insert).await;
+            handles.write_handle(4, *insert);
         }
-        handles.write_handle(5, value.layout_handle.unwrap_or_default()).await;
+        handles.write_handle(5, value.layout_handle.unwrap_or_default());
     }
     if let DwgTableRecordBody::Viewport(value) = body {
-        handles.write_handle(4, value.background_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.visual_style_handle.unwrap_or_default()).await;
-        handles.write_handle(3, value.sun_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.named_ucs_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.base_ucs_handle.unwrap_or_default()).await;
+        handles.write_handle(4, value.background_handle.unwrap_or_default());
+        handles.write_handle(5, value.visual_style_handle.unwrap_or_default());
+        handles.write_handle(3, value.sun_handle.unwrap_or_default());
+        handles.write_handle(5, value.named_ucs_handle.unwrap_or_default());
+        handles.write_handle(5, value.base_ucs_handle.unwrap_or_default());
     }
     if let DwgTableRecordBody::DimensionStyle(value) = body {
-        handles.write_handle(5, value.text_style_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.leader_arrow_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.arrow_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.arrow_1_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.arrow_2_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.dimension_linetype_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.extension_1_linetype_handle.unwrap_or_default()).await;
-        handles.write_handle(5, value.extension_2_linetype_handle.unwrap_or_default()).await;
+        handles.write_handle(5, value.text_style_handle.unwrap_or_default());
+        handles.write_handle(5, value.leader_arrow_handle.unwrap_or_default());
+        handles.write_handle(5, value.arrow_handle.unwrap_or_default());
+        handles.write_handle(5, value.arrow_1_handle.unwrap_or_default());
+        handles.write_handle(5, value.arrow_2_handle.unwrap_or_default());
+        handles.write_handle(5, value.dimension_linetype_handle.unwrap_or_default());
+        handles.write_handle(5, value.extension_1_linetype_handle.unwrap_or_default());
+        handles.write_handle(5, value.extension_2_linetype_handle.unwrap_or_default());
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn entity_mode_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityMode) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_mode_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityMode) -> u8 {
     use crate::artifacts::dwg::schema::snapshot::DwgEntityMode;
     match value {
         DwgEntityMode::ExplicitOwner => 0,
@@ -4644,7 +4827,8 @@ async fn entity_mode_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEnt
     }
 }
 
-async fn entity_reference_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_reference_bits(value: crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode) -> u8 {
     use crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode;
     match value {
         DwgEntityReferenceMode::ByLayer => 0,
@@ -4654,10 +4838,11 @@ async fn entity_reference_bits(value: crate::artifacts::dwg::schema::snapshot::D
     }
 }
 
-async fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgEntityColorKind;
     data.write_b(false);
-    data.write_bb(entity_mode_bits(common.mode).await);
+    data.write_bb(entity_mode_bits(common.mode));
     data.write_bl(object.reactor_handles.len() as u32);
     data.write_b(object.extension_dictionary_handle.is_none());
     let encoded_color = match common.color.kind {
@@ -4668,9 +4853,9 @@ async fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate
     };
     data.write_bs(encoded_color);
     data.write_bd(common.linetype_scale);
-    data.write_bb(entity_reference_bits(common.linetype).await);
-    data.write_bb(entity_reference_bits(common.plot_style).await);
-    data.write_bb(entity_reference_bits(common.material).await);
+    data.write_bb(entity_reference_bits(common.linetype));
+    data.write_bb(entity_reference_bits(common.plot_style));
+    data.write_bb(entity_reference_bits(common.material));
     data.write_rc(common.shadow);
     data.write_b(common.full_visual_style_handle.is_some());
     data.write_b(common.face_visual_style_handle.is_some());
@@ -4680,7 +4865,8 @@ async fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &crate
     Ok(())
 }
 
-async fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, common: &crate::artifacts::dwg::schema::snapshot::DwgEntityCommon) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
     if common.color.kind == DwgEntityColorKind::TrueColor {
         handles.write_handle(5, common.color.color_handle.unwrap_or_default());
@@ -4721,21 +4907,24 @@ async fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: 
     Ok(())
 }
 
-async fn logical_point3(values: &[f64], name: &str) -> Result<[f64; 3], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn logical_point3(values: &[f64], name: &str) -> Result<[f64; 3], String> {
     if values.len() != 3 || values.iter().any(|value| !value.is_finite()) {
         return Err(format!("{name} must contain exactly three finite coordinates"));
     }
     Ok([values[0], values[1], values[2]])
 }
 
-async fn logical_point2(values: &[f64], name: &str) -> Result<[f64; 2], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn logical_point2(values: &[f64], name: &str) -> Result<[f64; 2], String> {
     if values.len() != 2 || values.iter().any(|value| !value.is_finite()) {
         return Err(format!("{name} must contain exactly two finite coordinates"));
     }
     Ok([values[0], values[1]])
 }
 
-async fn dimension_attachment_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment) -> u16 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dimension_attachment_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment) -> u16 {
     use crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment::*;
     match value {
         TopCenter => 1,
@@ -4750,7 +4939,8 @@ async fn dimension_attachment_wire(value: crate::artifacts::dwg::schema::snapsho
     }
 }
 
-async fn dimension_attachment_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dimension_attachment_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgDimensionTextAttachment::*;
     match value {
         1 => Ok(TopCenter),
@@ -4766,14 +4956,16 @@ async fn dimension_attachment_logical(value: u16) -> Result<crate::artifacts::dw
     }
 }
 
-async fn dimension_spacing_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle) -> u16 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dimension_spacing_wire(value: crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle) -> u16 {
     match value {
         crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast => 1,
         crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::Exact => 2,
     }
 }
 
-async fn dimension_spacing_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dimension_spacing_logical(value: u16) -> Result<crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle, String> {
     match value {
         1 => Ok(crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::AtLeast),
         2 => Ok(crate::artifacts::dwg::schema::snapshot::DwgDimensionLineSpacingStyle::Exact),
@@ -4781,45 +4973,48 @@ async fn dimension_spacing_logical(value: u16) -> Result<crate::artifacts::dwg::
     }
 }
 
-async fn encode_r2010_block_begin_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_begin_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockBegin(block))) = object.body.as_ref() else {
         return Err(format!("BLOCK {:#x} typed body missing", object.handle));
     };
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &block.common).await?;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(name).await;
-    append_r2010_string_stream(&mut data, &strings, "BLOCK", object.handle).await?;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &block.common)?;
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(name);
+    append_r2010_string_stream(&mut data, &strings, "BLOCK", object.handle)?;
     let mut handles = DwgBitWriter::new();
-    encode_r2010_entity_common_handles(&mut handles, object, &block.common).await?;
-    finish_r2010_object_frame(data, handles.await).await
+    encode_r2010_entity_common_handles(&mut handles, object, &block.common)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_end_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_end_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockEnd(block))) = object.body.as_ref() else {
         return Err(format!("ENDBLK {:#x} typed body missing", object.handle));
     };
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &block.common).await?;
-    data.write_b(false).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &block.common)?;
+    data.write_b(false);
     let mut handles = DwgBitWriter::new();
-    encode_r2010_entity_common_handles(&mut handles, object, &block.common).await?;
-    finish_r2010_object_frame(data, handles.await).await
+    encode_r2010_entity_common_handles(&mut handles, object, &block.common)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_insert_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_insert_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Insert(insert))) = object.body.as_ref() else {
         return Err(format!("INSERT {:#x} typed body missing", object.handle));
     };
-    let insertion = logical_point3(&insert.insertion, "INSERT insertion").await?;
-    let scale = logical_point3(&insert.scale, "INSERT scale").await?;
-    let extrusion = logical_point3(&insert.extrusion, "INSERT extrusion").await?;
+    let insertion = logical_point3(&insert.insertion, "INSERT insertion")?;
+    let scale = logical_point3(&insert.scale, "INSERT scale")?;
+    let extrusion = logical_point3(&insert.extrusion, "INSERT extrusion")?;
     if scale.contains(&0.0) || !insert.rotation.is_finite() || extrusion == [0.0; 3] || insert.block_header_handle == 0 {
         return Err(format!("INSERT {:#x} transform or block-header relationship is invalid", object.handle));
     }
@@ -4827,58 +5022,59 @@ async fn encode_r2010_insert_frame(object: &crate::artifacts::dwg::schema::snaps
     if has_attributes != insert.sequence_end_handle.is_some() {
         return Err(format!("INSERT {:#x} attributes and SEQEND must be present together", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &insert.common).await?;
-    data.write_3bd(insertion).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &insert.common)?;
+    data.write_3bd(insertion);
     if scale == [1.0; 3] {
-        data.write_bb(3).await;
+        data.write_bb(3);
     } else if scale[0].to_bits() == scale[1].to_bits() && scale[0].to_bits() == scale[2].to_bits() {
-        data.write_bb(2).await;
-        data.write_rd(scale[0]).await;
+        data.write_bb(2);
+        data.write_rd(scale[0]);
     } else if scale[0] == 1.0 {
-        data.write_bb(1).await;
-        data.write_dd(scale[1], 1.0).await;
-        data.write_dd(scale[2], 1.0).await;
+        data.write_bb(1);
+        data.write_dd(scale[1], 1.0);
+        data.write_dd(scale[2], 1.0);
     } else {
-        data.write_bb(0).await;
-        data.write_rd(scale[0]).await;
-        data.write_dd(scale[1], scale[0]).await;
-        data.write_dd(scale[2], scale[0]).await;
+        data.write_bb(0);
+        data.write_rd(scale[0]);
+        data.write_dd(scale[1], scale[0]);
+        data.write_dd(scale[2], scale[0]);
     }
-    data.write_bd(insert.rotation).await;
-    data.write_3bd(extrusion).await;
-    data.write_b(has_attributes).await;
+    data.write_bd(insert.rotation);
+    data.write_3bd(extrusion);
+    data.write_b(has_attributes);
     if has_attributes {
-        data.write_bl(insert.attribute_handles.len() as u32).await;
+        data.write_bl(insert.attribute_handles.len() as u32);
     }
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
-    encode_r2010_entity_common_handles(&mut handles, object, &insert.common).await?;
-    handles.write_handle(5, insert.block_header_handle).await;
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
+    encode_r2010_entity_common_handles(&mut handles, object, &insert.common)?;
+    handles.write_handle(5, insert.block_header_handle);
     for attribute in &insert.attribute_handles {
-        handles.write_handle(4, *attribute).await;
+        handles.write_handle(4, *attribute);
     }
     if let Some(sequence_end) = insert.sequence_end_handle {
-        handles.write_handle(3, sequence_end).await;
+        handles.write_handle(3, sequence_end);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_dimension_linear_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dimension_linear_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::DimensionLinear(linear))) = object.body.as_ref() else {
         return Err(format!("DIMENSION_LINEAR {:#x} typed body missing", object.handle));
     };
     let dimension = &linear.dimension;
-    let extrusion = logical_point3(&dimension.extrusion, "dimension extrusion").await?;
-    let text_midpoint = logical_point2(&dimension.text_midpoint, "dimension text midpoint").await?;
-    let insertion_scale = logical_point3(&dimension.insertion_scale, "dimension insertion scale").await?;
-    let clone_point = logical_point2(&dimension.clone_insertion_point, "dimension clone insertion point").await?;
-    let extension_line_1 = logical_point3(&linear.extension_line_1, "dimension extension line 1").await?;
-    let extension_line_2 = logical_point3(&linear.extension_line_2, "dimension extension line 2").await?;
-    let definition_point = logical_point3(&linear.definition_point, "dimension definition point").await?;
+    let extrusion = logical_point3(&dimension.extrusion, "dimension extrusion")?;
+    let text_midpoint = logical_point2(&dimension.text_midpoint, "dimension text midpoint")?;
+    let insertion_scale = logical_point3(&dimension.insertion_scale, "dimension insertion scale")?;
+    let clone_point = logical_point2(&dimension.clone_insertion_point, "dimension clone insertion point")?;
+    let extension_line_1 = logical_point3(&linear.extension_line_1, "dimension extension line 1")?;
+    let extension_line_2 = logical_point3(&linear.extension_line_2, "dimension extension line 2")?;
+    let definition_point = logical_point3(&linear.definition_point, "dimension definition point")?;
     if dimension.dimension_style_handle == 0
         || dimension.line_spacing_factor <= 0.0
         || insertion_scale.contains(&0.0)
@@ -4889,44 +5085,45 @@ async fn encode_r2010_dimension_linear_frame(object: &crate::artifacts::dwg::sch
         return Err(format!("DIMENSION_LINEAR {:#x} contains invalid semantic values", object.handle));
     }
     let flag = 0x08 | (if dimension.status.block_reference_is_exclusive { 0x20 | 0x02 } else { 0 }) | (if dimension.status.user_positioned_text { 0x80 } else { 0x01 });
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &dimension.common).await?;
-    data.write_rc(0).await;
-    data.write_3bd(extrusion).await;
-    data.write_2rd(text_midpoint).await;
-    data.write_bd(dimension.elevation).await;
-    data.write_rc(flag).await;
-    data.write_bd(dimension.text_rotation).await;
-    data.write_bd(dimension.horizontal_direction).await;
-    data.write_3bd(insertion_scale).await;
-    data.write_bd(dimension.insertion_rotation).await;
-    data.write_bs(dimension_attachment_wire(dimension.attachment).await).await;
-    data.write_bs(dimension_spacing_wire(dimension.line_spacing_style).await).await;
-    data.write_bd(dimension.line_spacing_factor).await;
-    data.write_bd(dimension.actual_measurement).await;
-    data.write_b(false).await;
-    data.write_b(dimension.flip_arrow_1).await;
-    data.write_b(dimension.flip_arrow_2).await;
-    data.write_2rd(clone_point).await;
-    data.write_3bd(extension_line_1).await;
-    data.write_3bd(extension_line_2).await;
-    data.write_3bd(definition_point).await;
-    data.write_bd(linear.oblique_angle).await;
-    data.write_bd(linear.dimension_rotation).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&dimension.user_text).await;
-    append_r2010_string_stream(&mut data, &strings, "DIMENSION_LINEAR", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
-    encode_r2010_entity_common_handles(&mut handles, object, &dimension.common).await?;
-    handles.write_handle(5, dimension.dimension_style_handle).await;
-    handles.write_handle(5, dimension.dimension_block_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &dimension.common)?;
+    data.write_rc(0);
+    data.write_3bd(extrusion);
+    data.write_2rd(text_midpoint);
+    data.write_bd(dimension.elevation);
+    data.write_rc(flag);
+    data.write_bd(dimension.text_rotation);
+    data.write_bd(dimension.horizontal_direction);
+    data.write_3bd(insertion_scale);
+    data.write_bd(dimension.insertion_rotation);
+    data.write_bs(dimension_attachment_wire(dimension.attachment));
+    data.write_bs(dimension_spacing_wire(dimension.line_spacing_style));
+    data.write_bd(dimension.line_spacing_factor);
+    data.write_bd(dimension.actual_measurement);
+    data.write_b(false);
+    data.write_b(dimension.flip_arrow_1);
+    data.write_b(dimension.flip_arrow_2);
+    data.write_2rd(clone_point);
+    data.write_3bd(extension_line_1);
+    data.write_3bd(extension_line_2);
+    data.write_3bd(definition_point);
+    data.write_bd(linear.oblique_angle);
+    data.write_bd(linear.dimension_rotation);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&dimension.user_text);
+    append_r2010_string_stream(&mut data, &strings, "DIMENSION_LINEAR", object.handle)?;
+    let mut handles = DwgBitWriter::new();
+    encode_r2010_entity_common_handles(&mut handles, object, &dimension.common)?;
+    handles.write_handle(5, dimension.dimension_style_handle);
+    handles.write_handle(5, dimension.dimension_block_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn viewport_status_mask(flags: &[crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag]) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn viewport_status_mask(flags: &[crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag]) -> Result<u32, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag::*;
     let mut mask = 0u32;
     for flag in flags {
@@ -4962,7 +5159,8 @@ async fn viewport_status_mask(flags: &[crate::artifacts::dwg::schema::snapshot::
     Ok(mask)
 }
 
-async fn viewport_status_flags(mask: u32) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn viewport_status_flags(mask: u32) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgViewportStatusFlag::*;
     if mask & !0x003f_ffff != 0 {
         return Err(format!("VIEWPORT status contains unsupported bits {:#x}", mask & !0x003f_ffff));
@@ -4994,32 +5192,33 @@ async fn viewport_status_flags(mask: u32) -> Result<Vec<crate::artifacts::dwg::s
     Ok(all.into_iter().enumerate().filter_map(|(bit, flag)| (mask & (1 << bit) != 0).then_some(flag)).collect())
 }
 
-async fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportRenderMode};
     let Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Viewport(viewport))) = object.body.as_ref() else {
         return Err(format!("VIEWPORT {:#x} body missing", object.handle));
     };
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &viewport.common).await?;
-    data.write_3bd(logical_point3(&viewport.center, "VIEWPORT center").await?).await;
-    data.write_bd(viewport.width).await;
-    data.write_bd(viewport.height).await;
-    data.write_3bd(logical_point3(&viewport.view_target, "VIEWPORT view target").await?).await;
-    data.write_3bd(logical_point3(&viewport.view_direction, "VIEWPORT view direction").await?).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &viewport.common)?;
+    data.write_3bd(logical_point3(&viewport.center, "VIEWPORT center")?);
+    data.write_bd(viewport.width);
+    data.write_bd(viewport.height);
+    data.write_3bd(logical_point3(&viewport.view_target, "VIEWPORT view target")?);
+    data.write_3bd(logical_point3(&viewport.view_direction, "VIEWPORT view direction")?);
     for value in [viewport.twist_angle, viewport.view_height, viewport.lens_length, viewport.front_clip, viewport.back_clip, viewport.snap_angle] {
-        data.write_bd(value).await;
+        data.write_bd(value);
     }
-    data.write_2rd(logical_point2(&viewport.view_center, "VIEWPORT view center").await?).await;
-    data.write_2rd(logical_point2(&viewport.snap_base, "VIEWPORT snap base").await?).await;
-    data.write_2rd(logical_point2(&viewport.snap_unit, "VIEWPORT snap unit").await?).await;
-    data.write_2rd(logical_point2(&viewport.grid_unit, "VIEWPORT grid unit").await?).await;
-    data.write_bs(viewport.circle_zoom_percent).await;
-    data.write_bs(viewport.grid_major).await;
-    data.write_bl(u32::try_from(viewport.frozen_layer_handles.len()).map_err(|_| "VIEWPORT frozen-layer count exceeds u32")?).await;
-    data.write_bl(viewport_status_mask(&viewport.status).await?).await;
+    data.write_2rd(logical_point2(&viewport.view_center, "VIEWPORT view center")?);
+    data.write_2rd(logical_point2(&viewport.snap_base, "VIEWPORT snap base")?);
+    data.write_2rd(logical_point2(&viewport.snap_unit, "VIEWPORT snap unit")?);
+    data.write_2rd(logical_point2(&viewport.grid_unit, "VIEWPORT grid unit")?);
+    data.write_bs(viewport.circle_zoom_percent);
+    data.write_bs(viewport.grid_major);
+    data.write_bl(u32::try_from(viewport.frozen_layer_handles.len()).map_err(|_| "VIEWPORT frozen-layer count exceeds u32")?);
+    data.write_bl(viewport_status_mask(&viewport.status)?);
     data.write_rc(match viewport.render_mode {
         DwgViewportRenderMode::Optimized2d => 0,
         DwgViewportRenderMode::Wireframe => 1,
@@ -5028,13 +5227,13 @@ async fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::sna
         DwgViewportRenderMode::GouraudShaded => 4,
         DwgViewportRenderMode::FlatShadedWithWireframe => 5,
         DwgViewportRenderMode::GouraudShadedWithWireframe => 6,
-    }).await;
-    data.write_b(viewport.ucs_at_origin).await;
-    data.write_b(viewport.ucs_per_viewport).await;
-    data.write_3bd(logical_point3(&viewport.ucs_origin, "VIEWPORT UCS origin").await?).await;
-    data.write_3bd(logical_point3(&viewport.ucs_x_axis, "VIEWPORT UCS X axis").await?).await;
-    data.write_3bd(logical_point3(&viewport.ucs_y_axis, "VIEWPORT UCS Y axis").await?).await;
-    data.write_bd(viewport.ucs_elevation).await;
+    });
+    data.write_b(viewport.ucs_at_origin);
+    data.write_b(viewport.ucs_per_viewport);
+    data.write_3bd(logical_point3(&viewport.ucs_origin, "VIEWPORT UCS origin")?);
+    data.write_3bd(logical_point3(&viewport.ucs_x_axis, "VIEWPORT UCS X axis")?);
+    data.write_3bd(logical_point3(&viewport.ucs_y_axis, "VIEWPORT UCS Y axis")?);
+    data.write_bd(viewport.ucs_elevation);
     data.write_bs(match viewport.orthographic_view {
         DwgOrthographicView::None => 0,
         DwgOrthographicView::Top => 1,
@@ -5043,114 +5242,117 @@ async fn encode_r2010_viewport_frame(object: &crate::artifacts::dwg::schema::sna
         DwgOrthographicView::Back => 4,
         DwgOrthographicView::Left => 5,
         DwgOrthographicView::Right => 6,
-    }).await;
+    });
     data.write_bs(match viewport.shade_plot_mode {
         DwgShadePlotMode::AsDisplayed => 0,
         DwgShadePlotMode::Wireframe => 1,
         DwgShadePlotMode::Hidden => 2,
         DwgShadePlotMode::Rendered => 3,
-    }).await;
-    data.write_b(viewport.use_default_lights).await;
+    });
+    data.write_b(viewport.use_default_lights);
     data.write_rc(match viewport.default_lighting_type {
         DwgDefaultLightingType::OneDistantLight => 0,
         DwgDefaultLightingType::TwoDistantLights => 1,
-    }).await;
-    data.write_bd(viewport.brightness).await;
-    data.write_bd(viewport.contrast).await;
-    data.write_bs(viewport.ambient_color.index).await;
-    data.write_bl(encode_complex_color_value(&viewport.ambient_color.value).await).await;
-    data.write_rc(u8::from(viewport.ambient_color.name.is_some()) | (u8::from(viewport.ambient_color.book_name.is_some()) << 1)).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&viewport.style_sheet).await;
+    });
+    data.write_bd(viewport.brightness);
+    data.write_bd(viewport.contrast);
+    data.write_bs(viewport.ambient_color.index);
+    data.write_bl(encode_complex_color_value(&viewport.ambient_color.value));
+    data.write_rc(u8::from(viewport.ambient_color.name.is_some()) | (u8::from(viewport.ambient_color.book_name.is_some()) << 1));
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&viewport.style_sheet);
     if let Some(name) = &viewport.ambient_color.name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
     if let Some(name) = &viewport.ambient_color.book_name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
-    append_r2010_string_stream(&mut data, &strings, "VIEWPORT", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
-    encode_r2010_entity_common_handles(&mut handles, object, &viewport.common).await?;
+    append_r2010_string_stream(&mut data, &strings, "VIEWPORT", object.handle)?;
+    let mut handles = DwgBitWriter::new();
+    encode_r2010_entity_common_handles(&mut handles, object, &viewport.common)?;
     for layer in &viewport.frozen_layer_handles {
-        handles.write_handle(5, *layer).await;
+        handles.write_handle(5, *layer);
     }
-    handles.write_handle(5, viewport.clip_boundary_handle.unwrap_or_default()).await;
-    handles.write_handle(5, viewport.named_ucs_handle.unwrap_or_default()).await;
-    handles.write_handle(5, viewport.base_ucs_handle.unwrap_or_default()).await;
-    handles.write_handle(4, viewport.background_handle.unwrap_or_default()).await;
-    handles.write_handle(5, viewport.visual_style_handle.unwrap_or_default()).await;
-    handles.write_handle(4, viewport.shade_plot_handle.unwrap_or_default()).await;
-    handles.write_handle(3, viewport.sun_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(5, viewport.clip_boundary_handle.unwrap_or_default());
+    handles.write_handle(5, viewport.named_ucs_handle.unwrap_or_default());
+    handles.write_handle(5, viewport.base_ucs_handle.unwrap_or_default());
+    handles.write_handle(4, viewport.background_handle.unwrap_or_default());
+    handles.write_handle(5, viewport.visual_style_handle.unwrap_or_default());
+    handles.write_handle(4, viewport.shade_plot_handle.unwrap_or_default());
+    handles.write_handle(3, viewport.sun_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_line_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_line_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Line(line))) = object.body.as_ref() else {
         return Err(format!("LINE {:#x} typed body missing", object.handle));
     };
-    let start = logical_point3(&line.start, "LINE start").await?;
-    let end = logical_point3(&line.end, "LINE end").await?;
-    let extrusion = logical_point3(&line.extrusion, "LINE extrusion").await?;
+    let start = logical_point3(&line.start, "LINE start")?;
+    let end = logical_point3(&line.end, "LINE end")?;
+    let extrusion = logical_point3(&line.extrusion, "LINE extrusion")?;
     if !line.thickness.is_finite() {
         return Err("LINE thickness must be finite".into());
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &line.common).await?;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &line.common)?;
     let z_is_zero = start[2] == 0.0 && end[2] == 0.0;
-    data.write_b(z_is_zero).await;
-    data.write_rd(start[0]).await;
-    data.write_dd(end[0], start[0]).await;
-    data.write_rd(start[1]).await;
-    data.write_dd(end[1], start[1]).await;
+    data.write_b(z_is_zero);
+    data.write_rd(start[0]);
+    data.write_dd(end[0], start[0]);
+    data.write_rd(start[1]);
+    data.write_dd(end[1], start[1]);
     if !z_is_zero {
-        data.write_rd(start[2]).await;
-        data.write_dd(end[2], start[2]).await;
+        data.write_rd(start[2]);
+        data.write_dd(end[2], start[2]);
     }
-    data.write_bt(line.thickness).await;
-    data.write_be(extrusion).await;
-    data.write_b(false).await;
+    data.write_bt(line.thickness);
+    data.write_be(extrusion);
+    data.write_b(false);
     let mut handles = DwgBitWriter::new();
-    encode_r2010_entity_common_handles(&mut handles, object, &line.common).await?;
-    finish_r2010_object_frame(data, handles.await).await
+    encode_r2010_entity_common_handles(&mut handles, object, &line.common)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_arc_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_arc_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Arc(arc))) = object.body.as_ref() else {
         return Err(format!("ARC {:#x} typed body missing", object.handle));
     };
-    let center = logical_point3(&arc.center, "ARC center").await?;
-    let extrusion = logical_point3(&arc.extrusion, "ARC extrusion").await?;
+    let center = logical_point3(&arc.center, "ARC center")?;
+    let extrusion = logical_point3(&arc.extrusion, "ARC extrusion")?;
     if !arc.radius.is_finite() || arc.radius < 0.0 || !arc.thickness.is_finite() || !arc.start_angle.is_finite() || !arc.end_angle.is_finite() || extrusion == [0.0; 3] {
         return Err("ARC scalar values or extrusion are invalid".into());
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &arc.common).await?;
-    data.write_3bd(center).await;
-    data.write_bd(arc.radius).await;
-    data.write_bt(arc.thickness).await;
-    data.write_be(extrusion).await;
-    data.write_bd(arc.start_angle).await;
-    data.write_bd(arc.end_angle).await;
-    data.write_b(false).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &arc.common)?;
+    data.write_3bd(center);
+    data.write_bd(arc.radius);
+    data.write_bt(arc.thickness);
+    data.write_be(extrusion);
+    data.write_bd(arc.start_angle);
+    data.write_bd(arc.end_angle);
+    data.write_b(false);
     let mut handles = DwgBitWriter::new();
-    encode_r2010_entity_common_handles(&mut handles, object, &arc.common).await?;
-    finish_r2010_object_frame(data, handles.await).await
+    encode_r2010_entity_common_handles(&mut handles, object, &arc.common)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_lwpolyline_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_lwpolyline_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::LwPolyline(polyline))) = object.body.as_ref() else {
         return Err(format!("LWPOLYLINE {:#x} typed body missing", object.handle));
     };
     if polyline.vertices.is_empty() || polyline.vertices.len() > 20_000 {
         return Err(format!("LWPOLYLINE {:#x} vertex count is invalid", object.handle));
     }
-    let extrusion = logical_point3(&polyline.extrusion, "LWPOLYLINE extrusion").await?;
+    let extrusion = logical_point3(&polyline.extrusion, "LWPOLYLINE extrusion")?;
     let points = polyline
         .vertices
         .iter()
@@ -5173,62 +5375,63 @@ async fn encode_r2010_lwpolyline_frame(object: &crate::artifacts::dwg::schema::s
     flags |= u16::from(has_bulges) * 16;
     flags |= u16::from(has_widths) * 32;
     flags |= u16::from(has_ids) * 1024;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    encode_r2010_entity_common_main(&mut data, object, &polyline.common).await?;
-    data.write_bs(flags).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    encode_r2010_entity_common_main(&mut data, object, &polyline.common)?;
+    data.write_bs(flags);
     if let Some(width) = polyline.constant_width {
-        data.write_bd(width).await;
+        data.write_bd(width);
     }
     if polyline.elevation != 0.0 {
-        data.write_bd(polyline.elevation).await;
+        data.write_bd(polyline.elevation);
     }
     if polyline.thickness != 0.0 {
-        data.write_bd(polyline.thickness).await;
+        data.write_bd(polyline.thickness);
     }
     if extrusion != [0.0, 0.0, 1.0] {
-        data.write_3bd(extrusion).await;
+        data.write_3bd(extrusion);
     }
-    data.write_bl(points.len() as u32).await;
+    data.write_bl(points.len() as u32);
     if has_bulges {
-        data.write_bl(points.len() as u32).await;
+        data.write_bl(points.len() as u32);
     }
     if has_ids {
-        data.write_bl(points.len() as u32).await;
+        data.write_bl(points.len() as u32);
     }
     if has_widths {
-        data.write_bl(points.len() as u32).await;
+        data.write_bl(points.len() as u32);
     }
-    data.write_2rd(points[0]).await;
+    data.write_2rd(points[0]);
     for index in 1..points.len() {
-        data.write_dd(points[index][0], points[index - 1][0]).await;
-        data.write_dd(points[index][1], points[index - 1][1]).await;
+        data.write_dd(points[index][0], points[index - 1][0]);
+        data.write_dd(points[index][1], points[index - 1][1]);
     }
     if has_bulges {
         for vertex in &polyline.vertices {
-            data.write_bd(vertex.bulge).await;
+            data.write_bd(vertex.bulge);
         }
     }
     if has_ids {
         for vertex in &polyline.vertices {
-            data.write_bl(vertex.vertex_id.unwrap()).await;
+            data.write_bl(vertex.vertex_id.unwrap());
         }
     }
     if has_widths {
         for vertex in &polyline.vertices {
-            data.write_bd(vertex.start_width.unwrap()).await;
-            data.write_bd(vertex.end_width.unwrap()).await;
+            data.write_bd(vertex.start_width.unwrap());
+            data.write_bd(vertex.end_width.unwrap());
         }
     }
-    data.write_b(false).await;
+    data.write_b(false);
     let mut handles = DwgBitWriter::new();
-    encode_r2010_entity_common_handles(&mut handles, object, &polyline.common).await?;
-    finish_r2010_object_frame(data, handles.await).await
+    encode_r2010_entity_common_handles(&mut handles, object, &polyline.common)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn append_r2010_string_stream(data: &mut DwgBitWriter, strings: &DwgBitWriter, class_name: &str, handle: u64) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn append_r2010_string_stream(data: &mut DwgBitWriter, strings: &DwgBitWriter, class_name: &str, handle: u64) -> Result<(), String> {
     let string_bits = strings.bit_len();
     if string_bits == 0 {
         data.write_b(false);
@@ -5248,7 +5451,8 @@ async fn append_r2010_string_stream(data: &mut DwgBitWriter, strings: &DwgBitWri
     Ok(())
 }
 
-async fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation) {
     use crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation;
     data.write_bs(match operation {
         DwgVisualStylePropertyOperation::Inherit => 0,
@@ -5258,9 +5462,10 @@ async fn write_visual_style_operation(data: &mut DwgBitWriter, operation: crate:
     });
 }
 
-async fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgVisualStylePropertyOperation;
-    match data.read_bs().await? {
+    match data.read_bs()? {
         0 => Ok(DwgVisualStylePropertyOperation::Inherit),
         1 => Ok(DwgVisualStylePropertyOperation::Set),
         2 => Ok(DwgVisualStylePropertyOperation::Disable),
@@ -5269,15 +5474,17 @@ async fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<crat
     }
 }
 
-async fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>, u8), String> {
-    let (value, flags) = read_r2010_cmc_main(data).await?;
-    let operation = read_visual_style_operation(data).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>, u8), String> {
+    let (value, flags) = read_r2010_cmc_main(data)?;
+    let operation = read_visual_style_operation(data)?;
     Ok((crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty { value, operation }, flags))
 }
 
-async fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &crate::artifacts::dwg::schema::snapshot::DwgVisualStyleProperty<crate::artifacts::dwg::schema::snapshot::DwgComplexColor>) {
     data.write_bs(property.value.index);
-    data.write_bl(encode_complex_color_value(&property.value.value).await);
+    data.write_bl(encode_complex_color_value(&property.value.value));
     let flags = u8::from(property.value.name.is_some()) | (u8::from(property.value.book_name.is_some()) << 1);
     data.write_rc(flags);
     if let Some(name) = &property.value.name {
@@ -5289,7 +5496,8 @@ async fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitW
     write_visual_style_operation(data, property.operation);
 }
 
-async fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::VisualStyle(style)) = object.body.as_ref() else { return Err(format!("VISUALSTYLE {:#x} body missing", object.handle)) };
     if style.style_type > 22 || matches!(style.style_type, 10 | 17..=19) || style.extension_lighting_model > 3 {
@@ -5319,32 +5527,32 @@ async fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema:
     {
         return Err(format!("VISUALSTYLE {:#x} contains an invalid property value", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bl(style.style_type).await;
-    data.write_bs(style.extension_lighting_model).await;
-    data.write_b(style.internal_only).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&style.description).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bl(style.style_type);
+    data.write_bs(style.extension_lighting_model);
+    data.write_b(style.internal_only);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&style.description);
     macro_rules! bl {
         ($field:ident) => {{
-            data.write_bl(p.$field.value).await;
+            data.write_bl(p.$field.value);
             write_visual_style_operation(&mut data, p.$field.operation);
         }};
     }
     macro_rules! bs {
         ($field:ident) => {{
-            data.write_bs(p.$field.value).await;
+            data.write_bs(p.$field.value);
             write_visual_style_operation(&mut data, p.$field.operation);
         }};
     }
     macro_rules! bd {
         ($field:ident) => {{
-            data.write_bd(p.$field.value).await;
+            data.write_bd(p.$field.value);
             write_visual_style_operation(&mut data, p.$field.operation);
         }};
     }
@@ -5372,155 +5580,159 @@ async fn encode_r2010_visual_style_frame(object: &crate::artifacts::dwg::schema:
     bl!(edge_silhouette_width);
     bl!(edge_halo_gap);
     bl!(edge_isolines);
-    data.write_b(p.hidden_edge_precision.value).await;
+    data.write_b(p.hidden_edge_precision.value);
     write_visual_style_operation(&mut data, p.hidden_edge_precision.operation);
     bl!(display_settings);
     bd!(display_brightness);
     bl!(display_shadow_type);
-    append_r2010_string_stream(&mut data, &strings, "VISUALSTYLE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "VISUALSTYLE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(xdic) = object.extension_dictionary_handle {
-        handles.write_handle(4, xdic).await;
+        handles.write_handle(4, xdic);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_associative_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_associative_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(dependency)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCDEPENDENCY {:#x} body missing", object.handle));
     };
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_b(dependency.is_read_dependency).await;
-    data.write_b(dependency.is_write_dependency).await;
-    data.write_b(dependency.is_attached_to_object).await;
-    data.write_b(dependency.is_delegating_to_owning_action).await;
-    data.write_bl(dependency.order as u32).await;
-    data.write_b(dependency.name.is_some()).await;
-    data.write_bl(dependency.dependency_body_id as u32).await;
-    let mut strings = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_b(dependency.is_read_dependency);
+    data.write_b(dependency.is_write_dependency);
+    data.write_b(dependency.is_attached_to_object);
+    data.write_b(dependency.is_delegating_to_owning_action);
+    data.write_bl(dependency.order as u32);
+    data.write_b(dependency.name.is_some());
+    data.write_bl(dependency.dependency_body_id as u32);
+    let mut strings = DwgBitWriter::new();
     if let Some(name) = &dependency.name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
-    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCDEPENDENCY", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCDEPENDENCY", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
-    handles.write_handle(4, dependency.dependent_on_object_handle).await;
-    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default()).await;
-    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default()).await;
-    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, dependency.dependent_on_object_handle);
+    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default());
+    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default());
+    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_associative_value_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_associative_value_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(value)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVALUEDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &value.dependency;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_b(dependency.is_read_dependency).await;
-    data.write_b(dependency.is_write_dependency).await;
-    data.write_b(dependency.is_attached_to_object).await;
-    data.write_b(dependency.is_delegating_to_owning_action).await;
-    data.write_bl(dependency.order as u32).await;
-    data.write_b(dependency.name.is_some()).await;
-    data.write_bl(dependency.dependency_body_id as u32).await;
-    data.write_bs(0).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_b(dependency.is_read_dependency);
+    data.write_b(dependency.is_write_dependency);
+    data.write_b(dependency.is_attached_to_object);
+    data.write_b(dependency.is_delegating_to_owning_action);
+    data.write_bl(dependency.order as u32);
+    data.write_b(dependency.name.is_some());
+    data.write_bl(dependency.dependency_body_id as u32);
+    data.write_bs(0);
     match value.cached_value {
         crate::artifacts::dwg::schema::snapshot::DwgEvaluationVariant::Integer32(cached) => {
-            data.write_bs(90).await;
-            data.write_bl(cached as u32).await;
+            data.write_bs(90);
+            data.write_bl(cached as u32);
         }
     }
-    let mut strings = DwgBitWriter::new().await;
+    let mut strings = DwgBitWriter::new();
     if let Some(name) = &dependency.name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
-    strings.write_tu(&value.value_name).await;
-    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCVALUEDEPENDENCY", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    strings.write_tu(&value.value_name);
+    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCVALUEDEPENDENCY", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
-    handles.write_handle(4, dependency.dependent_on_object_handle).await;
-    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default()).await;
-    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default()).await;
-    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, dependency.dependent_on_object_handle);
+    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default());
+    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default());
+    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_associative_geometry_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_associative_geometry_dependency_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(geometry)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCGEOMDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &geometry.dependency;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_b(dependency.is_read_dependency).await;
-    data.write_b(dependency.is_write_dependency).await;
-    data.write_b(dependency.is_attached_to_object).await;
-    data.write_b(dependency.is_delegating_to_owning_action).await;
-    data.write_bl(dependency.order as u32).await;
-    data.write_b(dependency.name.is_some()).await;
-    data.write_bl(dependency.dependency_body_id as u32).await;
-    data.write_bs(0).await;
-    data.write_b(geometry.enabled).await;
-    data.write_b(geometry.dependent_on_compound_object).await;
-    let mut strings = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_b(dependency.is_read_dependency);
+    data.write_b(dependency.is_write_dependency);
+    data.write_b(dependency.is_attached_to_object);
+    data.write_b(dependency.is_delegating_to_owning_action);
+    data.write_bl(dependency.order as u32);
+    data.write_b(dependency.name.is_some());
+    data.write_bl(dependency.dependency_body_id as u32);
+    data.write_bs(0);
+    data.write_b(geometry.enabled);
+    data.write_b(geometry.dependent_on_compound_object);
+    let mut strings = DwgBitWriter::new();
     if let Some(name) = &dependency.name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
-    strings.write_tu(&geometry.persistent_subentity_class_name).await;
-    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCGEOMDEPENDENCY", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    strings.write_tu(&geometry.persistent_subentity_class_name);
+    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCGEOMDEPENDENCY", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
-    handles.write_handle(4, dependency.dependent_on_object_handle).await;
-    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default()).await;
-    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default()).await;
-    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, dependency.dependent_on_object_handle);
+    handles.write_handle(4, dependency.read_dependency_handle.unwrap_or_default());
+    handles.write_handle(4, dependency.dependency_node_handle.unwrap_or_default());
+    handles.write_handle(3, dependency.dependency_body_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_grip_location_component_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_grip_location_component_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockGripLocationComponent(grip)) = object.body.as_ref() else {
         return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {:#x} body missing", object.handle));
@@ -5529,63 +5741,64 @@ async fn encode_r2010_block_grip_location_component_frame(object: &crate::artifa
     if matches!(&expression.value, DwgEvaluationExpressionValue::PointGroup10(point) | DwgEvaluationExpressionValue::PointGroup11(point) if point.len() != 2) {
         return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {:#x} point value must contain two coordinates", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bl(expression.parent_id as u32).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bl(expression.parent_id as u32);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
     match &expression.value {
-        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16).await,
+        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16),
         DwgEvaluationExpressionValue::Double(value) => {
-            data.write_bs(40).await;
-            data.write_bd(*value).await;
+            data.write_bs(40);
+            data.write_bd(*value);
         }
         DwgEvaluationExpressionValue::PointGroup10(point) => {
-            data.write_bs(10).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(10);
+            data.write_2rd([point[0], point[1]]);
         }
         DwgEvaluationExpressionValue::PointGroup11(point) => {
-            data.write_bs(11).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(11);
+            data.write_2rd([point[0], point[1]]);
         }
-        DwgEvaluationExpressionValue::String(_) => data.write_bs(1).await,
+        DwgEvaluationExpressionValue::String(_) => data.write_bs(1),
         DwgEvaluationExpressionValue::Integer32(value) => {
-            data.write_bs(90).await;
-            data.write_bl(*value as u32).await;
+            data.write_bs(90);
+            data.write_bl(*value as u32);
         }
-        DwgEvaluationExpressionValue::ObjectReference(_) => data.write_bs(91).await,
+        DwgEvaluationExpressionValue::ObjectReference(_) => data.write_bs(91),
         DwgEvaluationExpressionValue::Integer16(value) => {
-            data.write_bs(70).await;
-            data.write_bs(*value as u16).await;
+            data.write_bs(70);
+            data.write_bs(*value as u16);
         }
     }
-    data.write_bl(expression.node_id).await;
-    data.write_bl(grip.grip_type).await;
-    let mut strings = DwgBitWriter::new().await;
+    data.write_bl(expression.node_id);
+    data.write_bl(grip.grip_type);
+    let mut strings = DwgBitWriter::new();
     if let DwgEvaluationExpressionValue::String(value) = &expression.value {
-        strings.write_tu(value).await;
+        strings.write_tu(value);
     }
-    strings.write_tu(&grip.grip_expression).await;
-    append_r2010_string_stream(&mut data, &strings, "BLOCKGRIPLOCATIONCOMPONENT", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    strings.write_tu(&grip.grip_expression);
+    append_r2010_string_stream(&mut data, &strings, "BLOCKGRIPLOCATIONCOMPONENT", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
     if let DwgEvaluationExpressionValue::ObjectReference(reference) = &expression.value {
-        handles.write_handle(5, *reference).await;
+        handles.write_handle(5, *reference);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::DynamicBlockProxyNode(proxy)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {:#x} body missing", object.handle));
@@ -5597,61 +5810,62 @@ async fn encode_r2010_dynamic_block_proxy_node_frame(object: &crate::artifacts::
     if matches!(&expression.value, DwgEvaluationExpressionValue::ObjectReference(0)) {
         return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {:#x} object reference is null", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bl(expression.parent_id as u32).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bl(expression.parent_id as u32);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
     match &expression.value {
-        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16).await,
+        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16),
         DwgEvaluationExpressionValue::Double(value) => {
-            data.write_bs(40).await;
-            data.write_bd(*value).await;
+            data.write_bs(40);
+            data.write_bd(*value);
         }
         DwgEvaluationExpressionValue::PointGroup10(point) => {
-            data.write_bs(10).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(10);
+            data.write_2rd([point[0], point[1]]);
         }
         DwgEvaluationExpressionValue::PointGroup11(point) => {
-            data.write_bs(11).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(11);
+            data.write_2rd([point[0], point[1]]);
         }
-        DwgEvaluationExpressionValue::String(_) => data.write_bs(1).await,
+        DwgEvaluationExpressionValue::String(_) => data.write_bs(1),
         DwgEvaluationExpressionValue::Integer32(value) => {
-            data.write_bs(90).await;
-            data.write_bl(*value as u32).await;
+            data.write_bs(90);
+            data.write_bl(*value as u32);
         }
-        DwgEvaluationExpressionValue::ObjectReference(_) => data.write_bs(91).await,
+        DwgEvaluationExpressionValue::ObjectReference(_) => data.write_bs(91),
         DwgEvaluationExpressionValue::Integer16(value) => {
-            data.write_bs(70).await;
-            data.write_bs(*value as u16).await;
+            data.write_bs(70);
+            data.write_bs(*value as u16);
         }
     }
-    data.write_bl(expression.node_id).await;
-    let mut strings = DwgBitWriter::new().await;
+    data.write_bl(expression.node_id);
+    let mut strings = DwgBitWriter::new();
     if let DwgEvaluationExpressionValue::String(value) = &expression.value {
-        strings.write_tu(value).await;
+        strings.write_tu(value);
     }
-    append_r2010_string_stream(&mut data, &strings, "ACDB_DYNAMICBLOCKPROXYNODE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "ACDB_DYNAMICBLOCKPROXYNODE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
     if let DwgEvaluationExpressionValue::ObjectReference(reference) = &expression.value {
-        handles.write_handle(5, *reference).await;
+        handles.write_handle(5, *reference);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_associative_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_associative_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationVariant, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::AssociativeVariable(variable)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVARIABLE {:#x} body missing", object.handle));
@@ -5662,157 +5876,162 @@ async fn encode_r2010_associative_variable_frame(object: &crate::artifacts::dwg:
     if variable.mergeable != variable.mergeable_variable_name.is_some() {
         return Err(format!("ACDBASSOCVARIABLE {:#x} mergeable state and variable name disagree", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_bl(variable.action.action_index as u32).await;
-    data.write_bl(variable.action.maximum_dependency_index as u32).await;
-    data.write_bl(variable.action.dependencies.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_bl(variable.action.action_index as u32);
+    data.write_bl(variable.action.maximum_dependency_index as u32);
+    data.write_bl(variable.action.dependencies.len() as u32);
     for dependency in &variable.action.dependencies {
-        data.write_b(dependency.owned).await;
+        data.write_b(dependency.owned);
     }
-    data.write_bl(2).await;
+    data.write_bl(2);
     match variable.evaluated_value {
         DwgEvaluationVariant::Integer32(value) => {
-            data.write_bs(90).await;
-            data.write_bl(value as u32).await;
+            data.write_bs(90);
+            data.write_bl(value as u32);
         }
     }
-    data.write_b(variable.mergeable).await;
-    data.write_b(variable.must_merge).await;
+    data.write_b(variable.mergeable);
+    data.write_b(variable.must_merge);
     if variable.action.maximum_dependency_index > 0 {
-        data.write_bl(variable.referenced_value_dependency_handles.len() as u32).await;
+        data.write_bl(variable.referenced_value_dependency_handles.len() as u32);
     }
-    data.write_bs(0).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&variable.name).await;
-    strings.write_tu(&variable.expression).await;
-    strings.write_tu(&variable.evaluator_id).await;
-    strings.write_tu(&variable.description).await;
+    data.write_bs(0);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&variable.name);
+    strings.write_tu(&variable.expression);
+    strings.write_tu(&variable.evaluator_id);
+    strings.write_tu(&variable.description);
     if let Some(name) = &variable.mergeable_variable_name {
-        strings.write_tu(name).await;
+        strings.write_tu(name);
     }
-    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCVARIABLE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "ACDBASSOCVARIABLE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
-    handles.write_handle(4, variable.action.owning_network_handle.unwrap_or_default()).await;
-    handles.write_handle(3, variable.action.action_body_handle.unwrap_or_default()).await;
+    handles.write_handle(4, variable.action.owning_network_handle.unwrap_or_default());
+    handles.write_handle(3, variable.action.action_body_handle.unwrap_or_default());
     for dependency in &variable.action.dependencies {
-        handles.write_handle(if dependency.owned { 3 } else { 5 }, dependency.dependency_handle).await;
+        handles.write_handle(if dependency.owned { 3 } else { 5 }, dependency.dependency_handle);
     }
     for dependency in &variable.referenced_value_dependency_handles {
-        handles.write_handle(3, *dependency).await;
+        handles.write_handle(3, *dependency);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_associative_dimension_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_associative_dimension_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("ASSOCDIMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    data.write_bs(1).await;
-    data.write_bs(1).await;
-    data.write_bs(1).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.name).await;
-    append_r2010_string_stream(&mut data, &strings, "ASSOCDIMDEPENDENCYBODY", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    data.write_bs(1);
+    data.write_bs(1);
+    data.write_bs(1);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.name);
+    append_r2010_string_stream(&mut data, &strings, "ASSOCDIMDEPENDENCYBODY", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     if let Some(extension_dictionary) = object.extension_dictionary_handle {
-        handles.write_handle(4, extension_dictionary).await;
+        handles.write_handle(4, extension_dictionary);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_parameter_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_parameter_dependency_body_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKPARAMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("BLOCKPARAMDEPENDENCYBODY {:#x} unsupported common state", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    data.write_bs(1).await;
-    data.write_bs(1).await;
-    data.write_bs(0).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.name).await;
-    append_r2010_string_stream(&mut data, &strings, "BLOCKPARAMDEPENDENCYBODY", object.handle).await?;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    data.write_bs(1);
+    data.write_bs(1);
+    data.write_bs(0);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.name);
+    append_r2010_string_stream(&mut data, &strings, "BLOCKPARAMDEPENDENCYBODY", object.handle)?;
     let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    finish_r2010_object_frame(data, handles.await).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_representation_data_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_representation_data_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle != Some(object.handle - 1) || object.reactor_handles.as_slice() != [object.handle - 1] || body.represented_block_header_handle == 0 {
         return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {:#x} common or graph state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bs(1).await;
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
-    handles.write_handle(8, 0).await;
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(5, body.represented_block_header_handle).await;
-    finish_r2010_object_frame(data, handles).await
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bs(1);
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
+    handles.write_handle(8, 0);
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(5, body.represented_block_header_handle);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_dynamic_block_purge_preventer_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dynamic_block_purge_preventer_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || body.protected_block_header_handle == 0 {
         return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {:#x} common or graph state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bs(1).await;
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bs(1);
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(5, body.protected_block_header_handle).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(5, body.protected_block_header_handle);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn evaluation_graph_indexes(graph: &crate::artifacts::dwg::schema::snapshot::DwgEvaluationGraph) -> Result<(Vec<[i32; 4]>, Vec<[i32; 5]>, Vec<(usize, usize)>), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn evaluation_graph_indexes(graph: &crate::artifacts::dwg::schema::snapshot::DwgEvaluationGraph) -> Result<(Vec<[i32; 4]>, Vec<[i32; 5]>, Vec<(usize, usize)>), String> {
     let mut node_indexes = std::collections::BTreeMap::new();
     for (index, node) in graph.nodes.iter().enumerate() {
         if node.id == 0 || node.expression_handle == 0 || node_indexes.insert(node.id, index).is_some() {
@@ -5870,54 +6089,56 @@ async fn evaluation_graph_indexes(graph: &crate::artifacts::dwg::schema::snapsho
     Ok((node_relations, edge_relations, endpoints))
 }
 
-async fn encode_r2010_evaluation_graph_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_evaluation_graph_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::EvaluationGraph(graph)) = object.body.as_ref() else {
         return Err(format!("ACAD_EVALUATION_GRAPH {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || graph.nodes.is_empty() {
         return Err(format!("ACAD_EVALUATION_GRAPH {:#x} common or graph state is invalid", object.handle));
     }
-    let (node_relations, edge_relations, endpoints) = evaluation_graph_indexes(graph).await?;
+    let (node_relations, edge_relations, endpoints) = evaluation_graph_indexes(graph)?;
     let watermark = graph.nodes.iter().map(|node| node.id).max().ok_or("evaluation graph has no nodes")?;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bl(watermark).await;
-    data.write_bl(watermark).await;
-    data.write_bl(graph.nodes.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bl(watermark);
+    data.write_bl(watermark);
+    data.write_bl(graph.nodes.len() as u32);
     for (index, node) in graph.nodes.iter().enumerate() {
-        data.write_bl(index as u32).await;
-        data.write_bl(32).await;
-        data.write_bl(node.id).await;
+        data.write_bl(index as u32);
+        data.write_bl(32);
+        data.write_bl(node.id);
         for relation in node_relations[index] {
-            data.write_bl(relation as u32).await;
+            data.write_bl(relation as u32);
         }
     }
-    data.write_bl(graph.edges.len() as u32).await;
+    data.write_bl(graph.edges.len() as u32);
     for (index, edge) in graph.edges.iter().enumerate() {
-        data.write_bl(index as u32).await;
-        data.write_bl(0).await;
-        data.write_bl(edge.reference_count).await;
-        data.write_bl(endpoints[index].0 as u32).await;
-        data.write_bl(endpoints[index].1 as u32).await;
+        data.write_bl(index as u32);
+        data.write_bl(0);
+        data.write_bl(edge.reference_count);
+        data.write_bl(endpoints[index].0 as u32);
+        data.write_bl(endpoints[index].1 as u32);
         for relation in edge_relations[index] {
-            data.write_bl(relation as u32).await;
+            data.write_bl(relation as u32);
         }
     }
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
+    handles.write_handle(4, object.reactor_handles[0]);
     for node in &graph.nodes {
-        handles.write_handle(3, node.expression_handle).await;
+        handles.write_handle(3, node.expression_handle);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_flip_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_flip_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockFlipParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKFLIPPARAMETER {:#x} body missing", object.handle));
@@ -5933,86 +6154,87 @@ async fn encode_r2010_block_flip_parameter_frame(object: &crate::artifacts::dwg:
         return Err(format!("BLOCKFLIPPARAMETER {:#x} logical state is invalid", object.handle));
     }
     let expression = &body.evaluation_expression;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    data.write_bl(expression.parent_id as u32).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    data.write_bl(expression.parent_id as u32);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
     match &expression.value {
-        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16).await,
+        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16),
         DwgEvaluationExpressionValue::Double(value) => {
-            data.write_bs(40).await;
-            data.write_bd(*value).await;
+            data.write_bs(40);
+            data.write_bd(*value);
         }
         DwgEvaluationExpressionValue::PointGroup10(point) | DwgEvaluationExpressionValue::PointGroup11(point) if point.len() == 2 => {
-            data.write_bs(if matches!(expression.value, DwgEvaluationExpressionValue::PointGroup10(_)) { 10 } else { 11 }).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(if matches!(expression.value, DwgEvaluationExpressionValue::PointGroup10(_)) { 10 } else { 11 });
+            data.write_2rd([point[0], point[1]]);
         }
-        DwgEvaluationExpressionValue::String(_) => data.write_bs(1).await,
+        DwgEvaluationExpressionValue::String(_) => data.write_bs(1),
         DwgEvaluationExpressionValue::Integer32(value) => {
-            data.write_bs(90).await;
-            data.write_bl(*value as u32).await;
+            data.write_bs(90);
+            data.write_bl(*value as u32);
         }
-        DwgEvaluationExpressionValue::ObjectReference(reference) if *reference != 0 => data.write_bs(91).await,
+        DwgEvaluationExpressionValue::ObjectReference(reference) if *reference != 0 => data.write_bs(91),
         DwgEvaluationExpressionValue::Integer16(value) => {
-            data.write_bs(70).await;
-            data.write_bs(*value as u16).await;
+            data.write_bs(70);
+            data.write_bs(*value as u16);
         }
         _ => return Err(format!("BLOCKFLIPPARAMETER {:#x} evaluation value is invalid", object.handle)),
     }
-    data.write_bl(expression.node_id).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
-    data.write_bl(0).await;
-    data.write_b(body.show_properties).await;
-    data.write_b(body.chain_actions).await;
-    data.write_3bd([body.definition_base[0], body.definition_base[1], body.definition_base[2]]).await;
-    data.write_3bd([body.definition_end[0], body.definition_end[1], body.definition_end[2]]).await;
+    data.write_bl(expression.node_id);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
+    data.write_bl(0);
+    data.write_b(body.show_properties);
+    data.write_b(body.chain_actions);
+    data.write_3bd([body.definition_base[0], body.definition_base[1], body.definition_base[2]]);
+    data.write_3bd([body.definition_end[0], body.definition_end[1], body.definition_end[2]]);
     for property in &body.properties {
-        data.write_bl(property.connections.len() as u32).await;
+        data.write_bl(property.connections.len() as u32);
         for connection in &property.connections {
-            data.write_bl(connection.code).await;
+            data.write_bl(connection.code);
         }
     }
-    data.write_bl(body.updated_flip.node_id).await;
-    data.write_bl(0).await;
-    data.write_bl(0).await;
-    data.write_bl(0).await;
+    data.write_bl(body.updated_flip.node_id);
+    data.write_bl(0);
+    data.write_bl(0);
+    data.write_bl(0);
     data.write_bs(match body.base_location {
         DwgBlockParameterBaseLocation::StartPoint => 0,
         DwgBlockParameterBaseLocation::Midpoint => 1,
-    }).await;
-    data.write_3bd([body.label_point[0], body.label_point[1], body.label_point[2]]).await;
-    data.write_bl(body.updated_flip.node_id).await;
-    let mut strings = DwgBitWriter::new().await;
+    });
+    data.write_3bd([body.label_point[0], body.label_point[1], body.label_point[2]]);
+    data.write_bl(body.updated_flip.node_id);
+    let mut strings = DwgBitWriter::new();
     if let DwgEvaluationExpressionValue::String(value) = &expression.value {
-        strings.write_tu(value).await;
+        strings.write_tu(value);
     }
-    strings.write_tu(&body.name).await;
+    strings.write_tu(&body.name);
     for property in &body.properties {
         for connection in &property.connections {
-            strings.write_tu(&connection.name).await;
+            strings.write_tu(&connection.name);
         }
     }
-    strings.write_tu(&body.label).await;
-    strings.write_tu(&body.description).await;
-    strings.write_tu(&body.value_set.base_label).await;
-    strings.write_tu(&body.value_set.flipped_label).await;
-    strings.write_tu(&body.updated_flip.expression_name).await;
-    append_r2010_string_stream(&mut data, &strings, "BLOCKFLIPPARAMETER", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    strings.write_tu(&body.label);
+    strings.write_tu(&body.description);
+    strings.write_tu(&body.value_set.base_label);
+    strings.write_tu(&body.value_set.flipped_label);
+    strings.write_tu(&body.updated_flip.expression_name);
+    append_r2010_string_stream(&mut data, &strings, "BLOCKFLIPPARAMETER", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     if let DwgEvaluationExpressionValue::ObjectReference(reference) = &expression.value {
-        handles.write_handle(5, *reference).await;
+        handles.write_handle(5, *reference);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_visibility_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_visibility_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationExpressionValue, DwgLogicalObjectBody, DwgVisibilityEvaluationHistory};
     let Some(DwgLogicalObjectBody::BlockVisibilityParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKVISIBILITYPARAMETER {:#x} body missing", object.handle));
@@ -6028,95 +6250,96 @@ async fn encode_r2010_block_visibility_parameter_frame(object: &crate::artifacts
         return Err(format!("BLOCKVISIBILITYPARAMETER {:#x} logical state is invalid", object.handle));
     }
     let expression = &body.evaluation_expression;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    data.write_bl(expression.parent_id as u32).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    data.write_bl(expression.parent_id as u32);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
     match &expression.value {
-        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16).await,
+        DwgEvaluationExpressionValue::Empty => data.write_bs((-9999i16) as u16),
         DwgEvaluationExpressionValue::Double(value) => {
-            data.write_bs(40).await;
-            data.write_bd(*value).await;
+            data.write_bs(40);
+            data.write_bd(*value);
         }
         DwgEvaluationExpressionValue::PointGroup10(point) | DwgEvaluationExpressionValue::PointGroup11(point) if point.len() == 2 => {
-            data.write_bs(if matches!(expression.value, DwgEvaluationExpressionValue::PointGroup10(_)) { 10 } else { 11 }).await;
-            data.write_2rd([point[0], point[1]]).await;
+            data.write_bs(if matches!(expression.value, DwgEvaluationExpressionValue::PointGroup10(_)) { 10 } else { 11 });
+            data.write_2rd([point[0], point[1]]);
         }
-        DwgEvaluationExpressionValue::String(_) => data.write_bs(1).await,
+        DwgEvaluationExpressionValue::String(_) => data.write_bs(1),
         DwgEvaluationExpressionValue::Integer32(value) => {
-            data.write_bs(90).await;
-            data.write_bl(*value as u32).await;
+            data.write_bs(90);
+            data.write_bl(*value as u32);
         }
-        DwgEvaluationExpressionValue::ObjectReference(reference) if *reference != 0 => data.write_bs(91).await,
+        DwgEvaluationExpressionValue::ObjectReference(reference) if *reference != 0 => data.write_bs(91),
         DwgEvaluationExpressionValue::Integer16(value) => {
-            data.write_bs(70).await;
-            data.write_bs(*value as u16).await;
+            data.write_bs(70);
+            data.write_bs(*value as u16);
         }
         _ => return Err(format!("BLOCKVISIBILITYPARAMETER {:#x} evaluation value is invalid", object.handle)),
     }
-    data.write_bl(expression.node_id).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
-    data.write_bl(0).await;
-    data.write_b(body.show_properties).await;
-    data.write_b(body.chain_actions).await;
-    data.write_3bd([body.definition_point[0], body.definition_point[1], body.definition_point[2]]).await;
+    data.write_bl(expression.node_id);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
+    data.write_bl(0);
+    data.write_b(body.show_properties);
+    data.write_b(body.chain_actions);
+    data.write_3bd([body.definition_point[0], body.definition_point[1], body.definition_point[2]]);
     for property in &body.properties {
-        data.write_bl(property.connections.len() as u32).await;
+        data.write_bl(property.connections.len() as u32);
         for connection in &property.connections {
-            data.write_bl(connection.code).await;
+            data.write_bl(connection.code);
         }
     }
-    data.write_bl(body.updated_visibility_node_id).await;
-    data.write_b(body.initialized).await;
-    data.write_b(matches!(body.evaluation_history, DwgVisibilityEvaluationHistory::Required)).await;
-    data.write_bl(body.eligible_entity_handles.len() as u32).await;
-    data.write_bl(body.states.len() as u32).await;
+    data.write_bl(body.updated_visibility_node_id);
+    data.write_b(body.initialized);
+    data.write_b(matches!(body.evaluation_history, DwgVisibilityEvaluationHistory::Required));
+    data.write_bl(body.eligible_entity_handles.len() as u32);
+    data.write_bl(body.states.len() as u32);
     for state in &body.states {
-        data.write_bl(state.visible_entity_handles.len() as u32).await;
-        data.write_bl(state.controlled_expression_handles.len() as u32).await;
+        data.write_bl(state.visible_entity_handles.len() as u32);
+        data.write_bl(state.controlled_expression_handles.len() as u32);
     }
-    let mut strings = DwgBitWriter::new().await;
+    let mut strings = DwgBitWriter::new();
     if let DwgEvaluationExpressionValue::String(value) = &expression.value {
-        strings.write_tu(value).await;
+        strings.write_tu(value);
     }
-    strings.write_tu(&body.element_name).await;
+    strings.write_tu(&body.element_name);
     for property in &body.properties {
         for connection in &property.connections {
-            strings.write_tu(&connection.name).await;
+            strings.write_tu(&connection.name);
         }
     }
-    strings.write_tu(&body.name).await;
-    strings.write_tu(&body.description).await;
+    strings.write_tu(&body.name);
+    strings.write_tu(&body.description);
     for state in &body.states {
-        strings.write_tu(&state.name).await;
+        strings.write_tu(&state.name);
     }
-    append_r2010_string_stream(&mut data, &strings, "BLOCKVISIBILITYPARAMETER", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "BLOCKVISIBILITYPARAMETER", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     if let DwgEvaluationExpressionValue::ObjectReference(reference) = &expression.value {
-        handles.write_handle(5, *reference).await;
+        handles.write_handle(5, *reference);
     }
     for handle in &body.eligible_entity_handles {
-        handles.write_handle(4, *handle).await;
+        handles.write_handle(4, *handle);
     }
     for state in &body.states {
         for handle in &state.visible_entity_handles {
-            handles.write_handle(4, *handle).await;
+            handles.write_handle(4, *handle);
         }
         for handle in &state.controlled_expression_handles {
-            handles.write_handle(4, *handle).await;
+            handles.write_handle(4, *handle);
         }
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_placeholder_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_placeholder_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     if !matches!(object.body, Some(DwgLogicalObjectBody::Placeholder(_)))
         || !object.extended_data.is_empty()
@@ -6126,20 +6349,21 @@ async fn encode_r2010_placeholder_frame(object: &crate::artifacts::dwg::schema::
     {
         return Err(format!("ACDBPLACEHOLDER {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_dictionary_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dictionary_variable_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::DictionaryVariable(body)) = object.body.as_ref() else {
         return Err(format!("DICTIONARYVAR {:#x} body missing", object.handle));
@@ -6147,23 +6371,24 @@ async fn encode_r2010_dictionary_variable_frame(object: &crate::artifacts::dwg::
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || object.extension_dictionary_handle.is_some() {
         return Err(format!("DICTIONARYVAR {:#x} common state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_rc(0).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.value).await;
-    append_r2010_string_stream(&mut data, &strings, "DICTIONARYVAR", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_rc(0);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.value);
+    append_r2010_string_stream(&mut data, &strings, "DICTIONARYVAR", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_annotation_scale_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_annotation_scale_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::AnnotationScale(body)) = object.body.as_ref() else {
         return Err(format!("SCALE {:#x} body missing", object.handle));
@@ -6181,26 +6406,27 @@ async fn encode_r2010_annotation_scale_frame(object: &crate::artifacts::dwg::sch
     {
         return Err(format!("SCALE {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bs(0).await;
-    data.write_bd(body.paper_units).await;
-    data.write_bd(body.drawing_units).await;
-    data.write_b(body.is_unit_scale).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.name).await;
-    append_r2010_string_stream(&mut data, &strings, "SCALE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bs(0);
+    data.write_bd(body.paper_units);
+    data.write_bd(body.drawing_units);
+    data.write_b(body.is_unit_scale);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.name);
+    append_r2010_string_stream(&mut data, &strings, "SCALE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_sort_entities_table_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_sort_entities_table_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::SortEntitiesTable(body)) = object.body.as_ref() else {
         return Err(format!("SORTENTSTABLE {:#x} body missing", object.handle));
@@ -6219,47 +6445,50 @@ async fn encode_r2010_sort_entities_table_frame(object: &crate::artifacts::dwg::
     {
         return Err(format!("SORTENTSTABLE {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bl(body.entries.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bl(body.entries.len() as u32);
     for entry in &body.entries {
-        data.write_handle(0, entry.sort_handle).await;
+        data.write_handle(0, entry.sort_handle);
     }
-    data.write_b(false).await;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_b(false);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(4, body.block_header_handle).await;
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(4, body.block_header_handle);
     for entry in &body.entries {
-        handles.write_handle(4, entry.entity_handle).await;
+        handles.write_handle(4, entry.entity_handle);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn write_table_style_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgComplexColor) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_table_style_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgComplexColor) -> Result<(), String> {
     if color.name.is_some() || color.book_name.is_some() {
         return Err("TABLESTYLE named colors are unsupported".into());
     }
     data.write_bs(color.index);
-    data.write_bl(encode_complex_color_value(&color.value).await);
+    data.write_bl(encode_complex_color_value(&color.value));
     data.write_rc(0);
     Ok(())
 }
 
-async fn table_style_borders(borders: &crate::artifacts::dwg::schema::snapshot::DwgCellBorders) -> [(u32, Option<&crate::artifacts::dwg::schema::snapshot::DwgCellBorder>); 6] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn table_style_borders(borders: &crate::artifacts::dwg::schema::snapshot::DwgCellBorders) -> [(u32, Option<&crate::artifacts::dwg::schema::snapshot::DwgCellBorder>); 6] {
     [(1, borders.top.as_ref()), (2, borders.horizontal_inside.as_ref()), (4, borders.bottom.as_ref()), (8, borders.left.as_ref()), (16, borders.vertical_inside.as_ref()), (32, borders.right.as_ref())]
 }
 
-async fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &crate::artifacts::dwg::schema::snapshot::DwgCellStyle) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &crate::artifacts::dwg::schema::snapshot::DwgCellStyle) -> Result<(), String> {
     data.write_bl(5);
     data.write_bs(1);
     data.write_bl(style.property_override_flags);
     data.write_bl(style.merge_flags);
-    write_table_style_color(data, &style.background_color).await?;
+    write_table_style_color(data, &style.background_color)?;
     data.write_bl(style.content_layout);
     data.write_bl(style.content_format.property_override_flags);
     data.write_bl(style.content_format.property_flags);
@@ -6269,7 +6498,7 @@ async fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWr
     data.write_bd(style.content_format.rotation);
     data.write_bd(style.content_format.block_scale);
     data.write_bl(style.content_format.alignment);
-    write_table_style_color(data, &style.content_format.content_color).await?;
+    write_table_style_color(data, &style.content_format.content_color)?;
     handles.write_handle(5, style.content_format.text_style_handle.unwrap_or_default());
     data.write_bd(style.content_format.text_height);
     data.write_bs(1);
@@ -6279,14 +6508,14 @@ async fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWr
     data.write_bd(style.margins.right);
     data.write_bd(style.margins.horizontal_spacing);
     data.write_bd(style.margins.vertical_spacing);
-    let borders = table_style_borders(&style.borders).await;
+    let borders = table_style_borders(&style.borders);
     data.write_bl(borders.iter().filter(|(_, border)| border.is_some()).count() as u32);
     for (mask, border) in borders {
         let Some(border) = border else { continue };
         data.write_bl(mask);
         data.write_bl(border.override_flags);
         data.write_bl(border.border_type);
-        write_table_style_color(data, &border.color).await?;
+        write_table_style_color(data, &border.color)?;
         data.write_bl(border.lineweight as u32);
         handles.write_handle(5, border.linetype_handle.unwrap_or_default());
         data.write_bl(border.visible);
@@ -6295,7 +6524,8 @@ async fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWr
     Ok(())
 }
 
-async fn encode_r2010_table_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_table_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::TableStyle(body)) = object.body.as_ref() else {
         return Err(format!("TABLESTYLE {:#x} body missing", object.handle));
@@ -6303,39 +6533,40 @@ async fn encode_r2010_table_style_frame(object: &crate::artifacts::dwg::schema::
     if object.owner_handle.is_none() || object.reactor_handles.len() != 1 || object.extension_dictionary_handle.is_none() || !object.extended_data.is_empty() {
         return Err(format!("TABLESTYLE {:#x} common state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(false).await;
-    data.write_rc(0).await;
-    data.write_bl(0).await;
-    data.write_bl(body.bit_flags).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.description).await;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(false);
+    data.write_rc(0);
+    data.write_bl(0);
+    data.write_bl(body.bit_flags);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.description);
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(3, object.extension_dictionary_handle.unwrap()).await;
-    handles.write_handle(3, body.template_style_handle.unwrap_or_default()).await;
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(3, object.extension_dictionary_handle.unwrap());
+    handles.write_handle(3, body.template_style_handle.unwrap_or_default());
     for (style, id, cell_type, name) in [(&body.table, 4, 2, "Table"), (&body.title, 1, 1, "_TITLE"), (&body.header, 2, 1, "_HEADER"), (&body.data, 3, 2, "_DATA")] {
         if id != 4 {
-            data.write_bl(id).await;
+            data.write_bl(id);
         }
-        encode_r2010_cell_style(&mut data, &mut strings, &mut handles, style).await?;
-        data.write_bl(id).await;
-        data.write_bl(cell_type).await;
-        strings.write_tu(name).await;
+        encode_r2010_cell_style(&mut data, &mut strings, &mut handles, style)?;
+        data.write_bl(id);
+        data.write_bl(cell_type);
+        strings.write_tu(name);
         if id == 4 {
-            data.write_bl(3).await;
+            data.write_bl(3);
         }
     }
-    append_r2010_string_stream(&mut data, &strings, "TABLESTYLE", object.handle).await?;
-    finish_r2010_object_frame(data, handles).await
+    append_r2010_string_stream(&mut data, &strings, "TABLESTYLE", object.handle)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMlineLinetype};
     let Some(DwgLogicalObjectBody::MlineStyle(body)) = object.body.as_ref() else { return Err(format!("MLINESTYLE {:#x} body missing", object.handle)) };
     if body.name.is_empty()
@@ -6349,12 +6580,12 @@ async fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::
     {
         return Err(format!("MLINESTYLE {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
     let mut flags = 0u16;
     flags |= u16::from(body.fill_enabled);
     flags |= u16::from(body.display_miters) << 1;
@@ -6364,31 +6595,32 @@ async fn encode_r2010_mline_style_frame(object: &crate::artifacts::dwg::schema::
     flags |= u16::from(body.end_caps.square) << 8;
     flags |= u16::from(body.end_caps.inner_arcs) << 9;
     flags |= u16::from(body.end_caps.round_outer_arcs) << 10;
-    data.write_bs(flags).await;
-    write_table_style_color(&mut data, &body.fill_color).await?;
-    data.write_bd(body.start_angle).await;
-    data.write_bd(body.end_angle).await;
-    data.write_rc(body.elements.len() as u8).await;
+    data.write_bs(flags);
+    write_table_style_color(&mut data, &body.fill_color)?;
+    data.write_bd(body.start_angle);
+    data.write_bd(body.end_angle);
+    data.write_rc(body.elements.len() as u8);
     for element in &body.elements {
-        data.write_bd(element.offset).await;
-        write_table_style_color(&mut data, &element.color).await?;
+        data.write_bd(element.offset);
+        write_table_style_color(&mut data, &element.color)?;
         data.write_bs(match element.linetype {
             DwgMlineLinetype::ByLayer => 32767,
             DwgMlineLinetype::ByBlock => 32766,
             DwgMlineLinetype::Continuous => 0,
-        }).await;
+        });
     }
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.name).await;
-    strings.write_tu(&body.description).await;
-    append_r2010_string_stream(&mut data, &strings, "MLINESTYLE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.name);
+    strings.write_tu(&body.description);
+    append_r2010_string_stream(&mut data, &strings, "MLINESTYLE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_mleader_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_mleader_style_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::*;
     let Some(DwgLogicalObjectBody::MLeaderStyle(body)) = object.body.as_ref() else { return Err(format!("MLEADERSTYLE {:#x} body missing", object.handle)) };
     if body.leader.linetype_style_handle == 0
@@ -6402,86 +6634,87 @@ async fn encode_r2010_mleader_style_frame(object: &crate::artifacts::dwg::schema
     {
         return Err(format!("MLEADERSTYLE {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bs(2).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bs(2);
     data.write_bs(match body.content_type {
         DwgMLeaderContentType::None => 0,
         DwgMLeaderContentType::Block => 1,
         DwgMLeaderContentType::MText => 2,
-    }).await;
+    });
     data.write_bs(match body.draw_order {
         DwgMLeaderDrawOrder::LeaderFirst => 0,
         DwgMLeaderDrawOrder::ContentFirst => 1,
-    }).await;
+    });
     data.write_bs(match body.leader_order {
         DwgMLeaderLeaderOrder::HeadFirst => 0,
         DwgMLeaderLeaderOrder::TailFirst => 1,
-    }).await;
-    data.write_bl(body.maximum_segment_points).await;
-    data.write_bd(body.first_segment_angle).await;
-    data.write_bd(body.second_segment_angle).await;
+    });
+    data.write_bl(body.maximum_segment_points);
+    data.write_bd(body.first_segment_angle);
+    data.write_bd(body.second_segment_angle);
     data.write_bs(match body.leader.kind {
         DwgMLeaderKind::Invisible => 0,
         DwgMLeaderKind::Straight => 1,
         DwgMLeaderKind::Spline => 2,
-    }).await;
-    write_table_style_color(&mut data, &body.leader.color).await?;
-    data.write_bl(body.leader.lineweight as u32).await;
-    data.write_b(body.landing.enabled).await;
-    data.write_bd(body.landing.gap).await;
-    data.write_b(body.dogleg.enabled).await;
-    data.write_bd(body.dogleg.length).await;
-    data.write_bd(body.arrow.size).await;
-    data.write_bs(body.text.left_attachment as u16).await;
-    data.write_bs(body.text.right_attachment as u16).await;
-    data.write_bs(body.text.angle as u16).await;
-    data.write_bs(body.text.alignment as u16).await;
-    write_table_style_color(&mut data, &body.text.color).await?;
-    data.write_bd(body.text.height).await;
-    data.write_b(body.text.frame).await;
-    data.write_b(body.text.always_left).await;
-    data.write_bd(body.text.alignment_space).await;
-    write_table_style_color(&mut data, &body.block.color).await?;
-    data.write_bd(body.block.scale[0]).await;
-    data.write_bd(body.block.scale[1]).await;
-    data.write_bd(body.block.scale[2]).await;
-    data.write_b(body.block.use_scale).await;
-    data.write_bd(body.block.rotation).await;
-    data.write_b(body.block.use_rotation).await;
+    });
+    write_table_style_color(&mut data, &body.leader.color)?;
+    data.write_bl(body.leader.lineweight as u32);
+    data.write_b(body.landing.enabled);
+    data.write_bd(body.landing.gap);
+    data.write_b(body.dogleg.enabled);
+    data.write_bd(body.dogleg.length);
+    data.write_bd(body.arrow.size);
+    data.write_bs(body.text.left_attachment as u16);
+    data.write_bs(body.text.right_attachment as u16);
+    data.write_bs(body.text.angle as u16);
+    data.write_bs(body.text.alignment as u16);
+    write_table_style_color(&mut data, &body.text.color)?;
+    data.write_bd(body.text.height);
+    data.write_b(body.text.frame);
+    data.write_b(body.text.always_left);
+    data.write_bd(body.text.alignment_space);
+    write_table_style_color(&mut data, &body.block.color)?;
+    data.write_bd(body.block.scale[0]);
+    data.write_bd(body.block.scale[1]);
+    data.write_bd(body.block.scale[2]);
+    data.write_b(body.block.use_scale);
+    data.write_bd(body.block.rotation);
+    data.write_b(body.block.use_rotation);
     data.write_bs(match body.block.connection {
         DwgMLeaderBlockConnection::Extents => 0,
         DwgMLeaderBlockConnection::BasePoint => 1,
-    }).await;
-    data.write_bd(body.overall_scale).await;
-    data.write_b(body.property_overrides_changed).await;
-    data.write_b(body.annotative).await;
-    data.write_bd(body.break_size).await;
+    });
+    data.write_bd(body.overall_scale);
+    data.write_b(body.property_overrides_changed);
+    data.write_b(body.annotative);
+    data.write_bd(body.break_size);
     data.write_bs(match body.text.attachment_direction {
         DwgMLeaderAttachmentDirection::Horizontal => 0,
         DwgMLeaderAttachmentDirection::Vertical => 1,
-    }).await;
-    data.write_bs(body.text.top_attachment as u16).await;
-    data.write_bs(body.text.bottom_attachment as u16).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.description).await;
-    strings.write_tu(&body.text.default_content).await;
-    append_r2010_string_stream(&mut data, &strings, "MLEADERSTYLE", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    });
+    data.write_bs(body.text.top_attachment as u16);
+    data.write_bs(body.text.bottom_attachment as u16);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.description);
+    strings.write_tu(&body.text.default_content);
+    append_r2010_string_stream(&mut data, &strings, "MLEADERSTYLE", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(5, body.leader.linetype_style_handle).await;
-    handles.write_handle(5, body.arrow.symbol_handle.unwrap_or_default()).await;
-    handles.write_handle(5, body.text.style_handle).await;
-    handles.write_handle(5, body.block.content_handle.unwrap_or_default()).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(5, body.leader.linetype_style_handle);
+    handles.write_handle(5, body.arrow.symbol_handle.unwrap_or_default());
+    handles.write_handle(5, body.text.style_handle);
+    handles.write_handle(5, body.block.content_handle.unwrap_or_default());
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn write_material_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgMaterialColor) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_material_color(data: &mut DwgBitWriter, color: &crate::artifacts::dwg::schema::snapshot::DwgMaterialColor) {
     data.write_rc(u8::from(color.override_rgb.is_some()));
     data.write_bd(color.factor);
     if let Some(rgb) = color.override_rgb {
@@ -6489,7 +6722,8 @@ async fn write_material_color(data: &mut DwgBitWriter, color: &crate::artifacts:
     }
 }
 
-async fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &crate::artifacts::dwg::schema::snapshot::DwgMaterialMap) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &crate::artifacts::dwg::schema::snapshot::DwgMaterialMap) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
     if map.transform.len() != 16 || map.transform.iter().any(|value| !value.is_finite()) {
         return Err("MATERIAL mapper transform must contain sixteen finite values".into());
@@ -6518,56 +6752,58 @@ async fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter,
             data.write_rc(1);
             strings.write_tu("");
         }
-        DwgMaterialMapSource::CurrentScene => data.write_rc(0).await,
+        DwgMaterialMapSource::CurrentScene => data.write_rc(0),
     }
     Ok(())
 }
 
-async fn encode_r2010_material_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_material_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::Material(body)) = object.body.as_ref() else { return Err(format!("MATERIAL {:#x} body missing", object.handle)) };
     if body.name.is_empty() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] {
         return Err(format!("MATERIAL {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(object.extension_dictionary_handle.is_none()).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&body.name).await;
-    strings.write_tu(&body.description).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(object.extension_dictionary_handle.is_none());
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&body.name);
+    strings.write_tu(&body.description);
     write_material_color(&mut data, &body.ambient);
     write_material_color(&mut data, &body.diffuse);
-    write_material_map(&mut data, &mut strings, &body.diffuse_map).await?;
+    write_material_map(&mut data, &mut strings, &body.diffuse_map)?;
     write_material_color(&mut data, &body.specular);
-    write_material_map(&mut data, &mut strings, &body.specular_map).await?;
-    data.write_bd(body.specular_gloss).await;
-    write_material_map(&mut data, &mut strings, &body.reflection_map).await?;
-    data.write_bd(body.opacity).await;
-    write_material_map(&mut data, &mut strings, &body.opacity_map).await?;
-    write_material_map(&mut data, &mut strings, &body.bump_map).await?;
-    data.write_bd(body.refraction_index).await;
-    write_material_map(&mut data, &mut strings, &body.refraction_map).await?;
-    data.write_bd(body.translucence).await;
-    data.write_bd(body.self_illumination).await;
-    data.write_bd(body.reflectivity).await;
-    data.write_bl(0).await;
+    write_material_map(&mut data, &mut strings, &body.specular_map)?;
+    data.write_bd(body.specular_gloss);
+    write_material_map(&mut data, &mut strings, &body.reflection_map)?;
+    data.write_bd(body.opacity);
+    write_material_map(&mut data, &mut strings, &body.opacity_map)?;
+    write_material_map(&mut data, &mut strings, &body.bump_map)?;
+    data.write_bd(body.refraction_index);
+    write_material_map(&mut data, &mut strings, &body.refraction_map)?;
+    data.write_bd(body.translucence);
+    data.write_bd(body.self_illumination);
+    data.write_bd(body.reflectivity);
+    data.write_bl(0);
     let channels = &body.enabled_channels;
-    data.write_bl(u32::from(channels.diffuse) | u32::from(channels.specular) << 1 | u32::from(channels.reflection) << 2 | u32::from(channels.opacity) << 3 | u32::from(channels.bump) << 4 | u32::from(channels.refraction) << 5).await;
-    data.write_bl(0).await;
-    append_r2010_string_stream(&mut data, &strings, "MATERIAL", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_bl(u32::from(channels.diffuse) | u32::from(channels.specular) << 1 | u32::from(channels.reflection) << 2 | u32::from(channels.opacity) << 3 | u32::from(channels.bump) << 4 | u32::from(channels.refraction) << 5);
+    data.write_bl(0);
+    append_r2010_string_stream(&mut data, &strings, "MATERIAL", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
+    handles.write_handle(4, object.reactor_handles[0]);
     if let Some(handle) = object.extension_dictionary_handle {
-        handles.write_handle(3, handle).await;
+        handles.write_handle(3, handle);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_move_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_move_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockMoveCoordinateMode, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::BlockMoveAction(body)) = object.body.as_ref() else { return Err(format!("BLOCKMOVEACTION {:#x} body missing", object.handle)) };
     let action = &body.action;
@@ -6590,45 +6826,46 @@ async fn encode_r2010_block_move_action_frame(object: &crate::artifacts::dwg::sc
     {
         return Err(format!("BLOCKMOVEACTION {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    data.write_bl(expression.parent_id as u32).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
-    data.write_bs((-9999i16) as u16).await;
-    data.write_bl(expression.node_id).await;
-    data.write_bl(expression.major_version).await;
-    data.write_bl(expression.minor_version).await;
-    data.write_bl(0).await;
-    data.write_3bd([action.display_location[0], action.display_location[1], action.display_location[2]]).await;
-    data.write_bl(action.dependencies.len() as u32).await;
-    data.write_bl(action.action_node_ids.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    data.write_bl(expression.parent_id as u32);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
+    data.write_bs((-9999i16) as u16);
+    data.write_bl(expression.node_id);
+    data.write_bl(expression.major_version);
+    data.write_bl(expression.minor_version);
+    data.write_bl(0);
+    data.write_3bd([action.display_location[0], action.display_location[1], action.display_location[2]]);
+    data.write_bl(action.dependencies.len() as u32);
+    data.write_bl(action.action_node_ids.len() as u32);
     for node_id in &action.action_node_ids {
-        data.write_bl(*node_id).await;
+        data.write_bl(*node_id);
     }
-    data.write_bl(body.x_connection.node_id).await;
-    data.write_bl(body.y_connection.node_id).await;
-    data.write_bd(body.distance_multiplier).await;
-    data.write_bd(body.angle_offset).await;
-    data.write_rc(0).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&action.name).await;
-    strings.write_tu(&body.x_connection.name).await;
-    strings.write_tu(&body.y_connection.name).await;
-    append_r2010_string_stream(&mut data, &strings, "BLOCKMOVEACTION", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_bl(body.x_connection.node_id);
+    data.write_bl(body.y_connection.node_id);
+    data.write_bd(body.distance_multiplier);
+    data.write_bd(body.angle_offset);
+    data.write_rc(0);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&action.name);
+    strings.write_tu(&body.x_connection.name);
+    strings.write_tu(&body.y_connection.name);
+    append_r2010_string_stream(&mut data, &strings, "BLOCKMOVEACTION", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for dependency in &action.dependencies {
-        handles.write_handle(4, dependency.object_handle).await;
+        handles.write_handle(4, dependency.object_handle);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_assoc_network_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_assoc_network_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgAssocNetworkMemberKind, DwgAssociativeActionStatus, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::AssocNetwork(network)) = object.body.as_ref() else { return Err(format!("ACDBASSOCNETWORK {:#x} body missing", object.handle)) };
     let action = &network.action;
@@ -6643,46 +6880,49 @@ async fn encode_r2010_assoc_network_frame(object: &crate::artifacts::dwg::schema
     {
         return Err(format!("ACDBASSOCNETWORK {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(true).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_bl(action.action_index as u32).await;
-    data.write_bl(action.maximum_dependency_index as u32).await;
-    data.write_bl(0).await;
-    data.write_bs(0).await;
-    data.write_bl(network.network_action_index as u32).await;
-    data.write_bl(network.actions.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(true);
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_bl(action.action_index as u32);
+    data.write_bl(action.maximum_dependency_index as u32);
+    data.write_bl(0);
+    data.write_bs(0);
+    data.write_bl(network.network_action_index as u32);
+    data.write_bl(network.actions.len() as u32);
     for member in &network.actions {
-        data.write_b(matches!(member.kind, DwgAssocNetworkMemberKind::Action)).await;
+        data.write_b(matches!(member.kind, DwgAssocNetworkMemberKind::Action));
     }
-    data.write_bl(0).await;
-    append_r2010_string_stream(&mut data, &DwgBitWriter::new(), "ACDBASSOCNETWORK", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    data.write_bl(0);
+    append_r2010_string_stream(&mut data, &DwgBitWriter::new(), "ACDBASSOCNETWORK", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(4, action.owning_network_handle.unwrap_or_default()).await;
-    handles.write_handle(3, 0).await;
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(4, action.owning_network_handle.unwrap_or_default());
+    handles.write_handle(3, 0);
     for member in &network.actions {
-        handles.write_handle(if matches!(member.kind, DwgAssocNetworkMemberKind::Network) { 4 } else { 3 }, member.handle).await;
+        handles.write_handle(if matches!(member.kind, DwgAssocNetworkMemberKind::Network) { 4 } else { 3 }, member.handle);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn constraint_point3(values: &[f64], role: &str) -> Result<[f64; 3], String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn constraint_point3(values: &[f64], role: &str) -> Result<[f64; 3], String> {
     if values.len() != 3 || values.iter().any(|value| !value.is_finite()) {
         return Err(format!("{role} must contain three finite coordinates"));
     }
     Ok([values[0], values[1], values[2]])
 }
 
-async fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgConstraintNode;
-    async fn core(data: &mut DwgBitWriter, node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNodeCore) -> Result<(), String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn core(data: &mut DwgBitWriter, node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNodeCore) -> Result<(), String> {
         if node.id < 0 || node.connected_node_ids.len() > 10_000 {
             return Err("constraint node ID or connection count is invalid".into());
         }
@@ -6693,23 +6933,26 @@ async fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snap
         }
         Ok(())
     }
-    async fn geometric(data: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgGeometricConstraint) -> Result<(), String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn geometric(data: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgGeometricConstraint) -> Result<(), String> {
         if !value.active {
             return Err("AC1024 geometric constraint must be active".into());
         }
-        core(data, &value.node).await?;
+        core(data, &value.node)?;
         data.write_bl(value.owner_node_id);
         data.write_b(value.implied);
         Ok(())
     }
-    async fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgConstraintGeometry) -> Result<(), String> {
-        core(data, &value.node).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgConstraintGeometry) -> Result<(), String> {
+        core(data, &value.node)?;
         handles.write_handle(4, value.geometry_dependency_handle.unwrap_or_default());
         data.write_bl(value.geometry_node_id);
         Ok(())
     }
-    async fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgExplicitConstraint) -> Result<(), String> {
-        geometric(data, &value.geometric).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &crate::artifacts::dwg::schema::snapshot::DwgExplicitConstraint) -> Result<(), String> {
+        geometric(data, &value.geometric)?;
         if value.value_dependency_handle == 0 || value.dimension_dependency_handle == 0 {
             return Err("explicit constraint dependency handles must be nonnull".into());
         }
@@ -6719,9 +6962,9 @@ async fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snap
     }
     let class = match node {
         DwgConstraintNode::ConstrainedImplicitPoint(value) => {
-            geometry(data, handles, &value.geometry).await?;
+            geometry(data, handles, &value.geometry)?;
             if value.geometry.geometry_dependency_handle.is_some() {
-                data.write_3bd(constraint_point3(value.point.as_deref().ok_or("dependent implicit point is missing its point")?, "implicit point").await?);
+                data.write_3bd(constraint_point3(value.point.as_deref().ok_or("dependent implicit point is missing its point")?, "implicit point")?);
             } else if value.point.is_some() {
                 return Err("independent implicit point must not persist a conditional point".into());
             }
@@ -6731,72 +6974,72 @@ async fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snap
             "AcConstrainedImplicitPoint"
         }
         DwgConstraintNode::PointCurveConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcPointCurveConstraint"
         }
         DwgConstraintNode::ConstrainedBoundedLine(value) => {
-            geometry(data, handles, &value.geometry).await?;
+            geometry(data, handles, &value.geometry)?;
             if value.bounded == value.ray {
                 return Err("bounded-line ray and bounded states must be complementary".into());
             }
-            data.write_3bd(constraint_point3(&value.origin, "bounded-line origin").await?);
-            data.write_3bd(constraint_point3(&value.direction, "bounded-line direction").await?);
+            data.write_3bd(constraint_point3(&value.origin, "bounded-line origin")?);
+            data.write_3bd(constraint_point3(&value.direction, "bounded-line direction")?);
             data.write_b(value.ray);
-            data.write_3bd(constraint_point3(&value.start_point, "bounded-line start").await?);
-            data.write_3bd(constraint_point3(&value.end_point, "bounded-line end").await?);
+            data.write_3bd(constraint_point3(&value.start_point, "bounded-line start")?);
+            data.write_3bd(constraint_point3(&value.end_point, "bounded-line end")?);
             "AcConstrainedBoundedLine"
         }
         DwgConstraintNode::PointCoincidenceConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcPointCoincidenceConstraint"
         }
         DwgConstraintNode::DistanceConstraint(value) => {
-            explicit(data, handles, &value.explicit).await?;
+            explicit(data, handles, &value.explicit)?;
             data.write_rc(value.direction_kind);
             if value.direction_kind != 0 {
-                data.write_3bd(constraint_point3(value.direction.as_deref().ok_or("directed distance is missing its direction")?, "distance direction").await?);
+                data.write_3bd(constraint_point3(value.direction.as_deref().ok_or("directed distance is missing its direction")?, "distance direction")?);
             } else if value.direction.is_some() {
                 return Err("undirected distance must not persist a conditional direction".into());
             }
             "AcDistanceConstraint"
         }
         DwgConstraintNode::PerpendicularConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcPerpendicularConstraint"
         }
         DwgConstraintNode::HorizontalConstraint(value) => {
-            geometric(data, &value.geometric).await?;
+            geometric(data, &value.geometric)?;
             data.write_bl(value.datum_line_index as u32);
             "AcHorizontalConstraint"
         }
         DwgConstraintNode::ParallelConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcParallelConstraint"
         }
         DwgConstraintNode::MidPointConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcMidPointConstraint"
         }
         DwgConstraintNode::EqualLengthConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcEqualLengthConstraint"
         }
         DwgConstraintNode::ColinearConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcColinearConstraint"
         }
         DwgConstraintNode::ConstrainedDatumLine(value) => {
-            geometry(data, handles, &value.geometry).await?;
-            data.write_3bd(constraint_point3(&value.origin, "datum-line origin").await?);
-            data.write_3bd(constraint_point3(&value.direction, "datum-line direction").await?);
+            geometry(data, handles, &value.geometry)?;
+            data.write_3bd(constraint_point3(&value.origin, "datum-line origin")?);
+            data.write_3bd(constraint_point3(&value.direction, "datum-line direction")?);
             "AcConstrainedDatumLine"
         }
         DwgConstraintNode::FixedConstraint(value) => {
-            geometric(data, value).await?;
+            geometric(data, value)?;
             "AcFixedConstraint"
         }
         DwgConstraintNode::VerticalConstraint(value) => {
-            geometric(data, &value.geometric).await?;
+            geometric(data, &value.geometric)?;
             data.write_bl(value.datum_line_index as u32);
             "AcVerticalConstraint"
         }
@@ -6805,7 +7048,8 @@ async fn encode_r2010_constraint_node(node: &crate::artifacts::dwg::schema::snap
     Ok(())
 }
 
-async fn constraint_node_id(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode) -> i32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn constraint_node_id(node: &crate::artifacts::dwg::schema::snapshot::DwgConstraintNode) -> i32 {
     use crate::artifacts::dwg::schema::snapshot::DwgConstraintNode;
     match node {
         DwgConstraintNode::ConstrainedImplicitPoint(value) => value.geometry.node.id,
@@ -6824,7 +7068,8 @@ async fn constraint_node_id(node: &crate::artifacts::dwg::schema::snapshot::DwgC
     }
 }
 
-async fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgAssociativeActionStatus, DwgLogicalObjectBody};
     let Some(DwgLogicalObjectBody::Assoc2dConstraintGroup(group)) = object.body.as_ref() else { return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {:#x} body missing", object.handle)) };
     if !matches!(group.action.status, DwgAssociativeActionStatus::UpToDate)
@@ -6840,50 +7085,51 @@ async fn encode_r2010_assoc_2d_constraint_group_frame(object: &crate::artifacts:
         return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {:#x} logical state is invalid", object.handle));
     }
     let work_plane = group.work_plane.iter().enumerate().map(|(index, point)| constraint_point3(point, &format!("work-plane point {index}"))).collect::<Result<Vec<_>, _>>()?;
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    data.write_bs(1).await;
-    data.write_bl(0).await;
-    data.write_bl(group.action.action_index as u32).await;
-    data.write_bl(group.action.maximum_dependency_index as u32).await;
-    data.write_bl(group.action.dependencies.len() as u32).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    data.write_bs(1);
+    data.write_bl(0);
+    data.write_bl(group.action.action_index as u32);
+    data.write_bl(group.action.maximum_dependency_index as u32);
+    data.write_bl(group.action.dependencies.len() as u32);
     for dependency in &group.action.dependencies {
-        data.write_b(dependency.owned).await;
+        data.write_b(dependency.owned);
     }
-    data.write_bl(0).await;
-    data.write_b(group.do_not_check_newly_added_constraints).await;
+    data.write_bl(0);
+    data.write_b(group.do_not_check_newly_added_constraints);
     for point in work_plane {
-        data.write_3bd(point).await;
+        data.write_3bd(point);
     }
-    data.write_bl(group.member_action_handles.len() as u32).await;
-    data.write_bl(group.nodes.iter().map(constraint_node_id).max().and_then(|value| semio_framework_plugin::resolve_ready(value.await.checked_add(1))).ok_or("constraint group node watermark is invalid")? as u32).await;
-    data.write_bl(group.nodes.len() as u32).await;
+    data.write_bl(group.member_action_handles.len() as u32);
+    data.write_bl(group.nodes.iter().map(constraint_node_id).max().and_then(|value| value.checked_add(1)).ok_or("constraint group node watermark is invalid")? as u32);
+    data.write_bl(group.nodes.len() as u32);
     let mut strings = DwgBitWriter::new();
     let mut node_handles = DwgBitWriter::new();
     for node in &group.nodes {
-        encode_r2010_constraint_node(node, &mut data, &mut strings, &mut node_handles).await?;
+        encode_r2010_constraint_node(node, &mut data, &mut strings, &mut node_handles)?;
     }
-    append_r2010_string_stream(&mut data, &strings, "ACDBASSOC2DCONSTRAINTGROUP", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    append_r2010_string_stream(&mut data, &strings, "ACDBASSOC2DCONSTRAINTGROUP", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, group.action.owning_network_handle.unwrap_or_default()).await;
-    handles.write_handle(3, 0).await;
+    handles.write_handle(4, group.action.owning_network_handle.unwrap_or_default());
+    handles.write_handle(3, 0);
     for dependency in &group.action.dependencies {
-        handles.write_handle(if dependency.owned { 3 } else { 4 }, dependency.dependency_handle).await;
+        handles.write_handle(if dependency.owned { 3 } else { 4 }, dependency.dependency_handle);
     }
-    handles.write_handle(3, 0).await;
+    handles.write_handle(3, 0);
     for member in &group.member_action_handles {
-        handles.write_handle(3, *member).await;
+        handles.write_handle(3, *member);
     }
-    handles.append_bits(&node_handles).await;
-    finish_r2010_object_frame(data, handles).await
+    handles.append_bits(&node_handles);
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &crate::artifacts::dwg::schema::snapshot::DwgBlockElement, class_name: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &crate::artifacts::dwg::schema::snapshot::DwgBlockElement, class_name: &str) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgEvaluationExpressionValue;
     let expression = &element.evaluation_expression;
     if expression.parent_id != -1 || expression.major_version != 29 || expression.minor_version != 2 || !matches!(expression.value, DwgEvaluationExpressionValue::Empty) || element.name.is_empty() {
@@ -6901,11 +7147,12 @@ async fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBi
     Ok(())
 }
 
-async fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
     if grip.location.len() != 3 || grip.location.iter().any(|value| !value.is_finite()) || grip.updated_x.expression_name != x_role || grip.updated_y.expression_name != y_role {
         return Err(format!("{class_name} grip state is invalid"));
     }
-    encode_r2010_block_element(data, strings, &grip.element, class_name).await?;
+    encode_r2010_block_element(data, strings, &grip.element, class_name)?;
     data.write_bl(grip.updated_x.node_id);
     data.write_bl(grip.updated_y.node_id);
     data.write_3bd([grip.location[0], grip.location[1], grip.location[2]]);
@@ -6914,18 +7161,19 @@ async fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWr
     Ok(())
 }
 
-async fn encode_r2010_dynamic_block_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_dynamic_block_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgLogicalObjectBody};
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
-    let mut strings = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
+    let mut strings = DwgBitWriter::new();
     match object.body.as_ref() {
         Some(DwgLogicalObjectBody::BlockLinearParameter(body)) if object.type_code == 527 => {
             let parameter = &body.parameter;
@@ -6942,100 +7190,103 @@ async fn encode_r2010_dynamic_block_frame(object: &crate::artifacts::dwg::schema
             {
                 return Err(format!("BLOCKLINEARPARAMETER {:#x} logical state is invalid", object.handle));
             }
-            encode_r2010_block_element(&mut data, &mut strings, &parameter.element, "BLOCKLINEARPARAMETER").await?;
-            data.write_b(parameter.show_properties).await;
-            data.write_b(parameter.chain_actions).await;
-            data.write_3bd([parameter.definition_base[0], parameter.definition_base[1], parameter.definition_base[2]]).await;
-            data.write_3bd([parameter.definition_end[0], parameter.definition_end[1], parameter.definition_end[2]]).await;
+            encode_r2010_block_element(&mut data, &mut strings, &parameter.element, "BLOCKLINEARPARAMETER")?;
+            data.write_b(parameter.show_properties);
+            data.write_b(parameter.chain_actions);
+            data.write_3bd([parameter.definition_base[0], parameter.definition_base[1], parameter.definition_base[2]]);
+            data.write_3bd([parameter.definition_end[0], parameter.definition_end[1], parameter.definition_end[2]]);
             for property in &parameter.properties {
-                data.write_bl(property.connections.len() as u32).await;
+                data.write_bl(property.connections.len() as u32);
                 for connection in &property.connections {
-                    data.write_bl(connection.code).await;
-                    strings.write_tu(&connection.name).await;
+                    data.write_bl(connection.code);
+                    strings.write_tu(&connection.name);
                 }
             }
             for property_index in 0..4 {
-                data.write_bl(parameter.property_expression_references.iter().find(|reference| reference.property_index == property_index).map_or(0, |reference| reference.node_id)).await;
+                data.write_bl(parameter.property_expression_references.iter().find(|reference| reference.property_index == property_index).map_or(0, |reference| reference.node_id));
             }
             data.write_bs(match parameter.base_location {
                 DwgBlockParameterBaseLocation::StartPoint => 0,
                 DwgBlockParameterBaseLocation::Midpoint => 1,
-            }).await;
-            strings.write_tu(&body.distance_name).await;
-            strings.write_tu(&body.distance_description).await;
-            data.write_bd(body.label_offset).await;
-            data.write_bl(8).await;
-            data.write_bd(0.0).await;
-            data.write_bd(0.0).await;
-            data.write_bd(0.0).await;
-            data.write_bs(body.allowed_values.len() as u16).await;
+            });
+            strings.write_tu(&body.distance_name);
+            strings.write_tu(&body.distance_description);
+            data.write_bd(body.label_offset);
+            data.write_bl(8);
+            data.write_bd(0.0);
+            data.write_bd(0.0);
+            data.write_bd(0.0);
+            data.write_bs(body.allowed_values.len() as u16);
             for value in &body.allowed_values {
-                data.write_bd(*value).await;
+                data.write_bd(*value);
             }
         }
         Some(DwgLogicalObjectBody::BlockLinearGrip(body)) if object.type_code == 528 => {
             if body.orientation.len() != 3 || body.orientation.iter().any(|value| !value.is_finite()) || body.orientation.iter().all(|value| *value == 0.0) {
                 return Err(format!("BLOCKLINEARGRIP {:#x} orientation is invalid", object.handle));
             }
-            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedEndX", "UpdatedEndY", "BLOCKLINEARGRIP").await?;
-            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]).await;
+            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedEndX", "UpdatedEndY", "BLOCKLINEARGRIP")?;
+            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]);
         }
         Some(DwgLogicalObjectBody::BlockFlipGrip(body)) if object.type_code == 530 => {
             if body.updated_flip.expression_name != "UpdatedFlip" || body.orientation.len() != 3 || body.orientation.iter().any(|value| !value.is_finite()) || body.orientation.iter().all(|value| *value == 0.0) {
                 return Err(format!("BLOCKFLIPGRIP {:#x} state is invalid", object.handle));
             }
-            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedBaseX", "UpdatedBaseY", "BLOCKFLIPGRIP").await?;
-            data.write_bl(body.updated_flip.node_id).await;
-            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]).await;
+            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedBaseX", "UpdatedBaseY", "BLOCKFLIPGRIP")?;
+            data.write_bl(body.updated_flip.node_id);
+            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]);
         }
         Some(DwgLogicalObjectBody::BlockVisibilityGrip(body)) if object.type_code == 532 => {
-            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedX", "UpdatedY", "BLOCKVISIBILITYGRIP").await?;
+            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "UpdatedX", "UpdatedY", "BLOCKVISIBILITYGRIP")?;
         }
         _ => return Err(format!("{} {:#x} body missing or mismatched", object.class_name, object.handle)),
     }
-    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle).await?;
+    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle)?;
     let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    finish_r2010_object_frame(data, handles.await).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockElement, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockElement, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockElement, DwgEvaluationExpression, DwgEvaluationExpressionValue};
-    let parent_id = data.read_bl().await? as i32;
-    let major_version = data.read_bl().await?;
-    let minor_version = data.read_bl().await?;
-    let value_code = data.read_bs().await? as i16;
-    let node_id = data.read_bl().await?;
-    let name = strings.read_tu().await?;
-    let repeated_major = data.read_bl().await?;
-    let repeated_minor = data.read_bl().await?;
-    let marker = data.read_bl().await?;
+    let parent_id = data.read_bl()? as i32;
+    let major_version = data.read_bl()?;
+    let minor_version = data.read_bl()?;
+    let value_code = data.read_bs()? as i16;
+    let node_id = data.read_bl()?;
+    let name = strings.read_tu()?;
+    let repeated_major = data.read_bl()?;
+    let repeated_minor = data.read_bl()?;
+    let marker = data.read_bl()?;
     if parent_id != -1 || (major_version, minor_version, value_code, repeated_major, repeated_minor, marker) != (29, 2, -9999, 29, 2, 0) || name.is_empty() {
         return Err(format!("{class_name} block-element metadata is invalid"));
     }
     Ok(DwgBlockElement { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value: DwgEvaluationExpressionValue::Empty, node_id }, name })
 }
 
-async fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockGrip, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockGrip, DwgNamedEvaluationNodeReference};
-    let element = decode_r2010_block_element(data, strings, class_name).await?;
-    let updated_x = DwgNamedEvaluationNodeReference { node_id: data.read_bl().await?, expression_name: x_role.into() };
-    let updated_y = DwgNamedEvaluationNodeReference { node_id: data.read_bl().await?, expression_name: y_role.into() };
-    let location = data.read_3bd().await?.to_vec();
-    let insertion_cycling = data.read_b().await?;
-    let insertion_cycling_weight = data.read_bl().await? as i32;
+    let element = decode_r2010_block_element(data, strings, class_name)?;
+    let updated_x = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: x_role.into() };
+    let updated_y = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: y_role.into() };
+    let location = data.read_3bd()?.to_vec();
+    let insertion_cycling = data.read_b()?;
+    let insertion_cycling_weight = data.read_bl()? as i32;
     if location.iter().any(|value| !value.is_finite()) {
         return Err(format!("{class_name} location is invalid"));
     }
     Ok(DwgBlockGrip { element, location, insertion_cycling, insertion_cycling_weight, updated_x, updated_y })
 }
 
-async fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgBlockParameterBaseLocation;
     if parameter.definition_base.len() != 3 || parameter.definition_end.len() != 3 || parameter.properties.len() != 4 || parameter.definition_base.iter().chain(&parameter.definition_end).any(|value| !value.is_finite()) {
         return Err(format!("{class_name} two-point parameter is invalid"));
     }
-    encode_r2010_block_element(data, strings, &parameter.element, class_name).await?;
+    encode_r2010_block_element(data, strings, &parameter.element, class_name)?;
     data.write_b(parameter.show_properties);
     data.write_b(parameter.chain_actions);
     data.write_3bd([parameter.definition_base[0], parameter.definition_base[1], parameter.definition_base[2]]);
@@ -7057,16 +7308,17 @@ async fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut
     Ok(())
 }
 
-async fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, [u32; 4]), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgBlockTwoPointParameter, [u32; 4]), String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter};
-    let element = decode_r2010_block_element(data, strings, class_name).await?;
-    let show_properties = data.read_b().await?;
-    let chain_actions = data.read_b().await?;
-    let definition_base = data.read_3bd().await?.to_vec();
-    let definition_end = data.read_3bd().await?.to_vec();
+    let element = decode_r2010_block_element(data, strings, class_name)?;
+    let show_properties = data.read_b()?;
+    let chain_actions = data.read_b()?;
+    let definition_base = data.read_3bd()?.to_vec();
+    let definition_end = data.read_3bd()?.to_vec();
     let mut properties = Vec::with_capacity(4);
     for _ in 0..4 {
-        let count = data.read_bl().await? as usize;
+        let count = data.read_bl()? as usize;
         if count > 10_000 {
             return Err(format!("{class_name} property connection count is invalid"));
         }
@@ -7074,8 +7326,8 @@ async fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: 
         let connections = codes.into_iter().map(|code| Ok(DwgBlockParameterConnection { code, name: strings.read_tu()? })).collect::<Result<Vec<_>, String>>()?;
         properties.push(DwgBlockParameterProperty { connections });
     }
-    let property_node_ids = [data.read_bl().await?, data.read_bl().await?, data.read_bl().await?, data.read_bl().await?];
-    let base_location = match data.read_bs().await? {
+    let property_node_ids = [data.read_bl()?, data.read_bl()?, data.read_bl()?, data.read_bl()?];
+    let base_location = match data.read_bs()? {
         0 => DwgBlockParameterBaseLocation::StartPoint,
         1 => DwgBlockParameterBaseLocation::Midpoint,
         value => return Err(format!("{class_name} base location {value} is unsupported")),
@@ -7083,12 +7335,13 @@ async fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: 
     Ok((DwgBlockTwoPointParameter { element, show_properties, chain_actions, definition_base, definition_end, properties, property_expression_references: Vec::new(), base_location }, property_node_ids))
 }
 
-async fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &crate::artifacts::dwg::schema::snapshot::DwgBlockAction, class_name: &str) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &crate::artifacts::dwg::schema::snapshot::DwgBlockAction, class_name: &str) -> Result<(), String> {
     use crate::artifacts::dwg::schema::snapshot::DwgBlockElement;
     if action.display_location.len() != 3 || action.display_location.iter().any(|value| !value.is_finite()) || action.name.is_empty() {
         return Err(format!("{class_name} action is invalid"));
     }
-    encode_r2010_block_element(data, strings, &DwgBlockElement { evaluation_expression: action.evaluation_expression.clone(), name: action.name.clone() }, class_name).await?;
+    encode_r2010_block_element(data, strings, &DwgBlockElement { evaluation_expression: action.evaluation_expression.clone(), name: action.name.clone() }, class_name)?;
     data.write_3bd([action.display_location[0], action.display_location[1], action.display_location[2]]);
     data.write_bl(action.dependencies.len() as u32);
     data.write_bl(action.action_node_ids.len() as u32);
@@ -7104,12 +7357,13 @@ async fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBit
     Ok(())
 }
 
-async fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockAction, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<crate::artifacts::dwg::schema::snapshot::DwgBlockAction, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockAction, DwgBlockActionDependency};
-    let element = decode_r2010_block_element(data, strings, class_name).await?;
-    let display_location = data.read_3bd().await?.to_vec();
-    let dependency_count = data.read_bl().await? as usize;
-    let action_node_count = data.read_bl().await? as usize;
+    let element = decode_r2010_block_element(data, strings, class_name)?;
+    let display_location = data.read_3bd()?.to_vec();
+    let dependency_count = data.read_bl()? as usize;
+    let action_node_count = data.read_bl()? as usize;
     if dependency_count > 10_000 || action_node_count > 10_000 {
         return Err(format!("{class_name} action count is invalid"));
     }
@@ -7118,7 +7372,8 @@ async fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut Dw
     Ok(DwgBlockAction { evaluation_expression: element.evaluation_expression, name: element.name, display_location, dependencies, action_node_ids })
 }
 
-async fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &crate::artifacts::dwg::schema::snapshot::DwgBlockActionConnection) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &crate::artifacts::dwg::schema::snapshot::DwgBlockActionConnection) -> Result<(), String> {
     if connection.name.is_empty() {
         return Err("block-action connection name is empty".into());
     }
@@ -7127,27 +7382,28 @@ async fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut Dw
     Ok(())
 }
 
-async fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgBlockActionCoordinateMode, DwgBlockScaleMode, DwgLogicalObjectBody};
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(0).await;
-    data.write_b(true).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(0);
+    data.write_b(true);
     let mut strings = DwgBitWriter::new();
-    let mut handles = DwgBitWriter::new().await;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     match object.body.as_ref() {
         Some(DwgLogicalObjectBody::BlockAlignmentParameter(body)) if object.type_code == 533 => {
             if body.updated_grip_node_id == 0 || !body.parameter.property_expression_references.is_empty() {
                 return Err(format!("BLOCKALIGNMENTPARAMETER {:#x} relation state is invalid", object.handle));
             }
-            encode_r2010_two_point_parameter(&mut data, &mut strings, &body.parameter, [body.updated_grip_node_id, 0, 0, 0], "BLOCKALIGNMENTPARAMETER").await?;
-            data.write_b(body.align_perpendicular).await;
+            encode_r2010_two_point_parameter(&mut data, &mut strings, &body.parameter, [body.updated_grip_node_id, 0, 0, 0], "BLOCKALIGNMENTPARAMETER")?;
+            data.write_b(body.align_perpendicular);
         }
         Some(DwgLogicalObjectBody::BlockAlignmentGrip(body)) if object.type_code == 534 => {
             if body.first_location_node_id == 0
@@ -7160,8 +7416,8 @@ async fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::sch
             {
                 return Err(format!("BLOCKALIGNMENTGRIP {:#x} logical state is invalid", object.handle));
             }
-            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "FirstLocation", "SecondLocation", "BLOCKALIGNMENTGRIP").await?;
-            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]).await;
+            encode_r2010_block_grip(&mut data, &mut strings, &body.grip, "FirstLocation", "SecondLocation", "BLOCKALIGNMENTGRIP")?;
+            data.write_3bd([body.orientation[0], body.orientation[1], body.orientation[2]]);
         }
         Some(DwgLogicalObjectBody::BlockStretchAction(body)) if object.type_code == 535 => {
             if body.points.is_empty()
@@ -7175,33 +7431,33 @@ async fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::sch
             {
                 return Err(format!("BLOCKSTRETCHACTION {:#x} logical state is invalid", object.handle));
             }
-            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &body.action, "BLOCKSTRETCHACTION").await?;
-            write_r2010_action_connection(&mut data, &mut strings, &body.x_connection).await?;
-            write_r2010_action_connection(&mut data, &mut strings, &body.y_connection).await?;
-            data.write_bl(body.points.len() as u32).await;
+            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &body.action, "BLOCKSTRETCHACTION")?;
+            write_r2010_action_connection(&mut data, &mut strings, &body.x_connection)?;
+            write_r2010_action_connection(&mut data, &mut strings, &body.y_connection)?;
+            data.write_bl(body.points.len() as u32);
             for point in &body.points {
-                data.write_2rd([point[0], point[1]]).await;
+                data.write_2rd([point[0], point[1]]);
             }
-            data.write_bl(body.selections.len() as u32).await;
+            data.write_bl(body.selections.len() as u32);
             for selection in &body.selections {
-                data.write_bs(u16::try_from(selection.vertex_indices.len()).map_err(|_| "BLOCKSTRETCHACTION selection index count exceeds BS")?).await;
+                data.write_bs(u16::try_from(selection.vertex_indices.len()).map_err(|_| "BLOCKSTRETCHACTION selection index count exceeds BS")?);
                 for index in &selection.vertex_indices {
-                    data.write_bl(*index).await;
+                    data.write_bl(*index);
                 }
             }
-            data.write_bl(body.selectors.len() as u32).await;
+            data.write_bl(body.selectors.len() as u32);
             for selector in &body.selectors {
-                data.write_bl(selector.node_id).await;
-                data.write_bs(u16::try_from(selector.point_indices.len()).map_err(|_| "BLOCKSTRETCHACTION selector index count exceeds BS")?).await;
+                data.write_bl(selector.node_id);
+                data.write_bs(u16::try_from(selector.point_indices.len()).map_err(|_| "BLOCKSTRETCHACTION selector index count exceeds BS")?);
                 for index in &selector.point_indices {
-                    data.write_bl(*index).await;
+                    data.write_bl(*index);
                 }
             }
-            data.write_bd(body.distance_multiplier).await;
-            data.write_bd(body.angle_offset).await;
-            data.write_rc(0).await;
+            data.write_bd(body.distance_multiplier);
+            data.write_bd(body.angle_offset);
+            data.write_rc(0);
             for selection in &body.selections {
-                handles.write_handle(4, selection.object_handle).await;
+                handles.write_handle(4, selection.object_handle);
             }
         }
         Some(DwgLogicalObjectBody::BlockScaleAction(body)) if object.type_code == 536 => {
@@ -7209,45 +7465,46 @@ async fn encode_r2010_alignment_action_frame(object: &crate::artifacts::dwg::sch
             if base.offset.len() != 3 || base.base_point.len() != 3 || base.offset.iter().chain(&base.base_point).any(|value| !value.is_finite()) || !matches!(body.mode, DwgBlockScaleMode::Xy) {
                 return Err(format!("BLOCKSCALEACTION {:#x} logical state is invalid", object.handle));
             }
-            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &base.action, "BLOCKSCALEACTION").await?;
-            data.write_3bd([base.offset[0], base.offset[1], base.offset[2]]).await;
-            write_r2010_action_connection(&mut data, &mut strings, &base.x_base_connection).await?;
-            write_r2010_action_connection(&mut data, &mut strings, &base.y_base_connection).await?;
-            data.write_b(base.dependent).await;
-            data.write_3bd([base.base_point[0], base.base_point[1], base.base_point[2]]).await;
-            write_r2010_action_connection(&mut data, &mut strings, &body.uniform_scale_connection).await?;
-            write_r2010_action_connection(&mut data, &mut strings, &body.x_scale_connection).await?;
-            write_r2010_action_connection(&mut data, &mut strings, &body.y_scale_connection).await?;
-            data.write_rc(0).await;
+            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &base.action, "BLOCKSCALEACTION")?;
+            data.write_3bd([base.offset[0], base.offset[1], base.offset[2]]);
+            write_r2010_action_connection(&mut data, &mut strings, &base.x_base_connection)?;
+            write_r2010_action_connection(&mut data, &mut strings, &base.y_base_connection)?;
+            data.write_b(base.dependent);
+            data.write_3bd([base.base_point[0], base.base_point[1], base.base_point[2]]);
+            write_r2010_action_connection(&mut data, &mut strings, &body.uniform_scale_connection)?;
+            write_r2010_action_connection(&mut data, &mut strings, &body.x_scale_connection)?;
+            write_r2010_action_connection(&mut data, &mut strings, &body.y_scale_connection)?;
+            data.write_rc(0);
         }
         Some(DwgLogicalObjectBody::BlockFlipAction(body)) if object.type_code == 537 => {
-            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &body.action, "BLOCKFLIPACTION").await?;
+            encode_r2010_block_action(&mut data, &mut strings, &mut handles, &body.action, "BLOCKFLIPACTION")?;
             for connection in [&body.flip_connection, &body.updated_flip_connection, &body.updated_base_connection, &body.updated_end_connection] {
-                write_r2010_action_connection(&mut data, &mut strings, connection).await?;
+                write_r2010_action_connection(&mut data, &mut strings, connection)?;
             }
         }
         _ => return Err(format!("{} {:#x} body missing or mismatched", object.class_name, object.handle)),
     }
-    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle).await?;
-    finish_r2010_object_frame(data, handles).await
+    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody;
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(object.reactor_handles.len() as u32).await;
-    data.write_b(true).await;
-    let mut strings = DwgBitWriter::new().await;
-    let mut handles = DwgBitWriter::new().await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(object.reactor_handles.len() as u32);
+    data.write_b(true);
+    let mut strings = DwgBitWriter::new();
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
     for reactor in &object.reactor_handles {
-        handles.write_handle(4, *reactor).await;
+        handles.write_handle(4, *reactor);
     }
     match object.body.as_ref() {
         Some(DwgLogicalObjectBody::BlockBasePointParameter(body)) if object.type_code == 538 => {
@@ -7261,20 +7518,20 @@ async fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::sche
             {
                 return Err(format!("BLOCKBASEPOINTPARAMETER {:#x} logical state is invalid", object.handle));
             }
-            encode_r2010_block_element(&mut data, &mut strings, &parameter.element, "BLOCKBASEPOINTPARAMETER").await?;
-            data.write_b(parameter.show_properties).await;
-            data.write_b(parameter.chain_actions).await;
-            data.write_3bd([parameter.definition_point[0], parameter.definition_point[1], parameter.definition_point[2]]).await;
+            encode_r2010_block_element(&mut data, &mut strings, &parameter.element, "BLOCKBASEPOINTPARAMETER")?;
+            data.write_b(parameter.show_properties);
+            data.write_b(parameter.chain_actions);
+            data.write_3bd([parameter.definition_point[0], parameter.definition_point[1], parameter.definition_point[2]]);
             for property in &parameter.properties {
-                data.write_bl(property.connections.len() as u32).await;
+                data.write_bl(property.connections.len() as u32);
                 for connection in &property.connections {
-                    data.write_bl(connection.code).await;
-                    strings.write_tu(&connection.name).await;
+                    data.write_bl(connection.code);
+                    strings.write_tu(&connection.name);
                 }
             }
-            data.write_bl(0).await;
-            data.write_3bd([body.point[0], body.point[1], body.point[2]]).await;
-            data.write_3bd([body.base_point[0], body.base_point[1], body.base_point[2]]).await;
+            data.write_bl(0);
+            data.write_3bd([body.point[0], body.point[1], body.point[2]]);
+            data.write_3bd([body.base_point[0], body.base_point[1], body.base_point[2]]);
         }
         Some(DwgLogicalObjectBody::BlockVerticalConstraintParameter(body) | DwgLogicalObjectBody::BlockHorizontalConstraintParameter(body)) if matches!(object.type_code, 546 | 548) => {
             if object.reactor_handles.len() != 3
@@ -7289,35 +7546,36 @@ async fn encode_r2010_final_parameter_frame(object: &crate::artifacts::dwg::sche
             {
                 return Err(format!("{} {:#x} logical state is invalid", object.class_name, object.handle));
             }
-            encode_r2010_two_point_parameter(&mut data, &mut strings, &body.parameter, [0, body.displacement_grip_node_id, 0, 0], &object.class_name).await?;
-            handles.write_handle(4, body.dependency_handle).await;
-            strings.write_tu(&body.expression_name).await;
-            strings.write_tu(&body.expression_description).await;
-            data.write_bd(body.value).await;
-            data.write_bl(8).await;
+            encode_r2010_two_point_parameter(&mut data, &mut strings, &body.parameter, [0, body.displacement_grip_node_id, 0, 0], &object.class_name)?;
+            handles.write_handle(4, body.dependency_handle);
+            strings.write_tu(&body.expression_name);
+            strings.write_tu(&body.expression_description);
+            data.write_bd(body.value);
+            data.write_bl(8);
             let delta = body.allowed_values.values.windows(2).next().map(|pair| pair[1] - pair[0]);
             let uniform = delta.filter(|step| *step != 0.0 && body.allowed_values.values.windows(2).all(|pair| pair[1] - pair[0] == *step));
             if let Some(step) = uniform {
-                data.write_bd(body.allowed_values.values[0]).await;
-                data.write_bd(*body.allowed_values.values.last().unwrap()).await;
-                data.write_bd(step).await;
+                data.write_bd(body.allowed_values.values[0]);
+                data.write_bd(*body.allowed_values.values.last().unwrap());
+                data.write_bd(step);
             } else {
-                data.write_bd(0.0).await;
-                data.write_bd(0.0).await;
-                data.write_bd(0.0).await;
+                data.write_bd(0.0);
+                data.write_bd(0.0);
+                data.write_bd(0.0);
             }
-            data.write_bs(body.allowed_values.values.len() as u16).await;
+            data.write_bs(body.allowed_values.values.len() as u16);
             for value in &body.allowed_values.values {
-                data.write_bd(*value).await;
+                data.write_bd(*value);
             }
         }
         _ => return Err(format!("{} {:#x} body missing or mismatched", object.class_name, object.handle)),
     }
-    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle).await?;
-    finish_r2010_object_frame(data, handles).await
+    append_r2010_string_stream(&mut data, &strings, &object.class_name, object.handle)?;
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale};
     let Some(DwgLogicalObjectBody::Layout(layout)) = object.body.as_ref() else { return Err(format!("LAYOUT {:#x} body missing", object.handle)) };
     let dimensions = [
@@ -7351,15 +7609,15 @@ async fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snaps
     {
         return Err(format!("LAYOUT {:#x} logical state is invalid", object.handle));
     }
-    let mut data = DwgBitWriter::new().await;
-    data.write_bot(object.type_code).await;
-    data.write_handle(0, object.handle).await;
-    encode_r2010_eed(&mut data, object.handle, &object.extended_data).await?;
-    data.write_bl(1).await;
-    data.write_b(false).await;
-    let mut strings = DwgBitWriter::new().await;
-    strings.write_tu(&layout.page_setup_name).await;
-    strings.write_tu(&layout.printer_configuration).await;
+    let mut data = DwgBitWriter::new();
+    data.write_bot(object.type_code);
+    data.write_handle(0, object.handle);
+    encode_r2010_eed(&mut data, object.handle, &object.extended_data)?;
+    data.write_bl(1);
+    data.write_b(false);
+    let mut strings = DwgBitWriter::new();
+    strings.write_tu(&layout.page_setup_name);
+    strings.write_tu(&layout.printer_configuration);
     let flags = u16::from(layout.plot_options.use_standard_scale) * 16
         | u16::from(layout.plot_options.plot_viewport_borders) * 32
         | u16::from(layout.plot_options.plot_with_lineweights) * 128
@@ -7367,61 +7625,61 @@ async fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snaps
         | u16::from(layout.plot_options.model_type) * 1024
         | u16::from(layout.plot_options.update_paper) * 2048
         | u16::from(layout.plot_options.initializing) * 8192;
-    data.write_bs(flags).await;
+    data.write_bs(flags);
     for value in &layout.margins {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
     for value in &layout.paper_size {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
-    strings.write_tu(&layout.canonical_media_name).await;
+    strings.write_tu(&layout.canonical_media_name);
     for value in &layout.plot_origin {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
     data.write_bs(match layout.paper_unit {
         DwgPlotPaperUnit::Inches => 0,
-    }).await;
+    });
     data.write_bs(match layout.rotation {
         DwgPlotRotation::QuarterTurn => 1,
-    }).await;
+    });
     data.write_bs(match layout.plot_area {
         DwgPlotArea::Display => 0,
         DwgPlotArea::Layout => 5,
-    }).await;
+    });
     for value in &layout.plot_window_lower_left {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
     for value in &layout.plot_window_upper_right {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
-    data.write_bd(layout.paper_units).await;
-    data.write_bd(layout.drawing_units).await;
-    strings.write_tu(&layout.stylesheet).await;
+    data.write_bd(layout.paper_units);
+    data.write_bd(layout.drawing_units);
+    strings.write_tu(&layout.stylesheet);
     data.write_bs(match layout.standard_scale {
         DwgStandardScale::Custom => 0,
         DwgStandardScale::OneToOne => 16,
-    }).await;
-    data.write_bd(layout.standard_scale_factor).await;
+    });
+    data.write_bd(layout.standard_scale_factor);
     for value in &layout.paper_image_origin {
-        data.write_bd(*value).await;
+        data.write_bd(*value);
     }
     data.write_bs(match layout.shade_plot {
         DwgShadePlot::AsDisplayed => 0,
-    }).await;
+    });
     data.write_bs(match layout.shade_plot_resolution {
         DwgShadePlotResolution::Normal => 2,
-    }).await;
-    data.write_bs(layout.shade_plot_dpi).await;
-    strings.write_tu(&layout.name).await;
-    data.write_bs(layout.tab_order).await;
-    data.write_bs(u16::from(layout.options.paper_space_linetype_scaling)).await;
-    data.write_3bd([layout.insertion_base[0], layout.insertion_base[1], layout.insertion_base[2]]).await;
-    data.write_2rd([layout.limits_minimum[0], layout.limits_minimum[1]]).await;
-    data.write_2rd([layout.limits_maximum[0], layout.limits_maximum[1]]).await;
-    data.write_3bd([layout.ucs_origin[0], layout.ucs_origin[1], layout.ucs_origin[2]]).await;
-    data.write_3bd([layout.ucs_x_axis[0], layout.ucs_x_axis[1], layout.ucs_x_axis[2]]).await;
-    data.write_3bd([layout.ucs_y_axis[0], layout.ucs_y_axis[1], layout.ucs_y_axis[2]]).await;
-    data.write_bd(layout.ucs_elevation).await;
+    });
+    data.write_bs(layout.shade_plot_dpi);
+    strings.write_tu(&layout.name);
+    data.write_bs(layout.tab_order);
+    data.write_bs(u16::from(layout.options.paper_space_linetype_scaling));
+    data.write_3bd([layout.insertion_base[0], layout.insertion_base[1], layout.insertion_base[2]]);
+    data.write_2rd([layout.limits_minimum[0], layout.limits_minimum[1]]);
+    data.write_2rd([layout.limits_maximum[0], layout.limits_maximum[1]]);
+    data.write_3bd([layout.ucs_origin[0], layout.ucs_origin[1], layout.ucs_origin[2]]);
+    data.write_3bd([layout.ucs_x_axis[0], layout.ucs_x_axis[1], layout.ucs_x_axis[2]]);
+    data.write_3bd([layout.ucs_y_axis[0], layout.ucs_y_axis[1], layout.ucs_y_axis[2]]);
+    data.write_bd(layout.ucs_elevation);
     data.write_bs(match layout.orthographic_view {
         DwgOrthographicView::None => 0,
         DwgOrthographicView::Top => 1,
@@ -7430,41 +7688,42 @@ async fn encode_r2010_layout_frame(object: &crate::artifacts::dwg::schema::snaps
         DwgOrthographicView::Back => 4,
         DwgOrthographicView::Left => 5,
         DwgOrthographicView::Right => 6,
-    }).await;
-    data.write_3bd([layout.extents_minimum[0], layout.extents_minimum[1], layout.extents_minimum[2]]).await;
-    data.write_3bd([layout.extents_maximum[0], layout.extents_maximum[1], layout.extents_maximum[2]]).await;
-    data.write_bl(layout.viewport_handles.len() as u32).await;
-    append_r2010_string_stream(&mut data, &strings, "LAYOUT", object.handle).await?;
-    let mut handles = DwgBitWriter::new().await;
+    });
+    data.write_3bd([layout.extents_minimum[0], layout.extents_minimum[1], layout.extents_minimum[2]]);
+    data.write_3bd([layout.extents_maximum[0], layout.extents_maximum[1], layout.extents_maximum[2]]);
+    data.write_bl(layout.viewport_handles.len() as u32);
+    append_r2010_string_stream(&mut data, &strings, "LAYOUT", object.handle)?;
+    let mut handles = DwgBitWriter::new();
     write_object_handle(&mut handles, object.handle, object.owner_handle);
-    handles.write_handle(4, object.reactor_handles[0]).await;
-    handles.write_handle(3, object.extension_dictionary_handle.unwrap()).await;
-    handles.write_handle(5, layout.plot_view_handle.unwrap_or_default()).await;
-    handles.write_handle(4, layout.visual_style_handle.unwrap_or_default()).await;
-    handles.write_handle(4, layout.block_header_handle).await;
-    handles.write_handle(4, layout.active_viewport_handle.unwrap_or_default()).await;
-    handles.write_handle(5, layout.base_ucs_handle.unwrap_or_default()).await;
-    handles.write_handle(5, layout.named_ucs_handle.unwrap_or_default()).await;
+    handles.write_handle(4, object.reactor_handles[0]);
+    handles.write_handle(3, object.extension_dictionary_handle.unwrap());
+    handles.write_handle(5, layout.plot_view_handle.unwrap_or_default());
+    handles.write_handle(4, layout.visual_style_handle.unwrap_or_default());
+    handles.write_handle(4, layout.block_header_handle);
+    handles.write_handle(4, layout.active_viewport_handle.unwrap_or_default());
+    handles.write_handle(5, layout.base_ucs_handle.unwrap_or_default());
+    handles.write_handle(5, layout.named_ucs_handle.unwrap_or_default());
     for viewport in &layout.viewport_handles {
-        handles.write_handle(4, *viewport).await;
+        handles.write_handle(4, *viewport);
     }
-    finish_r2010_object_frame(data, handles).await
+    finish_r2010_object_frame(data, handles)
 }
 
-async fn encode_r2010_object_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_object_frame(object: &crate::artifacts::dwg::schema::snapshot::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEntityBody, DwgLogicalObjectBody};
     match object.body.as_ref().ok_or_else(|| format!("object {:#x} has no typed body", object.handle))? {
-        DwgLogicalObjectBody::Dictionary(_) => encode_r2010_dictionary_frame(object).await,
-        DwgLogicalObjectBody::TableControl(_) => encode_r2010_table_control_frame(object).await,
-        DwgLogicalObjectBody::TableRecord(_) => encode_r2010_table_record_frame(object).await,
-        DwgLogicalObjectBody::XRecord(_) => encode_r2010_xrecord_frame(object).await,
+        DwgLogicalObjectBody::Dictionary(_) => encode_r2010_dictionary_frame(object),
+        DwgLogicalObjectBody::TableControl(_) => encode_r2010_table_control_frame(object),
+        DwgLogicalObjectBody::TableRecord(_) => encode_r2010_table_record_frame(object),
+        DwgLogicalObjectBody::XRecord(_) => encode_r2010_xrecord_frame(object),
         DwgLogicalObjectBody::Entity(entity) => match entity {
-            DwgEntityBody::Line(_) => encode_r2010_line_frame(object).await,
-            DwgEntityBody::Arc(_) => encode_r2010_arc_frame(object).await,
-            DwgEntityBody::LwPolyline(_) => encode_r2010_lwpolyline_frame(object).await,
-            DwgEntityBody::BlockBegin(_) => encode_r2010_block_begin_frame(object, block_names.get(&object.handle).ok_or_else(|| format!("BLOCK {:#x} has no logical block-header name", object.handle))?).await,
-            DwgEntityBody::BlockEnd(_) => encode_r2010_block_end_frame(object).await,
-            DwgEntityBody::Insert(_) => encode_r2010_insert_frame(object).await,
+            DwgEntityBody::Line(_) => encode_r2010_line_frame(object),
+            DwgEntityBody::Arc(_) => encode_r2010_arc_frame(object),
+            DwgEntityBody::LwPolyline(_) => encode_r2010_lwpolyline_frame(object),
+            DwgEntityBody::BlockBegin(_) => encode_r2010_block_begin_frame(object, block_names.get(&object.handle).ok_or_else(|| format!("BLOCK {:#x} has no logical block-header name", object.handle))?),
+            DwgEntityBody::BlockEnd(_) => encode_r2010_block_end_frame(object),
+            DwgEntityBody::Insert(_) => encode_r2010_insert_frame(object),
             DwgEntityBody::DimensionLinear(_) => encode_r2010_dimension_linear_frame(object),
             DwgEntityBody::Viewport(_) => encode_r2010_viewport_frame(object),
             DwgEntityBody::Geometry(_) => Err(format!("R2010 entity materializer does not encode typed {} objects", object.class_name)),
@@ -7496,14 +7755,15 @@ async fn encode_r2010_object_frame(object: &crate::artifacts::dwg::schema::snaps
         DwgLogicalObjectBody::Assoc2dConstraintGroup(_) => encode_r2010_assoc_2d_constraint_group_frame(object),
         DwgLogicalObjectBody::BlockLinearParameter(_) | DwgLogicalObjectBody::BlockLinearGrip(_) | DwgLogicalObjectBody::BlockFlipGrip(_) | DwgLogicalObjectBody::BlockVisibilityGrip(_) => encode_r2010_dynamic_block_frame(object),
         DwgLogicalObjectBody::BlockAlignmentParameter(_) | DwgLogicalObjectBody::BlockAlignmentGrip(_) | DwgLogicalObjectBody::BlockStretchAction(_) | DwgLogicalObjectBody::BlockScaleAction(_) | DwgLogicalObjectBody::BlockFlipAction(_) => {
-            encode_r2010_alignment_action_frame(object).await
+            encode_r2010_alignment_action_frame(object)
         }
         DwgLogicalObjectBody::BlockBasePointParameter(_) | DwgLogicalObjectBody::BlockVerticalConstraintParameter(_) | DwgLogicalObjectBody::BlockHorizontalConstraintParameter(_) => encode_r2010_final_parameter_frame(object),
         DwgLogicalObjectBody::Layout(_) => encode_r2010_layout_frame(object),
     }
 }
 
-async fn write_r2004_unsigned_modular_char(output: &mut Vec<u8>, mut value: u64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_unsigned_modular_char(output: &mut Vec<u8>, mut value: u64) {
     while value >= 0x80 {
         output.push((value as u8 & 0x7f) | 0x80);
         value >>= 7;
@@ -7511,7 +7771,8 @@ async fn write_r2004_unsigned_modular_char(output: &mut Vec<u8>, mut value: u64)
     output.push(value as u8);
 }
 
-async fn write_r2004_signed_modular_char(output: &mut Vec<u8>, value: i64) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_r2004_signed_modular_char(output: &mut Vec<u8>, value: i64) {
     let negative = value < 0;
     let mut magnitude = value.unsigned_abs();
     while magnitude >= 0x40 {
@@ -7521,17 +7782,19 @@ async fn write_r2004_signed_modular_char(output: &mut Vec<u8>, value: i64) {
     output.push(magnitude as u8 | if negative { 0x40 } else { 0 });
 }
 
-async fn finish_r2004_handle_block(output: &mut Vec<u8>, block: &mut Vec<u8>) -> Result<(), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn finish_r2004_handle_block(output: &mut Vec<u8>, block: &mut Vec<u8>) -> Result<(), String> {
     let size = u16::try_from(block.len()).map_err(|_| "R2004 Handles block exceeds u16")?;
     block[0..2].copy_from_slice(&size.to_be_bytes());
-    let crc = dwg_crc16(0xC0C1, block).await;
+    let crc = dwg_crc16(0xC0C1, block);
     output.extend_from_slice(block);
     output.extend_from_slice(&crc.to_be_bytes());
     block.clear();
     Ok(())
 }
 
-async fn materialize_r2004_handles(pairs: &[(u64, usize)]) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn materialize_r2004_handles(pairs: &[(u64, usize)]) -> Result<Vec<u8>, String> {
     let mut sorted = pairs.to_vec();
     sorted.sort_by_key(|(handle, _)| *handle);
     if sorted.iter().any(|(handle, _)| *handle == 0) || sorted.windows(2).any(|pair| pair[0].0 == pair[1].0) {
@@ -7547,21 +7810,22 @@ async fn materialize_r2004_handles(pairs: &[(u64, usize)]) -> Result<Vec<u8>, St
         last_handle = handle;
         last_address = address;
         if block.len() > 2030 {
-            finish_r2004_handle_block(&mut output, &mut block).await?;
+            finish_r2004_handle_block(&mut output, &mut block)?;
             block.extend_from_slice(&[0, 0]);
             last_handle = 0;
             last_address = 0;
         }
     }
     if block.len() > 2 {
-        finish_r2004_handle_block(&mut output, &mut block).await?;
+        finish_r2004_handle_block(&mut output, &mut block)?;
     }
     let mut terminator = vec![0, 2];
-    finish_r2004_handle_block(&mut output, &mut terminator).await?;
+    finish_r2004_handle_block(&mut output, &mut terminator)?;
     Ok(output)
 }
 
-async fn materialize_r2010_objects(objects: &[crate::artifacts::dwg::schema::snapshot::DwgLogicalObject]) -> Result<(Vec<u8>, Vec<(u64, usize)>), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn materialize_r2010_objects(objects: &[crate::artifacts::dwg::schema::snapshot::DwgLogicalObject]) -> Result<(Vec<u8>, Vec<(u64, usize)>), String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgTableRecordBody};
     let mut seen = std::collections::BTreeSet::new();
     if objects.iter().any(|object| object.handle == 0 || !seen.insert(object.handle)) {
@@ -7578,82 +7842,88 @@ async fn materialize_r2010_objects(objects: &[crate::artifacts::dwg::schema::sna
     let mut pairs = Vec::with_capacity(objects.len());
     for object in objects {
         pairs.push((object.handle, output.len()));
-        output.extend_from_slice(&encode_r2010_object_frame(object, &block_names).await?);
+        output.extend_from_slice(&encode_r2010_object_frame(object, &block_names)?);
     }
     Ok((output, pairs))
 }
 
-async fn decode_object_common_relations(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<(Option<u64>, Vec<u64>, Option<u64>), String> {
-    let reactor_count = data.read_bl().await? as usize;
-    let extension_dictionary_missing = data.read_b().await?;
-    let owner = read_object_handle(handles, base).await?;
-    let reactors = (0..reactor_count).map(|_| semio_framework_plugin::resolve_ready(read_object_handle(handles, base)).map(|handle| handle.unwrap_or_default())).collect::<Result<Vec<_>, _>>()?.into_iter().filter(|handle| *handle != 0).collect();
-    let extension_dictionary = if extension_dictionary_missing { None } else { read_object_handle(handles, base).await? };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_object_common_relations(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<(Option<u64>, Vec<u64>, Option<u64>), String> {
+    let reactor_count = data.read_bl()? as usize;
+    let extension_dictionary_missing = data.read_b()?;
+    let owner = read_object_handle(handles, base)?;
+    let reactors = (0..reactor_count).map(|_| read_object_handle(handles, base).map(|handle| handle.unwrap_or_default())).collect::<Result<Vec<_>, _>>()?.into_iter().filter(|handle| *handle != 0).collect();
+    let extension_dictionary = if extension_dictionary_missing { None } else { read_object_handle(handles, base)? };
     Ok((owner, reactors, extension_dictionary))
 }
 
-async fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgConstraintNode, String> {
     use crate::artifacts::dwg::schema::snapshot::{
         DwgAxisConstraint, DwgConstrainedBoundedLine, DwgConstrainedDatumLine, DwgConstrainedImplicitPoint, DwgConstraintGeometry, DwgConstraintNode, DwgConstraintNodeCore, DwgDistanceConstraint, DwgExplicitConstraint, DwgGeometricConstraint,
     };
-    async fn core(data: &mut DwgBitReader<'_>) -> Result<DwgConstraintNodeCore, String> {
-        let id = data.read_bl().await? as i32;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn core(data: &mut DwgBitReader<'_>) -> Result<DwgConstraintNodeCore, String> {
+        let id = data.read_bl()? as i32;
         if id < 0 {
             return Err(format!("constraint node ID {id} is invalid"));
         }
-        let count = data.read_bl().await? as usize;
+        let count = data.read_bl()? as usize;
         if count > 10_000 {
             return Err(format!("constraint node {id} connection count {count} is invalid"));
         }
         let connected_node_ids = (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
         Ok(DwgConstraintNodeCore { id, connected_node_ids })
     }
-    async fn geometric(data: &mut DwgBitReader<'_>) -> Result<DwgGeometricConstraint, String> {
-        Ok(DwgGeometricConstraint { node: core(data).await?, owner_node_id: data.read_bl().await?, implied: data.read_b().await?, active: true })
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn geometric(data: &mut DwgBitReader<'_>) -> Result<DwgGeometricConstraint, String> {
+        Ok(DwgGeometricConstraint { node: core(data)?, owner_node_id: data.read_bl()?, implied: data.read_b()?, active: true })
     }
-    async fn geometry(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgConstraintGeometry, String> {
-        Ok(DwgConstraintGeometry { node: core(data).await?, geometry_dependency_handle: read_object_handle(handles, base).await?, geometry_node_id: data.read_bl().await? })
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn geometry(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgConstraintGeometry, String> {
+        Ok(DwgConstraintGeometry { node: core(data)?, geometry_dependency_handle: read_object_handle(handles, base)?, geometry_node_id: data.read_bl()? })
     }
-    async fn explicit(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgExplicitConstraint, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn explicit(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgExplicitConstraint, String> {
         Ok(DwgExplicitConstraint {
-            geometric: geometric(data).await?,
-            value_dependency_handle: read_object_handle(handles, base).await?.ok_or("explicit constraint value dependency is null")?,
-            dimension_dependency_handle: read_object_handle(handles, base).await?.ok_or("explicit constraint dimension dependency is null")?,
+            geometric: geometric(data)?,
+            value_dependency_handle: read_object_handle(handles, base)?.ok_or("explicit constraint value dependency is null")?,
+            dimension_dependency_handle: read_object_handle(handles, base)?.ok_or("explicit constraint dimension dependency is null")?,
         })
     }
     Ok(match class {
         "AcConstrainedImplicitPoint" => {
-            let geometry = geometry(data, handles, base).await?;
-            let point = geometry.geometry_dependency_handle.is_some().then(|| semio_framework_plugin::resolve_ready(data.read_3bd()).map(|value| value.to_vec())).transpose()?;
-            DwgConstraintNode::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint { geometry, point, point_kind: data.read_rc().await?, point_index: data.read_bl().await? as i32, curve_node_id: data.read_bl().await? as i32 })
+            let geometry = geometry(data, handles, base)?;
+            let point = geometry.geometry_dependency_handle.is_some().then(|| data.read_3bd().map(|value| value.to_vec())).transpose()?;
+            DwgConstraintNode::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint { geometry, point, point_kind: data.read_rc()?, point_index: data.read_bl()? as i32, curve_node_id: data.read_bl()? as i32 })
         }
-        "AcPointCurveConstraint" => DwgConstraintNode::PointCurveConstraint(geometric(data).await?),
+        "AcPointCurveConstraint" => DwgConstraintNode::PointCurveConstraint(geometric(data)?),
         "AcConstrainedBoundedLine" => {
-            let geometry = geometry(data, handles, base).await?;
-            let origin = data.read_3bd().await?.to_vec();
-            let direction = data.read_3bd().await?.to_vec();
-            let ray = data.read_b().await?;
-            DwgConstraintNode::ConstrainedBoundedLine(DwgConstrainedBoundedLine { geometry, origin, direction, ray, bounded: !ray, start_point: data.read_3bd().await?.to_vec(), end_point: data.read_3bd().await?.to_vec() })
+            let geometry = geometry(data, handles, base)?;
+            let origin = data.read_3bd()?.to_vec();
+            let direction = data.read_3bd()?.to_vec();
+            let ray = data.read_b()?;
+            DwgConstraintNode::ConstrainedBoundedLine(DwgConstrainedBoundedLine { geometry, origin, direction, ray, bounded: !ray, start_point: data.read_3bd()?.to_vec(), end_point: data.read_3bd()?.to_vec() })
         }
-        "AcPointCoincidenceConstraint" => DwgConstraintNode::PointCoincidenceConstraint(geometric(data).await?),
+        "AcPointCoincidenceConstraint" => DwgConstraintNode::PointCoincidenceConstraint(geometric(data)?),
         "AcDistanceConstraint" => {
-            let explicit = explicit(data, handles, base).await?;
-            let direction_kind = data.read_rc().await?;
-            let direction = (direction_kind != 0).then(|| semio_framework_plugin::resolve_ready(data.read_3bd()).map(|value| value.to_vec())).transpose()?;
+            let explicit = explicit(data, handles, base)?;
+            let direction_kind = data.read_rc()?;
+            let direction = (direction_kind != 0).then(|| data.read_3bd().map(|value| value.to_vec())).transpose()?;
             DwgConstraintNode::DistanceConstraint(DwgDistanceConstraint { explicit, direction_kind, direction })
         }
-        "AcPerpendicularConstraint" => DwgConstraintNode::PerpendicularConstraint(geometric(data).await?),
-        "AcHorizontalConstraint" => DwgConstraintNode::HorizontalConstraint(DwgAxisConstraint { geometric: geometric(data).await?, datum_line_index: data.read_bl().await? as i32 }),
-        "AcParallelConstraint" => DwgConstraintNode::ParallelConstraint(geometric(data).await?),
-        "AcMidPointConstraint" => DwgConstraintNode::MidPointConstraint(geometric(data).await?),
-        "AcEqualLengthConstraint" => DwgConstraintNode::EqualLengthConstraint(geometric(data).await?),
-        "AcColinearConstraint" => DwgConstraintNode::ColinearConstraint(geometric(data).await?),
+        "AcPerpendicularConstraint" => DwgConstraintNode::PerpendicularConstraint(geometric(data)?),
+        "AcHorizontalConstraint" => DwgConstraintNode::HorizontalConstraint(DwgAxisConstraint { geometric: geometric(data)?, datum_line_index: data.read_bl()? as i32 }),
+        "AcParallelConstraint" => DwgConstraintNode::ParallelConstraint(geometric(data)?),
+        "AcMidPointConstraint" => DwgConstraintNode::MidPointConstraint(geometric(data)?),
+        "AcEqualLengthConstraint" => DwgConstraintNode::EqualLengthConstraint(geometric(data)?),
+        "AcColinearConstraint" => DwgConstraintNode::ColinearConstraint(geometric(data)?),
         "AcConstrainedDatumLine" => {
-            let geometry = geometry(data, handles, base).await?;
-            DwgConstraintNode::ConstrainedDatumLine(DwgConstrainedDatumLine { geometry, origin: data.read_3bd().await?.to_vec(), direction: data.read_3bd().await?.to_vec() })
+            let geometry = geometry(data, handles, base)?;
+            DwgConstraintNode::ConstrainedDatumLine(DwgConstrainedDatumLine { geometry, origin: data.read_3bd()?.to_vec(), direction: data.read_3bd()?.to_vec() })
         }
-        "AcFixedConstraint" => DwgConstraintNode::FixedConstraint(geometric(data).await?),
-        "AcVerticalConstraint" => DwgConstraintNode::VerticalConstraint(DwgAxisConstraint { geometric: geometric(data).await?, datum_line_index: data.read_bl().await? as i32 }),
+        "AcFixedConstraint" => DwgConstraintNode::FixedConstraint(geometric(data)?),
+        "AcVerticalConstraint" => DwgConstraintNode::VerticalConstraint(DwgAxisConstraint { geometric: geometric(data)?, datum_line_index: data.read_bl()? as i32 }),
         other => return Err(format!("unsupported ACDBASSOC2DCONSTRAINTGROUP node class {other}")),
     })
 }
@@ -7664,7 +7934,8 @@ struct DwgDecodedEntityCommon {
     extension_dictionary_missing: bool,
 }
 
-async fn entity_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityMode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityMode {
     use crate::artifacts::dwg::schema::snapshot::DwgEntityMode;
     match value {
         0 => DwgEntityMode::ExplicitOwner,
@@ -7674,7 +7945,8 @@ async fn entity_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgE
     }
 }
 
-async fn entity_reference_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_reference_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode {
     use crate::artifacts::dwg::schema::snapshot::DwgEntityReferenceMode;
     match value {
         0 => DwgEntityReferenceMode::ByLayer,
@@ -7684,19 +7956,20 @@ async fn entity_reference_mode(value: u8) -> crate::artifacts::dwg::schema::snap
     }
 }
 
-async fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEntityColor, DwgEntityColorKind, DwgEntityCommon};
-    if data.read_b().await? {
+    if data.read_b()? {
         return Err("R2010 entity graphic requires a typed semantic graphic model".into());
     }
-    let mode = data.read_bb().await?;
-    let reactor_count = data.read_bl().await? as usize;
-    let extension_dictionary_missing = data.read_b().await?;
-    let encoded_color = data.read_bs().await?;
-    let transparency = if encoded_color & 0x2000 != 0 { Some(data.read_bl().await?) } else { None };
+    let mode = data.read_bb()?;
+    let reactor_count = data.read_bl()? as usize;
+    let extension_dictionary_missing = data.read_b()?;
+    let encoded_color = data.read_bs()?;
+    let transparency = if encoded_color & 0x2000 != 0 { Some(data.read_bl()?) } else { None };
     let mut rgb = 0;
     if encoded_color & 0x4000 == 0 && encoded_color & 0x8000 != 0 {
-        rgb = data.read_bl().await?;
+        rgb = data.read_bl()?;
     }
     let index = encoded_color & 0x01ff;
     let color = DwgEntityColor {
@@ -7716,19 +7989,19 @@ async fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<
         book_name: None,
         color_handle: None,
     };
-    let linetype_scale = data.read_bd().await?;
-    let linetype = entity_reference_mode(data.read_bb().await?);
-    let plot_style = entity_reference_mode(data.read_bb().await?);
-    let material = entity_reference_mode(data.read_bb().await?);
-    let shadow = data.read_rc().await?;
-    let full_visual = data.read_b().await?;
-    let face_visual = data.read_b().await?;
-    let edge_visual = data.read_b().await?;
-    let invisible = data.read_bs().await?;
-    let lineweight = data.read_rc().await?;
+    let linetype_scale = data.read_bd()?;
+    let linetype = entity_reference_mode(data.read_bb()?);
+    let plot_style = entity_reference_mode(data.read_bb()?);
+    let material = entity_reference_mode(data.read_bb()?);
+    let shadow = data.read_rc()?;
+    let full_visual = data.read_b()?;
+    let face_visual = data.read_b()?;
+    let edge_visual = data.read_b()?;
+    let invisible = data.read_bs()?;
+    let lineweight = data.read_rc()?;
     Ok(DwgDecodedEntityCommon {
         logical: DwgEntityCommon {
-            mode: entity_mode(mode).await,
+            mode: entity_mode(mode),
             color,
             linetype_scale,
             linetype,
@@ -7747,85 +8020,91 @@ async fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<
     })
 }
 
-async fn decode_r2010_entity_common_handles(decoded: &mut DwgDecodedEntityCommon, handles: &mut DwgBitReader<'_>, base: u64) -> Result<(Option<u64>, Vec<u64>, Option<u64>), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_entity_common_handles(decoded: &mut DwgDecodedEntityCommon, handles: &mut DwgBitReader<'_>, base: u64) -> Result<(Option<u64>, Vec<u64>, Option<u64>), String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgEntityColorKind, DwgEntityMode, DwgEntityReferenceMode};
     if decoded.logical.color.kind == DwgEntityColorKind::TrueColor && decoded.logical.color.rgb == 0 {
-        decoded.logical.color.color_handle = read_object_handle(handles, base).await?;
+        decoded.logical.color.color_handle = read_object_handle(handles, base)?;
     }
-    let owner = if decoded.logical.mode == DwgEntityMode::ExplicitOwner { read_object_handle(handles, base).await? } else { None };
+    let owner = if decoded.logical.mode == DwgEntityMode::ExplicitOwner { read_object_handle(handles, base)? } else { None };
     let mut reactors = Vec::with_capacity(decoded.reactor_count);
     for index in 0..decoded.reactor_count {
-        reactors.push(read_object_handle(handles, base).await?.ok_or_else(|| format!("entity reactor {index} is null"))?);
+        reactors.push(read_object_handle(handles, base)?.ok_or_else(|| format!("entity reactor {index} is null"))?);
     }
-    let extension_dictionary = if decoded.extension_dictionary_missing { None } else { read_object_handle(handles, base).await? };
-    decoded.logical.layer_handle = read_object_handle(handles, base).await?.ok_or("entity layer handle is null")?;
+    let extension_dictionary = if decoded.extension_dictionary_missing { None } else { read_object_handle(handles, base)? };
+    decoded.logical.layer_handle = read_object_handle(handles, base)?.ok_or("entity layer handle is null")?;
     if decoded.logical.linetype == DwgEntityReferenceMode::Explicit {
-        decoded.logical.linetype_handle = read_object_handle(handles, base).await?;
+        decoded.logical.linetype_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.material == DwgEntityReferenceMode::Explicit {
-        decoded.logical.material_handle = read_object_handle(handles, base).await?;
+        decoded.logical.material_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.shadow == 3 {
-        decoded.logical.shadow_handle = read_object_handle(handles, base).await?;
+        decoded.logical.shadow_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.plot_style == DwgEntityReferenceMode::Explicit {
-        decoded.logical.plot_style_handle = read_object_handle(handles, base).await?;
+        decoded.logical.plot_style_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.full_visual_style_handle.is_some() {
-        decoded.logical.full_visual_style_handle = read_object_handle(handles, base).await?;
+        decoded.logical.full_visual_style_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.face_visual_style_handle.is_some() {
-        decoded.logical.face_visual_style_handle = read_object_handle(handles, base).await?;
+        decoded.logical.face_visual_style_handle = read_object_handle(handles, base)?;
     }
     if decoded.logical.edge_visual_style_handle.is_some() {
-        decoded.logical.edge_visual_style_handle = read_object_handle(handles, base).await?;
+        decoded.logical.edge_visual_style_handle = read_object_handle(handles, base)?;
     }
     Ok((owner, reactors, extension_dictionary))
 }
 
-async fn validate_entity_terminal_fill(reader: &mut DwgBitReader<'_>, end_bit: usize, handle: u64, class_name: &str) -> Result<(), String> {
-    let terminal_bits = end_bit.checked_sub(reader.bit_position().await).ok_or_else(|| format!("{class_name} {handle:#x} handle stream exceeds its frame"))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_entity_terminal_fill(reader: &mut DwgBitReader<'_>, end_bit: usize, handle: u64, class_name: &str) -> Result<(), String> {
+    let terminal_bits = end_bit.checked_sub(reader.bit_position()).ok_or_else(|| format!("{class_name} {handle:#x} handle stream exceeds its frame"))?;
     if terminal_bits > 7 {
         return Err(format!("{class_name} {handle:#x} has {terminal_bits} trailing handle bits"));
     }
     for _ in 0..terminal_bits {
-        if !reader.read_b().await? {
+        if !reader.read_b()? {
             return Err(format!("{class_name} {handle:#x} terminal handle fill contains zero"));
         }
     }
     Ok(())
 }
 
-async fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgComplexColor, u8), String> {
-    let index = data.read_bs().await?;
-    let value = decode_complex_color_value(data.read_bl().await?).await?;
-    let flags = data.read_rc().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(crate::artifacts::dwg::schema::snapshot::DwgComplexColor, u8), String> {
+    let index = data.read_bs()?;
+    let value = decode_complex_color_value(data.read_bl()?)?;
+    let flags = data.read_rc()?;
     if flags > 3 {
         return Err(format!("CMC flags {flags:#x} are invalid"));
     }
     Ok((crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index, value, name: None, book_name: None }, flags))
 }
 
-async fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColor, String> {
-    let (color, flags) = read_r2010_cmc_main(data).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColor, String> {
+    let (color, flags) = read_r2010_cmc_main(data)?;
     if flags != 0 {
         return Err(format!("TABLESTYLE {handle:#x} named colors are unsupported"));
     }
     Ok(color)
 }
 
-async fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialColor, String> {
-    let source = data.read_rc().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialColor, String> {
+    let source = data.read_rc()?;
     if source > 1 {
         return Err(format!("MATERIAL {handle:#x} color source {source} is unsupported"));
     }
-    Ok(crate::artifacts::dwg::schema::snapshot::DwgMaterialColor { factor: data.read_bd().await?, override_rgb: if source == 1 { Some(data.read_bl().await?) } else { None } })
+    Ok(crate::artifacts::dwg::schema::snapshot::DwgMaterialColor { factor: data.read_bd()?, override_rgb: if source == 1 { Some(data.read_bl()?) } else { None } })
 }
 
-async fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialMap, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgMaterialMap, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgMaterialMap, DwgMaterialMapSource, DwgMaterialProjection, DwgMaterialTiling};
-    let blend_factor = data.read_bd().await?;
-    let projection = match data.read_rc().await? {
+    let blend_factor = data.read_bd()?;
+    let projection = match data.read_rc()? {
         0 => DwgMaterialProjection::Inherit,
         1 => DwgMaterialProjection::Planar,
         2 => DwgMaterialProjection::Box,
@@ -7833,7 +8112,7 @@ async fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRead
         4 => DwgMaterialProjection::Sphere,
         value => return Err(format!("MATERIAL {handle:#x} projection {value} is unsupported")),
     };
-    let tiling = match data.read_rc().await? {
+    let tiling = match data.read_rc()? {
         0 => DwgMaterialTiling::Inherit,
         1 => DwgMaterialTiling::Tile,
         2 => DwgMaterialTiling::Crop,
@@ -7841,16 +8120,16 @@ async fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRead
         4 => DwgMaterialTiling::Mirror,
         value => return Err(format!("MATERIAL {handle:#x} tiling {value} is unsupported")),
     };
-    let auto_transform = data.read_rc().await?;
+    let auto_transform = data.read_rc()?;
     let (scale_to_entity, use_current_block_transform) = if auto_transform == 1 { (false, false) } else { (auto_transform & 2 != 0, auto_transform & 4 != 0) };
     if auto_transform & !7 != 0 {
         return Err(format!("MATERIAL {handle:#x} auto-transform {auto_transform:#x} is unsupported"));
     }
     let transform = (0..16).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
-    let source = match data.read_rc().await? {
+    let source = match data.read_rc()? {
         0 => DwgMaterialMapSource::CurrentScene,
         1 => {
-            let filename = strings.read_tu().await?;
+            let filename = strings.read_tu()?;
             if !filename.is_empty() {
                 return Err(format!("MATERIAL {handle:#x} external texture file is not yet supported"));
             }
@@ -7861,45 +8140,46 @@ async fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitRead
     Ok(DwgMaterialMap { blend_factor, projection, tiling, scale_to_entity, use_current_block_transform, transform, source })
 }
 
-async fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgCellStyle, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<crate::artifacts::dwg::schema::snapshot::DwgCellStyle, String> {
     use crate::artifacts::dwg::schema::snapshot::{DwgCellBorder, DwgCellBorders, DwgCellContentFormat, DwgCellMargins, DwgCellStyle};
-    if data.read_bl().await? != 5 || data.read_bs().await? != 1 {
+    if data.read_bl()? != 5 || data.read_bs()? != 1 {
         return Err(format!("TABLESTYLE {base:#x} cell type or data flag is unsupported"));
     }
-    let property_override_flags = data.read_bl().await?;
-    let merge_flags = data.read_bl().await?;
-    let background_color = read_table_style_color(data, base).await?;
-    let content_layout = data.read_bl().await?;
-    let content_property_override_flags = data.read_bl().await?;
-    let content_property_flags = data.read_bl().await?;
-    let value_data_type = data.read_bl().await?;
-    let value_unit_type = data.read_bl().await?;
-    let value_format_string = strings.read_tu().await?;
-    let rotation = data.read_bd().await?;
-    let block_scale = data.read_bd().await?;
-    let alignment = data.read_bl().await?;
-    let content_color = read_table_style_color(data, base).await?;
-    let text_style_handle = read_object_handle(handles, base).await?;
-    let text_height = data.read_bd().await?;
-    if data.read_bs().await? != 1 {
+    let property_override_flags = data.read_bl()?;
+    let merge_flags = data.read_bl()?;
+    let background_color = read_table_style_color(data, base)?;
+    let content_layout = data.read_bl()?;
+    let content_property_override_flags = data.read_bl()?;
+    let content_property_flags = data.read_bl()?;
+    let value_data_type = data.read_bl()?;
+    let value_unit_type = data.read_bl()?;
+    let value_format_string = strings.read_tu()?;
+    let rotation = data.read_bd()?;
+    let block_scale = data.read_bd()?;
+    let alignment = data.read_bl()?;
+    let content_color = read_table_style_color(data, base)?;
+    let text_style_handle = read_object_handle(handles, base)?;
+    let text_height = data.read_bd()?;
+    if data.read_bs()? != 1 {
         return Err(format!("TABLESTYLE {base:#x} cell margins are missing"));
     }
-    let margins = DwgCellMargins { vertical: data.read_bd().await?, horizontal: data.read_bd().await?, bottom: data.read_bd().await?, right: data.read_bd().await?, horizontal_spacing: data.read_bd().await?, vertical_spacing: data.read_bd().await? };
-    let border_count = data.read_bl().await? as usize;
+    let margins = DwgCellMargins { vertical: data.read_bd()?, horizontal: data.read_bd()?, bottom: data.read_bd()?, right: data.read_bd()?, horizontal_spacing: data.read_bd()?, vertical_spacing: data.read_bd()? };
+    let border_count = data.read_bl()? as usize;
     if border_count > 6 {
         return Err(format!("TABLESTYLE {base:#x} border count {border_count} is invalid"));
     }
     let mut borders = DwgCellBorders::default();
     for _ in 0..border_count {
-        let mask = data.read_bl().await?;
+        let mask = data.read_bl()?;
         let border = DwgCellBorder {
-            override_flags: data.read_bl().await?,
-            border_type: data.read_bl().await?,
-            color: read_table_style_color(data, base).await?,
-            lineweight: data.read_bl().await? as i32,
-            linetype_handle: read_object_handle(handles, base).await?,
-            visible: data.read_bl().await?,
-            double_line_spacing: data.read_bd().await?,
+            override_flags: data.read_bl()?,
+            border_type: data.read_bl()?,
+            color: read_table_style_color(data, base)?,
+            lineweight: data.read_bl()? as i32,
+            linetype_handle: read_object_handle(handles, base)?,
+            visible: data.read_bl()?,
+            double_line_spacing: data.read_bd()?,
         };
         let slot = match mask {
             1 => &mut borders.top,
@@ -7937,7 +8217,8 @@ async fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgB
     })
 }
 
-async fn decode_complex_color_value(word: u32) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_complex_color_value(word: u32) -> Result<crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue, String> {
     use crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue;
     let value = word & 0x00ff_ffff;
     match word >> 24 {
@@ -7954,7 +8235,8 @@ async fn decode_complex_color_value(word: u32) -> Result<crate::artifacts::dwg::
     }
 }
 
-async fn encode_complex_color_value(value: &crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_complex_color_value(value: &crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue) -> u32 {
     use crate::artifacts::dwg::schema::snapshot::DwgComplexColorValue;
     match value {
         DwgComplexColorValue::ByLayer => 0xc000_0000,
@@ -7969,22 +8251,23 @@ async fn encode_complex_color_value(value: &crate::artifacts::dwg::schema::snaps
     }
 }
 
-async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, Vec<(u8, u8)>), String> {
-    let sections = decode_r2004_sections(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, Vec<(u8, u8)>), String> {
+    let sections = decode_r2004_sections(bytes)?;
     let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
     let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let mut handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section).await?).await?;
+    let mut handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
     handle_map.sort_by_key(|(_, address)| *address);
-    let object_data = r2004_section_data(objects_section).await?;
+    let object_data = r2004_section_data(objects_section)?;
     let mut objects = Vec::with_capacity(handle_map.len());
     let mut xrecord_terminal_fills = Vec::new();
     let mut block_names = Vec::new();
     for (handle, address) in handle_map {
         let frame_bytes = object_data.get(address..).ok_or_else(|| format!("object {handle:#x} address {address} exceeds AcDbObjects"))?;
-        let mut frame = DwgBitReader::new(frame_bytes).await;
-        let payload_size = frame.read_ms().await.map(|value| value as usize).map_err(|error| format!("object {handle:#x} payload size: {error}"))?;
-        let handle_stream_bits = frame.read_umc().await.map(|value| value as usize).map_err(|error| format!("object {handle:#x} handle-stream size: {error}"))?;
-        frame.pad_to_byte().await;
+        let mut frame = DwgBitReader::new(frame_bytes);
+        let payload_size = frame.read_ms().map(|value| value as usize).map_err(|error| format!("object {handle:#x} payload size: {error}"))?;
+        let handle_stream_bits = frame.read_umc().map(|value| value as usize).map_err(|error| format!("object {handle:#x} handle-stream size: {error}"))?;
+        frame.pad_to_byte();
         let payload_end = frame.byte_pos.checked_add(payload_size).ok_or_else(|| format!("object {handle:#x} payload end overflow"))?;
         let payload = frame_bytes.get(frame.byte_pos..payload_end).ok_or_else(|| format!("object {handle:#x} payload is truncated"))?;
         let stored_crc = frame_bytes.get(payload_end..payload_end + 2).map(|bytes| u16::from_le_bytes([bytes[0], bytes[1]])).ok_or_else(|| format!("object {handle:#x} CRC is truncated"))?;
@@ -7993,28 +8276,28 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             return Err(format!("object {handle:#x} CRC mismatch: stored {stored_crc:#06x}, computed {computed_crc:#06x}"));
         }
         let data_end_bit = payload_size.checked_mul(8).and_then(|bits| bits.checked_sub(handle_stream_bits)).ok_or_else(|| format!("object {handle:#x} handle-stream size exceeds payload"))?;
-        let mut data = DwgBitReader::new(payload).await;
-        let mut handle_reader = DwgBitReader::at_bit(payload, data_end_bit).await.map_err(|error| format!("object {handle:#x} handle-stream start: {error}"))?;
-        let type_code = data.read_bot().await.map_err(|error| format!("object {handle:#x} type: {error}"))?;
-        let (_, object_handle) = data.read_handle().await.map_err(|error| format!("object {handle:#x} self handle: {error}"))?;
+        let mut data = DwgBitReader::new(payload);
+        let mut handle_reader = DwgBitReader::at_bit(payload, data_end_bit).map_err(|error| format!("object {handle:#x} handle-stream start: {error}"))?;
+        let type_code = data.read_bot().map_err(|error| format!("object {handle:#x} type: {error}"))?;
+        let (_, object_handle) = data.read_handle().map_err(|error| format!("object {handle:#x} self handle: {error}"))?;
         if object_handle != handle {
             return Err(format!("object {handle:#x} frame self handle is {object_handle:#x}"));
         }
         let fixed = fixed_object_name(type_code);
         let class_name = if fixed == "UNKNOWN" { classes.iter().find(|class| class.number == type_code).map(|class| class.dxf_name.clone()).unwrap_or_else(|| format!("CLASS_{type_code}")) } else { fixed.to_string() };
         let category = object_category(type_code);
-        let extended_data = decode_r2010_eed(&mut data, handle).await.map_err(|error| format!("object {handle:#x} EED: {error}"))?;
+        let extended_data = decode_r2010_eed(&mut data, handle).map_err(|error| format!("object {handle:#x} EED: {error}"))?;
         let mut object = crate::artifacts::dwg::schema::snapshot::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
         if category == crate::artifacts::dwg::schema::snapshot::DwgObjectCategory::Entity {
             if type_code == DWG_TYPE_BLOCK || type_code == DWG_TYPE_ENDBLK {
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).await.map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                if data.bit_position().await != class_main_end {
-                    return Err(format!("{} {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }, data.bit_position().await));
+                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("{} {handle:#x} common data: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+                if data.bit_position() != class_main_end {
+                    return Err(format!("{} {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }, data.bit_position()));
                 }
                 if type_code == DWG_TYPE_BLOCK {
-                    let name = strings.read_tu().await.map_err(|error| format!("BLOCK {handle:#x} name: {error}"))?;
-                    let string_end = r2010_string_content_end_bit(payload, data_end_bit).await?;
+                    let name = strings.read_tu().map_err(|error| format!("BLOCK {handle:#x} name: {error}"))?;
+                    let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
                     if strings.bit_position() != string_end {
                         return Err(format!("BLOCK {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
                     }
@@ -8023,8 +8306,8 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     return Err(format!("ENDBLK {handle:#x} unexpectedly declares a string stream"));
                 }
                 let (owner, reactors, extension_dictionary) =
-                    decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await.map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }).await?;
+                    decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).map_err(|error| format!("{} {handle:#x} common handles: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" })?;
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
@@ -8034,39 +8317,39 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     crate::artifacts::dwg::schema::snapshot::DwgEntityBody::BlockEnd(crate::artifacts::dwg::schema::snapshot::DwgBlockEndEntity { common: common.logical })
                 }));
             } else if type_code == DWG_TYPE_INSERT {
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
-                let insertion = data.read_3bd().await.map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
-                let scale = match data.read_bb().await.map_err(|error| format!("INSERT {handle:#x} scale mode: {error}"))? {
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
+                let insertion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
+                let scale = match data.read_bb().map_err(|error| format!("INSERT {handle:#x} scale mode: {error}"))? {
                     0 => {
-                        let x = data.read_rd().await?;
-                        [x, data.read_dd(x).await?, data.read_dd(x).await?]
+                        let x = data.read_rd()?;
+                        [x, data.read_dd(x)?, data.read_dd(x)?]
                     }
-                    1 => [1.0, data.read_dd(1.0).await?, data.read_dd(1.0).await?],
+                    1 => [1.0, data.read_dd(1.0)?, data.read_dd(1.0)?],
                     2 => {
-                        let value = data.read_rd().await?;
+                        let value = data.read_rd()?;
                         [value; 3]
                     }
                     3 => [1.0; 3],
                     _ => unreachable!(),
                 };
-                let rotation = data.read_bd().await.map_err(|error| format!("INSERT {handle:#x} rotation: {error}"))?;
-                let extrusion = data.read_3bd().await.map_err(|error| format!("INSERT {handle:#x} extrusion: {error}"))?;
-                let has_attributes = data.read_b().await.map_err(|error| format!("INSERT {handle:#x} attributes flag: {error}"))?;
-                let attribute_count = if has_attributes { data.read_bl().await.map_err(|error| format!("INSERT {handle:#x} attribute count: {error}"))? as usize } else { 0 };
-                if data.read_b().await.map_err(|error| format!("INSERT {handle:#x} string marker: {error}"))? || data.bit_position().await != data_end_bit {
+                let rotation = data.read_bd().map_err(|error| format!("INSERT {handle:#x} rotation: {error}"))?;
+                let extrusion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} extrusion: {error}"))?;
+                let has_attributes = data.read_b().map_err(|error| format!("INSERT {handle:#x} attributes flag: {error}"))?;
+                let attribute_count = if has_attributes { data.read_bl().map_err(|error| format!("INSERT {handle:#x} attribute count: {error}"))? as usize } else { 0 };
+                if data.read_b().map_err(|error| format!("INSERT {handle:#x} string marker: {error}"))? || data.bit_position() != data_end_bit {
                     return Err(format!("INSERT {handle:#x} main/string stream is not exactly consumed"));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await?;
-                let block_header_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+                let block_header_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} block header: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} block-header handle is null"))?;
                 let mut attribute_handles = Vec::with_capacity(attribute_count);
                 for index in 0..attribute_count {
-                    attribute_handles.push(read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
+                    attribute_handles.push(read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} attribute {index}: {error}"))?.ok_or_else(|| format!("INSERT {handle:#x} attribute {index} is null"))?);
                 }
-                let sequence_end_handle = if has_attributes { read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
+                let sequence_end_handle = if has_attributes { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("INSERT {handle:#x} SEQEND: {error}"))? } else { None };
                 if has_attributes && sequence_end_handle.is_none() {
                     return Err(format!("INSERT {handle:#x} attributes have no SEQEND"));
                 }
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "INSERT").await?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "INSERT")?;
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
@@ -8081,53 +8364,53 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     sequence_end_handle,
                 })));
             } else if type_code == DWG_TYPE_DIMENSION_LINEAR {
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).await.map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
-                let class_version = data.read_rc().await?;
+                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
+                let class_version = data.read_rc()?;
                 if class_version != 0 {
                     return Err(format!("DIMENSION_LINEAR {handle:#x} class version {class_version} is unsupported"));
                 }
-                let extrusion = data.read_3bd().await?;
-                let text_midpoint = data.read_2rd().await?;
-                let elevation = data.read_bd().await?;
-                let flag = data.read_rc().await?;
+                let extrusion = data.read_3bd()?;
+                let text_midpoint = data.read_2rd()?;
+                let elevation = data.read_bd()?;
+                let flag = data.read_rc()?;
                 let block_reference_is_exclusive = flag & 0x20 != 0;
                 let user_positioned_text = flag & 0x80 != 0;
                 let expected_flag = 0x08 | (if block_reference_is_exclusive { 0x22 } else { 0 }) | (if user_positioned_text { 0x80 } else { 0x01 });
                 if flag != expected_flag {
                     return Err(format!("DIMENSION_LINEAR {handle:#x} flag {flag:#x} disagrees with its semantic mirror bits; expected {expected_flag:#x}"));
                 }
-                let text_rotation = data.read_bd().await?;
-                let horizontal_direction = data.read_bd().await?;
-                let insertion_scale = data.read_3bd().await?;
-                let insertion_rotation = data.read_bd().await?;
-                let attachment = dimension_attachment_logical(data.read_bs().await?).await?;
-                let line_spacing_style = dimension_spacing_logical(data.read_bs().await?).await?;
-                let line_spacing_factor = data.read_bd().await?;
-                let actual_measurement = data.read_bd().await?;
-                if data.read_b().await? {
+                let text_rotation = data.read_bd()?;
+                let horizontal_direction = data.read_bd()?;
+                let insertion_scale = data.read_3bd()?;
+                let insertion_rotation = data.read_bd()?;
+                let attachment = dimension_attachment_logical(data.read_bs()?)?;
+                let line_spacing_style = dimension_spacing_logical(data.read_bs()?)?;
+                let line_spacing_factor = data.read_bd()?;
+                let actual_measurement = data.read_bd()?;
+                if data.read_b()? {
                     return Err(format!("DIMENSION_LINEAR {handle:#x} reserved flag is set"));
                 }
-                let flip_arrow_1 = data.read_b().await?;
-                let flip_arrow_2 = data.read_b().await?;
-                let clone_insertion_point = data.read_2rd().await?;
-                let extension_line_1 = data.read_3bd().await?;
-                let extension_line_2 = data.read_3bd().await?;
-                let definition_point = data.read_3bd().await?;
-                let oblique_angle = data.read_bd().await?;
-                let dimension_rotation = data.read_bd().await?;
-                if data.bit_position().await != class_main_end {
-                    return Err(format!("DIMENSION_LINEAR {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position().await));
+                let flip_arrow_1 = data.read_b()?;
+                let flip_arrow_2 = data.read_b()?;
+                let clone_insertion_point = data.read_2rd()?;
+                let extension_line_1 = data.read_3bd()?;
+                let extension_line_2 = data.read_3bd()?;
+                let definition_point = data.read_3bd()?;
+                let oblique_angle = data.read_bd()?;
+                let dimension_rotation = data.read_bd()?;
+                if data.bit_position() != class_main_end {
+                    return Err(format!("DIMENSION_LINEAR {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
                 }
-                let user_text = strings.read_tu().await?;
-                let string_end = r2010_string_content_end_bit(payload, data_end_bit).await?;
+                let user_text = strings.read_tu()?;
+                let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
                 if strings.bit_position() != string_end {
                     return Err(format!("DIMENSION_LINEAR {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await?;
-                let dimension_style_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
-                let dimension_block_handle = read_object_handle(&mut handle_reader, handle).await?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR").await?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+                let dimension_style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("DIMENSION_LINEAR {handle:#x} dimension style is null"))?;
+                let dimension_block_handle = read_object_handle(&mut handle_reader, handle)?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DIMENSION_LINEAR")?;
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
@@ -8161,28 +8444,28 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 })));
             } else if type_code == DWG_TYPE_VIEWPORT {
                 use crate::artifacts::dwg::schema::snapshot::{DwgComplexColor, DwgDefaultLightingType, DwgEntityBody, DwgLogicalObjectBody, DwgOrthographicView, DwgShadePlotMode, DwgViewportEntity, DwgViewportRenderMode};
-                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).await.map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
-                let center = data.read_3bd().await?;
-                let width = data.read_bd().await?;
-                let height = data.read_bd().await?;
-                let view_target = data.read_3bd().await?;
-                let view_direction = data.read_3bd().await?;
-                let twist_angle = data.read_bd().await?;
-                let view_height = data.read_bd().await?;
-                let lens_length = data.read_bd().await?;
-                let front_clip = data.read_bd().await?;
-                let back_clip = data.read_bd().await?;
-                let snap_angle = data.read_bd().await?;
-                let view_center = data.read_2rd().await?;
-                let snap_base = data.read_2rd().await?;
-                let snap_unit = data.read_2rd().await?;
-                let grid_unit = data.read_2rd().await?;
-                let circle_zoom_percent = data.read_bs().await?;
-                let grid_major = data.read_bs().await?;
-                let frozen_count = data.read_bl().await? as usize;
-                let status = viewport_status_flags(data.read_bl().await?).await?;
-                let render_mode = match data.read_rc().await? {
+                let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
+                let center = data.read_3bd()?;
+                let width = data.read_bd()?;
+                let height = data.read_bd()?;
+                let view_target = data.read_3bd()?;
+                let view_direction = data.read_3bd()?;
+                let twist_angle = data.read_bd()?;
+                let view_height = data.read_bd()?;
+                let lens_length = data.read_bd()?;
+                let front_clip = data.read_bd()?;
+                let back_clip = data.read_bd()?;
+                let snap_angle = data.read_bd()?;
+                let view_center = data.read_2rd()?;
+                let snap_base = data.read_2rd()?;
+                let snap_unit = data.read_2rd()?;
+                let grid_unit = data.read_2rd()?;
+                let circle_zoom_percent = data.read_bs()?;
+                let grid_major = data.read_bs()?;
+                let frozen_count = data.read_bl()? as usize;
+                let status = viewport_status_flags(data.read_bl()?)?;
+                let render_mode = match data.read_rc()? {
                     0 => DwgViewportRenderMode::Optimized2d,
                     1 => DwgViewportRenderMode::Wireframe,
                     2 => DwgViewportRenderMode::HiddenLine,
@@ -8192,13 +8475,13 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     6 => DwgViewportRenderMode::GouraudShadedWithWireframe,
                     value => return Err(format!("VIEWPORT {handle:#x} render mode {value} is unsupported")),
                 };
-                let ucs_at_origin = data.read_b().await?;
-                let ucs_per_viewport = data.read_b().await?;
-                let ucs_origin = data.read_3bd().await?;
-                let ucs_x_axis = data.read_3bd().await?;
-                let ucs_y_axis = data.read_3bd().await?;
-                let ucs_elevation = data.read_bd().await?;
-                let orthographic_view = match data.read_bs().await? {
+                let ucs_at_origin = data.read_b()?;
+                let ucs_per_viewport = data.read_b()?;
+                let ucs_origin = data.read_3bd()?;
+                let ucs_x_axis = data.read_3bd()?;
+                let ucs_y_axis = data.read_3bd()?;
+                let ucs_elevation = data.read_bd()?;
+                let orthographic_view = match data.read_bs()? {
                     0 => DwgOrthographicView::None,
                     1 => DwgOrthographicView::Top,
                     2 => DwgOrthographicView::Bottom,
@@ -8208,50 +8491,50 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     6 => DwgOrthographicView::Right,
                     value => return Err(format!("VIEWPORT {handle:#x} orthographic view {value} is unsupported")),
                 };
-                let shade_plot_mode = match data.read_bs().await? {
+                let shade_plot_mode = match data.read_bs()? {
                     0 => DwgShadePlotMode::AsDisplayed,
                     1 => DwgShadePlotMode::Wireframe,
                     2 => DwgShadePlotMode::Hidden,
                     3 => DwgShadePlotMode::Rendered,
                     value => return Err(format!("VIEWPORT {handle:#x} shade-plot mode {value} is unsupported")),
                 };
-                let use_default_lights = data.read_b().await?;
-                let default_lighting_type = match data.read_rc().await? {
+                let use_default_lights = data.read_b()?;
+                let default_lighting_type = match data.read_rc()? {
                     0 => DwgDefaultLightingType::OneDistantLight,
                     1 => DwgDefaultLightingType::TwoDistantLights,
                     value => return Err(format!("VIEWPORT {handle:#x} lighting type {value} is unsupported")),
                 };
-                let brightness = data.read_bd().await?;
-                let contrast = data.read_bd().await?;
-                let ambient_index = data.read_bs().await?;
-                let ambient_value = decode_complex_color_value(data.read_bl().await?).await?;
-                let ambient_flags = data.read_rc().await?;
+                let brightness = data.read_bd()?;
+                let contrast = data.read_bd()?;
+                let ambient_index = data.read_bs()?;
+                let ambient_value = decode_complex_color_value(data.read_bl()?)?;
+                let ambient_flags = data.read_rc()?;
                 if ambient_flags & !3 != 0 {
                     return Err(format!("VIEWPORT {handle:#x} ambient color flags {ambient_flags:#x} are unsupported"));
                 }
-                if data.bit_position().await != class_main_end {
-                    return Err(format!("VIEWPORT {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position().await));
+                if data.bit_position() != class_main_end {
+                    return Err(format!("VIEWPORT {handle:#x} main stream is not exactly consumed: {} != {class_main_end}", data.bit_position()));
                 }
-                let style_sheet = strings.read_tu().await?;
-                let ambient_name = if ambient_flags & 1 != 0 { Some(strings.read_tu().await?) } else { None };
-                let ambient_book_name = if ambient_flags & 2 != 0 { Some(strings.read_tu().await?) } else { None };
-                let string_end = r2010_string_content_end_bit(payload, data_end_bit).await?;
+                let style_sheet = strings.read_tu()?;
+                let ambient_name = if ambient_flags & 1 != 0 { Some(strings.read_tu()?) } else { None };
+                let ambient_book_name = if ambient_flags & 2 != 0 { Some(strings.read_tu()?) } else { None };
+                let string_end = r2010_string_content_end_bit(payload, data_end_bit)?;
                 if strings.bit_position() != string_end {
                     return Err(format!("VIEWPORT {handle:#x} string stream is not exactly consumed: {} != {string_end}", strings.bit_position()));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
                 let mut frozen_layer_handles = Vec::with_capacity(frozen_count);
                 for index in 0..frozen_count {
-                    frozen_layer_handles.push(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
+                    frozen_layer_handles.push(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("VIEWPORT {handle:#x} frozen layer {index} is null"))?);
                 }
-                let clip_boundary_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let named_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let base_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let background_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let visual_style_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let shade_plot_handle = read_object_handle(&mut handle_reader, handle).await?;
-                let sun_handle = read_object_handle(&mut handle_reader, handle).await?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VIEWPORT").await?;
+                let clip_boundary_handle = read_object_handle(&mut handle_reader, handle)?;
+                let named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+                let base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+                let background_handle = read_object_handle(&mut handle_reader, handle)?;
+                let visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
+                let shade_plot_handle = read_object_handle(&mut handle_reader, handle)?;
+                let sun_handle = read_object_handle(&mut handle_reader, handle)?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VIEWPORT")?;
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
@@ -8300,33 +8583,33 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     sun_handle,
                 })));
             } else if type_code == DWG_TYPE_LINE {
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("LINE {handle:#x} common data: {error}"))?;
-                let z_is_zero = data.read_b().await.map_err(|error| format!("LINE {handle:#x} Z flag: {error}"))?;
-                let start_x = data.read_rd().await.map_err(|error| format!("LINE {handle:#x} start X: {error}"))?;
-                let end_x = data.read_dd(start_x).await.map_err(|error| format!("LINE {handle:#x} end X: {error}"))?;
-                let start_y = data.read_rd().await.map_err(|error| format!("LINE {handle:#x} start Y: {error}"))?;
-                let end_y = data.read_dd(start_y).await.map_err(|error| format!("LINE {handle:#x} end Y: {error}"))?;
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("LINE {handle:#x} common data: {error}"))?;
+                let z_is_zero = data.read_b().map_err(|error| format!("LINE {handle:#x} Z flag: {error}"))?;
+                let start_x = data.read_rd().map_err(|error| format!("LINE {handle:#x} start X: {error}"))?;
+                let end_x = data.read_dd(start_x).map_err(|error| format!("LINE {handle:#x} end X: {error}"))?;
+                let start_y = data.read_rd().map_err(|error| format!("LINE {handle:#x} start Y: {error}"))?;
+                let end_y = data.read_dd(start_y).map_err(|error| format!("LINE {handle:#x} end Y: {error}"))?;
                 let (start_z, end_z) = if z_is_zero {
                     (0.0, 0.0)
                 } else {
-                    let start = data.read_rd().await.map_err(|error| format!("LINE {handle:#x} start Z: {error}"))?;
-                    (start, data.read_dd(start).await.map_err(|error| format!("LINE {handle:#x} end Z: {error}"))?)
+                    let start = data.read_rd().map_err(|error| format!("LINE {handle:#x} start Z: {error}"))?;
+                    (start, data.read_dd(start).map_err(|error| format!("LINE {handle:#x} end Z: {error}"))?)
                 };
-                let thickness = data.read_bt().await.map_err(|error| format!("LINE {handle:#x} thickness: {error}"))?;
-                let extrusion = data.read_be().await.map_err(|error| format!("LINE {handle:#x} extrusion: {error}"))?;
-                if data.read_b().await.map_err(|error| format!("LINE {handle:#x} string marker: {error}"))? {
+                let thickness = data.read_bt().map_err(|error| format!("LINE {handle:#x} thickness: {error}"))?;
+                let extrusion = data.read_be().map_err(|error| format!("LINE {handle:#x} extrusion: {error}"))?;
+                if data.read_b().map_err(|error| format!("LINE {handle:#x} string marker: {error}"))? {
                     return Err(format!("LINE {handle:#x} unexpectedly declares a string stream"));
                 }
-                if data.bit_position().await != data_end_bit {
-                    return Err(format!("LINE {handle:#x} main stream is not exactly consumed: {} != {data_end_bit}", data.bit_position().await));
+                if data.bit_position() != data_end_bit {
+                    return Err(format!("LINE {handle:#x} main stream is not exactly consumed: {} != {data_end_bit}", data.bit_position()));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await.map_err(|error| format!("LINE {handle:#x} common handles: {error}"))?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).map_err(|error| format!("LINE {handle:#x} common handles: {error}"))?;
                 let terminal_bits = payload_size * 8 - handle_reader.bit_position();
                 if terminal_bits > 7 {
                     return Err(format!("LINE {handle:#x} has {terminal_bits} trailing handle bits"));
                 }
                 for _ in 0..terminal_bits {
-                    if !handle_reader.read_b().await.map_err(|error| format!("LINE {handle:#x} terminal fill: {error}"))? {
+                    if !handle_reader.read_b().map_err(|error| format!("LINE {handle:#x} terminal fill: {error}"))? {
                         return Err(format!("LINE {handle:#x} terminal handle fill contains zero"));
                     }
                 }
@@ -8341,18 +8624,18 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     extrusion: extrusion.to_vec(),
                 })));
             } else if type_code == DWG_TYPE_ARC {
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("ARC {handle:#x} common data: {error}"))?;
-                let center = data.read_3bd().await.map_err(|error| format!("ARC {handle:#x} center: {error}"))?;
-                let radius = data.read_bd().await.map_err(|error| format!("ARC {handle:#x} radius: {error}"))?;
-                let thickness = data.read_bt().await.map_err(|error| format!("ARC {handle:#x} thickness: {error}"))?;
-                let extrusion = data.read_be().await.map_err(|error| format!("ARC {handle:#x} extrusion: {error}"))?;
-                let start_angle = data.read_bd().await.map_err(|error| format!("ARC {handle:#x} start angle: {error}"))?;
-                let end_angle = data.read_bd().await.map_err(|error| format!("ARC {handle:#x} end angle: {error}"))?;
-                if data.read_b().await? || data.bit_position().await != data_end_bit {
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("ARC {handle:#x} common data: {error}"))?;
+                let center = data.read_3bd().map_err(|error| format!("ARC {handle:#x} center: {error}"))?;
+                let radius = data.read_bd().map_err(|error| format!("ARC {handle:#x} radius: {error}"))?;
+                let thickness = data.read_bt().map_err(|error| format!("ARC {handle:#x} thickness: {error}"))?;
+                let extrusion = data.read_be().map_err(|error| format!("ARC {handle:#x} extrusion: {error}"))?;
+                let start_angle = data.read_bd().map_err(|error| format!("ARC {handle:#x} start angle: {error}"))?;
+                let end_angle = data.read_bd().map_err(|error| format!("ARC {handle:#x} end angle: {error}"))?;
+                if data.read_b()? || data.bit_position() != data_end_bit {
                     return Err(format!("ARC {handle:#x} main/string stream is not exactly consumed"));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ARC").await?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ARC")?;
                 object.owner_handle = owner;
                 object.reactor_handles = reactors;
                 object.extension_dictionary_handle = extension_dictionary;
@@ -8366,38 +8649,38 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     end_angle,
                 })));
             } else if type_code == DWG_TYPE_LWPOLYLINE {
-                let mut common = decode_r2010_entity_common_main(&mut data).await.map_err(|error| format!("LWPOLYLINE {handle:#x} common data: {error}"))?;
-                let flags = data.read_bs().await?;
-                let constant_width = if flags & 4 != 0 { Some(data.read_bd().await?) } else { None };
-                let elevation = if flags & 8 != 0 { data.read_bd().await? } else { 0.0 };
-                let thickness = if flags & 2 != 0 { data.read_bd().await? } else { 0.0 };
-                let extrusion = if flags & 1 != 0 { data.read_3bd().await? } else { [0.0, 0.0, 1.0] };
-                let vertex_count = data.read_bl().await? as usize;
+                let mut common = decode_r2010_entity_common_main(&mut data).map_err(|error| format!("LWPOLYLINE {handle:#x} common data: {error}"))?;
+                let flags = data.read_bs()?;
+                let constant_width = if flags & 4 != 0 { Some(data.read_bd()?) } else { None };
+                let elevation = if flags & 8 != 0 { data.read_bd()? } else { 0.0 };
+                let thickness = if flags & 2 != 0 { data.read_bd()? } else { 0.0 };
+                let extrusion = if flags & 1 != 0 { data.read_3bd()? } else { [0.0, 0.0, 1.0] };
+                let vertex_count = data.read_bl()? as usize;
                 if vertex_count == 0 || vertex_count > 20_000 {
                     return Err(format!("LWPOLYLINE {handle:#x} vertex count {vertex_count} is invalid"));
                 }
-                let bulge_count = if flags & 16 != 0 { data.read_bl().await? as usize } else { 0 };
-                let vertex_id_count = if flags & 1024 != 0 { data.read_bl().await? as usize } else { 0 };
-                let width_count = if flags & 32 != 0 { data.read_bl().await? as usize } else { 0 };
+                let bulge_count = if flags & 16 != 0 { data.read_bl()? as usize } else { 0 };
+                let vertex_id_count = if flags & 1024 != 0 { data.read_bl()? as usize } else { 0 };
+                let width_count = if flags & 32 != 0 { data.read_bl()? as usize } else { 0 };
                 for (name, count) in [("bulge", bulge_count), ("vertex ID", vertex_id_count), ("width", width_count)] {
                     if count != 0 && count != vertex_count {
                         return Err(format!("LWPOLYLINE {handle:#x} {name} count {count} differs from {vertex_count} vertices"));
                     }
                 }
                 let mut points = Vec::with_capacity(vertex_count);
-                points.push(data.read_2rd().await?);
+                points.push(data.read_2rd()?);
                 while points.len() < vertex_count {
                     let previous = *points.last().unwrap();
-                    points.push([data.read_dd(previous[0]).await?, data.read_dd(previous[1]).await?]);
+                    points.push([data.read_dd(previous[0])?, data.read_dd(previous[1])?]);
                 }
-                let bulges = (0..bulge_count).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-                let vertex_ids = (0..vertex_id_count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?;
-                let widths = (0..width_count).map(|_| Ok((semio_framework_plugin::resolve_ready(data.read_bd())?, semio_framework_plugin::resolve_ready(data.read_bd())?))).collect::<Result<Vec<_>, String>>()?;
-                if data.read_b().await? || data.bit_position().await != data_end_bit {
+                let bulges = (0..bulge_count).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+                let vertex_ids = (0..vertex_id_count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
+                let widths = (0..width_count).map(|_| Ok((data.read_bd()?, data.read_bd()?))).collect::<Result<Vec<_>, String>>()?;
+                if data.read_b()? || data.bit_position() != data_end_bit {
                     return Err(format!("LWPOLYLINE {handle:#x} main/string stream is not exactly consumed"));
                 }
-                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle).await?;
-                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "LWPOLYLINE").await?;
+                let (owner, reactors, extension_dictionary) = decode_r2010_entity_common_handles(&mut common, &mut handle_reader, handle)?;
+                validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "LWPOLYLINE")?;
                 let vertices = points
                     .into_iter()
                     .enumerate()
@@ -8427,7 +8710,7 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
         }
 
         let common_relations = decode_object_common_relations(&mut data, &mut handle_reader, handle);
-        let (owner, reactors, extension_dictionary) = match common_relations.await {
+        let (owner, reactors, extension_dictionary) = match common_relations {
             Ok(value) => value,
             Err(error)
                 if type_code == 79
@@ -8497,7 +8780,7 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
         object.owner_handle = owner;
         object.reactor_handles = reactors;
         object.extension_dictionary_handle = extension_dictionary;
-        let string_stream = r2010_string_stream(payload, data_end_bit).await.ok();
+        let string_stream = r2010_string_stream(payload, data_end_bit).ok();
         let main_end_bit = string_stream.as_ref().map_or(data_end_bit, |(_, start)| *start);
         let mut strings = string_stream.map(|(reader, _)| reader);
 
@@ -8506,66 +8789,66 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 DwgLayout, DwgLayoutOptions, DwgLogicalObjectBody, DwgOrthographicView, DwgPlotArea, DwgPlotOptions, DwgPlotPaperUnit, DwgPlotRotation, DwgShadePlot, DwgShadePlotResolution, DwgStandardScale,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("LAYOUT {handle:#x} string stream missing"))?;
-            let page_setup_name = strings.read_tu().await?;
-            let printer_configuration = strings.read_tu().await?;
-            let flags = data.read_bs().await?;
+            let page_setup_name = strings.read_tu()?;
+            let printer_configuration = strings.read_tu()?;
+            let flags = data.read_bs()?;
             if flags & !0x2eb0 != 0 {
                 return Err(format!("LAYOUT {handle:#x} plot options {flags:#x} are unsupported"));
             }
-            let margins = (0..4).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let paper_size = (0..2).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let canonical_media_name = strings.read_tu().await?;
-            let plot_origin = (0..2).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let paper_unit = match data.read_bs().await? {
+            let margins = (0..4).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let paper_size = (0..2).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let canonical_media_name = strings.read_tu()?;
+            let plot_origin = (0..2).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let paper_unit = match data.read_bs()? {
                 0 => DwgPlotPaperUnit::Inches,
                 value => return Err(format!("LAYOUT {handle:#x} paper unit {value} is unsupported")),
             };
-            let rotation = match data.read_bs().await? {
+            let rotation = match data.read_bs()? {
                 1 => DwgPlotRotation::QuarterTurn,
                 value => return Err(format!("LAYOUT {handle:#x} rotation {value} is unsupported")),
             };
-            let plot_area = match data.read_bs().await? {
+            let plot_area = match data.read_bs()? {
                 0 => DwgPlotArea::Display,
                 5 => DwgPlotArea::Layout,
                 value => return Err(format!("LAYOUT {handle:#x} plot area {value} is unsupported")),
             };
-            let plot_window_lower_left = (0..2).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let plot_window_upper_right = (0..2).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let plot_view_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let paper_units = data.read_bd().await?;
-            let drawing_units = data.read_bd().await?;
-            let stylesheet = strings.read_tu().await?;
-            let standard_scale = match data.read_bs().await? {
+            let plot_window_lower_left = (0..2).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let plot_window_upper_right = (0..2).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let plot_view_handle = read_object_handle(&mut handle_reader, handle)?;
+            let paper_units = data.read_bd()?;
+            let drawing_units = data.read_bd()?;
+            let stylesheet = strings.read_tu()?;
+            let standard_scale = match data.read_bs()? {
                 0 => DwgStandardScale::Custom,
                 16 => DwgStandardScale::OneToOne,
                 value => return Err(format!("LAYOUT {handle:#x} standard scale {value} is unsupported")),
             };
-            let standard_scale_factor = data.read_bd().await?;
-            let paper_image_origin = (0..2).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
-            let shade_plot = match data.read_bs().await? {
+            let standard_scale_factor = data.read_bd()?;
+            let paper_image_origin = (0..2).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
+            let shade_plot = match data.read_bs()? {
                 0 => DwgShadePlot::AsDisplayed,
                 value => return Err(format!("LAYOUT {handle:#x} shade plot {value} is unsupported")),
             };
-            let shade_plot_resolution = match data.read_bs().await? {
+            let shade_plot_resolution = match data.read_bs()? {
                 2 => DwgShadePlotResolution::Normal,
                 value => return Err(format!("LAYOUT {handle:#x} shade resolution {value} is unsupported")),
             };
-            let shade_plot_dpi = data.read_bs().await?;
-            let visual_style_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let name = strings.read_tu().await?;
-            let tab_order = data.read_bs().await?;
-            let layout_flags = data.read_bs().await?;
+            let shade_plot_dpi = data.read_bs()?;
+            let visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
+            let name = strings.read_tu()?;
+            let tab_order = data.read_bs()?;
+            let layout_flags = data.read_bs()?;
             if layout_flags & !1 != 0 {
                 return Err(format!("LAYOUT {handle:#x} options {layout_flags:#x} are unsupported"));
             }
-            let insertion_base = data.read_3bd().await?.to_vec();
-            let limits_minimum = data.read_2rd().await?.to_vec();
-            let limits_maximum = data.read_2rd().await?.to_vec();
-            let ucs_origin = data.read_3bd().await?.to_vec();
-            let ucs_x_axis = data.read_3bd().await?.to_vec();
-            let ucs_y_axis = data.read_3bd().await?.to_vec();
-            let ucs_elevation = data.read_bd().await?;
-            let orthographic_view = match data.read_bs().await? {
+            let insertion_base = data.read_3bd()?.to_vec();
+            let limits_minimum = data.read_2rd()?.to_vec();
+            let limits_maximum = data.read_2rd()?.to_vec();
+            let ucs_origin = data.read_3bd()?.to_vec();
+            let ucs_x_axis = data.read_3bd()?.to_vec();
+            let ucs_y_axis = data.read_3bd()?.to_vec();
+            let ucs_elevation = data.read_bd()?;
+            let orthographic_view = match data.read_bs()? {
                 0 => DwgOrthographicView::None,
                 1 => DwgOrthographicView::Top,
                 2 => DwgOrthographicView::Bottom,
@@ -8575,21 +8858,21 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 6 => DwgOrthographicView::Right,
                 value => return Err(format!("LAYOUT {handle:#x} orthographic view {value} is unsupported")),
             };
-            let extents_minimum = data.read_3bd().await?.to_vec();
-            let extents_maximum = data.read_3bd().await?.to_vec();
-            let viewport_count = data.read_bl().await? as usize;
+            let extents_minimum = data.read_3bd()?.to_vec();
+            let extents_maximum = data.read_3bd()?.to_vec();
+            let viewport_count = data.read_bl()? as usize;
             if viewport_count > 10_000 {
                 return Err(format!("LAYOUT {handle:#x} viewport count is invalid"));
             }
-            let block_header_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("LAYOUT {handle:#x} block header is null"))?;
-            let active_viewport_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let base_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let named_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
+            let block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("LAYOUT {handle:#x} block header is null"))?;
+            let active_viewport_handle = read_object_handle(&mut handle_reader, handle)?;
+            let base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+            let named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
             let viewport_handles = (0..viewport_count).map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("LAYOUT {handle:#x} viewport is null"))).collect::<Result<Vec<_>, String>>()?;
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("LAYOUT {handle:#x} stream boundary is invalid"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "LAYOUT").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "LAYOUT")?;
             object.body = Some(DwgLogicalObjectBody::Layout(DwgLayout {
                 page_setup_name,
                 printer_configuration,
@@ -8646,48 +8929,48 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 DwgBlockLinearParameter, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockTwoPointParameter, DwgLogicalObjectBody, DwgPropertyExpressionReference,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKLINEARPARAMETER {handle:#x} string stream missing"))?;
-            let element = decode_r2010_block_element(&mut data, strings, "BLOCKLINEARPARAMETER").await?;
-            let show_properties = data.read_b().await?;
-            let chain_actions = data.read_b().await?;
-            let definition_base = data.read_3bd().await?.to_vec();
-            let definition_end = data.read_3bd().await?.to_vec();
+            let element = decode_r2010_block_element(&mut data, strings, "BLOCKLINEARPARAMETER")?;
+            let show_properties = data.read_b()?;
+            let chain_actions = data.read_b()?;
+            let definition_base = data.read_3bd()?.to_vec();
+            let definition_end = data.read_3bd()?.to_vec();
             let mut properties = Vec::with_capacity(4);
             for _ in 0..4 {
-                let count = data.read_bl().await? as usize;
+                let count = data.read_bl()? as usize;
                 if count > 10_000 {
                     return Err(format!("BLOCKLINEARPARAMETER {handle:#x} connection count is invalid"));
                 }
-                let codes = (0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?;
+                let codes = (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
                 let connections = codes.into_iter().map(|code| Ok(DwgBlockParameterConnection { code, name: strings.read_tu()? })).collect::<Result<Vec<_>, String>>()?;
                 properties.push(DwgBlockParameterProperty { connections });
             }
             let property_expression_references =
-                (0..4).map(|property_index| semio_framework_plugin::resolve_ready(data.read_bl()).map(|node_id| (node_id != 0).then_some(DwgPropertyExpressionReference { property_index, node_id }))).collect::<Result<Vec<_>, _>>()?.into_iter().flatten().collect();
-            let base_location = match data.read_bs().await? {
+                (0..4).map(|property_index| data.read_bl().map(|node_id| (node_id != 0).then_some(DwgPropertyExpressionReference { property_index, node_id }))).collect::<Result<Vec<_>, _>>()?.into_iter().flatten().collect();
+            let base_location = match data.read_bs()? {
                 0 => DwgBlockParameterBaseLocation::StartPoint,
                 1 => DwgBlockParameterBaseLocation::Midpoint,
                 value => return Err(format!("BLOCKLINEARPARAMETER {handle:#x} base location {value} is unsupported")),
             };
-            let distance_name = strings.read_tu().await?;
-            let distance_description = strings.read_tu().await?;
-            let label_offset = data.read_bd().await?;
-            let value_flags = data.read_bl().await?;
-            let minimum = data.read_bd().await?;
-            let maximum = data.read_bd().await?;
-            let increment = data.read_bd().await?;
-            let value_count = data.read_bs().await? as usize;
-            let allowed_values = (0..value_count).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
+            let distance_name = strings.read_tu()?;
+            let distance_description = strings.read_tu()?;
+            let label_offset = data.read_bd()?;
+            let value_flags = data.read_bl()?;
+            let minimum = data.read_bd()?;
+            let maximum = data.read_bd()?;
+            let increment = data.read_bd()?;
+            let value_count = data.read_bs()? as usize;
+            let allowed_values = (0..value_count).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
             if value_flags != 8
                 || (minimum, maximum, increment) != (0.0, 0.0, 0.0)
                 || allowed_values.is_empty()
                 || definition_base.iter().chain(&definition_end).chain(&allowed_values).any(|value| !value.is_finite())
                 || !label_offset.is_finite()
-                || data.bit_position().await != main_end_bit
-                || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await?
+                || data.bit_position() != main_end_bit
+                || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)?
             {
                 return Err(format!("BLOCKLINEARPARAMETER {handle:#x} logical value or stream boundary is invalid"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKLINEARPARAMETER").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKLINEARPARAMETER")?;
             object.body = Some(DwgLogicalObjectBody::BlockLinearParameter(DwgBlockLinearParameter {
                 parameter: DwgBlockTwoPointParameter { element, show_properties, chain_actions, definition_base, definition_end, properties, property_expression_references, base_location },
                 distance_name,
@@ -8700,32 +8983,32 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(match type_code {
                 528 => {
-                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedEndX", "UpdatedEndY", "BLOCKLINEARGRIP").await?;
-                    let orientation = data.read_3bd().await?.to_vec();
+                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedEndX", "UpdatedEndY", "BLOCKLINEARGRIP")?;
+                    let orientation = data.read_3bd()?.to_vec();
                     if orientation.iter().any(|value| !value.is_finite()) || orientation.iter().all(|value| *value == 0.0) {
                         return Err(format!("BLOCKLINEARGRIP {handle:#x} orientation is invalid"));
                     }
                     DwgLogicalObjectBody::BlockLinearGrip(DwgBlockLinearGrip { grip, orientation })
                 }
                 530 => {
-                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedBaseX", "UpdatedBaseY", "BLOCKFLIPGRIP").await?;
-                    let updated_flip = DwgNamedEvaluationNodeReference { node_id: data.read_bl().await?, expression_name: "UpdatedFlip".into() };
-                    let orientation = data.read_3bd().await?.to_vec();
+                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedBaseX", "UpdatedBaseY", "BLOCKFLIPGRIP")?;
+                    let updated_flip = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: "UpdatedFlip".into() };
+                    let orientation = data.read_3bd()?.to_vec();
                     if orientation.iter().any(|value| !value.is_finite()) || orientation.iter().all(|value| *value == 0.0) {
                         return Err(format!("BLOCKFLIPGRIP {handle:#x} orientation is invalid"));
                     }
                     DwgLogicalObjectBody::BlockFlipGrip(DwgBlockFlipGrip { grip, updated_flip, orientation })
                 }
                 532 => {
-                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedX", "UpdatedY", "BLOCKVISIBILITYGRIP").await?;
+                    let grip = decode_r2010_block_grip(&mut data, strings, "UpdatedX", "UpdatedY", "BLOCKVISIBILITYGRIP")?;
                     DwgLogicalObjectBody::BlockVisibilityGrip(DwgBlockVisibilityGrip { grip })
                 }
                 _ => return Err(format!("{} {handle:#x} type code is invalid", object.class_name)),
             });
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("{} {handle:#x} stream boundary is invalid", object.class_name));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name).await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if matches!(type_code, 533 | 534 | 535 | 536 | 537) || matches!(object.class_name.as_str(), "BLOCKALIGNMENTPARAMETER" | "BLOCKALIGNMENTGRIP" | "BLOCKSTRETCHACTION" | "BLOCKSCALEACTION" | "BLOCKFLIPACTION") {
             use crate::artifacts::dwg::schema::snapshot::{
                 DwgBlockActionConnection, DwgBlockActionCoordinateMode, DwgBlockActionWithBasePoint, DwgBlockAlignmentGrip, DwgBlockAlignmentParameter, DwgBlockFlipAction, DwgBlockScaleAction, DwgBlockScaleMode, DwgBlockStretchAction,
@@ -8734,16 +9017,16 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(match type_code {
                 533 => {
-                    let (parameter, property_node_ids) = decode_r2010_two_point_parameter(&mut data, strings, "BLOCKALIGNMENTPARAMETER").await?;
-                    let align_perpendicular = data.read_b().await?;
+                    let (parameter, property_node_ids) = decode_r2010_two_point_parameter(&mut data, strings, "BLOCKALIGNMENTPARAMETER")?;
+                    let align_perpendicular = data.read_b()?;
                     if property_node_ids[0] == 0 || property_node_ids[1..] != [0, 0, 0] {
                         return Err(format!("BLOCKALIGNMENTPARAMETER {handle:#x} property relation is invalid"));
                     }
                     DwgLogicalObjectBody::BlockAlignmentParameter(DwgBlockAlignmentParameter { parameter, updated_grip_node_id: property_node_ids[0], align_perpendicular })
                 }
                 534 => {
-                    let grip = decode_r2010_block_grip(&mut data, strings, "FirstLocation", "SecondLocation", "BLOCKALIGNMENTGRIP").await?;
-                    let orientation = data.read_3bd().await?.to_vec();
+                    let grip = decode_r2010_block_grip(&mut data, strings, "FirstLocation", "SecondLocation", "BLOCKALIGNMENTGRIP")?;
+                    let orientation = data.read_3bd()?.to_vec();
                     if orientation.iter().any(|value| !value.is_finite()) || orientation.iter().all(|value| *value == 0.0) {
                         return Err(format!("BLOCKALIGNMENTGRIP {handle:#x} orientation is invalid"));
                     }
@@ -8752,41 +9035,41 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     DwgLogicalObjectBody::BlockAlignmentGrip(DwgBlockAlignmentGrip { grip, first_location_node_id, second_location_node_id, orientation })
                 }
                 535 => {
-                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKSTRETCHACTION").await?;
-                    let x_node_id = data.read_bl().await?;
-                    let x_name = strings.read_tu().await?;
-                    let y_node_id = data.read_bl().await?;
-                    let y_name = strings.read_tu().await?;
-                    let point_count = data.read_bl().await? as usize;
+                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKSTRETCHACTION")?;
+                    let x_node_id = data.read_bl()?;
+                    let x_name = strings.read_tu()?;
+                    let y_node_id = data.read_bl()?;
+                    let y_name = strings.read_tu()?;
+                    let point_count = data.read_bl()? as usize;
                     if point_count == 0 || point_count > 10_000 {
                         return Err(format!("BLOCKSTRETCHACTION {handle:#x} point count is invalid"));
                     }
-                    let points = (0..point_count).map(|_| semio_framework_plugin::resolve_ready(data.read_2rd()).map(|point| point.to_vec())).collect::<Result<Vec<_>, _>>()?;
-                    let selection_count = data.read_bl().await? as usize;
+                    let points = (0..point_count).map(|_| data.read_2rd().map(|point| point.to_vec())).collect::<Result<Vec<_>, _>>()?;
+                    let selection_count = data.read_bl()? as usize;
                     if selection_count > 10_000 {
                         return Err(format!("BLOCKSTRETCHACTION {handle:#x} selection count is invalid"));
                     }
                     let selection_indices = (0..selection_count)
                         .map(|_| {
-                            let count = semio_framework_plugin::resolve_ready(data.read_bs())? as usize;
-                            (0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()
+                            let count = data.read_bs()? as usize;
+                            (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()
                         })
                         .collect::<Result<Vec<_>, String>>()?;
-                    let selector_count = data.read_bl().await? as usize;
+                    let selector_count = data.read_bl()? as usize;
                     if selector_count > 10_000 {
                         return Err(format!("BLOCKSTRETCHACTION {handle:#x} selector count is invalid"));
                     }
                     let selectors = (0..selector_count)
                         .map(|_| {
-                            let node_id = semio_framework_plugin::resolve_ready(data.read_bl())?;
-                            let count = semio_framework_plugin::resolve_ready(data.read_bs())? as usize;
-                            let point_indices = (0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?;
+                            let node_id = data.read_bl()?;
+                            let count = data.read_bs()? as usize;
+                            let point_indices = (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
                             Ok(DwgStretchSelector { node_id, point_indices })
                         })
                         .collect::<Result<Vec<_>, String>>()?;
-                    let distance_multiplier = data.read_bd().await?;
-                    let angle_offset = data.read_bd().await?;
-                    if data.read_rc().await? != 0 {
+                    let distance_multiplier = data.read_bd()?;
+                    let angle_offset = data.read_bd()?;
+                    if data.read_rc()? != 0 {
                         return Err(format!("BLOCKSTRETCHACTION {handle:#x} coordinate mode is unsupported"));
                     }
                     let selections = selection_indices
@@ -8806,16 +9089,16 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     })
                 }
                 536 => {
-                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKSCALEACTION").await?;
-                    let offset = data.read_3bd().await?.to_vec();
-                    let x_base_connection = DwgBlockActionConnection { node_id: data.read_bl().await?, name: strings.read_tu().await? };
-                    let y_base_connection = DwgBlockActionConnection { node_id: data.read_bl().await?, name: strings.read_tu().await? };
-                    let dependent = data.read_b().await?;
-                    let base_point = data.read_3bd().await?.to_vec();
-                    let uniform_scale_connection = DwgBlockActionConnection { node_id: data.read_bl().await?, name: strings.read_tu().await? };
-                    let x_scale_connection = DwgBlockActionConnection { node_id: data.read_bl().await?, name: strings.read_tu().await? };
-                    let y_scale_connection = DwgBlockActionConnection { node_id: data.read_bl().await?, name: strings.read_tu().await? };
-                    if data.read_rc().await? != 0 {
+                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKSCALEACTION")?;
+                    let offset = data.read_3bd()?.to_vec();
+                    let x_base_connection = DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? };
+                    let y_base_connection = DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? };
+                    let dependent = data.read_b()?;
+                    let base_point = data.read_3bd()?.to_vec();
+                    let uniform_scale_connection = DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? };
+                    let x_scale_connection = DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? };
+                    let y_scale_connection = DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? };
+                    if data.read_rc()? != 0 {
                         return Err(format!("BLOCKSCALEACTION {handle:#x} scale mode is unsupported"));
                     }
                     DwgLogicalObjectBody::BlockScaleAction(DwgBlockScaleAction {
@@ -8827,8 +9110,8 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     })
                 }
                 537 => {
-                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKFLIPACTION").await?;
-                    let mut read_connection = || -> Result<DwgBlockActionConnection, String> { Ok(DwgBlockActionConnection { node_id: semio_framework_plugin::resolve_ready(data.read_bl())?, name: strings.read_tu()? }) };
+                    let action = decode_r2010_block_action(&mut data, strings, &mut handle_reader, handle, "BLOCKFLIPACTION")?;
+                    let mut read_connection = || -> Result<DwgBlockActionConnection, String> { Ok(DwgBlockActionConnection { node_id: data.read_bl()?, name: strings.read_tu()? }) };
                     DwgLogicalObjectBody::BlockFlipAction(DwgBlockFlipAction {
                         action,
                         flip_connection: read_connection()?,
@@ -8839,47 +9122,47 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 }
                 _ => return Err(format!("{} {handle:#x} type code is invalid", object.class_name)),
             });
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("{} {handle:#x} stream boundary is invalid", object.class_name));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name).await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if matches!(type_code, 538 | 546 | 548) || matches!(object.class_name.as_str(), "BLOCKBASEPOINTPARAMETER" | "BLOCKVERTICALCONSTRAINTPARAMETER" | "BLOCKHORIZONTALCONSTRAINTPARAMETER") {
             use crate::artifacts::dwg::schema::snapshot::{
                 DwgBlockBasePointParameter, DwgBlockLinearConstraintParameter, DwgBlockOnePointParameter, DwgBlockParameterAllowedValues, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgLogicalObjectBody,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(if type_code == 538 {
-                let element = decode_r2010_block_element(&mut data, strings, "BLOCKBASEPOINTPARAMETER").await?;
-                let show_properties = data.read_b().await?;
-                let chain_actions = data.read_b().await?;
-                let definition_point = data.read_3bd().await?.to_vec();
+                let element = decode_r2010_block_element(&mut data, strings, "BLOCKBASEPOINTPARAMETER")?;
+                let show_properties = data.read_b()?;
+                let chain_actions = data.read_b()?;
+                let definition_point = data.read_3bd()?.to_vec();
                 let mut properties = Vec::with_capacity(2);
                 for _ in 0..2 {
-                    let count = data.read_bl().await? as usize;
-                    let codes = (0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?;
+                    let count = data.read_bl()? as usize;
+                    let codes = (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
                     properties.push(DwgBlockParameterProperty { connections: codes.into_iter().map(|code| Ok(DwgBlockParameterConnection { code, name: strings.read_tu()? })).collect::<Result<Vec<_>, String>>()? });
                 }
-                if data.read_bl().await? != 0 {
+                if data.read_bl()? != 0 {
                     return Err(format!("BLOCKBASEPOINTPARAMETER {handle:#x} property-info count is invalid"));
                 }
-                let point = data.read_3bd().await?.to_vec();
-                let base_point = data.read_3bd().await?.to_vec();
+                let point = data.read_3bd()?.to_vec();
+                let base_point = data.read_3bd()?.to_vec();
                 DwgLogicalObjectBody::BlockBasePointParameter(DwgBlockBasePointParameter { parameter: DwgBlockOnePointParameter { element, show_properties, chain_actions, definition_point, properties }, point, base_point })
             } else {
-                let (parameter, property_node_ids) = decode_r2010_two_point_parameter(&mut data, strings, &object.class_name).await?;
+                let (parameter, property_node_ids) = decode_r2010_two_point_parameter(&mut data, strings, &object.class_name)?;
                 if property_node_ids[1] == 0 || property_node_ids[0] != 0 || property_node_ids[2] != 0 || property_node_ids[3] != 0 {
                     return Err(format!("{} {handle:#x} property state is invalid", object.class_name));
                 }
-                let dependency_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("{} {handle:#x} dependency is null", object.class_name))?;
-                let expression_name = strings.read_tu().await?;
-                let expression_description = strings.read_tu().await?;
-                let value = data.read_bd().await?;
-                let flags = data.read_bl().await?;
-                let minimum = data.read_bd().await?;
-                let maximum = data.read_bd().await?;
-                let increment = data.read_bd().await?;
-                let count = data.read_bs().await? as usize;
-                let values = (0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bd())).collect::<Result<Vec<_>, _>>()?;
+                let dependency_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("{} {handle:#x} dependency is null", object.class_name))?;
+                let expression_name = strings.read_tu()?;
+                let expression_description = strings.read_tu()?;
+                let value = data.read_bd()?;
+                let flags = data.read_bl()?;
+                let minimum = data.read_bd()?;
+                let maximum = data.read_bd()?;
+                let increment = data.read_bd()?;
+                let count = data.read_bs()? as usize;
+                let values = (0..count).map(|_| data.read_bd()).collect::<Result<Vec<_>, _>>()?;
                 let delta = values.windows(2).next().map(|pair| pair[1] - pair[0]);
                 let derived = delta.filter(|step| *step != 0.0 && values.windows(2).all(|pair| pair[1] - pair[0] == *step));
                 let expected = derived.map_or((0.0, 0.0, 0.0), |step| (values[0], *values.last().unwrap(), step));
@@ -8893,31 +9176,31 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     DwgLogicalObjectBody::BlockHorizontalConstraintParameter(body)
                 }
             });
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("{} {handle:#x} stream boundary is invalid", object.class_name));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name).await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, &object.class_name)?;
         } else if type_code == 539 || object.class_name == "ACDBASSOCNETWORK" {
             use crate::artifacts::dwg::schema::snapshot::{DwgAssocNetwork, DwgAssocNetworkMember, DwgAssocNetworkMemberKind, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
-            let action_version = data.read_bs().await?;
-            let action_status = data.read_bl().await?;
+            let action_version = data.read_bs()?;
+            let action_status = data.read_bl()?;
             if action_version != 1 || action_status != 0 {
                 return Err(format!("ACDBASSOCNETWORK {handle:#x} action version/status is unsupported"));
             }
-            let action_index = data.read_bl().await? as i32;
-            let maximum_dependency_index = data.read_bl().await? as i32;
-            let dependency_count = data.read_bl().await? as usize;
-            let dependency_ownership = (0..dependency_count).map(|_| semio_framework_plugin::resolve_ready(data.read_b())).collect::<Result<Vec<_>, _>>()?;
-            let network_version = data.read_bs().await?;
-            let network_action_index = data.read_bl().await? as i32;
-            let action_count = data.read_bl().await? as usize;
-            let action_kinds = (0..action_count).map(|_| semio_framework_plugin::resolve_ready(data.read_b())).collect::<Result<Vec<_>, _>>()?;
-            let owned_action_count = data.read_bl().await? as usize;
-            if network_version != 0 || owned_action_count != 0 || data.bit_position().await != main_end_bit {
+            let action_index = data.read_bl()? as i32;
+            let maximum_dependency_index = data.read_bl()? as i32;
+            let dependency_count = data.read_bl()? as usize;
+            let dependency_ownership = (0..dependency_count).map(|_| data.read_b()).collect::<Result<Vec<_>, _>>()?;
+            let network_version = data.read_bs()?;
+            let network_action_index = data.read_bl()? as i32;
+            let action_count = data.read_bl()? as usize;
+            let action_kinds = (0..action_count).map(|_| data.read_b()).collect::<Result<Vec<_>, _>>()?;
+            let owned_action_count = data.read_bl()? as usize;
+            if network_version != 0 || owned_action_count != 0 || data.bit_position() != main_end_bit {
                 return Err(format!("ACDBASSOCNETWORK {handle:#x} native derived state or main boundary is invalid"));
             }
-            let owning_network_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let action_body_handle = read_object_handle(&mut handle_reader, handle).await?;
+            let owning_network_handle = read_object_handle(&mut handle_reader, handle)?;
+            let action_body_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependencies = dependency_ownership
                 .into_iter()
                 .map(|owned| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCNETWORK {handle:#x} dependency is null")).map(|dependency_handle| DwgAssociativeActionDependency { owned, dependency_handle }))
@@ -8930,7 +9213,7 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                         .map(|member_handle| DwgAssocNetworkMember { handle: member_handle, kind: if owned { DwgAssocNetworkMemberKind::Action } else { DwgAssocNetworkMemberKind::Network } })
                 })
                 .collect::<Result<Vec<_>, String>>()?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCNETWORK").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCNETWORK")?;
             object.body = Some(DwgLogicalObjectBody::AssocNetwork(DwgAssocNetwork {
                 action: DwgAssociativeAction { status: DwgAssociativeActionStatus::UpToDate, owning_network_handle, action_body_handle, action_index, maximum_dependency_index, dependencies },
                 network_action_index,
@@ -8939,54 +9222,54 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
         } else if type_code == 540 || object.class_name == "ACDBASSOC2DCONSTRAINTGROUP" {
             use crate::artifacts::dwg::schema::snapshot::{DwgAssoc2dConstraintGroup, DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgLogicalObjectBody};
             let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} class stream missing"))?;
-            let action_version = data.read_bs().await?;
-            let action_status = data.read_bl().await?;
+            let action_version = data.read_bs()?;
+            let action_status = data.read_bl()?;
             if action_version != 1 || action_status != 0 {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} action version/status is unsupported"));
             }
-            let action_index = data.read_bl().await? as i32;
-            let maximum_dependency_index = data.read_bl().await? as i32;
-            let dependency_count = data.read_bl().await? as usize;
+            let action_index = data.read_bl()? as i32;
+            let maximum_dependency_index = data.read_bl()? as i32;
+            let dependency_count = data.read_bl()? as usize;
             if dependency_count > 10_000 {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} dependency count is invalid"));
             }
-            let dependency_ownership = (0..dependency_count).map(|_| semio_framework_plugin::resolve_ready(data.read_b())).collect::<Result<Vec<_>, _>>()?;
-            if data.read_bl().await? != 0 {
+            let dependency_ownership = (0..dependency_count).map(|_| data.read_b()).collect::<Result<Vec<_>, _>>()?;
+            if data.read_bl()? != 0 {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} group version is unsupported"));
             }
-            let do_not_check_newly_added_constraints = data.read_b().await?;
-            let work_plane = (0..3).map(|_| semio_framework_plugin::resolve_ready(data.read_3bd()).map(|value| value.to_vec())).collect::<Result<Vec<_>, _>>()?;
-            let member_count = data.read_bl().await? as usize;
+            let do_not_check_newly_added_constraints = data.read_b()?;
+            let work_plane = (0..3).map(|_| data.read_3bd().map(|value| value.to_vec())).collect::<Result<Vec<_>, _>>()?;
+            let member_count = data.read_bl()? as usize;
             if member_count > 10_000 {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} member count is invalid"));
             }
-            let node_id_watermark = data.read_bl().await? as i32;
-            let node_count = data.read_bl().await? as usize;
+            let node_id_watermark = data.read_bl()? as i32;
+            let node_count = data.read_bl()? as usize;
             if node_count == 0 || node_count > 10_000 {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} node count {node_count} is invalid"));
             }
-            let owning_network_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let action_body_handle = read_object_handle(&mut handle_reader, handle).await?;
+            let owning_network_handle = read_object_handle(&mut handle_reader, handle)?;
+            let action_body_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependencies = dependency_ownership
                 .into_iter()
                 .map(|owned| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} dependency is null")).map(|dependency_handle| DwgAssociativeActionDependency { owned, dependency_handle }))
                 .collect::<Result<Vec<_>, String>>()?;
-            if read_object_handle(&mut handle_reader, handle).await?.is_some() {
+            if read_object_handle(&mut handle_reader, handle)?.is_some() {
                 return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} compatibility dimension slot is nonnull"));
             }
             let member_action_handles = (0..member_count).map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} member action is null"))).collect::<Result<Vec<_>, String>>()?;
             let mut nodes = Vec::with_capacity(node_count);
             for index in 0..node_count {
-                let class = strings.read_tu().await?;
-                let bit = data.bit_position().await;
-                nodes.push(decode_r2010_constraint_node(&class, &mut data, &mut handle_reader, handle).await.map_err(|error| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} node {index} {class} at bit {bit}: {error}"))?);
+                let class = strings.read_tu()?;
+                let bit = data.bit_position();
+                nodes.push(decode_r2010_constraint_node(&class, &mut data, &mut handle_reader, handle).map_err(|error| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} node {index} {class} at bit {bit}: {error}"))?);
             }
-            let actual_node_id_watermark = nodes.iter().map(constraint_node_id).max().and_then(|value| semio_framework_plugin::resolve_ready(value.await.checked_add(1)));
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
-            if actual_node_id_watermark != Some(node_id_watermark) || data.bit_position().await != main_end_bit || strings.bit_position() != string_end_bit {
-                return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} watermark {actual_node_id_watermark:?}/{node_id_watermark}, main {}/{main_end_bit}, strings {}/{string_end_bit}", data.bit_position().await, strings.bit_position()));
+            let actual_node_id_watermark = nodes.iter().map(constraint_node_id).max().and_then(|value| value.checked_add(1));
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
+            if actual_node_id_watermark != Some(node_id_watermark) || data.bit_position() != main_end_bit || strings.bit_position() != string_end_bit {
+                return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} watermark {actual_node_id_watermark:?}/{node_id_watermark}, main {}/{main_end_bit}, strings {}/{string_end_bit}", data.bit_position(), strings.bit_position()));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOC2DCONSTRAINTGROUP").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOC2DCONSTRAINTGROUP")?;
             object.body = Some(DwgLogicalObjectBody::Assoc2dConstraintGroup(DwgAssoc2dConstraintGroup {
                 action: DwgAssociativeAction { status: DwgAssociativeActionStatus::UpToDate, owning_network_handle, action_body_handle, action_index, maximum_dependency_index, dependencies },
                 do_not_check_newly_added_constraints,
@@ -8997,34 +9280,34 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
         } else if type_code == 505 || object.class_name == "MATERIAL" {
             use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMaterial, DwgMaterialChannels};
             let strings = strings.as_mut().ok_or_else(|| format!("MATERIAL {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let description = strings.read_tu().await?;
-            let ambient = read_material_color(&mut data, handle).await?;
-            let diffuse = read_material_color(&mut data, handle).await?;
-            let diffuse_map = read_material_map(&mut data, strings, handle).await?;
-            let specular = read_material_color(&mut data, handle).await?;
-            let specular_map = read_material_map(&mut data, strings, handle).await?;
-            let specular_gloss = data.read_bd().await?;
-            let reflection_map = read_material_map(&mut data, strings, handle).await?;
-            let opacity = data.read_bd().await?;
-            let opacity_map = read_material_map(&mut data, strings, handle).await?;
-            let bump_map = read_material_map(&mut data, strings, handle).await?;
-            let refraction_index = data.read_bd().await?;
-            let refraction_map = read_material_map(&mut data, strings, handle).await?;
-            let translucence = data.read_bd().await?;
-            let self_illumination = data.read_bd().await?;
-            let reflectivity = data.read_bd().await?;
-            if data.read_bl().await? != 0 {
+            let name = strings.read_tu()?;
+            let description = strings.read_tu()?;
+            let ambient = read_material_color(&mut data, handle)?;
+            let diffuse = read_material_color(&mut data, handle)?;
+            let diffuse_map = read_material_map(&mut data, strings, handle)?;
+            let specular = read_material_color(&mut data, handle)?;
+            let specular_map = read_material_map(&mut data, strings, handle)?;
+            let specular_gloss = data.read_bd()?;
+            let reflection_map = read_material_map(&mut data, strings, handle)?;
+            let opacity = data.read_bd()?;
+            let opacity_map = read_material_map(&mut data, strings, handle)?;
+            let bump_map = read_material_map(&mut data, strings, handle)?;
+            let refraction_index = data.read_bd()?;
+            let refraction_map = read_material_map(&mut data, strings, handle)?;
+            let translucence = data.read_bd()?;
+            let self_illumination = data.read_bd()?;
+            let reflectivity = data.read_bd()?;
+            if data.read_bl()? != 0 {
                 return Err(format!("MATERIAL {handle:#x} illumination model is unsupported"));
             }
-            let channels = data.read_bl().await?;
-            if channels & !63 != 0 || data.read_bl().await? != 0 {
+            let channels = data.read_bl()?;
+            if channels & !63 != 0 || data.read_bl()? != 0 {
                 return Err(format!("MATERIAL {handle:#x} channel or mode state is unsupported"));
             }
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("MATERIAL {handle:#x} main or string stream is not exactly consumed"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MATERIAL").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MATERIAL")?;
             object.body = Some(DwgLogicalObjectBody::Material(DwgMaterial {
                 name,
                 description,
@@ -9049,46 +9332,46 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             use crate::artifacts::dwg::schema::snapshot::{
                 DwgBlockAction, DwgBlockActionConnection, DwgBlockActionDependency, DwgBlockMoveAction, DwgBlockMoveCoordinateMode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody,
             };
-            let parent_id = data.read_bl().await? as i32;
-            let major_version = data.read_bl().await?;
-            let minor_version = data.read_bl().await?;
-            let value_code = data.read_bs().await? as i16;
+            let parent_id = data.read_bl()? as i32;
+            let major_version = data.read_bl()?;
+            let minor_version = data.read_bl()?;
+            let value_code = data.read_bs()? as i16;
             if value_code != -9999 {
                 return Err(format!("BLOCKMOVEACTION {handle:#x} evaluation value {value_code} is unsupported"));
             }
-            let node_id = data.read_bl().await?;
-            let repeated_major = data.read_bl().await?;
-            let repeated_minor = data.read_bl().await?;
-            let application_marker = data.read_bl().await?;
+            let node_id = data.read_bl()?;
+            let repeated_major = data.read_bl()?;
+            let repeated_minor = data.read_bl()?;
+            let application_marker = data.read_bl()?;
             if (repeated_major, repeated_minor, application_marker) != (major_version, minor_version, 0) {
                 return Err(format!("BLOCKMOVEACTION {handle:#x} repeated block-element metadata is inconsistent"));
             }
-            let display_location = data.read_3bd().await?.to_vec();
-            let dependency_count = data.read_bl().await? as usize;
-            let action_node_count = data.read_bl().await? as usize;
-            let action_node_ids = (0..action_node_count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?;
-            let x_code = data.read_bl().await?;
-            let y_code = data.read_bl().await?;
-            let distance_multiplier = data.read_bd().await?;
-            let angle_offset = data.read_bd().await?;
-            let coordinate_mode = match data.read_rc().await? {
+            let display_location = data.read_3bd()?.to_vec();
+            let dependency_count = data.read_bl()? as usize;
+            let action_node_count = data.read_bl()? as usize;
+            let action_node_ids = (0..action_node_count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
+            let x_code = data.read_bl()?;
+            let y_code = data.read_bl()?;
+            let distance_multiplier = data.read_bd()?;
+            let angle_offset = data.read_bd()?;
+            let coordinate_mode = match data.read_rc()? {
                 0 => DwgBlockMoveCoordinateMode::CartesianXy,
                 value => return Err(format!("BLOCKMOVEACTION {handle:#x} coordinate mode {value} is unsupported")),
             };
-            if dependency_count != 2 || action_node_count != 1 || data.bit_position().await != main_end_bit {
+            if dependency_count != 2 || action_node_count != 1 || data.bit_position() != main_end_bit {
                 return Err(format!("BLOCKMOVEACTION {handle:#x} semantic counts or main boundary are invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKMOVEACTION {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let x_name = strings.read_tu().await?;
-            let y_name = strings.read_tu().await?;
-            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            let name = strings.read_tu()?;
+            let x_name = strings.read_tu()?;
+            let y_name = strings.read_tu()?;
+            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("BLOCKMOVEACTION {handle:#x} string stream is not exactly consumed"));
             }
             let dependencies = (0..dependency_count)
                 .map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("BLOCKMOVEACTION {handle:#x} dependency is null")).map(|object_handle| DwgBlockActionDependency { object_handle }))
                 .collect::<Result<Vec<_>, String>>()?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKMOVEACTION").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKMOVEACTION")?;
             object.body = Some(DwgLogicalObjectBody::BlockMoveAction(DwgBlockMoveAction {
                 action: DwgBlockAction { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value: DwgEvaluationExpressionValue::Empty, node_id }, name, display_location, dependencies, action_node_ids },
                 x_connection: DwgBlockActionConnection { node_id: x_code, name: x_name },
@@ -9099,22 +9382,22 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             }));
         } else if type_code == 73 || object.class_name == "MLINESTYLE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgMlineCaps, DwgMlineLinetype, DwgMlineStyle, DwgMlineStyleElement};
-            let flags = data.read_bs().await?;
+            let flags = data.read_bs()?;
             if flags & !0x0773 != 0 {
                 return Err(format!("MLINESTYLE {handle:#x} flags {flags:#x} contain unknown concepts"));
             }
-            let fill_color = read_table_style_color(&mut data, handle).await?;
-            let start_angle = data.read_bd().await?;
-            let end_angle = data.read_bd().await?;
-            let count = data.read_rc().await? as usize;
+            let fill_color = read_table_style_color(&mut data, handle)?;
+            let start_angle = data.read_bd()?;
+            let end_angle = data.read_bd()?;
+            let count = data.read_rc()? as usize;
             if count == 0 {
                 return Err(format!("MLINESTYLE {handle:#x} has no elements"));
             }
             let mut elements = Vec::with_capacity(count);
             for _ in 0..count {
-                let offset = data.read_bd().await?;
-                let color = read_table_style_color(&mut data, handle).await?;
-                let linetype = match data.read_bs().await? {
+                let offset = data.read_bd()?;
+                let color = read_table_style_color(&mut data, handle)?;
+                let linetype = match data.read_bs()? {
                     32767 => DwgMlineLinetype::ByLayer,
                     32766 => DwgMlineLinetype::ByBlock,
                     0 => DwgMlineLinetype::Continuous,
@@ -9122,16 +9405,16 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 };
                 elements.push(DwgMlineStyleElement { offset, color, linetype });
             }
-            if elements.windows(2).any(|pair| pair[0].offset <= pair[1].offset) || data.bit_position().await != main_end_bit {
+            if elements.windows(2).any(|pair| pair[0].offset <= pair[1].offset) || data.bit_position() != main_end_bit {
                 return Err(format!("MLINESTYLE {handle:#x} main stream or element ordering is invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("MLINESTYLE {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let description = strings.read_tu().await?;
-            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            let name = strings.read_tu()?;
+            let description = strings.read_tu()?;
+            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("MLINESTYLE {handle:#x} string stream is not exactly consumed"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MLINESTYLE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MLINESTYLE")?;
             object.body = Some(DwgLogicalObjectBody::MlineStyle(DwgMlineStyle {
                 name,
                 description,
@@ -9146,39 +9429,39 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             }));
         } else if type_code == 508 || object.class_name == "MLEADERSTYLE" {
             use crate::artifacts::dwg::schema::snapshot::*;
-            if data.read_bs().await? != 2 {
+            if data.read_bs()? != 2 {
                 return Err(format!("MLEADERSTYLE {handle:#x} class version is unsupported"));
             }
-            let content_type = match data.read_bs().await? {
+            let content_type = match data.read_bs()? {
                 0 => DwgMLeaderContentType::None,
                 1 => DwgMLeaderContentType::Block,
                 2 => DwgMLeaderContentType::MText,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} content type {value} is invalid")),
             };
-            let draw_order = match data.read_bs().await? {
+            let draw_order = match data.read_bs()? {
                 0 => DwgMLeaderDrawOrder::LeaderFirst,
                 1 => DwgMLeaderDrawOrder::ContentFirst,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} draw order {value} is invalid")),
             };
-            let leader_order = match data.read_bs().await? {
+            let leader_order = match data.read_bs()? {
                 0 => DwgMLeaderLeaderOrder::HeadFirst,
                 1 => DwgMLeaderLeaderOrder::TailFirst,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} leader order {value} is invalid")),
             };
-            let maximum_segment_points = data.read_bl().await?;
-            let first_segment_angle = data.read_bd().await?;
-            let second_segment_angle = data.read_bd().await?;
-            let kind = match data.read_bs().await? {
+            let maximum_segment_points = data.read_bl()?;
+            let first_segment_angle = data.read_bd()?;
+            let second_segment_angle = data.read_bd()?;
+            let kind = match data.read_bs()? {
                 0 => DwgMLeaderKind::Invisible,
                 1 => DwgMLeaderKind::Straight,
                 2 => DwgMLeaderKind::Spline,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} leader kind {value} is invalid")),
             };
-            let leader_color = read_table_style_color(&mut data, handle).await?;
-            let lineweight = data.read_bl().await? as i32;
-            let landing = DwgMLeaderLanding { enabled: data.read_b().await?, gap: data.read_bd().await? };
-            let dogleg = DwgMLeaderDogleg { enabled: data.read_b().await?, length: data.read_bd().await? };
-            let arrow_size = data.read_bd().await?;
+            let leader_color = read_table_style_color(&mut data, handle)?;
+            let lineweight = data.read_bl()? as i32;
+            let landing = DwgMLeaderLanding { enabled: data.read_b()?, gap: data.read_bd()? };
+            let dogleg = DwgMLeaderDogleg { enabled: data.read_b()?, length: data.read_bd()? };
+            let arrow_size = data.read_bd()?;
             let attachment = |value: u16| -> Result<DwgMLeaderTextAttachment, String> {
                 Ok(match value {
                     0 => DwgMLeaderTextAttachment::TopOfTop,
@@ -9194,60 +9477,60 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     _ => return Err(format!("MLEADERSTYLE attachment {value} is invalid")),
                 })
             };
-            let left_attachment = attachment(data.read_bs().await?)?;
-            let right_attachment = attachment(data.read_bs().await?)?;
-            let angle = match data.read_bs().await? {
+            let left_attachment = attachment(data.read_bs()?)?;
+            let right_attachment = attachment(data.read_bs()?)?;
+            let angle = match data.read_bs()? {
                 0 => DwgMLeaderTextAngle::Horizontal,
                 1 => DwgMLeaderTextAngle::Aligned,
                 2 => DwgMLeaderTextAngle::AlwaysRightReading,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} text angle {value} is invalid")),
             };
-            let alignment = match data.read_bs().await? {
+            let alignment = match data.read_bs()? {
                 0 => DwgMLeaderTextAlignment::Left,
                 1 => DwgMLeaderTextAlignment::Center,
                 2 => DwgMLeaderTextAlignment::Right,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} text alignment {value} is invalid")),
             };
-            let text_color = read_table_style_color(&mut data, handle).await?;
-            let text_height = data.read_bd().await?;
-            let frame = data.read_b().await?;
-            let always_left = data.read_b().await?;
-            let alignment_space = data.read_bd().await?;
-            let block_color = read_table_style_color(&mut data, handle).await?;
-            let block_scale = vec![data.read_bd().await?, data.read_bd().await?, data.read_bd().await?];
-            let use_scale = data.read_b().await?;
-            let rotation = data.read_bd().await?;
-            let use_rotation = data.read_b().await?;
-            let connection = match data.read_bs().await? {
+            let text_color = read_table_style_color(&mut data, handle)?;
+            let text_height = data.read_bd()?;
+            let frame = data.read_b()?;
+            let always_left = data.read_b()?;
+            let alignment_space = data.read_bd()?;
+            let block_color = read_table_style_color(&mut data, handle)?;
+            let block_scale = vec![data.read_bd()?, data.read_bd()?, data.read_bd()?];
+            let use_scale = data.read_b()?;
+            let rotation = data.read_bd()?;
+            let use_rotation = data.read_b()?;
+            let connection = match data.read_bs()? {
                 0 => DwgMLeaderBlockConnection::Extents,
                 1 => DwgMLeaderBlockConnection::BasePoint,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} block connection {value} is invalid")),
             };
-            let overall_scale = data.read_bd().await?;
-            let property_overrides_changed = data.read_b().await?;
-            let annotative = data.read_b().await?;
-            let break_size = data.read_bd().await?;
-            let attachment_direction = match data.read_bs().await? {
+            let overall_scale = data.read_bd()?;
+            let property_overrides_changed = data.read_b()?;
+            let annotative = data.read_b()?;
+            let break_size = data.read_bd()?;
+            let attachment_direction = match data.read_bs()? {
                 0 => DwgMLeaderAttachmentDirection::Horizontal,
                 1 => DwgMLeaderAttachmentDirection::Vertical,
                 value => return Err(format!("MLEADERSTYLE {handle:#x} attachment direction {value} is invalid")),
             };
-            let top_attachment = attachment(data.read_bs().await?)?;
-            let bottom_attachment = attachment(data.read_bs().await?)?;
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("MLEADERSTYLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let top_attachment = attachment(data.read_bs()?)?;
+            let bottom_attachment = attachment(data.read_bs()?)?;
+            if data.bit_position() != main_end_bit {
+                return Err(format!("MLEADERSTYLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("MLEADERSTYLE {handle:#x} string stream missing"))?;
-            let description = strings.read_tu().await?;
-            let default_content = strings.read_tu().await?;
-            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            let description = strings.read_tu()?;
+            let default_content = strings.read_tu()?;
+            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("MLEADERSTYLE {handle:#x} string stream is not exactly consumed"));
             }
-            let linetype_style_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("MLEADERSTYLE {handle:#x} linetype style is null"))?;
-            let symbol_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let style_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("MLEADERSTYLE {handle:#x} text style is null"))?;
-            let content_handle = read_object_handle(&mut handle_reader, handle).await?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MLEADERSTYLE").await?;
+            let linetype_style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("MLEADERSTYLE {handle:#x} linetype style is null"))?;
+            let symbol_handle = read_object_handle(&mut handle_reader, handle)?;
+            let style_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("MLEADERSTYLE {handle:#x} text style is null"))?;
+            let content_handle = read_object_handle(&mut handle_reader, handle)?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "MLEADERSTYLE")?;
             object.body = Some(DwgLogicalObjectBody::MLeaderStyle(DwgMLeaderStyle {
                 content_type,
                 draw_order,
@@ -9284,62 +9567,62 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             }));
         } else if type_code == 504 || object.class_name == "TABLESTYLE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgTableStyle};
-            if data.read_rc().await? != 0 {
+            if data.read_rc()? != 0 {
                 return Err(format!("TABLESTYLE {handle:#x} native discriminator is unsupported"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("TABLESTYLE {handle:#x} string stream missing"))?;
-            let description = strings.read_tu().await?;
-            if data.read_bl().await? != 0 {
+            let description = strings.read_tu()?;
+            if data.read_bl()? != 0 {
                 return Err(format!("TABLESTYLE {handle:#x} native format version is unsupported"));
             }
-            let bit_flags = data.read_bl().await?;
-            let template_style_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let table = decode_r2010_cell_style(&mut data, strings, &mut handle_reader, handle).await?;
-            if data.read_bl().await? != 4 || data.read_bl().await? != 2 || strings.read_tu().await? != "Table" || data.read_bl().await? != 3 {
+            let bit_flags = data.read_bl()?;
+            let template_style_handle = read_object_handle(&mut handle_reader, handle)?;
+            let table = decode_r2010_cell_style(&mut data, strings, &mut handle_reader, handle)?;
+            if data.read_bl()? != 4 || data.read_bl()? != 2 || strings.read_tu()? != "Table" || data.read_bl()? != 3 {
                 return Err(format!("TABLESTYLE {handle:#x} base identity or override count is invalid"));
             }
             let mut overrides = Vec::with_capacity(3);
             for (expected_id, expected_type, expected_name) in [(1, 1, "_TITLE"), (2, 1, "_HEADER"), (3, 2, "_DATA")] {
-                if data.read_bl().await? != expected_id {
+                if data.read_bl()? != expected_id {
                     return Err(format!("TABLESTYLE {handle:#x} override selector is invalid"));
                 }
-                let style = decode_r2010_cell_style(&mut data, strings, &mut handle_reader, handle).await?;
-                if data.read_bl().await? != expected_id || data.read_bl().await? != expected_type || strings.read_tu().await? != expected_name {
+                let style = decode_r2010_cell_style(&mut data, strings, &mut handle_reader, handle)?;
+                if data.read_bl()? != expected_id || data.read_bl()? != expected_type || strings.read_tu()? != expected_name {
                     return Err(format!("TABLESTYLE {handle:#x} override identity is invalid"));
                 }
                 overrides.push(style);
             }
-            if data.bit_position().await != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            if data.bit_position() != main_end_bit || strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("TABLESTYLE {handle:#x} main or string stream is not exactly consumed"));
             }
             if object.owner_handle.is_none() || object.reactor_handles.len() != 1 || object.extension_dictionary_handle.is_none() || !object.extended_data.is_empty() {
                 return Err(format!("TABLESTYLE {handle:#x} common state is invalid"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "TABLESTYLE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "TABLESTYLE")?;
             let mut overrides = overrides.into_iter();
             object.body = Some(DwgLogicalObjectBody::TableStyle(DwgTableStyle { description, bit_flags, template_style_handle, table, title: overrides.next().unwrap(), header: overrides.next().unwrap(), data: overrides.next().unwrap() }));
         } else if type_code == 516 || object.class_name == "SORTENTSTABLE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgDrawOrderEntry, DwgLogicalObjectBody, DwgSortEntitiesTable};
-            let count = data.read_bl().await? as usize;
+            let count = data.read_bl()? as usize;
             if count > 50_000 {
                 return Err(format!("SORTENTSTABLE {handle:#x} entry count {count} is invalid"));
             }
             let sort_handles = (0..count)
                 .map(|_| {
-                    let (code, value) = semio_framework_plugin::resolve_ready(data.read_handle())?;
+                    let (code, value) = data.read_handle()?;
                     if code != 0 {
                         return Err(format!("SORTENTSTABLE {handle:#x} sort key uses handle code {code}"));
                     }
                     Ok(value)
                 })
                 .collect::<Result<Vec<_>, String>>()?;
-            if data.bit_position().await != main_end_bit || main_end_bit + 1 != data_end_bit {
+            if data.bit_position() != main_end_bit || main_end_bit + 1 != data_end_bit {
                 return Err(format!("SORTENTSTABLE {handle:#x} main/string stream is not exactly consumed"));
             }
             if object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || object.extension_dictionary_handle.is_some() || !object.extended_data.is_empty() {
                 return Err(format!("SORTENTSTABLE {handle:#x} common state is invalid"));
             }
-            let block_header_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("SORTENTSTABLE {handle:#x} block header is null"))?;
+            let block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("SORTENTSTABLE {handle:#x} block header is null"))?;
             let entity_handles = (0..count).map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("SORTENTSTABLE {handle:#x} entity reference is null"))).collect::<Result<Vec<_>, String>>()?;
             let entries = entity_handles.into_iter().zip(sort_handles).map(|(entity_handle, sort_handle)| DwgDrawOrderEntry { entity_handle, sort_handle }).collect::<Vec<_>>();
             let unique_entities = entries.iter().map(|entry| entry.entity_handle).collect::<std::collections::BTreeSet<_>>();
@@ -9347,25 +9630,25 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             if unique_entities.len() != entries.len() || unique_sorts.len() != entries.len() {
                 return Err(format!("SORTENTSTABLE {handle:#x} contains duplicate entity or sort keys"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SORTENTSTABLE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SORTENTSTABLE")?;
             object.body = Some(DwgLogicalObjectBody::SortEntitiesTable(DwgSortEntitiesTable { block_header_handle, entries }));
         } else if type_code == 507 || object.class_name == "SCALE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgAnnotationScale, DwgLogicalObjectBody};
-            if data.read_bs().await? != 0 {
+            if data.read_bs()? != 0 {
                 return Err(format!("SCALE {handle:#x} native format flag is unsupported"));
             }
-            let paper_units = data.read_bd().await?;
-            let drawing_units = data.read_bd().await?;
-            let is_unit_scale = data.read_b().await?;
-            if data.bit_position().await != main_end_bit {
+            let paper_units = data.read_bd()?;
+            let drawing_units = data.read_bd()?;
+            let is_unit_scale = data.read_b()?;
+            if data.bit_position() != main_end_bit {
                 return Err(format!("SCALE {handle:#x} main stream is not exactly consumed"));
             }
             if object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || object.extension_dictionary_handle.is_some() || !object.extended_data.is_empty() {
                 return Err(format!("SCALE {handle:#x} common state is invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("SCALE {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await?
+            let name = strings.read_tu()?;
+            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)?
                 || name.is_empty()
                 || !paper_units.is_finite()
                 || paper_units <= 0.0
@@ -9375,11 +9658,11 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             {
                 return Err(format!("SCALE {handle:#x} logical value or string boundary is invalid"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SCALE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "SCALE")?;
             object.body = Some(DwgLogicalObjectBody::AnnotationScale(DwgAnnotationScale { name, paper_units, drawing_units, is_unit_scale }));
         } else if type_code == 80 || object.class_name == "ACDBPLACEHOLDER" {
             use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgPlaceholder};
-            if data.bit_position().await != main_end_bit
+            if data.bit_position() != main_end_bit
                 || main_end_bit + 1 != data_end_bit
                 || object.owner_handle.is_none()
                 || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()]
@@ -9388,83 +9671,83 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             {
                 return Err(format!("ACDBPLACEHOLDER {handle:#x} logical stream or common state is invalid"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBPLACEHOLDER").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBPLACEHOLDER")?;
             object.body = Some(DwgLogicalObjectBody::Placeholder(DwgPlaceholder {}));
         } else if type_code == 503 || object.class_name == "DICTIONARYVAR" {
             use crate::artifacts::dwg::schema::snapshot::{DwgDictionaryVariable, DwgLogicalObjectBody};
-            if data.read_rc().await? != 0 || data.bit_position().await != main_end_bit {
+            if data.read_rc()? != 0 || data.bit_position() != main_end_bit {
                 return Err(format!("DICTIONARYVAR {handle:#x} schema revision or main boundary is invalid"));
             }
             if object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || object.extension_dictionary_handle.is_some() || !object.extended_data.is_empty() {
                 return Err(format!("DICTIONARYVAR {handle:#x} common state is invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("DICTIONARYVAR {handle:#x} string stream missing"))?;
-            let value = strings.read_tu().await?;
-            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit).await? {
+            let value = strings.read_tu()?;
+            if strings.bit_position() != r2010_string_content_end_bit(payload, data_end_bit)? {
                 return Err(format!("DICTIONARYVAR {handle:#x} string stream is not exactly consumed"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DICTIONARYVAR").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "DICTIONARYVAR")?;
             object.body = Some(DwgLogicalObjectBody::DictionaryVariable(DwgDictionaryVariable { value }));
         } else if type_code == 531 || object.class_name == "BLOCKVISIBILITYPARAMETER" {
             use crate::artifacts::dwg::schema::snapshot::{
                 DwgBlockParameterConnection, DwgBlockParameterProperty, DwgBlockVisibilityParameter, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody, DwgVisibilityEvaluationHistory, DwgVisibilityState,
             };
-            let parent_id = data.read_bl().await? as i32;
-            let major_version = data.read_bl().await?;
-            let minor_version = data.read_bl().await?;
-            let value_code = data.read_bs().await? as i16;
+            let parent_id = data.read_bl()? as i32;
+            let major_version = data.read_bl()?;
+            let minor_version = data.read_bl()?;
+            let value_code = data.read_bs()? as i16;
             let data_value = match value_code {
                 -9999 => Some(DwgEvaluationExpressionValue::Empty),
-                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd().await?)),
-                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd().await?.to_vec())),
-                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd().await?.to_vec())),
+                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd()?)),
+                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd()?.to_vec())),
+                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd()?.to_vec())),
                 1 | 91 => None,
-                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl().await? as i32)),
-                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs().await? as i16)),
+                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl()? as i32)),
+                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs()? as i16)),
                 _ => return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} evaluation discriminator {value_code} is unsupported")),
             };
-            let node_id = data.read_bl().await?;
-            if data.read_bl().await? != major_version || data.read_bl().await? != minor_version || data.read_bl().await? != 0 {
+            let node_id = data.read_bl()?;
+            if data.read_bl()? != major_version || data.read_bl()? != minor_version || data.read_bl()? != 0 {
                 return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} block-element version is invalid"));
             }
-            let show_properties = data.read_b().await?;
-            let chain_actions = data.read_b().await?;
-            let definition_point = data.read_3bd().await?.to_vec();
+            let show_properties = data.read_b()?;
+            let chain_actions = data.read_b()?;
+            let definition_point = data.read_3bd()?.to_vec();
             let mut connection_codes = Vec::with_capacity(2);
             for _ in 0..2 {
-                let count = data.read_bl().await? as usize;
-                connection_codes.push((0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?);
+                let count = data.read_bl()? as usize;
+                connection_codes.push((0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?);
             }
-            let updated_visibility_node_id = data.read_bl().await?;
-            let initialized = data.read_b().await?;
-            let evaluation_history = if data.read_b().await? { DwgVisibilityEvaluationHistory::Required } else { DwgVisibilityEvaluationHistory::Stateless };
-            let eligible_count = data.read_bl().await? as usize;
-            let state_count = data.read_bl().await? as usize;
-            let state_counts = (0..state_count).map(|_| Ok((semio_framework_plugin::resolve_ready(data.read_bl())? as usize, semio_framework_plugin::resolve_ready(data.read_bl())? as usize))).collect::<Result<Vec<_>, String>>()?;
-            if data.bit_position().await != main_end_bit {
+            let updated_visibility_node_id = data.read_bl()?;
+            let initialized = data.read_b()?;
+            let evaluation_history = if data.read_b()? { DwgVisibilityEvaluationHistory::Required } else { DwgVisibilityEvaluationHistory::Stateless };
+            let eligible_count = data.read_bl()? as usize;
+            let state_count = data.read_bl()? as usize;
+            let state_counts = (0..state_count).map(|_| Ok((data.read_bl()? as usize, data.read_bl()? as usize))).collect::<Result<Vec<_>, String>>()?;
+            if data.bit_position() != main_end_bit {
                 return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} main stream is not exactly consumed"));
             }
             if object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
                 return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} common state is invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKVISIBILITYPARAMETER {handle:#x} string stream missing"))?;
-            let string_value = if value_code == 1 { Some(strings.read_tu().await?) } else { None };
-            let element_name = strings.read_tu().await?;
+            let string_value = if value_code == 1 { Some(strings.read_tu()?) } else { None };
+            let element_name = strings.read_tu()?;
             let mut properties = Vec::with_capacity(2);
             for codes in connection_codes {
                 let connections = codes.into_iter().map(|code| Ok(DwgBlockParameterConnection { code, name: strings.read_tu()? })).collect::<Result<Vec<_>, String>>()?;
                 properties.push(DwgBlockParameterProperty { connections });
             }
-            let name = strings.read_tu().await?;
-            let description = strings.read_tu().await?;
+            let name = strings.read_tu()?;
+            let description = strings.read_tu()?;
             let state_names = (0..state_count).map(|_| strings.read_tu()).collect::<Result<Vec<_>, _>>()?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} string stream is not exactly consumed"));
             }
             let value = match value_code {
                 1 => DwgEvaluationExpressionValue::String(string_value.unwrap()),
-                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("BLOCKVISIBILITYPARAMETER {handle:#x} evaluation object reference is null"))?),
+                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("BLOCKVISIBILITYPARAMETER {handle:#x} evaluation object reference is null"))?),
                 _ => data_value.unwrap(),
             };
             let eligible_entity_handles = (0..eligible_count).map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("BLOCKVISIBILITYPARAMETER {handle:#x} eligible entity is null"))).collect::<Result<Vec<_>, String>>()?;
@@ -9478,7 +9761,7 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             if states.iter().any(|state| state.visible_entity_handles.iter().any(|member| !eligible_entity_handles.contains(member))) {
                 return Err(format!("BLOCKVISIBILITYPARAMETER {handle:#x} state contains an ineligible entity"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKVISIBILITYPARAMETER").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKVISIBILITYPARAMETER")?;
             object.body = Some(DwgLogicalObjectBody::BlockVisibilityParameter(DwgBlockVisibilityParameter {
                 evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value, node_id },
                 element_name,
@@ -9499,70 +9782,70 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 DwgBlockFlipParameter, DwgBlockFlipValueSet, DwgBlockParameterBaseLocation, DwgBlockParameterConnection, DwgBlockParameterProperty, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody,
                 DwgNamedEvaluationNodeReference,
             };
-            let parent_id = data.read_bl().await? as i32;
-            let major_version = data.read_bl().await?;
-            let minor_version = data.read_bl().await?;
-            let value_code = data.read_bs().await? as i16;
+            let parent_id = data.read_bl()? as i32;
+            let major_version = data.read_bl()?;
+            let minor_version = data.read_bl()?;
+            let value_code = data.read_bs()? as i16;
             let data_value = match value_code {
                 -9999 => Some(DwgEvaluationExpressionValue::Empty),
-                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd().await?)),
-                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd().await?.to_vec())),
-                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd().await?.to_vec())),
+                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd()?)),
+                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd()?.to_vec())),
+                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd()?.to_vec())),
                 1 | 91 => None,
-                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl().await? as i32)),
-                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs().await? as i16)),
+                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl()? as i32)),
+                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs()? as i16)),
                 _ => return Err(format!("BLOCKFLIPPARAMETER {handle:#x} evaluation discriminator {value_code} is unsupported")),
             };
-            let node_id = data.read_bl().await?;
-            if data.read_bl().await? != major_version || data.read_bl().await? != minor_version || data.read_bl().await? != 0 {
+            let node_id = data.read_bl()?;
+            if data.read_bl()? != major_version || data.read_bl()? != minor_version || data.read_bl()? != 0 {
                 return Err(format!("BLOCKFLIPPARAMETER {handle:#x} block-element version is invalid"));
             }
-            let show_properties = data.read_b().await?;
-            let chain_actions = data.read_b().await?;
-            let definition_base = data.read_3bd().await?.to_vec();
-            let definition_end = data.read_3bd().await?.to_vec();
+            let show_properties = data.read_b()?;
+            let chain_actions = data.read_b()?;
+            let definition_base = data.read_3bd()?.to_vec();
+            let definition_end = data.read_3bd()?.to_vec();
             let mut connection_codes = Vec::with_capacity(4);
             for _ in 0..4 {
-                let count = data.read_bl().await? as usize;
-                connection_codes.push((0..count).map(|_| semio_framework_plugin::resolve_ready(data.read_bl())).collect::<Result<Vec<_>, _>>()?);
+                let count = data.read_bl()? as usize;
+                connection_codes.push((0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?);
             }
-            let property_states = [data.read_bl().await?, data.read_bl().await?, data.read_bl().await?, data.read_bl().await?];
-            let base_location = match data.read_bs().await? {
+            let property_states = [data.read_bl()?, data.read_bl()?, data.read_bl()?, data.read_bl()?];
+            let base_location = match data.read_bs()? {
                 0 => DwgBlockParameterBaseLocation::StartPoint,
                 1 => DwgBlockParameterBaseLocation::Midpoint,
                 value => return Err(format!("BLOCKFLIPPARAMETER {handle:#x} base location {value} is unsupported")),
             };
-            let label_point = data.read_3bd().await?.to_vec();
-            let updated_node_id = data.read_bl().await?;
-            if property_states != [updated_node_id, 0, 0, 0] || data.bit_position().await != main_end_bit {
+            let label_point = data.read_3bd()?.to_vec();
+            let updated_node_id = data.read_bl()?;
+            if property_states != [updated_node_id, 0, 0, 0] || data.bit_position() != main_end_bit {
                 return Err(format!("BLOCKFLIPPARAMETER {handle:#x} duplicated update state or main boundary is invalid"));
             }
             if object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
                 return Err(format!("BLOCKFLIPPARAMETER {handle:#x} common state is invalid"));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKFLIPPARAMETER {handle:#x} string stream missing"))?;
-            let string_value = if value_code == 1 { Some(strings.read_tu().await?) } else { None };
-            let name = strings.read_tu().await?;
+            let string_value = if value_code == 1 { Some(strings.read_tu()?) } else { None };
+            let name = strings.read_tu()?;
             let mut properties = Vec::with_capacity(4);
             for codes in connection_codes {
                 let connections = codes.into_iter().map(|code| Ok(DwgBlockParameterConnection { code, name: strings.read_tu()? })).collect::<Result<Vec<_>, String>>()?;
                 properties.push(DwgBlockParameterProperty { connections });
             }
-            let label = strings.read_tu().await?;
-            let description = strings.read_tu().await?;
-            let base_label = strings.read_tu().await?;
-            let flipped_label = strings.read_tu().await?;
-            let expression_name = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let label = strings.read_tu()?;
+            let description = strings.read_tu()?;
+            let base_label = strings.read_tu()?;
+            let flipped_label = strings.read_tu()?;
+            let expression_name = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("BLOCKFLIPPARAMETER {handle:#x} string stream is not exactly consumed"));
             }
             let value = match value_code {
                 1 => DwgEvaluationExpressionValue::String(string_value.unwrap()),
-                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("BLOCKFLIPPARAMETER {handle:#x} evaluation object reference is null"))?),
+                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("BLOCKFLIPPARAMETER {handle:#x} evaluation object reference is null"))?),
                 _ => data_value.unwrap(),
             };
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKFLIPPARAMETER").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKFLIPPARAMETER")?;
             object.body = Some(DwgLogicalObjectBody::BlockFlipParameter(DwgBlockFlipParameter {
                 evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value, node_id },
                 name,
@@ -9580,114 +9863,114 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             }));
         } else if type_code == 517 || object.class_name == "ACAD_EVALUATION_GRAPH" {
             use crate::artifacts::dwg::schema::snapshot::{DwgEvaluationGraph, DwgEvaluationGraphEdge, DwgEvaluationGraphNode, DwgLogicalObjectBody};
-            let watermark = data.read_bl().await?;
-            let watermark_copy = data.read_bl().await?;
+            let watermark = data.read_bl()?;
+            let watermark_copy = data.read_bl()?;
             if watermark != watermark_copy {
                 return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} watermark copies disagree"));
             }
-            let node_count = data.read_bl().await? as usize;
+            let node_count = data.read_bl()? as usize;
             let mut nodes = Vec::with_capacity(node_count);
             let mut native_node_relations = Vec::with_capacity(node_count);
             for index in 0..node_count {
-                if data.read_bl().await? as usize != index || data.read_bl().await? != 32 {
+                if data.read_bl()? as usize != index || data.read_bl()? != 32 {
                     return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} node {index} native identity is invalid"));
                 }
-                let id = data.read_bl().await?;
+                let id = data.read_bl()?;
                 let mut relations = [0i32; 4];
                 for relation in &mut relations {
-                    *relation = data.read_bl().await? as i32;
+                    *relation = data.read_bl()? as i32;
                 }
                 nodes.push(DwgEvaluationGraphNode { id, expression_handle: 0 });
                 native_node_relations.push(relations);
             }
-            let edge_count = data.read_bl().await? as usize;
+            let edge_count = data.read_bl()? as usize;
             let mut edges = Vec::with_capacity(edge_count);
             let mut native_edge_relations = Vec::with_capacity(edge_count);
             let mut native_endpoints = Vec::with_capacity(edge_count);
             for index in 0..edge_count {
-                if data.read_bl().await? as usize != index || data.read_bl().await? != 0 {
+                if data.read_bl()? as usize != index || data.read_bl()? != 0 {
                     return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} edge {index} native identity is invalid"));
                 }
-                let reference_count = data.read_bl().await?;
-                let from = data.read_bl().await? as usize;
-                let to = data.read_bl().await? as usize;
+                let reference_count = data.read_bl()?;
+                let from = data.read_bl()? as usize;
+                let to = data.read_bl()? as usize;
                 let from_node_id = nodes.get(from).ok_or_else(|| format!("ACAD_EVALUATION_GRAPH {handle:#x} edge {index} source is invalid"))?.id;
                 let to_node_id = nodes.get(to).ok_or_else(|| format!("ACAD_EVALUATION_GRAPH {handle:#x} edge {index} target is invalid"))?.id;
                 let mut relations = [0i32; 5];
                 for relation in &mut relations {
-                    *relation = data.read_bl().await? as i32;
+                    *relation = data.read_bl()? as i32;
                 }
                 edges.push(DwgEvaluationGraphEdge { from_node_id, to_node_id, reference_count, invertible: false, suppressed: false });
                 native_edge_relations.push(relations);
                 native_endpoints.push((from, to));
             }
-            if data.bit_position().await != main_end_bit || nodes.iter().map(|node| node.id).max() != Some(watermark) {
+            if data.bit_position() != main_end_bit || nodes.iter().map(|node| node.id).max() != Some(watermark) {
                 return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} main stream or watermark is invalid"));
             }
             if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] {
                 return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} common state is invalid"));
             }
             for node in &mut nodes {
-                node.expression_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACAD_EVALUATION_GRAPH {handle:#x} expression handle is null"))?;
+                node.expression_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACAD_EVALUATION_GRAPH {handle:#x} expression handle is null"))?;
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACAD_EVALUATION_GRAPH").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACAD_EVALUATION_GRAPH")?;
             let graph = DwgEvaluationGraph { nodes, edges };
-            let (derived_node_relations, derived_edge_relations, derived_endpoints) = evaluation_graph_indexes(&graph).await?;
+            let (derived_node_relations, derived_edge_relations, derived_endpoints) = evaluation_graph_indexes(&graph)?;
             if native_node_relations != derived_node_relations || native_edge_relations != derived_edge_relations || native_endpoints != derived_endpoints {
                 return Err(format!("ACAD_EVALUATION_GRAPH {handle:#x} native indexes do not match the semantic graph"));
             }
             object.body = Some(DwgLogicalObjectBody::EvaluationGraph(graph));
         } else if type_code == 522 || object.class_name == "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION" {
-            let marker = data.read_bs().await?;
+            let marker = data.read_bs()?;
             if marker != 1 {
                 return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} marker {marker} is unsupported"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] {
                 return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} common state is invalid"));
             }
-            let protected_block_header_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} protected block header is null"))?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION").await?;
+            let protected_block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} protected block header is null"))?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::DynamicBlockPurgePreventer(crate::artifacts::dwg::schema::snapshot::DwgDynamicBlockPurgePreventer { protected_block_header_handle }));
         } else if type_code == 559 || object.class_name == "ACDB_BLOCKREPRESENTATION_DATA" {
-            let marker = data.read_bs().await?;
+            let marker = data.read_bs()?;
             if marker != 1 {
                 return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} marker {marker} is unsupported"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle != Some(handle - 1) || object.reactor_handles.as_slice() != [handle - 1] {
                 return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} common state is invalid"));
             }
-            let represented_block_header_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} represented block header is null"))?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_BLOCKREPRESENTATION_DATA").await?;
+            let represented_block_header_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} represented block header is null"))?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_BLOCKREPRESENTATION_DATA")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockRepresentationData(crate::artifacts::dwg::schema::snapshot::DwgBlockRepresentationData { represented_block_header_handle }));
         } else if type_code == 506 || object.class_name == "VISUALSTYLE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgLogicalObjectBody, DwgVisualStyle, DwgVisualStyleProperties, DwgVisualStyleProperty};
-            let style_type = data.read_bl().await?;
-            let extension_lighting_model = data.read_bs().await?;
-            let internal_only = data.read_b().await?;
+            let style_type = data.read_bl()?;
+            let extension_lighting_model = data.read_bs()?;
+            let internal_only = data.read_b()?;
             macro_rules! blp {
                 () => {{
-                    let value = data.read_bl().await?;
-                    let operation = read_visual_style_operation(&mut data).await?;
+                    let value = data.read_bl()?;
+                    let operation = read_visual_style_operation(&mut data)?;
                     DwgVisualStyleProperty { value, operation }
                 }};
             }
             macro_rules! bsp {
                 () => {{
-                    let value = data.read_bs().await?;
-                    let operation = read_visual_style_operation(&mut data).await?;
+                    let value = data.read_bs()?;
+                    let operation = read_visual_style_operation(&mut data)?;
                     DwgVisualStyleProperty { value, operation }
                 }};
             }
             macro_rules! bdp {
                 () => {{
-                    let value = data.read_bd().await?;
-                    let operation = read_visual_style_operation(&mut data).await?;
+                    let value = data.read_bd()?;
+                    let operation = read_visual_style_operation(&mut data)?;
                     DwgVisualStyleProperty { value, operation }
                 }};
             }
@@ -9697,33 +9980,33 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             let face_modifiers = bsp!();
             let face_opacity = bdp!();
             let face_specular_amount = bdp!();
-            let (face_monochrome_color, face_monochrome_flags) = read_visual_style_color(&mut data).await?;
+            let (face_monochrome_color, face_monochrome_flags) = read_visual_style_color(&mut data)?;
             let edge_model = blp!();
             let edge_styles = blp!();
-            let (edge_intersection_color, edge_intersection_flags) = read_visual_style_color(&mut data).await?;
-            let (edge_obscured_color, edge_obscured_flags) = read_visual_style_color(&mut data).await?;
+            let (edge_intersection_color, edge_intersection_flags) = read_visual_style_color(&mut data)?;
+            let (edge_obscured_color, edge_obscured_flags) = read_visual_style_color(&mut data)?;
             let edge_obscured_line_pattern = blp!();
             let edge_intersection_line_pattern = blp!();
             let edge_crease_angle = bdp!();
             let edge_modifiers = blp!();
-            let (edge_color, edge_color_flags) = read_visual_style_color(&mut data).await?;
+            let (edge_color, edge_color_flags) = read_visual_style_color(&mut data)?;
             let edge_opacity = bdp!();
             let edge_width = blp!();
             let edge_overhang = blp!();
             let edge_jitter = blp!();
-            let (edge_silhouette_color, edge_silhouette_flags) = read_visual_style_color(&mut data).await?;
+            let (edge_silhouette_color, edge_silhouette_flags) = read_visual_style_color(&mut data)?;
             let edge_silhouette_width = blp!();
             let edge_halo_gap = blp!();
             let edge_isolines = blp!();
-            let hidden_edge_precision = DwgVisualStyleProperty { value: data.read_b().await?, operation: read_visual_style_operation(&mut data).await? };
+            let hidden_edge_precision = DwgVisualStyleProperty { value: data.read_b()?, operation: read_visual_style_operation(&mut data)? };
             let display_settings = blp!();
             let display_brightness = bdp!();
             let display_shadow_type = blp!();
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("VISUALSTYLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("VISUALSTYLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("VISUALSTYLE {handle:#x} string stream missing"))?;
-            let description = strings.read_tu().await?;
+            let description = strings.read_tu()?;
             let mut properties = DwgVisualStyleProperties {
                 face_lighting_model,
                 face_lighting_quality,
@@ -9768,93 +10051,93 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             read_color_strings(&mut properties.edge_obscured_color.value, edge_obscured_flags)?;
             read_color_strings(&mut properties.edge_color.value, edge_color_flags)?;
             read_color_strings(&mut properties.edge_silhouette_color.value, edge_silhouette_flags)?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("VISUALSTYLE {handle:#x} string stream is not exactly consumed: {} != {string_end_bit}", strings.bit_position()));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VISUALSTYLE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "VISUALSTYLE")?;
             object.body = Some(DwgLogicalObjectBody::VisualStyle(DwgVisualStyle { description, style_type, extension_lighting_model, internal_only, properties }));
         } else if type_code == 543 || object.class_name == "BLOCKPARAMDEPENDENCYBODY" {
-            let dependency_version = data.read_bs().await?;
-            let dimension_base_version = data.read_bs().await?;
-            let class_version = data.read_bs().await?;
+            let dependency_version = data.read_bs()?;
+            let dimension_base_version = data.read_bs()?;
+            let class_version = data.read_bs()?;
             if (dependency_version, dimension_base_version, class_version) != (1, 1, 0) {
                 return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} versions {dependency_version}/{dimension_base_version}/{class_version} are unsupported"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let name = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKPARAMDEPENDENCYBODY").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKPARAMDEPENDENCYBODY")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockParameterDependencyBody(crate::artifacts::dwg::schema::snapshot::DwgBlockParameterDependencyBody { name }));
         } else if type_code == 549 || object.class_name == "ASSOCDIMDEPENDENCYBODY" {
-            let dependency_version = data.read_bs().await?;
-            let dimension_base_version = data.read_bs().await?;
-            let class_version = data.read_bs().await?;
+            let dependency_version = data.read_bs()?;
+            let dimension_base_version = data.read_bs()?;
+            let class_version = data.read_bs()?;
             if (dependency_version, dimension_base_version, class_version) != (1, 1, 1) {
                 return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} versions {dependency_version}/{dimension_base_version}/{class_version} are unsupported"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("ASSOCDIMDEPENDENCYBODY {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let name = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
             }
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ASSOCDIMDEPENDENCYBODY").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ASSOCDIMDEPENDENCYBODY")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(crate::artifacts::dwg::schema::snapshot::DwgAssociativeDimensionDependencyBody { name }));
         } else if type_code == 545 || object.class_name == "ACDBASSOCVARIABLE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgAssociativeAction, DwgAssociativeActionDependency, DwgAssociativeActionStatus, DwgAssociativeVariable, DwgEvaluationVariant, DwgLogicalObjectBody};
-            let action_version = data.read_bs().await?;
-            let action_status = data.read_bl().await?;
+            let action_version = data.read_bs()?;
+            let action_status = data.read_bl()?;
             if action_version != 1 || action_status != 0 {
                 return Err(format!("ACDBASSOCVARIABLE {handle:#x} action version/status {action_version}/{action_status} is unsupported"));
             }
-            let action_index = data.read_bl().await? as i32;
-            let maximum_dependency_index = data.read_bl().await? as i32;
-            let dependency_count = data.read_bl().await? as usize;
-            let dependency_ownership = (0..dependency_count).map(|_| semio_framework_plugin::resolve_ready(data.read_b())).collect::<Result<Vec<_>, _>>()?;
-            let variable_version = data.read_bl().await?;
-            let value_code = data.read_bs().await?;
+            let action_index = data.read_bl()? as i32;
+            let maximum_dependency_index = data.read_bl()? as i32;
+            let dependency_count = data.read_bl()? as usize;
+            let dependency_ownership = (0..dependency_count).map(|_| data.read_b()).collect::<Result<Vec<_>, _>>()?;
+            let variable_version = data.read_bl()?;
+            let value_code = data.read_bs()?;
             if variable_version != 2 || value_code != 90 {
                 return Err(format!("ACDBASSOCVARIABLE {handle:#x} variable version/value code {variable_version}/{value_code} is unsupported"));
             }
-            let evaluated_value = DwgEvaluationVariant::Integer32(data.read_bl().await? as i32);
-            let mergeable = data.read_b().await?;
-            let must_merge = data.read_b().await?;
-            let binding_count = if maximum_dependency_index > 0 { data.read_bl().await? as usize } else { 0 };
-            let binding_version = data.read_bs().await?;
+            let evaluated_value = DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
+            let mergeable = data.read_b()?;
+            let must_merge = data.read_b()?;
+            let binding_count = if maximum_dependency_index > 0 { data.read_bl()? as usize } else { 0 };
+            let binding_version = data.read_bs()?;
             if maximum_dependency_index < 0 || maximum_dependency_index as usize != binding_count || binding_version != 0 {
                 return Err(format!("ACDBASSOCVARIABLE {handle:#x} binding index/count/version is inconsistent"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDBASSOCVARIABLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDBASSOCVARIABLE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await?;
-            let expression = strings.read_tu().await?;
-            let evaluator_id = strings.read_tu().await?;
-            let description = strings.read_tu().await?;
-            let mergeable_variable_name = if mergeable { Some(strings.read_tu().await?) } else { None };
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let name = strings.read_tu()?;
+            let expression = strings.read_tu()?;
+            let evaluator_id = strings.read_tu()?;
+            let description = strings.read_tu()?;
+            let mergeable_variable_name = if mergeable { Some(strings.read_tu()?) } else { None };
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("ACDBASSOCVARIABLE {handle:#x} string stream is not exactly consumed: {} != {string_end_bit}", strings.bit_position()));
             }
-            let owning_network_handle = Some(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} owning network is null"))?);
-            let action_body_handle = read_object_handle(&mut handle_reader, handle).await?;
+            let owning_network_handle = Some(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} owning network is null"))?);
+            let action_body_handle = read_object_handle(&mut handle_reader, handle)?;
             let dependencies = dependency_ownership
                 .into_iter()
                 .map(|owned| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} action dependency is null")).map(|dependency_handle| DwgAssociativeActionDependency { owned, dependency_handle }))
                 .collect::<Result<Vec<_>, String>>()?;
             let referenced_value_dependency_handles = (0..binding_count).map(|_| read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} value dependency is null"))).collect::<Result<Vec<_>, String>>()?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCVARIABLE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCVARIABLE")?;
             object.body = Some(DwgLogicalObjectBody::AssociativeVariable(DwgAssociativeVariable {
                 action: DwgAssociativeAction { status: DwgAssociativeActionStatus::UpToDate, owning_network_handle, action_body_handle, action_index, maximum_dependency_index, dependencies },
                 name,
@@ -9869,109 +10152,109 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             }));
         } else if type_code == 547 || object.class_name == "ACDB_DYNAMICBLOCKPROXYNODE" {
             use crate::artifacts::dwg::schema::snapshot::{DwgDynamicBlockProxyNode, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
-            let parent_id = data.read_bl().await? as i32;
-            let major_version = data.read_bl().await?;
-            let minor_version = data.read_bl().await?;
-            let value_code = data.read_bs().await? as i16;
+            let parent_id = data.read_bl()? as i32;
+            let major_version = data.read_bl()?;
+            let minor_version = data.read_bl()?;
+            let value_code = data.read_bs()? as i16;
             let data_value = match value_code {
                 -9999 => Some(DwgEvaluationExpressionValue::Empty),
-                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd().await?)),
-                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd().await?.to_vec())),
-                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd().await?.to_vec())),
+                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd()?)),
+                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd()?.to_vec())),
+                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd()?.to_vec())),
                 1 | 91 => None,
-                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl().await? as i32)),
-                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs().await? as i16)),
+                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl()? as i32)),
+                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs()? as i16)),
                 _ => return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} value discriminator {value_code} is unsupported")),
             };
-            let node_id = data.read_bl().await?;
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let node_id = data.read_bl()?;
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let value = match value_code {
                 1 => {
                     let strings = strings.as_mut().ok_or_else(|| format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} string stream missing"))?;
-                    let value = DwgEvaluationExpressionValue::String(strings.read_tu().await?);
-                    let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+                    let value = DwgEvaluationExpressionValue::String(strings.read_tu()?);
+                    let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
                     if strings.bit_position() != string_end_bit {
                         return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} string stream is not exactly consumed"));
                     }
                     value
                 }
-                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} object reference is null"))?),
+                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} object reference is null"))?),
                 _ => data_value.unwrap(),
             };
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPROXYNODE").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPROXYNODE")?;
             object.body = Some(DwgLogicalObjectBody::DynamicBlockProxyNode(DwgDynamicBlockProxyNode { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value, node_id } }));
         } else if type_code == 520 || object.class_name == "ACDB_BLOCKGRIPLOCATIONCOMPONENT" {
             use crate::artifacts::dwg::schema::snapshot::{DwgBlockGripLocationComponent, DwgEvaluationExpression, DwgEvaluationExpressionValue, DwgLogicalObjectBody};
-            let parent_id = data.read_bl().await? as i32;
-            let major_version = data.read_bl().await?;
-            let minor_version = data.read_bl().await?;
-            let value_code = data.read_bs().await? as i16;
+            let parent_id = data.read_bl()? as i32;
+            let major_version = data.read_bl()?;
+            let minor_version = data.read_bl()?;
+            let value_code = data.read_bs()? as i16;
             let data_value = match value_code {
                 -9999 => Some(DwgEvaluationExpressionValue::Empty),
-                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd().await?)),
-                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd().await?.to_vec())),
-                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd().await?.to_vec())),
+                40 => Some(DwgEvaluationExpressionValue::Double(data.read_bd()?)),
+                10 => Some(DwgEvaluationExpressionValue::PointGroup10(data.read_2rd()?.to_vec())),
+                11 => Some(DwgEvaluationExpressionValue::PointGroup11(data.read_2rd()?.to_vec())),
                 1 | 91 => None,
-                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl().await? as i32)),
-                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs().await? as i16)),
+                90 => Some(DwgEvaluationExpressionValue::Integer32(data.read_bl()? as i32)),
+                70 => Some(DwgEvaluationExpressionValue::Integer16(data.read_bs()? as i16)),
                 _ => return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} value discriminator {value_code} is unsupported")),
             };
-            let node_id = data.read_bl().await?;
-            let grip_type = data.read_bl().await?;
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let node_id = data.read_bl()?;
+            let grip_type = data.read_bl()?;
+            if data.bit_position() != main_end_bit {
+                return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} string stream missing"))?;
-            let string_value = if value_code == 1 { Some(strings.read_tu().await?) } else { None };
-            let grip_expression = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let string_value = if value_code == 1 { Some(strings.read_tu()?) } else { None };
+            let grip_expression = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} string stream is not exactly consumed: {} != {string_end_bit}", strings.bit_position()));
             }
             let value = match value_code {
                 1 => DwgEvaluationExpressionValue::String(string_value.unwrap()),
-                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} object reference is null"))?),
+                91 => DwgEvaluationExpressionValue::ObjectReference(read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} object reference is null"))?),
                 _ => data_value.unwrap(),
             };
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKGRIPLOCATIONCOMPONENT").await?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "BLOCKGRIPLOCATIONCOMPONENT")?;
             object.body =
                 Some(DwgLogicalObjectBody::BlockGripLocationComponent(DwgBlockGripLocationComponent { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value, node_id }, grip_type, grip_expression }));
         } else if type_code == 544 || object.class_name == "ACDBASSOCGEOMDEPENDENCY" {
-            let class_version = data.read_bs().await?;
-            let status = data.read_bl().await?;
+            let class_version = data.read_bs()?;
+            let status = data.read_bl()?;
             if class_version != 1 || status != 0 {
                 return Err(format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} has unsupported dependency version/status {class_version}/{status}"));
             }
-            let is_read_dependency = data.read_b().await?;
-            let is_write_dependency = data.read_b().await?;
-            let is_attached_to_object = data.read_b().await?;
-            let is_delegating_to_owning_action = data.read_b().await?;
-            let order = data.read_bl().await? as i32;
-            let has_name = data.read_b().await?;
-            let dependency_body_id = data.read_bl().await? as i32;
-            let geometry_version = data.read_bs().await?;
-            let enabled = data.read_b().await?;
-            let dependent_on_compound_object = data.read_b().await?;
+            let is_read_dependency = data.read_b()?;
+            let is_write_dependency = data.read_b()?;
+            let is_attached_to_object = data.read_b()?;
+            let is_delegating_to_owning_action = data.read_b()?;
+            let order = data.read_bl()? as i32;
+            let has_name = data.read_b()?;
+            let dependency_body_id = data.read_bl()? as i32;
+            let geometry_version = data.read_bs()?;
+            let enabled = data.read_b()?;
+            let dependent_on_compound_object = data.read_b()?;
             if geometry_version != 0 {
                 return Err(format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} geometry version {geometry_version} is unsupported"));
             }
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} string stream missing"))?;
-            let name = if has_name { Some(strings.read_tu().await?) } else { None };
-            let persistent_subentity_class_name = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let name = if has_name { Some(strings.read_tu()?) } else { None };
+            let persistent_subentity_class_name = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} string stream is not exactly consumed: {} != {string_end_bit}", strings.bit_position()));
             }
-            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} dependent-on object is null"))?;
-            let read_dependency_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_node_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_body_handle = read_object_handle(&mut handle_reader, handle).await?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCGEOMDEPENDENCY").await?;
+            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} dependent-on object is null"))?;
+            let read_dependency_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCGEOMDEPENDENCY")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeGeometryDependency {
                 dependency: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
                     status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
@@ -9992,39 +10275,39 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 dependent_on_compound_object,
             }));
         } else if type_code == 541 || object.class_name == "ACDBASSOCVALUEDEPENDENCY" {
-            let class_version = data.read_bs().await?;
-            let status = data.read_bl().await?;
+            let class_version = data.read_bs()?;
+            let status = data.read_bl()?;
             if class_version != 1 || status != 0 {
                 return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} has unsupported dependency version/status {class_version}/{status}"));
             }
-            let is_read_dependency = data.read_b().await?;
-            let is_write_dependency = data.read_b().await?;
-            let is_attached_to_object = data.read_b().await?;
-            let is_delegating_to_owning_action = data.read_b().await?;
-            let order = data.read_bl().await? as i32;
-            let has_name = data.read_b().await?;
-            let dependency_body_id = data.read_bl().await? as i32;
-            let value_dependency_version = data.read_bs().await?;
-            let cached_value_code = data.read_bs().await? as i16;
+            let is_read_dependency = data.read_b()?;
+            let is_write_dependency = data.read_b()?;
+            let is_attached_to_object = data.read_b()?;
+            let is_delegating_to_owning_action = data.read_b()?;
+            let order = data.read_bl()? as i32;
+            let has_name = data.read_b()?;
+            let dependency_body_id = data.read_bl()? as i32;
+            let value_dependency_version = data.read_bs()?;
+            let cached_value_code = data.read_bs()? as i16;
             if value_dependency_version != 0 || cached_value_code != 90 {
                 return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} has unsupported value version/code {value_dependency_version}/{cached_value_code}"));
             }
-            let cached_value = crate::artifacts::dwg::schema::snapshot::DwgEvaluationVariant::Integer32(data.read_bl().await? as i32);
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let cached_value = crate::artifacts::dwg::schema::snapshot::DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} string stream missing"))?;
-            let name = if has_name { Some(strings.read_tu().await?) } else { None };
-            let value_name = strings.read_tu().await?;
-            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit).await?;
+            let name = if has_name { Some(strings.read_tu()?) } else { None };
+            let value_name = strings.read_tu()?;
+            let string_end_bit = r2010_string_content_end_bit(payload, data_end_bit)?;
             if strings.bit_position() != string_end_bit {
                 return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} string stream is not exactly consumed: {} != {string_end_bit}", strings.bit_position()));
             }
-            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} dependent-on object is null"))?;
-            let read_dependency_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_node_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_body_handle = read_object_handle(&mut handle_reader, handle).await?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCVALUEDEPENDENCY").await?;
+            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} dependent-on object is null"))?;
+            let read_dependency_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCVALUEDEPENDENCY")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeValueDependency {
                 dependency: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
                     status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
@@ -10044,33 +10327,33 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 value_name,
             }));
         } else if type_code == 542 || object.class_name == "ACDBASSOCDEPENDENCY" {
-            let class_version = data.read_bs().await.map_err(|error| format!("ACDBASSOCDEPENDENCY {handle:#x} class version: {error}"))?;
+            let class_version = data.read_bs().map_err(|error| format!("ACDBASSOCDEPENDENCY {handle:#x} class version: {error}"))?;
             if class_version != 1 {
                 return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} class version {class_version} is unsupported"));
             }
-            let status = data.read_bl().await.map_err(|error| format!("ACDBASSOCDEPENDENCY {handle:#x} status: {error}"))?;
+            let status = data.read_bl().map_err(|error| format!("ACDBASSOCDEPENDENCY {handle:#x} status: {error}"))?;
             if status != 0 {
                 return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} status {status} is unsupported"));
             }
-            let is_read_dependency = data.read_b().await?;
-            let is_write_dependency = data.read_b().await?;
-            let is_attached_to_object = data.read_b().await?;
-            let is_delegating_to_owning_action = data.read_b().await?;
-            let order = data.read_bl().await? as i32;
-            let has_name = data.read_b().await?;
-            let dependency_body_id = data.read_bl().await? as i32;
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let is_read_dependency = data.read_b()?;
+            let is_write_dependency = data.read_b()?;
+            let is_attached_to_object = data.read_b()?;
+            let is_delegating_to_owning_action = data.read_b()?;
+            let order = data.read_bl()? as i32;
+            let has_name = data.read_b()?;
+            let dependency_body_id = data.read_bl()? as i32;
+            if data.bit_position() != main_end_bit {
+                return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
-            let name = if has_name { Some(strings.as_mut().ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} string stream missing"))?.read_tu().await?) } else { None };
+            let name = if has_name { Some(strings.as_mut().ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} string stream missing"))?.read_tu()?) } else { None };
             if strings.as_ref().is_some_and(|reader| reader.bit_position() != main_end_bit) {
                 return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} string stream is not exactly consumed"));
             }
-            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle).await?.ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} dependent-on object is null"))?;
-            let read_dependency_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_node_handle = read_object_handle(&mut handle_reader, handle).await?;
-            let dependency_body_handle = read_object_handle(&mut handle_reader, handle).await?;
-            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCDEPENDENCY").await?;
+            let dependent_on_object_handle = read_object_handle(&mut handle_reader, handle)?.ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} dependent-on object is null"))?;
+            let read_dependency_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_node_handle = read_object_handle(&mut handle_reader, handle)?;
+            let dependency_body_handle = read_object_handle(&mut handle_reader, handle)?;
+            validate_entity_terminal_fill(&mut handle_reader, payload_size * 8, handle, "ACDBASSOCDEPENDENCY")?;
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependency {
                 status: crate::artifacts::dwg::schema::snapshot::DwgAssociativeDependencyStatus::UpToDate,
                 is_read_dependency,
@@ -10086,41 +10369,41 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 dependency_body_id,
             }));
         } else if type_code == 42 || object.class_name == "ACDBDICTIONARYWDFLT" {
-            let item_count = data.read_bl().await.map_err(|error| format!("dictionary {handle:#x} item count: {error}"))? as usize;
-            let cloning_flag = data.read_bs().await.map_err(|error| format!("dictionary {handle:#x} cloning flag: {error}"))?;
-            let hard_owner = data.read_rc().await.map_err(|error| format!("dictionary {handle:#x} hard-owner flag: {error}"))? != 0;
-            let names = (0..item_count).map(|_| semio_framework_plugin::resolve_ready(strings.as_mut().ok_or("dictionary string stream missing")?.read_tu()).map_err(|error| format!("dictionary {handle:#x} entry name: {error}"))).collect::<Result<Vec<_>, String>>()?;
+            let item_count = data.read_bl().map_err(|error| format!("dictionary {handle:#x} item count: {error}"))? as usize;
+            let cloning_flag = data.read_bs().map_err(|error| format!("dictionary {handle:#x} cloning flag: {error}"))?;
+            let hard_owner = data.read_rc().map_err(|error| format!("dictionary {handle:#x} hard-owner flag: {error}"))? != 0;
+            let names = (0..item_count).map(|_| strings.as_mut().ok_or("dictionary string stream missing")?.read_tu().map_err(|error| format!("dictionary {handle:#x} entry name: {error}"))).collect::<Result<Vec<_>, String>>()?;
             let mut entries = Vec::with_capacity(item_count);
             for name in names {
-                let reference = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("dictionary {handle:#x} entry {name} handle: {error}"))?.ok_or_else(|| format!("dictionary {handle:#x} entry {name} has a null handle"))?;
+                let reference = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} entry {name} handle: {error}"))?.ok_or_else(|| format!("dictionary {handle:#x} entry {name} has a null handle"))?;
                 entries.push(crate::artifacts::dwg::schema::snapshot::DwgNamedReference { name, handle: reference });
             }
-            let default_entry_handle = if object.class_name == "ACDBDICTIONARYWDFLT" { read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("dictionary {handle:#x} default entry handle: {error}"))? } else { None };
+            let default_entry_handle = if object.class_name == "ACDBDICTIONARYWDFLT" { read_object_handle(&mut handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} default entry handle: {error}"))? } else { None };
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(crate::artifacts::dwg::schema::snapshot::DwgDictionaryBody { entries, cloning_flag, hard_owner, default_entry_handle }));
         } else if matches!(type_code, 48 | 50 | 52 | 56 | 60 | 62 | 64 | 66 | 68 | 70) {
             use crate::artifacts::dwg::schema::snapshot::{DwgBlockTableControl, DwgDimensionStyleTableControl, DwgLinetypeTableControl, DwgLogicalObjectBody, DwgTableControlBody, DwgTableControlEntries, DwgTableControlEntry};
             let entry_count = match type_code {
-                48 | 50 | 52 | 60 => data.read_bl().await.map(|value| value as usize),
-                _ => data.read_bs().await.map(|value| value as usize),
+                48 | 50 | 52 | 60 => data.read_bl().map(|value| value as usize),
+                _ => data.read_bs().map(|value| value as usize),
             }
             .map_err(|error| format!("table control {handle:#x} entry count: {error}"))?;
-            let additional_count = if type_code == 68 { data.read_rc().await.map_err(|error| format!("DIMSTYLE control {handle:#x} additional count: {error}"))? as usize } else { 0 };
+            let additional_count = if type_code == 68 { data.read_rc().map_err(|error| format!("DIMSTYLE control {handle:#x} additional count: {error}"))? as usize } else { 0 };
             let mut entry_handles = Vec::with_capacity(entry_count);
             for index in 0..entry_count {
-                entry_handles.push(DwgTableControlEntry { handle: read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("table control {handle:#x} entry {index}: {error}"))? });
+                entry_handles.push(DwgTableControlEntry { handle: read_object_handle(&mut handle_reader, handle).map_err(|error| format!("table control {handle:#x} entry {index}: {error}"))? });
             }
             let body = match type_code {
                 48 => DwgTableControlBody::Block(DwgBlockTableControl {
                     entry_handles,
-                    model_space_handle: Some(read_object_handle(&mut handle_reader, handle).await?.ok_or("BLOCK_CONTROL model-space handle is null")?),
-                    paper_space_handle: Some(read_object_handle(&mut handle_reader, handle).await?.ok_or("BLOCK_CONTROL paper-space handle is null")?),
+                    model_space_handle: Some(read_object_handle(&mut handle_reader, handle)?.ok_or("BLOCK_CONTROL model-space handle is null")?),
+                    paper_space_handle: Some(read_object_handle(&mut handle_reader, handle)?.ok_or("BLOCK_CONTROL paper-space handle is null")?),
                 }),
                 50 => DwgTableControlBody::Layer(DwgTableControlEntries { entry_handles }),
                 52 => DwgTableControlBody::TextStyle(DwgTableControlEntries { entry_handles }),
                 56 => DwgTableControlBody::Linetype(DwgLinetypeTableControl {
                     entry_handles,
-                    by_block_handle: read_object_handle(&mut handle_reader, handle).await?.ok_or("LTYPE_CONTROL ByBlock handle is null")?,
-                    by_layer_handle: read_object_handle(&mut handle_reader, handle).await?.ok_or("LTYPE_CONTROL ByLayer handle is null")?,
+                    by_block_handle: read_object_handle(&mut handle_reader, handle)?.ok_or("LTYPE_CONTROL ByBlock handle is null")?,
+                    by_layer_handle: read_object_handle(&mut handle_reader, handle)?.ok_or("LTYPE_CONTROL ByLayer handle is null")?,
                 }),
                 60 => DwgTableControlBody::View(DwgTableControlEntries { entry_handles }),
                 62 => DwgTableControlBody::Ucs(DwgTableControlEntries { entry_handles }),
@@ -10131,7 +10414,7 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     for index in 0..additional_count {
                         additional_handles.push(
                             read_object_handle(&mut handle_reader, handle)
-                                .await.map_err(|error| format!("DIMSTYLE control {handle:#x} additional handle {index}: {error}"))?
+                                .map_err(|error| format!("DIMSTYLE control {handle:#x} additional handle {index}: {error}"))?
                                 .ok_or_else(|| format!("DIMSTYLE control {handle:#x} additional handle {index} is null"))?,
                         );
                     }
@@ -10141,42 +10424,42 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             };
             object.body = Some(DwgLogicalObjectBody::TableControl(body));
         } else if matches!(type_code, 49 | 51 | 53 | 57 | 65 | 67 | 69) {
-            let xref_resolution = data.read_bs().await.map_err(|error| format!("table record {handle:#x} xref resolution: {error}"))?;
+            let xref_resolution = data.read_bs().map_err(|error| format!("table record {handle:#x} xref resolution: {error}"))?;
             if !matches!(xref_resolution, 0 | 256) {
                 return Err(format!("table record {handle:#x} xref resolution {xref_resolution} is invalid"));
             }
             let text_style = if type_code == 53 {
                 Some((
-                    data.read_b().await.map_err(|error| format!("text style {handle:#x} shape flag: {error}"))?,
-                    data.read_b().await.map_err(|error| format!("text style {handle:#x} vertical flag: {error}"))?,
-                    data.read_bd().await.map_err(|error| format!("text style {handle:#x} text size: {error}"))?,
-                    data.read_bd().await.map_err(|error| format!("text style {handle:#x} width factor: {error}"))?,
-                    data.read_bd().await.map_err(|error| format!("text style {handle:#x} oblique angle: {error}"))?,
-                    data.read_rc().await.map_err(|error| format!("text style {handle:#x} generation: {error}"))?,
-                    data.read_bd().await.map_err(|error| format!("text style {handle:#x} last height: {error}"))?,
+                    data.read_b().map_err(|error| format!("text style {handle:#x} shape flag: {error}"))?,
+                    data.read_b().map_err(|error| format!("text style {handle:#x} vertical flag: {error}"))?,
+                    data.read_bd().map_err(|error| format!("text style {handle:#x} text size: {error}"))?,
+                    data.read_bd().map_err(|error| format!("text style {handle:#x} width factor: {error}"))?,
+                    data.read_bd().map_err(|error| format!("text style {handle:#x} oblique angle: {error}"))?,
+                    data.read_rc().map_err(|error| format!("text style {handle:#x} generation: {error}"))?,
+                    data.read_bd().map_err(|error| format!("text style {handle:#x} last height: {error}"))?,
                 ))
             } else {
                 None
             };
             let viewport = if type_code == 65 {
-                let view_height = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} height: {error}"))?;
-                let view_width = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} width: {error}"))?;
-                let center = data.read_2rd().await.map_err(|error| format!("viewport table {handle:#x} center: {error}"))?;
-                let target = data.read_3bd().await.map_err(|error| format!("viewport table {handle:#x} target: {error}"))?;
-                let direction = data.read_3bd().await.map_err(|error| format!("viewport table {handle:#x} direction: {error}"))?;
-                let twist = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} twist: {error}"))?;
-                let lens_length = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} lens: {error}"))?;
-                let front_clipping = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} front clipping: {error}"))?;
-                let back_clipping = data.read_bd().await.map_err(|error| format!("viewport table {handle:#x} back clipping: {error}"))?;
-                let view_mode = [data.read_b().await?, data.read_b().await?, data.read_b().await?, data.read_b().await?];
-                let render_mode = data.read_rc().await?;
-                let use_default_lights = data.read_b().await?;
-                let default_lighting_type = data.read_rc().await?;
-                let brightness = data.read_bd().await?;
-                let contrast = data.read_bd().await?;
-                let ambient_index = data.read_bs().await?;
-                let ambient_rgb = data.read_bl().await?;
-                let ambient_flags = data.read_rc().await?;
+                let view_height = data.read_bd().map_err(|error| format!("viewport table {handle:#x} height: {error}"))?;
+                let view_width = data.read_bd().map_err(|error| format!("viewport table {handle:#x} width: {error}"))?;
+                let center = data.read_2rd().map_err(|error| format!("viewport table {handle:#x} center: {error}"))?;
+                let target = data.read_3bd().map_err(|error| format!("viewport table {handle:#x} target: {error}"))?;
+                let direction = data.read_3bd().map_err(|error| format!("viewport table {handle:#x} direction: {error}"))?;
+                let twist = data.read_bd().map_err(|error| format!("viewport table {handle:#x} twist: {error}"))?;
+                let lens_length = data.read_bd().map_err(|error| format!("viewport table {handle:#x} lens: {error}"))?;
+                let front_clipping = data.read_bd().map_err(|error| format!("viewport table {handle:#x} front clipping: {error}"))?;
+                let back_clipping = data.read_bd().map_err(|error| format!("viewport table {handle:#x} back clipping: {error}"))?;
+                let view_mode = [data.read_b()?, data.read_b()?, data.read_b()?, data.read_b()?];
+                let render_mode = data.read_rc()?;
+                let use_default_lights = data.read_b()?;
+                let default_lighting_type = data.read_rc()?;
+                let brightness = data.read_bd()?;
+                let contrast = data.read_bd()?;
+                let ambient_index = data.read_bs()?;
+                let ambient_rgb = data.read_bl()?;
+                let ambient_flags = data.read_rc()?;
                 if ambient_flags > 3 {
                     return Err(format!("viewport table {handle:#x} ambient color flags {ambient_flags:#x} are invalid"));
                 }
@@ -10198,30 +10481,30 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                         default_lighting_type,
                         brightness,
                         contrast,
-                        ambient_color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb).await?, name: None, book_name: None },
-                        lower_left: data.read_2rd().await?,
-                        upper_right: data.read_2rd().await?,
-                        ucs_follow: data.read_b().await?,
-                        circle_zoom: data.read_bs().await?,
-                        fast_zoom: data.read_b().await?,
-                        ucs_icon: data.read_bb().await?,
-                        grid_mode: data.read_b().await?,
-                        grid_unit: data.read_2rd().await?,
-                        snap_mode: data.read_b().await?,
-                        snap_style: data.read_b().await?,
-                        snap_isopair: data.read_bs().await?,
-                        snap_angle: data.read_bd().await?,
-                        snap_base: data.read_2rd().await?,
-                        snap_unit: data.read_2rd().await?,
-                        ucs_at_origin: data.read_b().await?,
-                        ucs_viewport: data.read_b().await?,
-                        ucs_origin: data.read_3bd().await?,
-                        ucs_x_axis: data.read_3bd().await?,
-                        ucs_y_axis: data.read_3bd().await?,
-                        ucs_elevation: data.read_bd().await?,
-                        ucs_orthographic_view: data.read_bs().await?,
-                        grid_flags: data.read_bs().await?,
-                        grid_major: data.read_bs().await?,
+                        ambient_color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb)?, name: None, book_name: None },
+                        lower_left: data.read_2rd()?,
+                        upper_right: data.read_2rd()?,
+                        ucs_follow: data.read_b()?,
+                        circle_zoom: data.read_bs()?,
+                        fast_zoom: data.read_b()?,
+                        ucs_icon: data.read_bb()?,
+                        grid_mode: data.read_b()?,
+                        grid_unit: data.read_2rd()?,
+                        snap_mode: data.read_b()?,
+                        snap_style: data.read_b()?,
+                        snap_isopair: data.read_bs()?,
+                        snap_angle: data.read_bd()?,
+                        snap_base: data.read_2rd()?,
+                        snap_unit: data.read_2rd()?,
+                        ucs_at_origin: data.read_b()?,
+                        ucs_viewport: data.read_b()?,
+                        ucs_origin: data.read_3bd()?,
+                        ucs_x_axis: data.read_3bd()?,
+                        ucs_y_axis: data.read_3bd()?,
+                        ucs_elevation: data.read_bd()?,
+                        ucs_orthographic_view: data.read_bs()?,
+                        grid_flags: data.read_bs()?,
+                        grid_major: data.read_bs()?,
                         background_handle: None,
                         visual_style_handle: None,
                         sun_handle: None,
@@ -10236,87 +10519,87 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             let dimension_style = if type_code == 69 {
                 use crate::artifacts::dwg::schema::snapshot::{DwgDimensionBehavior, DwgDimensionGeometry, DwgDimensionR2010, DwgDimensionStyleTableRecord, DwgDimensionText, DwgDimensionUnits};
                 let geometry = DwgDimensionGeometry {
-                    scale: data.read_bd().await?,
-                    arrow_size: data.read_bd().await?,
-                    extension_origin_offset: data.read_bd().await?,
-                    dimension_line_increment: data.read_bd().await?,
-                    extension_line_extension: data.read_bd().await?,
-                    rounding: data.read_bd().await?,
-                    dimension_line_extension: data.read_bd().await?,
-                    plus_tolerance: data.read_bd().await?,
-                    minus_tolerance: data.read_bd().await?,
-                    fixed_extension_length: data.read_bd().await?,
-                    jog_angle: data.read_bd().await?,
+                    scale: data.read_bd()?,
+                    arrow_size: data.read_bd()?,
+                    extension_origin_offset: data.read_bd()?,
+                    dimension_line_increment: data.read_bd()?,
+                    extension_line_extension: data.read_bd()?,
+                    rounding: data.read_bd()?,
+                    dimension_line_extension: data.read_bd()?,
+                    plus_tolerance: data.read_bd()?,
+                    minus_tolerance: data.read_bd()?,
+                    fixed_extension_length: data.read_bd()?,
+                    jog_angle: data.read_bd()?,
                 };
-                let fill_mode = data.read_bs().await?;
-                let (fill_color, fill_flags) = read_r2010_cmc_main(&mut data).await?;
+                let fill_mode = data.read_bs()?;
+                let (fill_color, fill_flags) = read_r2010_cmc_main(&mut data)?;
                 let behavior = DwgDimensionBehavior {
-                    tolerance: data.read_b().await?,
-                    limits: data.read_b().await?,
-                    text_inside_horizontal: data.read_b().await?,
-                    text_outside_horizontal: data.read_b().await?,
-                    suppress_extension_1: data.read_b().await?,
-                    suppress_extension_2: data.read_b().await?,
-                    text_vertical_alignment: data.read_bs().await?,
-                    zero_suppression: data.read_bs().await?,
-                    angular_zero_suppression: data.read_bs().await?,
-                    arc_symbol: data.read_bs().await?,
+                    tolerance: data.read_b()?,
+                    limits: data.read_b()?,
+                    text_inside_horizontal: data.read_b()?,
+                    text_outside_horizontal: data.read_b()?,
+                    suppress_extension_1: data.read_b()?,
+                    suppress_extension_2: data.read_b()?,
+                    text_vertical_alignment: data.read_bs()?,
+                    zero_suppression: data.read_bs()?,
+                    angular_zero_suppression: data.read_bs()?,
+                    arc_symbol: data.read_bs()?,
                 };
                 let mut text = DwgDimensionText {
-                    height: data.read_bd().await?,
-                    center_mark_size: data.read_bd().await?,
-                    tick_size: data.read_bd().await?,
-                    alternate_scale: data.read_bd().await?,
-                    linear_scale: data.read_bd().await?,
-                    vertical_position: data.read_bd().await?,
-                    tolerance_scale: data.read_bd().await?,
-                    gap: data.read_bd().await?,
-                    alternate_rounding: data.read_bd().await?,
-                    alternate_enabled: data.read_b().await?,
-                    alternate_decimals: data.read_bs().await?,
-                    text_outside_extensions: data.read_b().await?,
-                    separate_arrowheads: data.read_b().await?,
-                    force_text_inside: data.read_b().await?,
-                    suppress_outside_extensions: data.read_b().await?,
+                    height: data.read_bd()?,
+                    center_mark_size: data.read_bd()?,
+                    tick_size: data.read_bd()?,
+                    alternate_scale: data.read_bd()?,
+                    linear_scale: data.read_bd()?,
+                    vertical_position: data.read_bd()?,
+                    tolerance_scale: data.read_bd()?,
+                    gap: data.read_bd()?,
+                    alternate_rounding: data.read_bd()?,
+                    alternate_enabled: data.read_b()?,
+                    alternate_decimals: data.read_bs()?,
+                    text_outside_extensions: data.read_b()?,
+                    separate_arrowheads: data.read_b()?,
+                    force_text_inside: data.read_b()?,
+                    suppress_outside_extensions: data.read_b()?,
                     ..Default::default()
                 };
-                let (c1, c1f) = read_r2010_cmc_main(&mut data).await?;
-                let (c2, c2f) = read_r2010_cmc_main(&mut data).await?;
-                let (c3, c3f) = read_r2010_cmc_main(&mut data).await?;
+                let (c1, c1f) = read_r2010_cmc_main(&mut data)?;
+                let (c2, c2f) = read_r2010_cmc_main(&mut data)?;
+                let (c3, c3f) = read_r2010_cmc_main(&mut data)?;
                 text.dimension_line_color = c1;
                 text.extension_line_color = c2;
                 text.text_color = c3;
                 let units = DwgDimensionUnits {
-                    alternate_decimal_places: data.read_bs().await?,
-                    decimal_places: data.read_bs().await?,
-                    tolerance_decimal_places: data.read_bs().await?,
-                    alternate_units: data.read_bs().await?,
-                    alternate_tolerance_decimal_places: data.read_bs().await?,
-                    angular_units: data.read_bs().await?,
-                    fraction_format: data.read_bs().await?,
-                    linear_units: data.read_bs().await?,
-                    decimal_separator: data.read_bs().await?,
-                    text_movement: data.read_bs().await?,
-                    text_horizontal_alignment: data.read_bs().await?,
-                    suppress_dimension_line_1: data.read_b().await?,
-                    suppress_dimension_line_2: data.read_b().await?,
-                    tolerance_vertical_alignment: data.read_bs().await?,
-                    tolerance_zero_suppression: data.read_bs().await?,
-                    alternate_zero_suppression: data.read_bs().await?,
-                    alternate_tolerance_zero_suppression: data.read_bs().await?,
-                    user_positioned_text: data.read_b().await?,
-                    arrow_text_fit: data.read_bs().await?,
+                    alternate_decimal_places: data.read_bs()?,
+                    decimal_places: data.read_bs()?,
+                    tolerance_decimal_places: data.read_bs()?,
+                    alternate_units: data.read_bs()?,
+                    alternate_tolerance_decimal_places: data.read_bs()?,
+                    angular_units: data.read_bs()?,
+                    fraction_format: data.read_bs()?,
+                    linear_units: data.read_bs()?,
+                    decimal_separator: data.read_bs()?,
+                    text_movement: data.read_bs()?,
+                    text_horizontal_alignment: data.read_bs()?,
+                    suppress_dimension_line_1: data.read_b()?,
+                    suppress_dimension_line_2: data.read_b()?,
+                    tolerance_vertical_alignment: data.read_bs()?,
+                    tolerance_zero_suppression: data.read_bs()?,
+                    alternate_zero_suppression: data.read_bs()?,
+                    alternate_tolerance_zero_suppression: data.read_bs()?,
+                    user_positioned_text: data.read_b()?,
+                    arrow_text_fit: data.read_bs()?,
                 };
                 let r2010 = DwgDimensionR2010 {
-                    fixed_extension_enabled: data.read_b().await?,
-                    text_direction: data.read_b().await?,
-                    alternate_measurement_factor: data.read_bd().await?,
+                    fixed_extension_enabled: data.read_b()?,
+                    text_direction: data.read_b()?,
+                    alternate_measurement_factor: data.read_bd()?,
                     alternate_measurement_suffix: String::new(),
-                    measurement_factor: data.read_bd().await?,
+                    measurement_factor: data.read_bd()?,
                     measurement_suffix: String::new(),
-                    dimension_lineweight: data.read_bs().await?,
-                    extension_lineweight: data.read_bs().await?,
-                    flag: data.read_b().await?,
+                    dimension_lineweight: data.read_bs()?,
+                    extension_lineweight: data.read_bs()?,
+                    flag: data.read_b()?,
                 };
                 Some((
                     DwgDimensionStyleTableRecord {
@@ -10345,16 +10628,16 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 None
             };
             let block_header = if type_code == 49 {
-                let anonymous = data.read_b().await.map_err(|error| format!("block header {handle:#x} anonymous flag: {error}"))?;
-                let has_attributes = data.read_b().await.map_err(|error| format!("block header {handle:#x} attribute flag: {error}"))?;
-                let is_xref = data.read_b().await.map_err(|error| format!("block header {handle:#x} xref flag: {error}"))?;
-                let xref_overlaid = data.read_b().await.map_err(|error| format!("block header {handle:#x} overlay flag: {error}"))?;
-                let xref_loaded = data.read_b().await.map_err(|error| format!("block header {handle:#x} loaded flag: {error}"))?;
-                let owned_count = if !is_xref && !xref_overlaid { data.read_bl().await.map_err(|error| format!("block header {handle:#x} owned count: {error}"))? as usize } else { 0 };
-                let base_point = data.read_3bd().await.map_err(|error| format!("block header {handle:#x} base point: {error}"))?;
+                let anonymous = data.read_b().map_err(|error| format!("block header {handle:#x} anonymous flag: {error}"))?;
+                let has_attributes = data.read_b().map_err(|error| format!("block header {handle:#x} attribute flag: {error}"))?;
+                let is_xref = data.read_b().map_err(|error| format!("block header {handle:#x} xref flag: {error}"))?;
+                let xref_overlaid = data.read_b().map_err(|error| format!("block header {handle:#x} overlay flag: {error}"))?;
+                let xref_loaded = data.read_b().map_err(|error| format!("block header {handle:#x} loaded flag: {error}"))?;
+                let owned_count = if !is_xref && !xref_overlaid { data.read_bl().map_err(|error| format!("block header {handle:#x} owned count: {error}"))? as usize } else { 0 };
+                let base_point = data.read_3bd().map_err(|error| format!("block header {handle:#x} base point: {error}"))?;
                 let mut insert_count = 0usize;
                 loop {
-                    let marker = data.read_rc().await.map_err(|error| format!("block header {handle:#x} insert marker: {error}"))?;
+                    let marker = data.read_rc().map_err(|error| format!("block header {handle:#x} insert marker: {error}"))?;
                     if marker == 0 {
                         break;
                     }
@@ -10363,31 +10646,31 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     }
                     insert_count += 1;
                 }
-                let preview_size = data.read_bl().await.map_err(|error| format!("block header {handle:#x} preview size: {error}"))? as usize;
+                let preview_size = data.read_bl().map_err(|error| format!("block header {handle:#x} preview size: {error}"))? as usize;
                 if preview_size != 0 {
                     return Err(format!("block header {handle:#x} has unsupported semantic preview of {preview_size} bytes"));
                 }
-                let insert_units = data.read_bs().await.map_err(|error| format!("block header {handle:#x} insert units: {error}"))?;
-                let explodable = data.read_b().await.map_err(|error| format!("block header {handle:#x} explodable flag: {error}"))?;
-                let block_scaling = data.read_rc().await.map_err(|error| format!("block header {handle:#x} block scaling: {error}"))?;
+                let insert_units = data.read_bs().map_err(|error| format!("block header {handle:#x} insert units: {error}"))?;
+                let explodable = data.read_b().map_err(|error| format!("block header {handle:#x} explodable flag: {error}"))?;
+                let block_scaling = data.read_rc().map_err(|error| format!("block header {handle:#x} block scaling: {error}"))?;
                 Some((anonymous, has_attributes, is_xref, xref_overlaid, xref_loaded, owned_count, base_point, insert_count, insert_units, explodable, block_scaling))
             } else {
                 None
             };
             let linetype = if type_code == 57 {
-                let pattern_length = data.read_bd().await.map_err(|error| format!("linetype {handle:#x} pattern length: {error}"))?;
-                let alignment = data.read_rc().await.map_err(|error| format!("linetype {handle:#x} alignment: {error}"))?;
-                let dash_count = data.read_rc().await.map_err(|error| format!("linetype {handle:#x} dash count: {error}"))? as usize;
+                let pattern_length = data.read_bd().map_err(|error| format!("linetype {handle:#x} pattern length: {error}"))?;
+                let alignment = data.read_rc().map_err(|error| format!("linetype {handle:#x} alignment: {error}"))?;
+                let dash_count = data.read_rc().map_err(|error| format!("linetype {handle:#x} dash count: {error}"))? as usize;
                 let mut dashes = Vec::with_capacity(dash_count);
                 for index in 0..dash_count {
                     dashes.push((
-                        data.read_bd().await.map_err(|error| format!("linetype {handle:#x} dash {index} length: {error}"))?,
-                        data.read_bs().await.map_err(|error| format!("linetype {handle:#x} dash {index} shape code: {error}"))?,
-                        data.read_rd().await.map_err(|error| format!("linetype {handle:#x} dash {index} X offset: {error}"))?,
-                        data.read_rd().await.map_err(|error| format!("linetype {handle:#x} dash {index} Y offset: {error}"))?,
-                        data.read_bd().await.map_err(|error| format!("linetype {handle:#x} dash {index} scale: {error}"))?,
-                        data.read_bd().await.map_err(|error| format!("linetype {handle:#x} dash {index} rotation: {error}"))?,
-                        data.read_bs().await.map_err(|error| format!("linetype {handle:#x} dash {index} shape flags: {error}"))?,
+                        data.read_bd().map_err(|error| format!("linetype {handle:#x} dash {index} length: {error}"))?,
+                        data.read_bs().map_err(|error| format!("linetype {handle:#x} dash {index} shape code: {error}"))?,
+                        data.read_rd().map_err(|error| format!("linetype {handle:#x} dash {index} X offset: {error}"))?,
+                        data.read_rd().map_err(|error| format!("linetype {handle:#x} dash {index} Y offset: {error}"))?,
+                        data.read_bd().map_err(|error| format!("linetype {handle:#x} dash {index} scale: {error}"))?,
+                        data.read_bd().map_err(|error| format!("linetype {handle:#x} dash {index} rotation: {error}"))?,
+                        data.read_bs().map_err(|error| format!("linetype {handle:#x} dash {index} shape flags: {error}"))?,
                     ));
                 }
                 Some((pattern_length, alignment, dashes))
@@ -10395,10 +10678,10 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 None
             };
             let layer = if type_code == 51 {
-                let flag0 = data.read_bs().await.map_err(|error| format!("layer {handle:#x} flags: {error}"))?;
-                let color_index = data.read_bs().await.map_err(|error| format!("layer {handle:#x} color index: {error}"))?;
-                let color_rgb = data.read_bl().await.map_err(|error| format!("layer {handle:#x} color RGB: {error}"))?;
-                let color_flags = data.read_rc().await.map_err(|error| format!("layer {handle:#x} color flags: {error}"))?;
+                let flag0 = data.read_bs().map_err(|error| format!("layer {handle:#x} flags: {error}"))?;
+                let color_index = data.read_bs().map_err(|error| format!("layer {handle:#x} color index: {error}"))?;
+                let color_rgb = data.read_bl().map_err(|error| format!("layer {handle:#x} color RGB: {error}"))?;
+                let color_flags = data.read_rc().map_err(|error| format!("layer {handle:#x} color flags: {error}"))?;
                 if color_flags > 3 {
                     return Err(format!("layer {handle:#x} color flags {color_flags:#x} are invalid"));
                 }
@@ -10406,18 +10689,18 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             } else {
                 None
             };
-            let group_71 = if type_code == 67 { Some(data.read_rc().await.map_err(|error| format!("registered-application {handle:#x} group-71 marker: {error}"))?) } else { None };
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("table record {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let group_71 = if type_code == 67 { Some(data.read_rc().map_err(|error| format!("registered-application {handle:#x} group-71 marker: {error}"))?) } else { None };
+            if data.bit_position() != main_end_bit {
+                return Err(format!("table record {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let strings = strings.as_mut().ok_or_else(|| format!("table record {handle:#x} string stream missing"))?;
-            let name = strings.read_tu().await.map_err(|error| format!("table record {handle:#x} name: {error}"))?;
-            let xref_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("table record {handle:#x} xref handle: {error}"))?;
+            let name = strings.read_tu().map_err(|error| format!("table record {handle:#x} name: {error}"))?;
+            let xref_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("table record {handle:#x} xref handle: {error}"))?;
             let common = crate::artifacts::dwg::schema::snapshot::DwgTableRecordCommon { name, xref_resolution, xref_handle };
             let body = if let Some((mut value, color_flags)) = dimension_style {
                 value.common = common;
-                value.dimension_postfix = strings.read_tu().await?;
-                value.alternate_postfix = strings.read_tu().await?;
+                value.dimension_postfix = strings.read_tu()?;
+                value.alternate_postfix = strings.read_tu()?;
                 let mut read_color_strings = |color: &mut crate::artifacts::dwg::schema::snapshot::DwgComplexColor, flags: u8| -> Result<(), String> {
                     if flags & 1 != 0 {
                         color.name = Some(strings.read_tu()?);
@@ -10431,51 +10714,51 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                 read_color_strings(&mut value.text.dimension_line_color, color_flags[1])?;
                 read_color_strings(&mut value.text.extension_line_color, color_flags[2])?;
                 read_color_strings(&mut value.text.text_color, color_flags[3])?;
-                value.r2010.alternate_measurement_suffix = strings.read_tu().await?;
-                value.r2010.measurement_suffix = strings.read_tu().await?;
-                value.text_style_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.leader_arrow_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.arrow_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.arrow_1_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.arrow_2_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.dimension_linetype_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.extension_1_linetype_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.extension_2_linetype_handle = read_object_handle(&mut handle_reader, handle).await?;
+                value.r2010.alternate_measurement_suffix = strings.read_tu()?;
+                value.r2010.measurement_suffix = strings.read_tu()?;
+                value.text_style_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.leader_arrow_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.arrow_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.arrow_1_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.arrow_2_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.dimension_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.extension_1_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.extension_2_linetype_handle = read_object_handle(&mut handle_reader, handle)?;
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::DimensionStyle(value)
             } else if let Some((mut value, ambient_flags)) = viewport {
                 value.common = common;
                 if ambient_flags & 1 != 0 {
-                    value.ambient_color.name = Some(strings.read_tu().await.map_err(|error| format!("viewport table {handle:#x} ambient color name: {error}"))?);
+                    value.ambient_color.name = Some(strings.read_tu().map_err(|error| format!("viewport table {handle:#x} ambient color name: {error}"))?);
                 }
                 if ambient_flags & 2 != 0 {
-                    value.ambient_color.book_name = Some(strings.read_tu().await.map_err(|error| format!("viewport table {handle:#x} ambient color book: {error}"))?);
+                    value.ambient_color.book_name = Some(strings.read_tu().map_err(|error| format!("viewport table {handle:#x} ambient color book: {error}"))?);
                 }
-                value.background_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.visual_style_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.sun_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.named_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
-                value.base_ucs_handle = read_object_handle(&mut handle_reader, handle).await?;
+                value.background_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.visual_style_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.sun_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.named_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
+                value.base_ucs_handle = read_object_handle(&mut handle_reader, handle)?;
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Viewport(value)
             } else if let Some((anonymous, has_attributes, is_xref, xref_overlaid, xref_loaded, owned_count, base_point, insert_count, insert_units, explodable, block_scaling)) = block_header {
-                let xref_path = strings.read_tu().await.map_err(|error| format!("block header {handle:#x} xref path: {error}"))?;
-                let description = strings.read_tu().await.map_err(|error| format!("block header {handle:#x} description: {error}"))?;
-                let block_entity_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("block header {handle:#x} block entity: {error}"))?.ok_or_else(|| format!("block header {handle:#x} block entity is null"))?;
+                let xref_path = strings.read_tu().map_err(|error| format!("block header {handle:#x} xref path: {error}"))?;
+                let description = strings.read_tu().map_err(|error| format!("block header {handle:#x} description: {error}"))?;
+                let block_entity_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("block header {handle:#x} block entity: {error}"))?.ok_or_else(|| format!("block header {handle:#x} block entity is null"))?;
                 let mut owned_entity_handles = Vec::with_capacity(owned_count);
                 for index in 0..owned_count {
                     owned_entity_handles
-                        .push(read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("block header {handle:#x} owned entity {index}: {error}"))?.ok_or_else(|| format!("block header {handle:#x} owned entity {index} is null"))?);
+                        .push(read_object_handle(&mut handle_reader, handle).map_err(|error| format!("block header {handle:#x} owned entity {index}: {error}"))?.ok_or_else(|| format!("block header {handle:#x} owned entity {index} is null"))?);
                 }
                 let end_block_entity_handle =
-                    read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("block header {handle:#x} end-block entity: {error}"))?.ok_or_else(|| format!("block header {handle:#x} end-block entity is null"))?;
+                    read_object_handle(&mut handle_reader, handle).map_err(|error| format!("block header {handle:#x} end-block entity: {error}"))?.ok_or_else(|| format!("block header {handle:#x} end-block entity is null"))?;
                 let mut insert_backreference_handles = Vec::with_capacity(insert_count);
                 for index in 0..insert_count {
                     insert_backreference_handles.push(
                         read_object_handle(&mut handle_reader, handle)
-                            .await.map_err(|error| format!("block header {handle:#x} insert backreference {index}: {error}"))?
+                            .map_err(|error| format!("block header {handle:#x} insert backreference {index}: {error}"))?
                             .ok_or_else(|| format!("block header {handle:#x} insert backreference {index} is null"))?,
                     );
                 }
-                let layout_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("block header {handle:#x} layout: {error}"))?;
+                let layout_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("block header {handle:#x} layout: {error}"))?;
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(crate::artifacts::dwg::schema::snapshot::DwgBlockHeaderTableRecord {
                     common,
                     anonymous,
@@ -10496,19 +10779,19 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     layout_handle,
                 })
             } else if let Some((pattern_length, alignment, dash_values)) = linetype {
-                let description = strings.read_tu().await.map_err(|error| format!("linetype {handle:#x} description: {error}"))?;
+                let description = strings.read_tu().map_err(|error| format!("linetype {handle:#x} description: {error}"))?;
                 let mut dashes = Vec::with_capacity(dash_values.len());
                 for (index, (length, complex_shape_code, x_offset, y_offset, scale, rotation, shape_flags)) in dash_values.into_iter().enumerate() {
-                    let style_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("linetype {handle:#x} dash {index} style: {error}"))?;
+                    let style_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("linetype {handle:#x} dash {index} style: {error}"))?;
                     dashes.push(crate::artifacts::dwg::schema::snapshot::DwgLinetypeDash { length, complex_shape_code, style_handle, x_offset, y_offset, scale, rotation, shape_flags, text: None });
                 }
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Linetype(crate::artifacts::dwg::schema::snapshot::DwgLinetypeTableRecord { common, description, pattern_length, alignment, dashes })
             } else if let Some((flag0, color_index, color_rgb, color_flags)) = layer {
-                let color_name = if color_flags & 1 != 0 { Some(strings.read_tu().await.map_err(|error| format!("layer {handle:#x} color name: {error}"))?) } else { None };
-                let color_book_name = if color_flags & 2 != 0 { Some(strings.read_tu().await.map_err(|error| format!("layer {handle:#x} color book name: {error}"))?) } else { None };
-                let plot_style_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("layer {handle:#x} plot-style handle: {error}"))?;
-                let material_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("layer {handle:#x} material handle: {error}"))?;
-                let linetype_handle = read_object_handle(&mut handle_reader, handle).await.map_err(|error| format!("layer {handle:#x} linetype handle: {error}"))?;
+                let color_name = if color_flags & 1 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color name: {error}"))?) } else { None };
+                let color_book_name = if color_flags & 2 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color book name: {error}"))?) } else { None };
+                let plot_style_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} plot-style handle: {error}"))?;
+                let material_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} material handle: {error}"))?;
+                let linetype_handle = read_object_handle(&mut handle_reader, handle).map_err(|error| format!("layer {handle:#x} linetype handle: {error}"))?;
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Layer(crate::artifacts::dwg::schema::snapshot::DwgLayerTableRecord {
                     common,
                     frozen: flag0 & 1 != 0,
@@ -10517,14 +10800,14 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     locked: flag0 & 8 != 0,
                     plottable: flag0 & 16 != 0,
                     lineweight: ((flag0 & 0x03e0) >> 5) as u8,
-                    color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb).await?, name: color_name, book_name: color_book_name },
+                    color: crate::artifacts::dwg::schema::snapshot::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb)?, name: color_name, book_name: color_book_name },
                     plot_style_handle,
                     material_handle,
                     linetype_handle,
                 })
             } else if let Some((is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height)) = text_style {
-                let font_file = strings.read_tu().await.map_err(|error| format!("text style {handle:#x} font file: {error}"))?;
-                let big_font_file = strings.read_tu().await.map_err(|error| format!("text style {handle:#x} big-font file: {error}"))?;
+                let font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} font file: {error}"))?;
+                let big_font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} big-font file: {error}"))?;
                 crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::TextStyle(crate::artifacts::dwg::schema::snapshot::DwgTextStyleTableRecord {
                     common,
                     is_shape,
@@ -10542,17 +10825,17 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
             };
             object.body = Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(body));
         } else if type_code == 79 || object.class_name == "XRECORD" {
-            let data_byte_count = data.read_bl().await.map_err(|error| format!("XRECORD {handle:#x} value byte count: {error}"))? as usize;
-            let values = decode_xrecord_values(&mut data, data_byte_count, main_end_bit).await.map_err(|error| format!("XRECORD {handle:#x}: {error}"))?;
-            let cloning_flag = data.read_bs().await.map_err(|error| format!("XRECORD {handle:#x} cloning flag: {error}"))?;
-            if data.bit_position().await != main_end_bit {
-                return Err(format!("XRECORD {handle:#x} class-main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position().await));
+            let data_byte_count = data.read_bl().map_err(|error| format!("XRECORD {handle:#x} value byte count: {error}"))? as usize;
+            let values = decode_xrecord_values(&mut data, data_byte_count, main_end_bit).map_err(|error| format!("XRECORD {handle:#x}: {error}"))?;
+            let cloning_flag = data.read_bs().map_err(|error| format!("XRECORD {handle:#x} cloning flag: {error}"))?;
+            if data.bit_position() != main_end_bit {
+                return Err(format!("XRECORD {handle:#x} class-main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
             }
             let handle_end_bit = payload_size.saturating_mul(8);
             let mut object_id_handles = Vec::new();
-            while handle_end_bit.saturating_sub(handle_reader.bit_position().await) >= 8 {
+            while handle_end_bit.saturating_sub(handle_reader.bit_position()) >= 8 {
                 let checkpoint = handle_reader.clone();
-                match read_object_handle(&mut handle_reader, handle).await {
+                match read_object_handle(&mut handle_reader, handle) {
                     Ok(Some(reference)) => object_id_handles.push(reference),
                     Ok(None) => break,
                     Err(_) => {
@@ -10561,13 +10844,13 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
                     }
                 }
             }
-            let terminal_padding = handle_end_bit.saturating_sub(handle_reader.bit_position().await);
+            let terminal_padding = handle_end_bit.saturating_sub(handle_reader.bit_position());
             if terminal_padding > 7 {
                 return Err(format!("XRECORD {handle:#x} has {terminal_padding} trailing handle-stream bits"));
             }
             let mut padding_value = 0u8;
             for _ in 0..terminal_padding {
-                padding_value = (padding_value << 1) | u8::from(handle_reader.read_b().await.map_err(|error| format!("XRECORD {handle:#x} terminal fill: {error}"))?);
+                padding_value = (padding_value << 1) | u8::from(handle_reader.read_b().map_err(|error| format!("XRECORD {handle:#x} terminal fill: {error}"))?);
             }
             let expected_padding = (1u8 << terminal_padding).saturating_sub(1);
             if padding_value != expected_padding {
@@ -10622,8 +10905,9 @@ async fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::
     Ok((objects, xrecord_terminal_fills))
 }
 
-pub(crate) async fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, String> {
-    decode_r2004_object_records(bytes, classes).await.map(|(objects, _)| objects)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<crate::artifacts::dwg::schema::snapshot::DwgLogicalObject>, String> {
+    decode_r2004_object_records(bytes, classes).map(|(objects, _)| objects)
 }
 
 
@@ -10671,129 +10955,135 @@ pub(crate) async fn decode_r2004_object_identities(bytes: &[u8], classes: &[crat
 
 
 
-async fn r2010_string_stream(bytes: &[u8], end_bit: usize) -> Result<(DwgBitReader<'_>, usize), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2010_string_stream(bytes: &[u8], end_bit: usize) -> Result<(DwgBitReader<'_>, usize), String> {
     if end_bit < 17 || end_bit > bytes.len().saturating_mul(8) {
         return Err("R2010 string-stream end is out of bounds".into());
     }
-    let mut present = DwgBitReader::at_bit(bytes, end_bit - 1).await?;
-    if !present.read_b().await? {
-        return Ok((DwgBitReader::at_bit(bytes, end_bit - 1).await?, end_bit - 1));
+    let mut present = DwgBitReader::at_bit(bytes, end_bit - 1)?;
+    if !present.read_b()? {
+        return Ok((DwgBitReader::at_bit(bytes, end_bit - 1)?, end_bit - 1));
     }
-    let mut size_reader = DwgBitReader::at_bit(bytes, end_bit - 17).await?;
-    let low = size_reader.read_rs().await?;
+    let mut size_reader = DwgBitReader::at_bit(bytes, end_bit - 17)?;
+    let low = size_reader.read_rs()?;
     let (size_bits, header_bits) = if low & 0x8000 == 0 {
         (usize::from(low), 17usize)
     } else {
         if end_bit < 33 {
             return Err("R2010 extended string-stream size is truncated".into());
         }
-        let mut high_reader = DwgBitReader::at_bit(bytes, end_bit - 33).await?;
-        ((usize::from(low & 0x7fff)) | (usize::from(high_reader.read_rs().await?) << 15), 33usize)
+        let mut high_reader = DwgBitReader::at_bit(bytes, end_bit - 33)?;
+        ((usize::from(low & 0x7fff)) | (usize::from(high_reader.read_rs()?) << 15), 33usize)
     };
     let start = end_bit.checked_sub(header_bits).and_then(|value| value.checked_sub(size_bits)).ok_or("R2010 string-stream size exceeds class data")?;
-    Ok((DwgBitReader::at_bit(bytes, start).await?, start))
+    Ok((DwgBitReader::at_bit(bytes, start)?, start))
 }
 
-async fn r2010_string_content_end_bit(bytes: &[u8], end_bit: usize) -> Result<usize, String> {
-    let (_, start) = r2010_string_stream(bytes, end_bit).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn r2010_string_content_end_bit(bytes: &[u8], end_bit: usize) -> Result<usize, String> {
+    let (_, start) = r2010_string_stream(bytes, end_bit)?;
     if start == end_bit.saturating_sub(1) {
         return Ok(start);
     }
-    let mut size_reader = DwgBitReader::at_bit(bytes, end_bit.checked_sub(17).ok_or("R2010 string footer is truncated")?).await?;
-    let low = size_reader.read_rs().await?;
+    let mut size_reader = DwgBitReader::at_bit(bytes, end_bit.checked_sub(17).ok_or("R2010 string footer is truncated")?)?;
+    let low = size_reader.read_rs()?;
     Ok(end_bit - if low & 0x8000 == 0 { 17 } else { 33 })
 }
 
-async fn decode_r2010_classes_section(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_classes_section(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
     if bytes.len() < 24 || bytes[..16] != DWG_SENTINEL_CLASSES_BEGIN {
         return Err("R2010 classes section sentinel is missing".into());
     }
     let total_bits = u32::from_le_bytes(bytes[20..24].try_into().unwrap()) as usize;
     let end_bit = 20usize.checked_mul(8).and_then(|value| value.checked_add(total_bits)).ok_or("R2010 classes end overflow")?;
-    let (mut strings, data_end_bit) = r2010_string_stream(bytes, end_bit).await?;
-    let mut data = DwgBitReader::at_bit(bytes, 24 * 8).await?;
-    let maximum_class = data.read_bl().await? as u16;
-    if !data.read_b().await? {
+    let (mut strings, data_end_bit) = r2010_string_stream(bytes, end_bit)?;
+    let mut data = DwgBitReader::at_bit(bytes, 24 * 8)?;
+    let maximum_class = data.read_bl()? as u16;
+    if !data.read_b()? {
         return Err("R2010 classes section standard marker is unset".into());
     }
     let expected = maximum_class.saturating_sub(499) as usize;
     let mut classes = Vec::with_capacity(expected);
     while classes.len() < expected && data.bit_position() < data_end_bit {
-        let number = data.read_bs().await?;
-        let proxy_flags = u32::from(data.read_bs().await?);
-        let application_name = strings.read_tu().await?;
-        let cpp_class_name = strings.read_tu().await?;
-        let dxf_name = strings.read_tu().await?;
-        let was_zombie = data.read_b().await?;
-        let item_class_id = data.read_bs().await?;
-        let object_count = data.read_bl().await?;
-        let dwg_version = data.read_bl().await?;
-        let maintenance_version = data.read_bl().await?;
-        let reserved_values = vec![data.read_bl().await?, data.read_bl().await?];
+        let number = data.read_bs()?;
+        let proxy_flags = u32::from(data.read_bs()?);
+        let application_name = strings.read_tu()?;
+        let cpp_class_name = strings.read_tu()?;
+        let dxf_name = strings.read_tu()?;
+        let was_zombie = data.read_b()?;
+        let item_class_id = data.read_bs()?;
+        let object_count = data.read_bl()?;
+        let dwg_version = data.read_bl()?;
+        let maintenance_version = data.read_bl()?;
+        let reserved_values = vec![data.read_bl()?, data.read_bl()?];
         classes.push(crate::artifacts::dwg::DwgClass { number, proxy_flags, application_name, cpp_class_name, dxf_name, was_zombie, item_class_id, object_count, dwg_version, maintenance_version, reserved_values });
     }
     Ok(classes)
 }
 
-pub(crate) async fn decode_r2004_classes(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
-    let sections = decode_r2004_sections(bytes).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_r2004_classes(bytes: &[u8]) -> Result<Vec<crate::artifacts::dwg::DwgClass>, String> {
+    let sections = decode_r2004_sections(bytes)?;
     let classes = sections.iter().find(|section| section.name == "AcDb:Classes").ok_or("R2004 Classes section missing")?;
-    decode_r2010_classes_section(&r2004_section_data(classes).await?).await
+    decode_r2010_classes_section(&r2004_section_data(classes)?)
 }
 
-async fn encode_r2010_classes_section(classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<u8>, String> {
-    let mut data = DwgBitWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2010_classes_section(classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<u8>, String> {
+    let mut data = DwgBitWriter::new();
     let maximum_class = classes.iter().map(|class| class.number).max().unwrap_or(499);
-    data.write_bl(u32::from(maximum_class)).await;
-    data.write_b(true).await;
-    let mut strings = DwgBitWriter::new().await;
+    data.write_bl(u32::from(maximum_class));
+    data.write_b(true);
+    let mut strings = DwgBitWriter::new();
     for class in classes {
-        data.write_bs(class.number).await;
-        data.write_bs(class.proxy_flags as u16).await;
-        strings.write_tu(&class.application_name).await;
-        strings.write_tu(&class.cpp_class_name).await;
-        strings.write_tu(&class.dxf_name).await;
-        data.write_b(class.was_zombie).await;
-        data.write_bs(class.item_class_id).await;
-        data.write_bl(class.object_count).await;
-        data.write_bl(class.dwg_version).await;
-        data.write_bl(class.maintenance_version).await;
-        data.write_bl(class.reserved_values.first().copied().unwrap_or(0)).await;
-        data.write_bl(class.reserved_values.get(1).copied().unwrap_or(0)).await;
+        data.write_bs(class.number);
+        data.write_bs(class.proxy_flags as u16);
+        strings.write_tu(&class.application_name);
+        strings.write_tu(&class.cpp_class_name);
+        strings.write_tu(&class.dxf_name);
+        data.write_b(class.was_zombie);
+        data.write_bs(class.item_class_id);
+        data.write_bl(class.object_count);
+        data.write_bl(class.dwg_version);
+        data.write_bl(class.maintenance_version);
+        data.write_bl(class.reserved_values.first().copied().unwrap_or(0));
+        data.write_bl(class.reserved_values.get(1).copied().unwrap_or(0));
     }
-    let string_bits = strings.bit_len().await;
-    data.append_bits(&strings).await;
+    let string_bits = strings.bit_len();
+    data.append_bits(&strings);
     if string_bits <= 0x7fff {
-        data.write_rs(string_bits as u16).await;
+        data.write_rs(string_bits as u16);
     } else {
         let high = string_bits >> 15;
         if high > u16::MAX as usize {
             return Err("R2010 class string stream exceeds extended size".into());
         }
-        data.write_rs(high as u16).await;
-        data.write_rs((string_bits as u16 & 0x7fff) | 0x8000).await;
+        data.write_rs(high as u16);
+        data.write_rs((string_bits as u16 & 0x7fff) | 0x8000);
     }
-    data.write_b(true).await;
-    let body_bits = data.bit_len().await;
-    data.pad_to_byte().await;
+    data.write_b(true);
+    let body_bits = data.bit_len();
+    data.pad_to_byte();
     let total_bits = 32usize.checked_add(body_bits).ok_or("R2010 class section size overflow")?;
     let mut output = Vec::new();
     output.extend_from_slice(&DWG_SENTINEL_CLASSES_BEGIN);
     output.extend_from_slice(&(((total_bits + 7) / 8) as u32).to_le_bytes());
     output.extend_from_slice(&(total_bits as u32).to_le_bytes());
     output.extend_from_slice(&data.bytes);
-    output.extend_from_slice(&dwg_crc16(0xC0C1, &output[16..]).await.to_le_bytes());
+    output.extend_from_slice(&dwg_crc16(0xC0C1, &output[16..]).to_le_bytes());
     output.extend_from_slice(&DWG_SENTINEL_CLASSES_END);
     output.extend_from_slice(&[0; 8]);
     Ok(output)
 }
 
 /// 🏗️ Decodes standard R2004 object and handle sections directly into the logical drawing.
-async fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawing, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawing, String> {
     let handles = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
     let objects = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles).await?).await?;
-    let object_data = r2004_section_data(objects).await?;
+    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles)?)?;
+    let object_data = r2004_section_data(objects)?;
     let mut layers = Vec::new();
     let mut layer_handle_index = std::collections::HashMap::new();
     let mut pending_entities = Vec::new();
@@ -10801,10 +11091,10 @@ async fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawin
         if address >= object_data.len() {
             return Err(format!("R2004 object {handle:#x} address {address:#x} is out of bounds"));
         }
-        let mut sizer = DwgBitReader::new(&object_data[address..]).await;
-        let payload_len = sizer.read_ms().await.map_err(|error| format!("R2004 object {handle:#x} size: {error}"))? as usize;
-        let handle_stream_bits = sizer.read_umc().await.map_err(|error| format!("R2004 object {handle:#x} handle-stream size: {error}"))? as usize;
-        sizer.pad_to_byte().await;
+        let mut sizer = DwgBitReader::new(&object_data[address..]);
+        let payload_len = sizer.read_ms().map_err(|error| format!("R2004 object {handle:#x} size: {error}"))? as usize;
+        let handle_stream_bits = sizer.read_umc().map_err(|error| format!("R2004 object {handle:#x} handle-stream size: {error}"))? as usize;
+        sizer.pad_to_byte();
         let payload_start = address.checked_add(sizer.byte_pos).ok_or_else(|| format!("R2004 object {handle:#x} payload address overflow"))?;
         let payload_end = payload_start.checked_add(payload_len).ok_or_else(|| format!("R2004 object {handle:#x} payload length overflow"))?;
         let payload = object_data.get(payload_start..payload_end).ok_or_else(|| format!("R2004 object {handle:#x} payload is truncated"))?;
@@ -10812,11 +11102,11 @@ async fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawin
         if handle_stream_bits > payload_bits {
             return Err(format!("R2004 object {handle:#x} handle stream exceeds its payload"));
         }
-        let mut reader = DwgBitReader::new(payload).await;
+        let mut reader = DwgBitReader::new(payload);
         let data_end_bit = payload_bits - handle_stream_bits;
-        let mut handle_reader = DwgBitReader::at_bit(payload, data_end_bit).await.map_err(|error| format!("R2004 object {handle:#x} handle stream: {error}"))?;
-        let object_type = reader.read_bot().await.map_err(|error| format!("R2004 object {handle:#x} type: {error}"))?;
-        let (_, object_handle) = reader.read_handle().await.map_err(|error| format!("R2004 object {handle:#x} identity: {error}"))?;
+        let mut handle_reader = DwgBitReader::at_bit(payload, data_end_bit).map_err(|error| format!("R2004 object {handle:#x} handle stream: {error}"))?;
+        let object_type = reader.read_bot().map_err(|error| format!("R2004 object {handle:#x} type: {error}"))?;
+        let (_, object_handle) = reader.read_handle().map_err(|error| format!("R2004 object {handle:#x} identity: {error}"))?;
         if object_handle != handle {
             return Err(format!("R2004 object map handle {handle:#x} does not match encoded handle {object_handle:#x}"));
         }
@@ -10825,17 +11115,17 @@ async fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawin
         if object_type != DWG_TYPE_LAYER && !known_entity {
             continue;
         }
-        decode_r2010_eed(&mut reader, handle).await.map_err(|error| format!("R2004 object {handle:#x} extended entity data: {error}"))?;
+        decode_r2010_eed(&mut reader, handle).map_err(|error| format!("R2004 object {handle:#x} extended entity data: {error}"))?;
         if object_type == DWG_TYPE_LAYER {
-            let (mut strings, _) = r2010_string_stream(payload, data_end_bit).await.map_err(|error| format!("R2004 layer {handle:#x} string stream: {error}"))?;
-            let layer = dwg_decode_r2010_layer(&mut reader, &mut strings).await.map_err(|error| format!("R2004 layer {handle:#x}: {error}"))?;
+            let (mut strings, _) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("R2004 layer {handle:#x} string stream: {error}"))?;
+            let layer = dwg_decode_r2010_layer(&mut reader, &mut strings).map_err(|error| format!("R2004 layer {handle:#x}: {error}"))?;
             if layer_handle_index.insert(handle, layers.len()).is_some() {
                 return Err(format!("R2004 object map repeats layer handle {handle:#x}"));
             }
             layers.push(layer);
         } else {
             let entity = dwg_decode_r2010_entity(object_type, &mut reader, &mut handle_reader)
-                .await.map_err(|error| format!("R2004 entity {handle:#x} type {object_type}: {error}"))?
+                .map_err(|error| format!("R2004 entity {handle:#x} type {object_type}: {error}"))?
                 .ok_or_else(|| format!("R2004 entity {handle:#x} type {object_type} was classified as known but has no decoder"))?;
             pending_entities.push(entity);
         }
@@ -10858,13 +11148,15 @@ async fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawin
     Ok(drawing)
 }
 
-pub(crate) async fn decode_r2004_drawing(bytes: &[u8]) -> Result<DwgDrawing, String> {
-    let sections = decode_r2004_sections(bytes).await?;
-    dwg_from_r2004_sections(&sections).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_r2004_drawing(bytes: &[u8]) -> Result<DwgDrawing, String> {
+    let sections = decode_r2004_sections(bytes)?;
+    dwg_from_r2004_sections(&sections)
 }
 
 /// 📐️ Parses a semio DWG (AC1015-flavored) byte stream, skipping only unrecognized object types.
-pub async fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
     if bytes.len() < 6 || &bytes[0..6] != b"AC1015" {
         let found = String::from_utf8_lossy(bytes.get(0..6).unwrap_or(b"??????")).to_string();
         return Err(format!("unsupported dwg version '{found}': only AC1015 (R2000) is supported"));
@@ -10915,31 +11207,31 @@ pub async fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
         if *address >= bytes.len() {
             return Err(format!("dwg object {handle:#x} address {address:#x} is out of bounds"));
         }
-        let mut sizer = DwgBitReader::new(&bytes[*address..]).await;
-        let payload_len = sizer.read_ms().await.map_err(|error| format!("dwg object {handle:#x} size: {error}"))? as usize;
-        sizer.pad_to_byte().await;
+        let mut sizer = DwgBitReader::new(&bytes[*address..]);
+        let payload_len = sizer.read_ms().map_err(|error| format!("dwg object {handle:#x} size: {error}"))? as usize;
+        sizer.pad_to_byte();
         let payload_start = address.checked_add(sizer.byte_pos).ok_or_else(|| format!("dwg object {handle:#x} payload address overflow"))?;
         let payload_end = payload_start.checked_add(payload_len).ok_or_else(|| format!("dwg object {handle:#x} payload length overflow"))?;
         if payload_end > bytes.len() {
             return Err(format!("dwg object {handle:#x} payload is truncated"));
         }
         let payload = &bytes[payload_start..payload_end];
-        let mut reader = DwgBitReader::new(payload).await;
-        let object_type = reader.read_bs().await.map_err(|error| format!("dwg object {handle:#x} type: {error}"))?;
-        let bitsize = reader.read_rl().await.map_err(|error| format!("dwg object {handle:#x} data size: {error}"))?;
-        let (_, encoded_handle) = reader.read_handle().await.map_err(|error| format!("dwg object {handle:#x} identity: {error}"))?;
+        let mut reader = DwgBitReader::new(payload);
+        let object_type = reader.read_bs().map_err(|error| format!("dwg object {handle:#x} type: {error}"))?;
+        let bitsize = reader.read_rl().map_err(|error| format!("dwg object {handle:#x} data size: {error}"))?;
+        let (_, encoded_handle) = reader.read_handle().map_err(|error| format!("dwg object {handle:#x} identity: {error}"))?;
         if encoded_handle != *handle {
             return Err(format!("dwg object map handle {handle:#x} does not match encoded handle {encoded_handle:#x}"));
         }
-        reader.pad_to_byte().await;
+        reader.pad_to_byte();
         let data_start_bit = reader.byte_pos.checked_mul(8).ok_or_else(|| format!("dwg object {handle:#x} data offset overflow"))?;
         let body_storage_bits = (bitsize as usize).checked_add(7).map(|value| value / 8 * 8).ok_or_else(|| format!("dwg object {handle:#x} data size overflow"))?;
         let handle_start_bit = data_start_bit.checked_add(body_storage_bits).ok_or_else(|| format!("dwg object {handle:#x} handle-stream offset overflow"))?;
-        let mut handle_reader = DwgBitReader::at_bit(payload, handle_start_bit).await.map_err(|error| format!("dwg object {handle:#x} handle stream: {error}"))?;
+        let mut handle_reader = DwgBitReader::at_bit(payload, handle_start_bit).map_err(|error| format!("dwg object {handle:#x} handle stream: {error}"))?;
 
         if object_type == DWG_TYPE_LAYER {
-            let name = reader.read_t().await.map_err(|error| format!("dwg layer {handle:#x} name: {error}"))?;
-            let color = reader.read_rc().await.map_err(|error| format!("dwg layer {handle:#x} color: {error}"))?;
+            let name = reader.read_t().map_err(|error| format!("dwg layer {handle:#x} name: {error}"))?;
+            let color = reader.read_rc().map_err(|error| format!("dwg layer {handle:#x} color: {error}"))?;
             if layer_handle_index.insert(*handle, layers.len()).is_some() {
                 return Err(format!("dwg object map repeats layer handle {handle:#x}"));
             }
@@ -10947,7 +11239,7 @@ pub async fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
             continue;
         }
 
-        match dwg_decode_semio_entity(object_type, &mut reader, &mut handle_reader).await.map_err(|error| format!("dwg entity {handle:#x} type {object_type}: {error}"))? {
+        match dwg_decode_semio_entity(object_type, &mut reader, &mut handle_reader).map_err(|error| format!("dwg entity {handle:#x} type {object_type}: {error}"))? {
             Some((layer_handle, color, geometry)) => pending_entities.push((layer_handle, color, geometry)),
             None => continue,
         }
@@ -10981,7 +11273,8 @@ pub async fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
 /// has real framework-layer callers (`🧊️3d/📐️brep/📦️mesh-io`, the `os`/`host` products' OS-media
 /// DWG mesh handlers) that cannot depend on this plugin crate — see this wave's report for the
 /// resulting cross-layer gate on deleting the old `🔺️mesh` module outright.
-pub async fn mesh_to_dwg_drawing(mesh: &semio_framework_mesh_engine::MeshData) -> DwgDrawing {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mesh_to_dwg_drawing(mesh: &semio_framework_mesh_engine::MeshData) -> DwgDrawing {
     let vertices: Vec<[f64; 3]> = mesh.positions.chunks_exact(3).map(|c| [c[0] as f64, c[1] as f64, c[2] as f64]).collect();
     let faces: Vec<[i32; 4]> = mesh.indices.chunks_exact(3).map(|tri| [tri[0] as i32 + 1, tri[1] as i32 + 1, tri[2] as i32 + 1, tri[2] as i32 + 1]).collect();
     let mut drawing = DwgDrawing::default();
@@ -10992,7 +11285,8 @@ pub async fn mesh_to_dwg_drawing(mesh: &semio_framework_mesh_engine::MeshData) -
 }
 
 /// 🔺️ Collects polyface-mesh and 3dface entities into mesh data.
-pub async fn dwg_drawing_to_mesh(drawing: &DwgDrawing) -> semio_framework_mesh_engine::MeshData {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_drawing_to_mesh(drawing: &DwgDrawing) -> semio_framework_mesh_engine::MeshData {
     let mut mesh = semio_framework_mesh_engine::MeshData::default();
     for entity in &drawing.entities {
         match &entity.geometry {
@@ -11041,7 +11335,8 @@ pub enum DwgPathSegment {
     Close,
 }
 
-async fn arc_bulge(from: [f64; 2], to: [f64; 2], radius: f64, sweep: bool) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arc_bulge(from: [f64; 2], to: [f64; 2], radius: f64, sweep: bool) -> f64 {
     let dx = to[0] - from[0];
     let dy = to[1] - from[1];
     let chord = (dx * dx + dy * dy).sqrt();
@@ -11057,7 +11352,8 @@ async fn arc_bulge(from: [f64; 2], to: [f64; 2], radius: f64, sweep: bool) -> f6
     }
 }
 
-async fn bulge_to_segment(from: [f64; 2], to: [f64; 2], bulge: f64) -> DwgPathSegment {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bulge_to_segment(from: [f64; 2], to: [f64; 2], bulge: f64) -> DwgPathSegment {
     if bulge.abs() < 1e-9 {
         return DwgPathSegment::Line { to };
     }
@@ -11071,7 +11367,8 @@ async fn bulge_to_segment(from: [f64; 2], to: [f64; 2], bulge: f64) -> DwgPathSe
 }
 
 /// ✏️ Converts flattened path segments to dwg entities: line/close runs to lwpolylines with bulge arcs, curves to splines.
-pub async fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
     let mut drawing = DwgDrawing::default();
     let layer = drawing.ensure_layer("0");
     for path in paths {
@@ -11122,7 +11419,7 @@ pub async fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
                 DwgPathSegment::Arc { rx, sweep, to, .. } => {
                     let bulge = arc_bulge(cursor, *to, *rx, *sweep);
                     if let Some(last) = bulges.last_mut() {
-                        *last = bulge.await;
+                        *last = bulge;
                     }
                     vertices.push(*to);
                     bulges.push(0.0);
@@ -11149,7 +11446,8 @@ pub async fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
 /// index), something the original all-entities-flattened `Vec<Vec<DwgPathSegment>>` return shape
 /// could not offer since non-path geometry kinds are silently skipped, desyncing any by-index zip
 /// against `drawing.entities`.
-pub async fn dwg_geometry_to_path_segments(geometry: &DwgGeometry) -> Option<Vec<DwgPathSegment>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_geometry_to_path_segments(geometry: &DwgGeometry) -> Option<Vec<DwgPathSegment>> {
     match geometry {
         DwgGeometry::LwPolyline { closed, vertices, bulges, .. } => {
             if vertices.is_empty() {
@@ -11160,11 +11458,11 @@ pub async fn dwg_geometry_to_path_segments(geometry: &DwgGeometry) -> Option<Vec
                 let from = vertices[i - 1];
                 let to = vertices[i];
                 let bulge = bulges.get(i - 1).copied().unwrap_or(0.0);
-                segments.push(bulge_to_segment(from, to, bulge).await);
+                segments.push(bulge_to_segment(from, to, bulge));
             }
             if *closed && vertices.len() > 1 {
                 let bulge = bulges.last().copied().unwrap_or(0.0);
-                segments.push(bulge_to_segment(vertices[vertices.len() - 1], vertices[0], bulge).await);
+                segments.push(bulge_to_segment(vertices[vertices.len() - 1], vertices[0], bulge));
                 segments.push(DwgPathSegment::Close);
             }
             Some(segments)
@@ -11184,7 +11482,8 @@ pub async fn dwg_geometry_to_path_segments(geometry: &DwgGeometry) -> Option<Vec
 }
 
 /// ✏️ Converts drawing entities back to path segments, one path per entity.
-pub async fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
     drawing.entities.iter().filter_map(|entity| dwg_geometry_to_path_segments(&entity.geometry)).collect()
 }
 //#endregion DwgPathBridge

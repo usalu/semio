@@ -72,7 +72,8 @@ pub mod io_registry {
 /// unchanged in call order/behavior, only the function's file moved with the deleted directory);
 /// left reachable at its old `crate::artifacts::binary::engine::register()` path via a pure
 /// re-export shim in `📦️glue.rs`.
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     let _ = semio_framework_plugin::register_composer_entries(io_registry::entries());
     register_artifact_schema();
     register_artifact_inferences();
@@ -80,7 +81,7 @@ pub async fn register() {
     register_schema_specs();
     let _ = store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
         crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA,
-    ).await);
+    ));
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion
@@ -91,13 +92,15 @@ pub async fn register() {
 /// and there is no single canonical id for a Mutation enum's N independently-shaped variants; that
 /// is the genuine scope boundary, not "this facet has too many specs to register any of them."
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.binary", crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.binary#diff", crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 
 /// 📌️ P2-P3: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per note's/json's
 /// exemplar pattern -- `stdio.binary`/`.op`/`.diff`/`.pack`/`.spr`, all `dsl::passthrough_hooks`.
@@ -105,7 +108,8 @@ pub async fn register_schema_specs() {}
 /// scheme has no dedicated "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.
 /// semio` is a real, conformance-tested file -- its binary form is exercised directly by
 /// `protocol_walk_law` (`💡️inferences/🦀️component.rs`), just not wired through a 6th `LanguageRole`).
-pub async fn register_pilot_languages() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
     use crate::artifacts::binary::standards::v_raw::subsets::any::schema;
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.binary",
@@ -160,15 +164,17 @@ pub async fn register_pilot_languages() {
 }
 
 /// 📌️ Registers schema leaves for `s.stdio.binary`.
-pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
-pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 
@@ -184,7 +190,8 @@ pub async fn register_artifact_inferences() {
 /// `📤️export/…` are provably redundant under the new mechanism — kept in place this pass only
 /// because deleting them requires the crate to build cleanly for verification, which it
 /// currently cannot (see `📓️w2-p-report.md` `## verification`).
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::binary::{BinaryMutation, BinarySnapshot};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     IoDeclaration {
@@ -197,7 +204,7 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()).await,
+            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()),
         },
         entries: &[],
     }

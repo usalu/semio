@@ -129,18 +129,21 @@ pub mod derived_analysis {
 
     const TEXT_ELEMENTS: &[&str] = &["text", "tspan", "tref", "textPath"];
 
-    async fn local_name(name: &str) -> &str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn local_name(name: &str) -> &str {
         name.rsplit(':').next().unwrap_or(name)
     }
 
-    async fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
         attrs.iter().find(|a| local_name(&a.name) == name).map(|a| a.value.as_str())
     }
 
     /// 🔗 Extracts the fragment id from a `clip-path="url(#id)"`-shaped value (bare or quoted) --
     /// `None` for anything else (a non-`url()`/non-fragment value isn't resolvable against this
     /// document, so isn't scanned).
-    async fn clip_path_ref_id(value: &str) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn clip_path_ref_id(value: &str) -> Option<&str> {
         let inner = value.trim().strip_prefix("url(")?.strip_suffix(')')?;
         inner.trim().trim_matches(|c| c == '\'' || c == '"').strip_prefix('#')
     }
@@ -152,16 +155,19 @@ pub mod derived_analysis {
     pub const CODE_BASE_PROFILE: &str = "stdio.svg.basic.base-profile";
     pub const CODE_NESTED_SVG: &str = "stdio.svg.basic.nested-svg";
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
     }
 
     /// 🌳 Recursively collects every element node's `(name, attrs, children)` triple, depth-first.
-    async fn collect_elements<'a>(node: &'a XmlNode, out: &mut Vec<(&'a str, &'a [XmlAttr], &'a [XmlNode])>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn collect_elements<'a>(node: &'a XmlNode, out: &mut Vec<(&'a str, &'a [XmlAttr], &'a [XmlNode])>) {
         if let XmlNode::Element { name, attrs, children } = node {
             out.push((name.as_str(), attrs.as_slice(), children.as_slice()));
             for c in children {
@@ -171,9 +177,10 @@ pub mod derived_analysis {
     }
 
     /// 🔍️ `true` if any (possibly-nested) descendant is one of the SVG text element kinds.
-    async fn has_text_descendant(children: &[XmlNode]) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_text_descendant(children: &[XmlNode]) -> bool {
         children.iter().any(|c| match c {
-            XmlNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || semio_framework_plugin::resolve_ready(has_text_descendant(children)),
+            XmlNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || has_text_descendant(children),
             _ => false,
         })
     }
@@ -181,11 +188,13 @@ pub mod derived_analysis {
     /// 🗺️ Builds an `id -> children` map for every retained `<clipPath id="...">` element, so a
     /// `clip-path="url(#id)"` reference can resolve to the REAL clipPath's descendants rather than a
     /// guess.
-    async fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
-        elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| semio_framework_plugin::resolve_ready(attr_val(attrs, "id")).map(|id| (id, *children))).collect()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
+        elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| attr_val(attrs, "id").map(|id| (id, *children))).collect()
     }
 
-    async fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
         for n in children {
             if let XmlNode::Element { name, children, .. } = n {
                 if local_name(name) == "svg" {
@@ -201,23 +210,24 @@ pub mod derived_analysis {
     /// authoritative), `SvgBasicBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
-    pub async fn check_svg_basic_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_svg_basic_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };
 
         let mut elements = Vec::new();
         collect_elements(root, &mut elements);
-        let clip_paths = clip_path_children_by_id(&elements).await;
+        let clip_paths = clip_path_children_by_id(&elements);
 
         for (name, attrs, _children) in &elements {
             if BLOCKED_FILTER_PRIMITIVES.contains(&local_name(name)) {
-                out.push(hard(CODE_FILTER_PRIMITIVE, format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")).await);
+                out.push(hard(CODE_FILTER_PRIMITIVE, format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")));
             }
-            if let Some(cp) = attr_val(attrs, "clip-path").await {
-                if let Some(id) = clip_path_ref_id(cp).await {
+            if let Some(cp) = attr_val(attrs, "clip-path") {
+                if let Some(id) = clip_path_ref_id(cp) {
                     if let Some(cp_children) = clip_paths.get(id) {
-                        if has_text_descendant(cp_children).await {
-                            out.push(hard(CODE_CLIP_PATH_TEXT, format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")).await);
+                        if has_text_descendant(cp_children) {
+                            out.push(hard(CODE_CLIP_PATH_TEXT, format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")));
                         }
                     }
                 }
@@ -228,7 +238,7 @@ pub mod derived_analysis {
             let mut nested = Vec::new();
             find_nested_svg(children, &mut nested);
             for name in nested {
-                out.push(soft(CODE_NESTED_SVG, format!("nested <{name}> element found below the document root -- review its viewport/clipping behavior on constrained renderers")).await);
+                out.push(soft(CODE_NESTED_SVG, format!("nested <{name}> element found below the document root -- review its viewport/clipping behavior on constrained renderers")));
             }
         }
 
@@ -236,7 +246,7 @@ pub mod derived_analysis {
             let base_profile_ok = attrs.iter().any(|a| a.name == "baseProfile" && a.value == "basic");
             let version_ok = attrs.iter().any(|a| a.name == "version" && a.value == "1.1");
             if !base_profile_ok || !version_ok {
-                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"basic\"/version=\"1.1\" -- SVG Basic 1.1 documents should declare their profile")).await);
+                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"basic\"/version=\"1.1\" -- SVG Basic 1.1 documents should declare their profile")));
             }
         }
         out
@@ -262,7 +272,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_svg_basic_conformance(snapshot).await;
+                let checks = check_svg_basic_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -277,21 +287,25 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        async fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn svg_root(attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> SvgSnapshot {
             let mut snapshot = SvgSnapshot::default();
             snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs, children });
             snapshot
         }
 
-        async fn attr(name: &str, value: &str) -> XmlAttr {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn attr(name: &str, value: &str) -> XmlAttr {
             XmlAttr { name: name.into(), value: value.into() }
         }
 
-        async fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn elem(name: &str, attrs: Vec<XmlAttr>, children: Vec<XmlNode>) -> XmlNode {
             XmlNode::Element { name: name.into(), attrs, children }
         }
 
-        async fn base_attrs() -> Vec<XmlAttr> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn base_attrs() -> Vec<XmlAttr> {
             vec![attr("baseProfile", "basic"), attr("version", "1.1")]
         }
 

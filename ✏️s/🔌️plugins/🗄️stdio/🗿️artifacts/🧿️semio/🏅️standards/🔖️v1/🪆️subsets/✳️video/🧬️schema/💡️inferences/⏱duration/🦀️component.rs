@@ -22,7 +22,8 @@ pub struct SemioVideoDuration {
 /// is expressed in units of `rate` ticks per second, so dividing by the rate converts to seconds.
 /// `0.0` for an empty stream or a zero numerator (honest degenerate case, not a panic — matches
 /// `audio`'s own `sampleRate == 0` handling).
-async fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
     if stream.rate.num == 0 {
         return 0.0;
     }
@@ -31,7 +32,8 @@ async fn stream_duration_seconds(stream: &SemioVideoStream) -> f64 {
 }
 
 /// ⏱️ Computes [`SemioVideoDuration`] — pure, total, O(streams + samples).
-pub async fn compute_semio_video_duration(snapshot: &SemioVideoSnapshot) -> SemioVideoDuration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_video_duration(snapshot: &SemioVideoSnapshot) -> SemioVideoDuration {
     let duration_seconds = snapshot.streams.iter().map(stream_duration_seconds).fold(0.0_f64, f64::max);
     let sample_count = snapshot.streams.iter().map(|s| s.samples.len() as u32).sum();
     SemioVideoDuration { duration_seconds, stream_count: snapshot.streams.len() as u32, sample_count }
@@ -44,7 +46,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 
-    async fn populated() -> SemioVideoSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![

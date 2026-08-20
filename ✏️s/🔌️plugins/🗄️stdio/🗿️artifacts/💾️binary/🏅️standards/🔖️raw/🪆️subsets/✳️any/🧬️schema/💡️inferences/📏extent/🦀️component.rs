@@ -22,7 +22,8 @@ pub struct BinaryExtent {
 /// 📏️ Computes [`BinaryExtent`] — `byteLength`/`isEmpty` read `bytes.len()` directly;
 /// `contentDigest` folds `bytes` through `std`'s own `DefaultHasher` (same std-only reasoning
 /// `🎒️zip/🗃entries` and `🗜️deflate/🪟window` already established for a single scalar digest).
-pub async fn compute_binary_extent(snapshot: &BinarySnapshot) -> BinaryExtent {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_binary_extent(snapshot: &BinarySnapshot) -> BinaryExtent {
     let mut hasher = DefaultHasher::new();
     snapshot.bytes.hash(&mut hasher);
     BinaryExtent { byte_length: snapshot.bytes.len() as u64, is_empty: snapshot.bytes.is_empty(), content_digest: format!("{:016x}", hasher.finish()) }

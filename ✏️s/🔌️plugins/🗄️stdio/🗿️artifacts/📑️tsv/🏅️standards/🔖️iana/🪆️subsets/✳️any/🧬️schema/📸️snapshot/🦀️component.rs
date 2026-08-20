@@ -26,7 +26,8 @@ pub enum LineEnding {
 }
 
 impl LineEnding {
-    pub async fn as_str(self) -> &'static str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_str(self) -> &'static str {
         match self {
             LineEnding::Lf => "\n",
             LineEnding::Crlf => "\r\n",
@@ -74,7 +75,8 @@ impl Default for TsvSnapshot {
 /// accept-by-default since TSV has no reliable magic"). Real structural heuristic: at least one
 /// line, and every line contains at least one tab OR the file is a single untabbed line (a valid
 /// one-column TSV) — i.e. reject obvious binary noise (NUL bytes) rather than claim a false magic.
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
     !bytes.is_empty() && !bytes.contains(&0u8)
 }
 //#endregion 🔖️Sniff
@@ -83,9 +85,10 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// 📥️ Decodes TSV text via a byte-exact split on the file's own line ending, then `\t` per line
 /// — no quoting, no escaping, no coercion (matches the real W0 fixture's own `verify_tsv.py`
 /// verification method exactly: split on `\n`, then each line on `\t`).
-pub async fn decode_tsv(text: &str) -> TsvSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_tsv(text: &str) -> TsvSnapshot {
     let line_ending = if text.contains("\r\n") { LineEnding::Crlf } else { LineEnding::Lf };
-    let sep = line_ending.as_str().await;
+    let sep = line_ending.as_str();
     let trailing_newline = text.ends_with(sep);
     let body = if trailing_newline { &text[..text.len() - sep.len()] } else { text };
     let records: Vec<Vec<String>> = if body.is_empty() { Vec::new() } else { body.split(sep).map(|line| line.split('\t').map(|s| s.to_string()).collect()).collect() };
@@ -94,11 +97,12 @@ pub async fn decode_tsv(text: &str) -> TsvSnapshot {
 
 /// 📤️ Encodes via a byte-exact rejoin: `\t` within a row, the snapshot's own `line_ending`
 /// between rows, plus a final terminator iff `trailing_newline` is set.
-pub async fn encode_tsv(snap: &TsvSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_tsv(snap: &TsvSnapshot) -> String {
     let sep = snap.line_ending.as_str();
-    let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep.await);
+    let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep);
     if snap.trailing_newline {
-        out.push_str(sep.await);
+        out.push_str(sep);
     }
     out
 }
@@ -116,7 +120,7 @@ impl store::ArtifactDsl for TsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_tsv(body).await)
+        Ok(decode_tsv(body))
     }
     async fn print_dsl(&self) -> String {
         let body = encode_tsv(self);
@@ -128,7 +132,7 @@ impl store::ArtifactDsl for TsvSnapshot {
 impl store::ArtifactPack for TsvSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = encode_tsv(self).await.into_bytes();
+        let raw = encode_tsv(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -139,7 +143,7 @@ impl store::ArtifactPack for TsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_tsv(&text).await)
+        Ok(decode_tsv(&text))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

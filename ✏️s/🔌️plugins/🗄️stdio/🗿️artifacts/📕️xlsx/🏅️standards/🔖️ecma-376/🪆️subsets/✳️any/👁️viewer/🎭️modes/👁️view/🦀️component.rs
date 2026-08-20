@@ -8,13 +8,15 @@ pub const XLSX_VIEW_MODE_ID: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `create_xlsx_viewer` (subset root).
-pub async fn definition() -> ModeDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: XLSX_VIEW_MODE_ID.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window filling the whole canvas — same single-window shape as the sibling mutation-
 /// capable surface's own layout.
-pub async fn layout() -> WindowLayout {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

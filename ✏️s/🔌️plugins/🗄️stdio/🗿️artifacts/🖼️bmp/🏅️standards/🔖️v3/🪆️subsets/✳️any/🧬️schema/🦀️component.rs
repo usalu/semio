@@ -56,7 +56,8 @@ impl Default for BmpArtifact {
 
 impl BmpArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> BmpSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> BmpSnapshot {
         BmpSnapshot {
             schema: self.schema.clone(),
             header_size: self.header_size,
@@ -77,7 +78,8 @@ impl BmpArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: BmpSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: BmpSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             header_size: snapshot.header_size,
@@ -98,7 +100,8 @@ impl BmpArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
         self.schema = snapshot.schema;
         self.header_size = snapshot.header_size;
         self.width = snapshot.width;
@@ -120,7 +123,8 @@ impl BmpArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.bmp`.
-pub async fn bmp_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bmp_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.bmp",
         artifact: schema::FacetLeaves {
@@ -185,7 +189,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::bmp::schema::mutations::apply_bmp_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -314,7 +318,8 @@ semio_framework_plugin::derive_artifact_facets!(
 // deliberate imperative plugin-root calls — untouched, reached via this standard's own inline
 // `engine` barrel) + `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_bmp_snapshot() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_bmp_snapshot() -> BmpSnapshot {
     BmpSnapshot::default()
 }
 
@@ -329,7 +334,8 @@ pub async fn empty_bmp_snapshot() -> BmpSnapshot {
 /// `EncodeScopeNote`), so this snapshot is safe against `encode_bmp`'s own canonicalization (any
 /// other value here would silently "self-correct" on the first decode and break
 /// `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
-pub async fn demo_bmp_snapshot() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_bmp_snapshot() -> BmpSnapshot {
     use crate::artifacts::bmp::standards::v_v3::subsets::any::io::row_bytes;
     BmpSnapshot {
         schema: crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),

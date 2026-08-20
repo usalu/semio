@@ -84,7 +84,8 @@ pub enum SemioBrepMutation {
 /// ⚡️ Real hand-rolled `OpText`, grammar `keyword id=hex ...` — reusing the sibling `🔺️diff`
 /// facet's now-`pub(crate)` hex/value primitives (one source of truth for entity encoding, same
 /// convention this file's pre-rewrite version and `✳️flow`'s mutations facet both established).
-async fn print_brep_mutation(m: &SemioBrepMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={}", enc_str(&p.id), enc_point3(&p.point)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
@@ -103,40 +104,41 @@ async fn print_brep_mutation(m: &SemioBrepMutation) -> String {
         SemioBrepMutation::MoveVertex(p) => format!("move-vertex id={} point={}", enc_str(&p.vertex_id), enc_point3(&p.new_point)),
     }
 }
-async fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: dec_str(arg("id")?).await?, point: dec_point3(arg("point")?).await? })),
-        "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: dec_str(arg("id")?).await? })),
-        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: dec_str(arg("id")?).await?, start_vertex: dec_str(arg("start")?).await?, end_vertex: dec_str(arg("end")?).await?, curve: dec_curve(arg("curve")?).await? })),
-        "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: dec_str(arg("id")?).await? })),
+        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)? })),
+        "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: dec_str(arg("id")?)? })),
+        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)?, curve: dec_curve(arg("curve")?)? })),
+        "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: dec_str(arg("id")?)? })),
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::mutation::CreateFace {
-            id: dec_str(arg("id")?).await?,
-            outer_loop: dec_str(arg("outer")?).await?,
-            inner_loops: dec_list(arg("inner")?, dec_str).await?,
-            surface: dec_surface(arg("surface")?).await?,
-            orientation: crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?).await?,
+            id: dec_str(arg("id")?)?,
+            outer_loop: dec_str(arg("outer")?)?,
+            inner_loops: dec_list(arg("inner")?, dec_str)?,
+            surface: dec_surface(arg("surface")?)?,
+            orientation: crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?)?,
         })),
-        "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: dec_str(arg("id")?).await? })),
-        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: dec_str(arg("id")?).await?, faces: dec_list(arg("faces")?, dec_shell_face).await? })),
-        "delete-shell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: dec_str(arg("id")?).await? })),
-        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::mutation::CreateSolid { id: dec_str(arg("id")?).await?, shells: dec_list(arg("shells")?, dec_solid_shell).await? })),
-        "delete-solid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: dec_str(arg("id")?).await? })),
-        "replace-curve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve { edge_id: dec_str(arg("edge")?).await?, new_curve: dec_curve(arg("curve")?).await? })),
-        "replace-surface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: dec_str(arg("face")?).await?, new_surface: dec_surface(arg("surface")?).await? })),
-        "move-vertex" => Ok(SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: dec_str(arg("id")?).await?, new_point: dec_point3(arg("point")?).await? })),
+        "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: dec_str(arg("id")?)? })),
+        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)? })),
+        "delete-shell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: dec_str(arg("id")?)? })),
+        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::mutation::CreateSolid { id: dec_str(arg("id")?)?, shells: dec_list(arg("shells")?, dec_solid_shell)? })),
+        "delete-solid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: dec_str(arg("id")?)? })),
+        "replace-curve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve { edge_id: dec_str(arg("edge")?)?, new_curve: dec_curve(arg("curve")?)? })),
+        "replace-surface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: dec_str(arg("face")?)?, new_surface: dec_surface(arg("surface")?)? })),
+        "move-vertex" => Ok(SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: dec_str(arg("id")?)?, new_point: dec_point3(arg("point")?)? })),
         other => Err(format!("brep mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioBrepMutation {
     async fn print_op(&self) -> String {
-        print_brep_mutation(self).await
+        print_brep_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_brep_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_brep_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -145,7 +147,8 @@ impl OpText for SemioBrepMutation {
 /// 🏷️ Ordinal table, same declaration order as `SemioBrepMutation`'s own enum variants and
 /// `parse_brep_mutation`'s keyword match — the real binary `tag` field's source of truth.
 const OP_KEYWORDS: [&str; 13] = ["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
-async fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
     match m {
         SemioBrepMutation::CreateVertex(_) => 0,
         SemioBrepMutation::DeleteVertex(_) => 1,
@@ -164,8 +167,9 @@ async fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_brep_mutation` — the binary frame's `tag`
 /// byte already carries the keyword, so the text keyword itself is redundant in the binary payload.
-async fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
-    match print_brep_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
+    match print_brep_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -179,8 +183,8 @@ async fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
 impl OpBinary for SemioBrepMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_brep_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -205,7 +209,8 @@ impl OpBinary for SemioBrepMutation {
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️component.rs` (`✳️brep/🚪️io/🦀️component.rs`, another session's file, read-only).
 #[cfg(test)]
-pub(crate) async fn fixture() -> SemioBrepSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn fixture() -> SemioBrepSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
@@ -219,7 +224,8 @@ pub(crate) async fn fixture() -> SemioBrepSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
@@ -263,7 +269,8 @@ mod tests {
     /// re-creates an entity deleted from the middle of a collection legitimately lands it at the
     /// end. Round-trip fidelity is therefore SET equality, not vector equality — sort by id before
     /// comparing, never compare the raw `Vec` order.
-    async fn sorted_by_id(mut s: SemioBrepSnapshot) -> SemioBrepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sorted_by_id(mut s: SemioBrepSnapshot) -> SemioBrepSnapshot {
         s.vertices.sort_by(|a, b| a.id.cmp(&b.id));
         s.edges.sort_by(|a, b| a.id.cmp(&b.id));
         s.loops.sort_by(|a, b| a.id.cmp(&b.id));
@@ -280,7 +287,8 @@ mod tests {
     /// threads `mutation.diff(&current); current = diff.diff().apply(&current)` at every step, forward AND
     /// backward, matching this facet's own `mutate()` (`✳️brep/🧬️schema/🦀️component.rs`) production
     /// convention.
-    async fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

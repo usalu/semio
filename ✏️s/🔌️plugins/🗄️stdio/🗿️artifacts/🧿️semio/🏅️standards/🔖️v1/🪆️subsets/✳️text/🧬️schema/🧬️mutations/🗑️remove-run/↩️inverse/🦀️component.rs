@@ -7,7 +7,8 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::Se
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &RemoveRun, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &RemoveRun, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
     match base.runs.get(payload.index) {
         Some(run) => vec![SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: payload.index, run: run.clone() })],
         None => Vec::new(),

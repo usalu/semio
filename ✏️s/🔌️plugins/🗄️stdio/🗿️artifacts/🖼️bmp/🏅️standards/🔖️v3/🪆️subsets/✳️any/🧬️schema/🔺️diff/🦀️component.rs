@@ -55,7 +55,8 @@ pub struct BmpPaletteDiff {
 }
 
 impl BmpPaletteDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -79,7 +80,8 @@ enum Slot {
 
 /// 🧪 Simulates `removed`(descending)/`added`(ascending, clamped) against a virtual array of
 /// `[0, len)` `Slot::Base(i)` markers, mirroring `BmpPaletteDiff` apply's own ordering exactly.
-async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -100,13 +102,15 @@ async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) 
 
 /// 📏 Tight virtual-array bound: one past the highest base index this diff's own
 /// removed/modified/added keys reference (0 if it references none).
-async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
 /// ➕️ Structural, total, base-free absorb of two `palette` triples
 /// (`~/.claude/plans/the-current-schemas-are-scalable-journal.md` `## Absorb`).
-async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
     //#region 🔖️PhiBaseToMid
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
@@ -117,7 +121,7 @@ async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDif
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
 
     //#region 🔖️Seed
@@ -177,7 +181,7 @@ async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDif
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -272,7 +276,7 @@ pub struct BmpDiff {
 impl MutationDiff<BmpSnapshot> for BmpDiff {
     async fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
         if let Some(palette) = &self.palette {
-            validate_bmp_palette(base.palette.len(), palette).await?;
+            validate_bmp_palette(base.palette.len(), palette)?;
         }
         let mut next = base.clone();
         if let Some(v) = self.header_size {
@@ -381,7 +385,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         if let Some(pd2) = other.palette {
             match self.palette.take() {
                 None => self.palette = Some(pd2),
-                Some(pd1) => self.palette = Some(absorb_palette(pd1, pd2).await),
+                Some(pd1) => self.palette = Some(absorb_palette(pd1, pd2)),
             }
         }
         if other.pixels.is_some() {
@@ -390,24 +394,25 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
     }
 }
 
-async fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApplyResult<()> {
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").await.at(["palette", "removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").at(["palette", "removed"]));
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").await.at(["palette", "modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").at(["palette", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").await.at(["palette", "added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").at(["palette", "added"]));
         }
     }
     Ok(())
@@ -476,8 +481,9 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub async fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
-    BmpDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
+    BmpDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
@@ -486,12 +492,14 @@ pub async fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDif
 /// `demo_snap_a`/`demo_diff_cases` placement) so `⚙️engine/🦀️component.rs`'s
 /// `conformance_laws` module can reach these too.
 #[cfg(test)]
-async fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entry(b: u8, g: u8, r: u8, reserved: u8) -> BmpPaletteEntry {
     BmpPaletteEntry { b, g, r, reserved }
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_snap_a() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snap_a() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 40,
@@ -512,7 +520,8 @@ pub(crate) async fn demo_snap_a() -> BmpSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_snap_b() -> BmpSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snap_b() -> BmpSnapshot {
     BmpSnapshot {
         schema: "stdio.bmp".into(),
         header_size: 56,
@@ -543,7 +552,8 @@ pub(crate) async fn demo_snap_b() -> BmpSnapshot {
 /// `conformance_laws` module) all exercise — same consolidation `stdio.png`'s own
 /// `demo_diff_cases()` already made (single source of truth, per this repo's own CLAUDE.md).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<BmpDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<BmpDiff> {
     let a = demo_snap_a();
     let b = demo_snap_b();
     vec![BmpDiff::default(), BmpDiff::between(&a, &b), BmpDiff::between(&b, &a)]

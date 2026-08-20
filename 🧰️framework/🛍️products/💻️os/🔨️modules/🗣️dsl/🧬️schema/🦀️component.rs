@@ -215,7 +215,7 @@ pub struct GrammarSpec {
 /// `x-semio-unit`; `Ref(kind)` carries the referenced entity kind as `x-semio-ref`; every shape with
 /// no native JSON Schema vocabulary (`Bytes64`/`Wire`/`Coord`/`Dir`/`Dim`/`Range`/`Count`/`Expr`/
 /// `Embed`/`EmbedFrom`) additionally carries `x-semio-shape` naming the exact `Shape` variant.
-pub async fn shape_json_schema(shape: &Shape) -> serde_json::Value {
+pub fn shape_json_schema(shape: &Shape) -> serde_json::Value {
     match shape {
         Shape::Bool => serde_json::json!({ "type": "boolean" }),
         Shape::Int => serde_json::json!({ "type": "integer" }),
@@ -225,7 +225,7 @@ pub async fn shape_json_schema(shape: &Shape) -> serde_json::Value {
         Shape::Bytes64 => serde_json::json!({ "type": "string", "contentEncoding": "base64", "x-semio-shape": "bytes64" }),
         Shape::Enum(variants) => serde_json::json!({ "type": "string", "enum": variants.iter().map(|(tag, _)| tag.clone()).collect::<Vec<_>>() }),
         Shape::Tuple(inner, len) => {
-            let items = Box::pin(shape_json_schema(inner)).await;
+            let items = shape_json_schema(inner);
             let mut value = serde_json::json!({ "type": "array", "items": items });
             if let Some(len) = len {
                 let map = value.as_object_mut().expect("object schema");
@@ -235,15 +235,15 @@ pub async fn shape_json_schema(shape: &Shape) -> serde_json::Value {
             value
         }
         Shape::List(inner) => {
-            let items = Box::pin(shape_json_schema(inner)).await;
+            let items = shape_json_schema(inner);
             serde_json::json!({ "type": "array", "items": items })
         }
-        Shape::Record(spec_fn) => record_spec_json_schema(&spec_fn()).await,
-        Shape::Block(inner) => Box::pin(shape_json_schema(inner)).await,
+        Shape::Record(spec_fn) => record_spec_json_schema(&spec_fn()),
+        Shape::Block(inner) => shape_json_schema(inner),
         Shape::Statements(variants) => {
             let mut one_of: Vec<serde_json::Value> = Vec::with_capacity(variants.len());
             for (keyword, spec_fn) in variants {
-                let mut entry = record_spec_json_schema(&spec_fn()).await;
+                let mut entry = record_spec_json_schema(&spec_fn());
                 if let Some(map) = entry.as_object_mut() {
                     map.insert("x-semio-keyword".into(), serde_json::Value::String(keyword.clone()));
                 }
@@ -252,12 +252,12 @@ pub async fn shape_json_schema(shape: &Shape) -> serde_json::Value {
             serde_json::json!({ "type": "array", "items": { "oneOf": one_of } })
         }
         Shape::Map(inner) => {
-            let additional_properties = Box::pin(shape_json_schema(inner)).await;
+            let additional_properties = shape_json_schema(inner);
             serde_json::json!({ "type": "object", "additionalProperties": additional_properties })
         }
         Shape::Value => serde_json::json!({}),
         Shape::Table(spec_fn) => {
-            let items = record_spec_json_schema(&spec_fn()).await;
+            let items = record_spec_json_schema(&spec_fn());
             serde_json::json!({ "type": "array", "items": items })
         }
         Shape::Wire => serde_json::json!({ "type": "string", "x-semio-shape": "wire" }),
@@ -280,10 +280,10 @@ pub async fn shape_json_schema(shape: &Shape) -> serde_json::Value {
 /// property on), `flatten`ed nested-record fields splice their own fields into THIS SAME properties
 /// map rather than nesting, mirroring what `flatten` means at parse/print altitude. `required` lists
 /// every non-`optional`, non-empty-key field.
-pub async fn record_spec_json_schema(spec: &RecordSpec) -> serde_json::Value {
+pub fn record_spec_json_schema(spec: &RecordSpec) -> serde_json::Value {
     let mut properties = serde_json::Map::new();
     let mut required: Vec<serde_json::Value> = Vec::new();
-    collect_record_spec_properties(spec, &mut properties, &mut required).await;
+    collect_record_spec_properties(spec, &mut properties, &mut required);
     let mut value = serde_json::json!({ "type": "object", "properties": properties });
     let map = value.as_object_mut().expect("object schema");
     if let Some(keyword) = &spec.keyword {
@@ -295,18 +295,18 @@ pub async fn record_spec_json_schema(spec: &RecordSpec) -> serde_json::Value {
     value
 }
 
-async fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json::Map<String, serde_json::Value>, required: &mut Vec<serde_json::Value>) {
+fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json::Map<String, serde_json::Value>, required: &mut Vec<serde_json::Value>) {
     for field in &spec.fields {
         if field.flatten {
             if let Shape::Record(spec_fn) = &field.shape {
-                Box::pin(collect_record_spec_properties(&spec_fn(), properties, required)).await;
+                collect_record_spec_properties(&spec_fn(), properties, required);
                 continue;
             }
         }
         if field.key.is_empty() {
             continue;
         }
-        properties.insert(field.key.clone(), Box::pin(shape_json_schema(&field.shape)).await);
+        properties.insert(field.key.clone(), shape_json_schema(&field.shape));
         if !field.optional {
             required.push(serde_json::Value::String(field.key.clone()));
         }
@@ -319,52 +319,52 @@ mod json_schema_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_shapes_map_onto_the_expected_json_schema_types() {
-        assert_eq!(shape_json_schema(&Shape::Bool).await, serde_json::json!({ "type": "boolean" }));
-        assert_eq!(shape_json_schema(&Shape::Int).await, serde_json::json!({ "type": "integer" }));
-        assert_eq!(shape_json_schema(&Shape::UInt).await, serde_json::json!({ "type": "integer", "minimum": 0 }));
-        assert_eq!(shape_json_schema(&Shape::Float).await, serde_json::json!({ "type": "number" }));
-        assert_eq!(shape_json_schema(&Shape::Text).await, serde_json::json!({ "type": "string" }));
-        assert_eq!(shape_json_schema(&Shape::Count).await, serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }));
-        assert_eq!(shape_json_schema(&Shape::Expr).await, serde_json::json!({ "type": "string", "x-semio-shape": "expr" }));
+        assert_eq!(shape_json_schema(&Shape::Bool), serde_json::json!({ "type": "boolean" }));
+        assert_eq!(shape_json_schema(&Shape::Int), serde_json::json!({ "type": "integer" }));
+        assert_eq!(shape_json_schema(&Shape::UInt), serde_json::json!({ "type": "integer", "minimum": 0 }));
+        assert_eq!(shape_json_schema(&Shape::Float), serde_json::json!({ "type": "number" }));
+        assert_eq!(shape_json_schema(&Shape::Text), serde_json::json!({ "type": "string" }));
+        assert_eq!(shape_json_schema(&Shape::Count), serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }));
+        assert_eq!(shape_json_schema(&Shape::Expr), serde_json::json!({ "type": "string", "x-semio-shape": "expr" }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ref_carries_the_entity_kind_and_quantity_carries_its_unit() {
-        let ref_schema = shape_json_schema(&Shape::Ref("material")).await;
+        let ref_schema = shape_json_schema(&Shape::Ref("material"));
         assert_eq!(ref_schema["type"], serde_json::json!("string"));
         assert_eq!(ref_schema["x-semio-ref"], serde_json::json!("material"));
 
-        let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap())).await;
+        let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap()));
         assert_eq!(quantity_schema["type"], serde_json::json!("number"));
         assert_eq!(quantity_schema["x-semio-unit"], serde_json::json!("GPa"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn enum_becomes_a_string_enum_of_its_tags() {
-        let schema = shape_json_schema(&Shape::Enum(vec![("visible".into(), 0), ("hidden".into(), 1)])).await;
+        let schema = shape_json_schema(&Shape::Enum(vec![("visible".into(), 0), ("hidden".into(), 1)]));
         assert_eq!(schema["type"], serde_json::json!("string"));
         assert_eq!(schema["enum"], serde_json::json!(["visible", "hidden"]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn list_and_fixed_tuple_map_onto_json_schema_arrays() {
-        let list = shape_json_schema(&Shape::List(Box::new(Shape::Float))).await;
+        let list = shape_json_schema(&Shape::List(Box::new(Shape::Float)));
         assert_eq!(list["type"], serde_json::json!("array"));
         assert_eq!(list["items"], serde_json::json!({ "type": "number" }));
 
-        let tuple = shape_json_schema(&Shape::Tuple(Box::new(Shape::Float), Some(3))).await;
+        let tuple = shape_json_schema(&Shape::Tuple(Box::new(Shape::Float), Some(3)));
         assert_eq!(tuple["minItems"], serde_json::json!(3));
         assert_eq!(tuple["maxItems"], serde_json::json!(3));
     }
 
     // --- record_spec_json_schema over the existing dsl fixtures (this file's 🧪️Tests region) ---
-    async fn camera_spec() -> RecordSpec {
+    fn camera_spec() -> RecordSpec {
         RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn record_spec_json_schema_covers_required_and_optional_fields() {
-        let schema = record_spec_json_schema(&camera_spec().await).await;
+        let schema = record_spec_json_schema(&camera_spec());
         assert_eq!(schema["type"], serde_json::json!("object"));
         assert_eq!(schema["properties"]["x"], serde_json::json!({ "type": "number" }));
         assert_eq!(schema["properties"]["label"], serde_json::json!({ "type": "string" }));
@@ -374,13 +374,13 @@ mod json_schema_tests {
         assert!(!required.contains(&"label".to_string()), "optional field must not be required");
     }
 
-    async fn writer_note_spec() -> RecordSpec {
+    fn writer_note_spec() -> RecordSpec {
         RecordSpec::new(Some("query"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "body", Shape::Embed("jack"))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn record_spec_json_schema_round_trips_embed_and_positional_fields() {
-        let schema = record_spec_json_schema(&writer_note_spec().await).await;
+        let schema = record_spec_json_schema(&writer_note_spec());
         assert_eq!(schema["properties"]["id"], serde_json::json!({ "type": "string" }));
         assert_eq!(schema["properties"]["body"]["x-semio-shape"], serde_json::json!("embed"));
         assert_eq!(schema["properties"]["body"]["x-semio-lang"], serde_json::json!("jack"));
@@ -394,7 +394,7 @@ mod json_schema_tests {
     #[semio_framework_async_macros::async_test]
     async fn record_shape_recurses_via_record_spec_json_schema() {
         let spec = RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))]);
-        let schema = record_spec_json_schema(&spec).await;
+        let schema = record_spec_json_schema(&spec);
         assert_eq!(schema["properties"]["at"]["type"], serde_json::json!("object"));
         assert_eq!(schema["properties"]["at"]["properties"]["x"], serde_json::json!({ "type": "number" }));
     }
@@ -402,7 +402,7 @@ mod json_schema_tests {
     #[semio_framework_async_macros::async_test]
     async fn flatten_splices_nested_fields_into_the_same_properties_map() {
         let spec = RecordSpec::new(Some("shape"), RecordLayout::Inline, vec![FieldSpec::new(0, "origin", Shape::Record(nested_point_spec)).flatten(), FieldSpec::new(1, "label", Shape::Text)]);
-        let schema = record_spec_json_schema(&spec).await;
+        let schema = record_spec_json_schema(&spec);
         let properties = schema["properties"].as_object().unwrap();
         assert!(properties.contains_key("x") && properties.contains_key("y"), "flatten must splice into the parent's properties, not nest");
         assert!(properties.contains_key("label"));
@@ -434,7 +434,7 @@ pub struct WireEdgeLabel {
 }
 
 impl WireEdgeLabel {
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.id.is_none() && self.kind.is_none()
     }
 }
@@ -481,7 +481,7 @@ pub struct RecordValue {
 impl RecordValue {
     // 🚫️async: E1 pure map lookup, consumed by `Iterator::any`/`Option::and_then` sync closures
     // (`print_record_fields`) and by dozens of `assert_eq!(value.get(id), ...)` test call sites
-    // that compare its result directly (never `.await`ed) — see R9
+    // that compare its result directly (never ``ed) — see R9
     pub fn get(&self, id: u16) -> Option<&FieldValue> {
         self.fields.get(&id)
     }
@@ -630,21 +630,21 @@ impl Default for ParseOptions {
 /// vector is grammar-only and needs no raw source bytes (the parser is token-only — no shape
 /// still consumes verbatim source text the way the deleted `RawLines` shape once did). Exists so
 /// a caller that already has tokens (e.g. an incremental relexer) can skip `parse`'s own lex pass.
-pub async fn parse_tokens(tokens: Vec<SpannedToken>, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
+pub fn parse_tokens(tokens: Vec<SpannedToken>, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
     let mut cursor = Cursor::new(tokens, opts.limits);
-    parse_record_body(&mut cursor, spec, 0).await
+    parse_record_body(&mut cursor, spec, 0)
 }
 
-pub async fn parse(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
-    let tokens = lex(text, &opts.limits, false).await?;
-    parse_tokens(tokens, spec, opts).await
+pub fn parse(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
+    let tokens = lex(text, &opts.limits, false)?;
+    parse_tokens(tokens, spec, opts)
 }
 
-async fn ident_like_text(token: &SpannedToken) -> String {
+fn ident_like_text(token: &SpannedToken) -> String {
     token.text.as_str().to_string()
 }
 
-async fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextError> {
+fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextError> {
     match shape {
         Shape::Bool => {
             let token = cursor.expect(TokenKind::Ident)?;
@@ -670,13 +670,13 @@ async fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, 
                 return Err(TextError::new(format!("expected a float, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
             }
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Float(value))
         }
-        Shape::Text => parse_scalar_text(cursor).await,
+        Shape::Text => parse_scalar_text(cursor),
         Shape::Bytes64 => {
             let token = cursor.expect(TokenKind::Text)?;
-            let bytes = base64_decode(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))?;
+            let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Bytes64(bytes))
         }
         Shape::Enum(variants) => {
@@ -684,9 +684,9 @@ async fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, 
             let text = token.text.as_str();
             variants.iter().find(|(tag, _)| tag == text.as_ref()).map(|(_, ordinal)| FieldValue::Enum(*ordinal)).ok_or_else(|| TextError::new(format!("unknown enum tag '{text}'"), token.span))
         }
-        Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared).await,
-        Shape::Ref(_) => parse_scalar_text(cursor).await,
-        Shape::Embed(declared_lang) => parse_embed(cursor, declared_lang).await,
+        Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared),
+        Shape::Ref(_) => parse_scalar_text(cursor),
+        Shape::Embed(declared_lang) => parse_embed(cursor, declared_lang),
         Shape::EmbedFrom(_) => Err(TextError::new("EmbedFrom field must be parsed in record context", cursor.span())),
         Shape::Count => {
             if cursor.peek().kind != TokenKind::Ident {
@@ -706,15 +706,15 @@ async fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, 
 /// outer `(`/`)` already consumed). `min_prec` is the lowest operator precedence this call is
 /// willing to keep consuming at — the standard technique for turning a flat token stream into a
 /// precedence-correct tree without a separate tokenize-then-shunting-yard pass.
-async fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue, TextError> {
-    let lhs = parse_expr_unary(cursor).await?;
-    parse_expr_continue(cursor, min_prec, lhs).await
+fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue, TextError> {
+    let lhs = parse_expr_unary(cursor)?;
+    parse_expr_continue(cursor, min_prec, lhs)
 }
 
 /// @emoji 🧮️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
 /// can re-enter it with an ALREADY-PARSED left operand instead of calling `parse_expr_unary` again
 /// (which would re-consume nothing, since the token was already consumed to build that operand).
-async fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
+fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
     loop {
         // The shared lexer glues a leading `-` onto an immediately-following digit as ONE negative
         // number token (`y=-2`'s existing, load-bearing behavior — see dsl_core's lexer) — so
@@ -738,41 +738,41 @@ async fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprVal
         }
         let rhs = if glued_negative {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))?;
-            Box::pin(parse_expr_continue(cursor, prec + 1, ExprValue::Num(-value))).await?
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
+            parse_expr_continue(cursor, prec + 1, ExprValue::Num(-value))?
         } else {
             cursor.advance();
-            Box::pin(parse_expr(cursor, prec + 1)).await?
+            parse_expr(cursor, prec + 1)?
         };
         lhs = ExprValue::Binary(op, Box::new(lhs), Box::new(rhs));
     }
     Ok(lhs)
 }
 
-async fn parse_expr_unary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
+fn parse_expr_unary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
     if cursor.peek().kind == TokenKind::Minus {
         cursor.advance();
-        return Ok(ExprValue::Neg(Box::new(Box::pin(parse_expr_unary(cursor)).await?)));
+        return Ok(ExprValue::Neg(Box::new(parse_expr_unary(cursor)?)));
     }
-    parse_expr_primary(cursor).await
+    parse_expr_primary(cursor)
 }
 
-async fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
+fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Float | TokenKind::Int => {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(ExprValue::Num(value))
         }
         TokenKind::Ident => {
             let token = cursor.advance();
-            let name = ident_like_text(&token).await;
+            let name = ident_like_text(&token);
             if cursor.peek().kind == TokenKind::LParen {
                 cursor.advance();
                 let mut args = Vec::new();
                 if cursor.peek().kind != TokenKind::RParen {
                     loop {
-                        args.push(Box::pin(parse_expr(cursor, 0)).await?);
+                        args.push(parse_expr(cursor, 0)?);
                         if cursor.peek().kind == TokenKind::Comma {
                             cursor.advance();
                             continue;
@@ -788,7 +788,7 @@ async fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError>
         }
         TokenKind::LParen => {
             cursor.advance();
-            let inner = Box::pin(parse_expr(cursor, 0)).await?;
+            let inner = parse_expr(cursor, 0)?;
             cursor.expect(TokenKind::RParen)?;
             Ok(inner)
         }
@@ -799,10 +799,10 @@ async fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError>
 /// @emoji 🧮️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
 /// unlike `Shape::Expr`'s own field-value grammar) — what `pack_value`'s decoder calls to turn the
 /// canonical string it stored back into an `ExprValue`, since decode has no `Cursor` of its own.
-pub async fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {
-    let tokens = lex(text, &Limits::default(), false).await?;
+pub fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {
+    let tokens = lex(text, &Limits::default(), false)?;
     let mut cursor = Cursor::new(tokens, Limits::default());
-    let value = parse_expr(&mut cursor, 0).await?;
+    let value = parse_expr(&mut cursor, 0)?;
     cursor.expect(TokenKind::Eof)?;
     Ok(value)
 }
@@ -848,16 +848,16 @@ fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
 
 /// @emoji 📛️ `Shape::Text`'s own body, factored out so `Shape::Ref` (identical grammar, distinct
 /// type only) can share it without a redundant match arm duplicating both branches.
-async fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
+fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).await.map_err(|e| TextError::new(e, token.span))?;
+            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Text(text))
         }
         TokenKind::Ident => {
             let token = cursor.advance();
-            Ok(FieldValue::Text(ident_like_text(&token).await))
+            Ok(FieldValue::Text(ident_like_text(&token)))
         }
         other => Err(TextError::new(format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()), cursor.span())),
     }
@@ -867,7 +867,7 @@ async fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError>
 /// the `lang\u{0}content` encoding) with an empty or matching lang tag, OR anything
 /// `parse_scalar_text` already accepts (Inline mode's escaped-quoted fallback) — both converge on
 /// the same `FieldValue::Text`, which is what makes Document/Inline renders agree.
-async fn parse_embed(cursor: &mut Cursor, declared_lang: &str) -> Result<FieldValue, TextError> {
+fn parse_embed(cursor: &mut Cursor, declared_lang: &str) -> Result<FieldValue, TextError> {
     if cursor.peek().kind == TokenKind::Fence {
         let token = cursor.advance();
         let raw = token.text.as_str();
@@ -877,10 +877,10 @@ async fn parse_embed(cursor: &mut Cursor, declared_lang: &str) -> Result<FieldVa
         }
         return Ok(FieldValue::Text(content.to_string()));
     }
-    parse_scalar_text(cursor).await
+    parse_scalar_text(cursor)
 }
 
-async fn sibling_text_field<'a>(record: &'a RecordValue, spec: &RecordSpec, lang_key: &str) -> Option<&'a str> {
+fn sibling_text_field<'a>(record: &'a RecordValue, spec: &RecordSpec, lang_key: &str) -> Option<&'a str> {
     let field = spec.fields.iter().find(|f| f.key == lang_key)?;
     match record.get(field.id)? {
         FieldValue::Text(text) => Some(text.as_str()),
@@ -888,31 +888,31 @@ async fn sibling_text_field<'a>(record: &'a RecordValue, spec: &RecordSpec, lang
     }
 }
 
-async fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, record: &RecordValue, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, record: &RecordValue, depth: usize) -> Result<FieldValue, TextError> {
     if let Shape::EmbedFrom(lang_key) = &field.shape {
-        let declared = sibling_text_field(record, spec, lang_key).await.unwrap_or("");
-        return parse_embed(cursor, declared).await;
+        let declared = sibling_text_field(record, spec, lang_key).unwrap_or("");
+        return parse_embed(cursor, declared);
     }
-    Box::pin(parse_shape(cursor, &field.shape, depth)).await
+    parse_shape(cursor, &field.shape, depth)
 }
 
 /// @emoji 📐️ Shared parse for `Shape::Quantity`/`Shape::Angle`: a number, optionally followed by a
 /// GLUED (no whitespace between — the lexer already ends a numeric token exactly where the next
 /// `Ident` token begins for input like `210GPa`) unit-symbol ident. No suffix means the number is
 /// already expressed in `declared`'s unit; a suffix converts, erroring if the dimensions differ.
-async fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::UnitSpec) -> Result<FieldValue, TextError> {
+fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::UnitSpec) -> Result<FieldValue, TextError> {
     let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
     if !is_number_token {
         return Err(TextError::new(format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
     }
     let number_token = cursor.advance();
-    let value = parse_f64(&number_token.text.as_str()).await.map_err(|e| TextError::new(e, number_token.span))?;
+    let value = parse_f64(&number_token.text.as_str()).map_err(|e| TextError::new(e, number_token.span))?;
     let suffix = cursor.peek();
     if suffix.kind == TokenKind::Ident && suffix.byte_range.0 == number_token.byte_range.1 {
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
-        let suffix_unit = crate::os_dsl::unit_by_symbol(&symbol).await.ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
-        let converted = crate::os_dsl::convert(value, suffix_unit, declared).await.ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
+        let suffix_unit = crate::os_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
+        let converted = crate::os_dsl::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
@@ -922,20 +922,20 @@ async fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::U
 /// @emoji 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
 /// `Dim`/`Range` semio_compose_rs from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
 /// components are always dimensionless numbers or already-declared-unit numbers).
-async fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
+fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
     if !matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) {
         return Err(TextError::new(format!("expected a number, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
     }
     let token = cursor.advance();
-    parse_f64(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))
+    parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))
 }
 
 /// @emoji 📍️ Shared body for `Shape::Coord`/`Shape::Dir`: a fixed-arity comma-separated run of
 /// plain numbers, with no delimiter of its own (the caller already consumed the `@`/`^` sigil).
-async fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Result<FieldValue, TextError> {
+fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Result<FieldValue, TextError> {
     let mut items = Vec::with_capacity(arity);
     loop {
-        items.push(FieldValue::Float(parse_plain_number(cursor).await?));
+        items.push(FieldValue::Float(parse_plain_number(cursor)?));
         if items.len() == arity {
             break;
         }
@@ -952,9 +952,9 @@ async fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str)
 /// lexer has no notion of a bare `x` operator (digits/`.` are ident-continue, so `x0.12x0.24`
 /// lexes as ONE `Ident` token), so this splits that single glued token on `x` itself rather than
 /// looping token-by-token the way `parse_fixed_number_tuple` does.
-async fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> {
+fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> {
     let first_token = cursor.peek().clone();
-    let first = parse_plain_number(cursor).await?;
+    let first = parse_plain_number(cursor)?;
     let mut items = vec![FieldValue::Float(first)];
     if dims > 1 {
         let suffix = cursor.peek();
@@ -970,50 +970,50 @@ async fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextE
             return Err(TextError::new(format!("dimension literal expects {dims} components glued with 'x', found '{}{}'", format_f64(first), suffix_text), suffix_token.span));
         }
         for part in &parts[1..] {
-            let value = parse_f64(part).await.map_err(|_| TextError::new(format!("invalid dimension component '{part}'"), suffix_token.span))?;
+            let value = parse_f64(part).map_err(|_| TextError::new(format!("invalid dimension component '{part}'"), suffix_token.span))?;
             items.push(FieldValue::Float(value));
         }
     }
     Ok(FieldValue::Tuple(items))
 }
 
-async fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     match shape {
-        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) | Shape::Ref(_) | Shape::Count | Shape::Embed(_) => parse_scalar(cursor, shape).await,
+        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) | Shape::Ref(_) | Shape::Count | Shape::Embed(_) => parse_scalar(cursor, shape),
         Shape::EmbedFrom(_) => Err(TextError::new("EmbedFrom field must be parsed in record context", cursor.span())),
         Shape::Coord(dims) => {
             cursor.expect(TokenKind::At)?;
-            parse_fixed_number_tuple(cursor, *dims as usize, "coordinate").await
+            parse_fixed_number_tuple(cursor, *dims as usize, "coordinate")
         }
         Shape::Dir => {
             cursor.expect(TokenKind::Caret)?;
-            parse_fixed_number_tuple(cursor, 3, "direction").await
+            parse_fixed_number_tuple(cursor, 3, "direction")
         }
-        Shape::Dim(dims) => parse_dim(cursor, *dims as usize).await,
+        Shape::Dim(dims) => parse_dim(cursor, *dims as usize),
         Shape::Range => {
             cursor.expect(TokenKind::LParen)?;
-            let lo = parse_plain_number(cursor).await?;
+            let lo = parse_plain_number(cursor)?;
             cursor.expect(TokenKind::DotDot)?;
-            let hi = parse_plain_number(cursor).await?;
+            let hi = parse_plain_number(cursor)?;
             let mut items = vec![FieldValue::Float(lo), FieldValue::Float(hi)];
             if cursor.peek().kind == TokenKind::Comma {
                 cursor.advance();
-                items.push(FieldValue::Float(parse_plain_number(cursor).await?));
+                items.push(FieldValue::Float(parse_plain_number(cursor)?));
             }
             cursor.expect(TokenKind::RParen)?;
             Ok(FieldValue::Tuple(items))
         }
         Shape::Expr => {
             cursor.expect(TokenKind::LParen)?;
-            let value = parse_expr(cursor, 0).await?;
+            let value = parse_expr(cursor, 0)?;
             cursor.expect(TokenKind::RParen)?;
             Ok(FieldValue::Expr(value))
         }
         Shape::Tuple(elem, len) => {
             let mut items = Vec::new();
             loop {
-                items.push(Box::pin(parse_shape(cursor, elem, depth + 1)).await?);
+                items.push(parse_shape(cursor, elem, depth + 1)?);
                 if cursor.peek().kind == TokenKind::Comma {
                     cursor.advance();
                     continue;
@@ -1032,7 +1032,7 @@ async fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result
             let mut items = Vec::new();
             while cursor.peek().kind != TokenKind::RBracket {
                 let pos_before = cursor.pos;
-                items.push(Box::pin(parse_shape(cursor, elem, depth + 1)).await?);
+                items.push(parse_shape(cursor, elem, depth + 1)?);
                 // A bare `Shape::Record` element (no keyword, no brackets of its own — e.g. a
                 // list of `key=value` port records) can legitimately parse to an empty record
                 // consuming zero tokens once its remaining keys stop matching whatever comes
@@ -1050,20 +1050,20 @@ async fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result
             cursor.expect(TokenKind::RBracket)?;
             Ok(FieldValue::List(items))
         }
-        Shape::Record(spec_fn) => Ok(FieldValue::Record(Box::pin(parse_record_body(cursor, &spec_fn(), depth + 1)).await?)),
+        Shape::Record(spec_fn) => Ok(FieldValue::Record(parse_record_body(cursor, &spec_fn(), depth + 1)?)),
         Shape::Block(inner) => {
             cursor.expect(TokenKind::LBrace)?;
-            let value = Box::pin(parse_shape(cursor, inner, depth + 1)).await?;
+            let value = parse_shape(cursor, inner, depth + 1)?;
             cursor.expect(TokenKind::RBrace)?;
             Ok(FieldValue::Block(Box::new(value)))
         }
         Shape::Statements(variants) => {
             let mut out = Vec::new();
-            while let Some(keyword) = current_keyword(cursor).await {
+            while let Some(keyword) = current_keyword(cursor) {
                 let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == &keyword) else { break };
                 // `parse_record_body` consumes the keyword itself (see its own check below); we
                 // only peek here to decide whether this token starts a known variant at all.
-                let record = Box::pin(parse_record_body(cursor, &spec_fn(), depth + 1)).await?;
+                let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
                 out.push((keyword, record));
                 cursor.limits.check_nodes(out.len(), cursor.span())?;
                 if cursor.peek().kind == TokenKind::RBrace || cursor.peek().kind == TokenKind::Eof {
@@ -1078,13 +1078,13 @@ async fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result
             while let Some(key) = cursor.at_attr_key() {
                 cursor.advance();
                 cursor.expect(TokenKind::Equals)?;
-                let value = Box::pin(parse_shape(cursor, inner, depth + 1)).await?;
+                let value = parse_shape(cursor, inner, depth + 1)?;
                 entries.push((key, value));
             }
             cursor.expect(TokenKind::RBrace)?;
             Ok(FieldValue::Map(entries))
         }
-        Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1).await?)),
+        Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1)?)),
         // Reached whenever a `Table` shape is parsed via the generic `key=` dispatch (the
         // AoS-verbose alternate input, `name=[ {row} {row} ... ]`) or nested inside another shape
         // (a table row's own column, a list element). Delegates to `parse_table_list`, NOT to
@@ -1097,14 +1097,14 @@ async fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result
         // `parse_record_body`, and calls `parse_table_soa` directly since its grammar (a header,
         // then count-delimited rows) isn't reachable through `parse_shape` at all.
         Shape::Table(spec_fn) => {
-            validate_table_columns(&spec_fn()).await?;
-            parse_table_list(cursor, *spec_fn, depth).await
+            validate_table_columns(&spec_fn())?;
+            parse_table_list(cursor, *spec_fn, depth)
         }
-        Shape::Wire => Ok(FieldValue::Wire(parse_wire(cursor).await?)),
+        Shape::Wire => Ok(FieldValue::Wire(parse_wire(cursor)?)),
     }
 }
 
-async fn current_keyword(cursor: &Cursor) -> Option<String> {
+fn current_keyword(cursor: &Cursor) -> Option<String> {
     if cursor.peek().kind == TokenKind::Ident && cursor.at_attr_key().is_none() {
         Some(cursor.peek().text.as_str().to_string())
     } else {
@@ -1112,7 +1112,7 @@ async fn current_keyword(cursor: &Cursor) -> Option<String> {
     }
 }
 
-async fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextError> {
+fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     match cursor.peek().kind {
         TokenKind::LBrace => {
@@ -1121,7 +1121,7 @@ async fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, 
             while let Some(key) = cursor.at_attr_key() {
                 cursor.advance();
                 cursor.expect(TokenKind::Equals)?;
-                entries.push((key, Box::pin(parse_dsl_value(cursor, depth + 1)).await?));
+                entries.push((key, parse_dsl_value(cursor, depth + 1)?));
             }
             cursor.expect(TokenKind::RBrace)?;
             Ok(DslValue::Object(entries))
@@ -1130,19 +1130,19 @@ async fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, 
             cursor.advance();
             let mut items = Vec::new();
             while cursor.peek().kind != TokenKind::RBracket {
-                items.push(Box::pin(parse_dsl_value(cursor, depth + 1)).await?);
+                items.push(parse_dsl_value(cursor, depth + 1)?);
             }
             cursor.expect(TokenKind::RBracket)?;
             Ok(DslValue::Array(items))
         }
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).await.map_err(|e| TextError::new(e, token.span))?;
+            let text = crate::os_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
             Ok(DslValue::String(text))
         }
         TokenKind::Int | TokenKind::Float => {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).await.map_err(|e| TextError::new(e, token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(DslValue::Number(value))
         }
         TokenKind::Ident => {
@@ -1161,54 +1161,54 @@ async fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, 
 /// @emoji 🕸️ Parses one wire literal. `<-` is accepted sugar only: normalized here by swapping
 /// the two endpoints, so the stored `WireValue` (and everything reprinted from it) only ever
 /// holds `->`/`--` or fused labeled arrows — `b<-a` and `a->b` parse to the identical value.
-async fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
-    async fn parse_wire_label(cursor: &mut Cursor) -> Result<WireEdgeLabel, TextError> {
+fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
+    fn parse_wire_label(cursor: &mut Cursor) -> Result<WireEdgeLabel, TextError> {
         cursor.expect(TokenKind::LBracket)?;
         let id = if cursor.peek().kind == TokenKind::Ident {
-            Some(ident_like_text(&cursor.advance()).await)
+            Some(ident_like_text(&cursor.advance()))
         } else {
             None
         };
         let kind = if cursor.peek().kind == TokenKind::Colon {
             cursor.advance();
-            Some(ident_like_text(&cursor.expect(TokenKind::Ident)?).await)
+            Some(ident_like_text(&cursor.expect(TokenKind::Ident)?))
         } else {
             None
         };
         let label = WireEdgeLabel { id, kind };
-        if label.is_empty().await {
+        if label.is_empty() {
             return Err(TextError::new("edge label `[...]` must name an id and/or a `:kind`", cursor.span()));
         }
         cursor.expect(TokenKind::RBracket)?;
         Ok(label)
     }
 
-    let mut from = parse_wire_node(cursor).await?;
+    let mut from = parse_wire_node(cursor)?;
     let mut edge_label = WireEdgeLabel::default();
     let edge = match cursor.peek().kind {
         TokenKind::Arrow => {
             cursor.advance();
-            let to = parse_wire_node(cursor).await?;
+            let to = parse_wire_node(cursor)?;
             Some((true, to))
         }
         TokenKind::DashArrow => {
             cursor.advance();
-            let to = parse_wire_node(cursor).await?;
+            let to = parse_wire_node(cursor)?;
             Some((false, to))
         }
         TokenKind::BackArrow => {
             cursor.advance();
             if cursor.peek().kind == TokenKind::LBracket {
-                edge_label = parse_wire_label(cursor).await?;
+                edge_label = parse_wire_label(cursor)?;
                 cursor.expect(TokenKind::Minus)?;
             }
-            let to = parse_wire_node(cursor).await?;
+            let to = parse_wire_node(cursor)?;
             let swapped_to = std::mem::replace(&mut from, to);
             Some((true, swapped_to))
         }
         TokenKind::Minus if cursor.peek_at(1).kind == TokenKind::LBracket => {
             cursor.advance();
-            edge_label = parse_wire_label(cursor).await?;
+            edge_label = parse_wire_label(cursor)?;
             let directed = match cursor.peek().kind {
                 TokenKind::Arrow => {
                     cursor.advance();
@@ -1222,42 +1222,42 @@ async fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
                     return Err(TextError::new(format!("expected `->` or `--` to close a labeled edge, found {other:?}"), cursor.span()));
                 }
             };
-            let to = parse_wire_node(cursor).await?;
+            let to = parse_wire_node(cursor)?;
             Some((directed, to))
         }
         TokenKind::EdgeArrow => {
             let token = cursor.advance();
-            let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str()).await?;
+            let (directed, label) = dsl_notation::decode_fused_edge_arrow(&token.text.as_str())?;
             edge_label = WireEdgeLabel { id: label.id, kind: label.kind };
-            let to = parse_wire_node(cursor).await?;
+            let to = parse_wire_node(cursor)?;
             Some((directed, to))
         }
         _ => None,
     };
-    let properties = if cursor.peek().kind == TokenKind::LBrace { parse_dsl_value(cursor, 0).await? } else { DslValue::Object(Vec::new()) };
+    let properties = if cursor.peek().kind == TokenKind::LBrace { parse_dsl_value(cursor, 0)? } else { DslValue::Object(Vec::new()) };
     Ok(WireValue { from, edge, edge_label, properties })
 }
 
 /// @emoji 🔌️ Small public entry point other crates (the graph wire module, trinity) can call
 /// directly to lex + parse one standalone wire literal, without needing a `RecordSpec` around it.
-pub async fn parse_wire_text(text: &str) -> Result<WireValue, TextError> {
+pub fn parse_wire_text(text: &str) -> Result<WireValue, TextError> {
     let limits = Limits::default();
-    let tokens = lex(text, &limits, false).await?;
+    let tokens = lex(text, &limits, false)?;
     let mut cursor = Cursor::new(tokens, limits);
-    parse_wire(&mut cursor).await
+    parse_wire(&mut cursor)
 }
 
-async fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
-    let id = ident_like_text(&cursor.expect(TokenKind::Ident)?).await;
+fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
+    let id = ident_like_text(&cursor.expect(TokenKind::Ident)?);
     let kind = if cursor.peek().kind == TokenKind::Colon {
         cursor.advance();
-        Some(ident_like_text(&cursor.expect(TokenKind::Ident)?).await)
+        Some(ident_like_text(&cursor.expect(TokenKind::Ident)?))
     } else {
         None
     };
     let port = if cursor.peek().kind == TokenKind::At {
         cursor.advance();
-        Some(ident_like_text(&cursor.expect(TokenKind::Ident)?).await)
+        Some(ident_like_text(&cursor.expect(TokenKind::Ident)?))
     } else {
         None
     };
@@ -1271,10 +1271,10 @@ async fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
 /// then order-independent `key=value` attributes (LL(2): an `Ident` followed by `=` is always a
 /// key), until a token that is neither a known key nor an unfilled positional slot — which ends
 /// the record (it belongs to whatever comes next: a new statement, a closing brace, or EOF).
-async fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
+fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     if spec.layout == RecordLayout::Call {
-        return Box::pin(parse_call_record(cursor, spec, depth)).await;
+        return parse_call_record(cursor, spec, depth);
     }
     if let Some(keyword) = &spec.keyword {
         if cursor.at_keyword(keyword) {
@@ -1283,7 +1283,7 @@ async fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize)
             return Err(TextError::new(format!("expected keyword '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
         }
     }
-    Box::pin(parse_record_fields(cursor, spec, depth)).await
+    parse_record_fields(cursor, spec, depth)
 }
 
 /// @emoji 📛️ Parses a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The parenthesized
@@ -1291,13 +1291,13 @@ async fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize)
 /// — it naturally stops at the first token that matches neither a positional slot nor a known
 /// key (here, always `)`), so no special "bounded sub-cursor" is needed to keep it from reading
 /// past the closing paren.
-async fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
+fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     let name_field = spec
         .fields
         .iter()
         .find(|f| f.is_call_name)
         .ok_or_else(|| TextError::new("RecordLayout::Call requires exactly one field marked call_name()", cursor.span()))?;
-    let name = ident_like_text(&cursor.expect(TokenKind::Ident)?).await;
+    let name = ident_like_text(&cursor.expect(TokenKind::Ident)?);
     cursor.expect(TokenKind::Equals)?;
     let keyword = spec.keyword.as_deref().ok_or_else(|| TextError::new("RecordLayout::Call requires RecordSpec.keyword (the call target)", cursor.span()))?;
     if !cursor.at_keyword(keyword) {
@@ -1305,7 +1305,7 @@ async fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize)
     }
     cursor.advance();
     cursor.expect(TokenKind::LParen)?;
-    let mut record = Box::pin(parse_record_fields(cursor, spec, depth)).await?;
+    let mut record = parse_record_fields(cursor, spec, depth)?;
     cursor.expect(TokenKind::RParen)?;
     record.fields.insert(name_field.id, FieldValue::Text(name));
     Ok(record)
@@ -1318,7 +1318,7 @@ async fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize)
 /// field marked `call_name()` from both candidate sets: that field is consumed by the caller
 /// (`RecordLayout::Call`'s `<name> =` prefix) before this function ever runs, for a Call-layout
 /// spec, and no field is ever marked `call_name()` under any other layout.
-async fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
+fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     let mut record = RecordValue::default();
     let positional: Vec<&FieldSpec> = {
         let mut p: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some() && !f.is_call_name).collect();
@@ -1341,7 +1341,7 @@ async fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usiz
                 continue;
             }
         }
-        let value = parse_field_shape(cursor, field, spec, &record, depth + 1).await?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
 
@@ -1359,7 +1359,7 @@ async fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usiz
             let field = keyed.remove(index);
             cursor.advance();
             cursor.expect(TokenKind::Equals)?;
-            let value = parse_field_shape(cursor, field, spec, &record, depth + 1).await?;
+            let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
             record.fields.insert(field.id, value);
             continue;
         }
@@ -1370,14 +1370,14 @@ async fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usiz
             let Shape::Table(spec_fn) = &field.shape else { unreachable!() };
             let spec_fn = *spec_fn;
             cursor.advance();
-            let value = Box::pin(parse_table_soa(cursor, spec_fn, depth + 1)).await?;
+            let value = parse_table_soa(cursor, spec_fn, depth + 1)?;
             record.fields.insert(field.id, value);
             continue;
         }
         let Some(index) = keyed.iter().position(|f| matches!(f.shape, Shape::Block(_)) && cursor.at_keyword(&f.key)) else { break };
         let field = keyed.remove(index);
         cursor.advance();
-        let value = parse_field_shape(cursor, field, spec, &record, depth + 1).await?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
     for field in keyed {
@@ -1385,7 +1385,7 @@ async fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usiz
     }
 
     if let Some(field) = statements_field {
-        let value = parse_field_shape(cursor, field, spec, &record, depth + 1).await?;
+        let value = parse_field_shape(cursor, field, spec, &record, depth + 1)?;
         record.fields.insert(field.id, value);
     }
 
@@ -1432,7 +1432,7 @@ fn shape_is_self_delimiting(shape: &Shape) -> bool {
 /// @emoji 🚧️ Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
 /// `Shape::Table(spec_fn)` is first evaluated (both parse paths, and printing), since `spec_fn` is
 /// a lazy pointer rather than an eagerly-built value there is no earlier moment to check it at.
-async fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
+fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
     for field in &spec.fields {
         if !shape_is_self_delimiting(&field.shape) {
             return Err(TextError::new(format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)), TextSpan::at(1, 1)));
@@ -1484,9 +1484,9 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
 /// lets a hand-written header omit types the engine can already infer. Rows have NO separator —
 /// reading exactly `columns.len()` values per row is what makes a row self-delimiting, which is
 /// also why every column shape must itself be self-delimiting (`validate_table_columns`).
-async fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
     let element_spec = spec_fn();
-    validate_table_columns(&element_spec).await?;
+    validate_table_columns(&element_spec)?;
     cursor.expect(TokenKind::LBracket)?;
     let mut columns: Vec<&FieldSpec> = Vec::new();
     while cursor.peek().kind != TokenKind::RBracket {
@@ -1510,7 +1510,7 @@ async fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth
                 record.fields.insert(field_spec.id, FieldValue::Absent);
                 continue;
             }
-            let value = parse_table_cell(cursor, &field_spec.shape, depth + 1).await?;
+            let value = parse_table_cell(cursor, &field_spec.shape, depth + 1)?;
             record.fields.insert(field_spec.id, value);
         }
         for field_spec in &element_spec.fields {
@@ -1533,14 +1533,14 @@ async fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth
 /// absent (never printed) silently lets column N's parse run on and swallow column N+1's
 /// same-named token instead of stopping at the column boundary. Braced here for exactly that
 /// reason — every other shape already round-trips through the ordinary `parse_shape`.
-async fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
     if let Shape::Record(spec_fn) = shape {
         cursor.expect(TokenKind::LBrace)?;
-        let record = Box::pin(parse_record_body(cursor, &spec_fn(), depth + 1)).await?;
+        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
         cursor.expect(TokenKind::RBrace)?;
         return Ok(FieldValue::Record(record));
     }
-    Box::pin(parse_shape(cursor, shape, depth)).await
+    parse_shape(cursor, shape, depth)
 }
 
 /// @emoji 📋️ The AoS-list form for a `Table` value reached anywhere other than a record's own
@@ -1551,12 +1551,12 @@ async fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> R
 /// field could let its parse run on into the next row's same-named token exactly like the
 /// column-vs-column case. Bracing every row here removes that ambiguity regardless of whether the
 /// row type happens to declare a keyword or not.
-async fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
     cursor.expect(TokenKind::LBracket)?;
     let mut items = Vec::new();
     while cursor.peek().kind != TokenKind::RBracket {
         cursor.expect(TokenKind::LBrace)?;
-        let record = Box::pin(parse_record_body(cursor, &spec_fn(), depth + 1)).await?;
+        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
         cursor.expect(TokenKind::RBrace)?;
         items.push(FieldValue::Record(record));
         cursor.limits.check_nodes(items.len(), cursor.span())?;
@@ -1567,21 +1567,21 @@ async fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, dept
 
 /// @emoji 📋️ Prints the braced AoS-list form `parse_table_list` reads back. Ordinary `[ ]` spacing
 /// (a space just inside, per the general list rule — NOT the header's own tight-glued exception).
-async fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
-    writer.atom("[").await;
+fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
+    writer.atom("[");
     for item in items {
         let FieldValue::Record(record) = item else { continue };
-        writer.atom("{").await;
-        writer.glue().await;
-        Box::pin(print_record(record, &spec_fn(), writer)).await;
-        writer.glue().await;
-        writer.atom("}").await;
+        writer.atom("{");
+        writer.glue();
+        print_record(record, &spec_fn(), writer);
+        writer.glue();
+        writer.atom("}");
     }
-    writer.atom("]").await;
+    writer.atom("]");
 }
 //#endregion 🔖️Table
 
-async fn base64_decode(text: &str) -> Result<Vec<u8>, String> {
+fn base64_decode(text: &str) -> Result<Vec<u8>, String> {
     const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut lut = [255u8; 256];
     for (i, &c) in ALPHABET.iter().enumerate() {
@@ -1606,7 +1606,7 @@ async fn base64_decode(text: &str) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-async fn base64_encode(bytes: &[u8]) -> String {
+fn base64_encode(bytes: &[u8]) -> String {
     const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for chunk in bytes.chunks(3) {
@@ -1673,31 +1673,31 @@ impl Default for Writer {
 }
 
 impl Writer {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { chunks: Vec::new(), indent: 0 }
     }
 
-    pub async fn atom(&mut self, s: impl AsRef<str>) {
+    pub fn atom(&mut self, s: impl AsRef<str>) {
         let s = s.as_ref();
         debug_assert!(!s.contains('\n'), "Writer::atom must not contain a raw newline: {s:?}");
         self.chunks.push(Chunk::Atom(s.to_string()));
     }
 
-    pub async fn key_value(&mut self, key: &str, value: impl AsRef<str>) {
-        self.atom(format!("{key}={}", value.as_ref())).await;
+    pub fn key_value(&mut self, key: &str, value: impl AsRef<str>) {
+        self.atom(format!("{key}={}", value.as_ref()));
     }
 
-    pub async fn open_block(&mut self) {
+    pub fn open_block(&mut self) {
         self.chunks.push(Chunk::OpenBlock);
         self.indent += 1;
     }
 
-    pub async fn close_block(&mut self) {
+    pub fn close_block(&mut self) {
         self.indent = self.indent.saturating_sub(1);
         self.chunks.push(Chunk::CloseBlock);
     }
 
-    pub async fn new_record(&mut self) {
+    pub fn new_record(&mut self) {
         self.chunks.push(Chunk::NewRecord);
     }
 
@@ -1707,17 +1707,17 @@ impl Writer {
     /// place (which only worked for single-atom scalar values): `glue()` composes with arbitrarily
     /// structured values (nested blocks, lists, whole sub-records) since it's a rendering-time
     /// join, not a string-splice.
-    pub async fn glue(&mut self) {
+    pub fn glue(&mut self) {
         self.chunks.push(Chunk::Glue);
     }
 
     /// @emoji 📜️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
     /// [`Self::atom`], which forbids them), since Document mode renders it as a fence.
-    pub async fn verbatim(&mut self, lang: &str, content: &str) {
+    pub fn verbatim(&mut self, lang: &str, content: &str) {
         self.chunks.push(Chunk::Verbatim { lang: lang.to_string(), content: content.to_string() });
     }
 
-    pub async fn render(&self, mode: JoinMode) -> String {
+    pub fn render(&self, mode: JoinMode) -> String {
         match mode {
             JoinMode::Inline => {
                 let mut parts: Vec<String> = Vec::new();
@@ -1860,58 +1860,58 @@ fn keyed_field_rank(shape: &Shape) -> u8 {
     }
 }
 
-pub async fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
     if spec.layout == RecordLayout::Call {
-        Box::pin(print_call_record(value, spec, writer)).await;
+        print_call_record(value, spec, writer);
         return;
     }
     if let Some(keyword) = &spec.keyword {
-        writer.atom(keyword).await;
+        writer.atom(keyword);
     }
-    Box::pin(print_record_fields(value, spec, writer)).await;
+    print_record_fields(value, spec, writer);
 }
 
 /// @emoji 📛️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
 /// is built by [`print_record_fields`] — the exact same field-printing logic every other layout
 /// uses — rendered to its own `JoinMode::Inline` string and glued onto the keyword inside parens,
 /// so a positional/keyed field prints identically here as it would under `Inline` layout.
-async fn print_call_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+fn print_call_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
     let Some(name_field) = spec.fields.iter().find(|f| f.is_call_name) else {
         debug_assert!(false, "RecordLayout::Call requires exactly one field marked call_name()");
         return;
     };
     let name_text = match value.get(name_field.id) {
-        Some(fv @ FieldValue::Text(_)) => scalar_to_text(fv).await,
+        Some(fv @ FieldValue::Text(_)) => scalar_to_text(fv),
         _ => String::new(),
     };
-    writer.atom(name_text).await;
-    writer.atom("=").await;
+    writer.atom(name_text);
+    writer.atom("=");
     if let Some(keyword) = &spec.keyword {
-        writer.atom(keyword).await;
+        writer.atom(keyword);
     }
-    let mut args_writer = Writer::new().await;
-    Box::pin(print_record_fields(value, spec, &mut args_writer)).await;
-    let args_text = args_writer.render(JoinMode::Inline).await;
-    writer.glue().await;
-    writer.atom(format!("({args_text})")).await;
+    let mut args_writer = Writer::new();
+    print_record_fields(value, spec, &mut args_writer);
+    let args_text = args_writer.render(JoinMode::Inline);
+    writer.glue();
+    writer.atom(format!("({args_text})"));
 }
 
 /// @emoji 🖨️ Prints a record's fields: positional bare in declaration order, then order-
 /// independent `key=value` attributes. Excludes any field marked `call_name()` — see
 /// [`parse_record_fields`]'s matching doc comment for why.
-async fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
     let mut positional: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some() && !f.is_call_name).collect();
     positional.sort_by_key(|f| f.position.unwrap());
     for (index, field) in positional.iter().enumerate() {
         match value.get(field.id) {
-            Some(fv) if !matches!(fv, FieldValue::Absent) => Box::pin(print_shape(fv, &field.shape, writer)).await,
+            Some(fv) if !matches!(fv, FieldValue::Absent) => print_shape(fv, &field.shape, writer),
             _ => {
                 // An absent OPTIONAL positional prints as `_` only if some LATER positional in
                 // this same record is actually present — that's what keeps slots aligned for the
                 // reader (and reparse). A run of trailing absents needs no placeholder at all.
                 let later_present = positional[index + 1..].iter().any(|f| matches!(value.get(f.id), Some(fv) if !matches!(fv, FieldValue::Absent)));
                 if later_present {
-                    writer.atom("_").await;
+                    writer.atom("_");
                 }
             }
         }
@@ -1924,9 +1924,9 @@ async fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mu
             Some(FieldValue::Absent) | None => continue,
             Some(fv) => match &field.shape {
                 Shape::EmbedFrom(lang_key) => {
-                    writer.new_record().await;
-                    writer.atom(format!("{}=", field.key)).await;
-                    writer.glue().await;
+                    writer.new_record();
+                    writer.atom(format!("{}=", field.key));
+                    writer.glue();
                     let lang = spec
                         .fields
                         .iter()
@@ -1938,18 +1938,18 @@ async fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mu
                         })
                         .unwrap_or("plaintext");
                     if let FieldValue::Text(content) = fv {
-                        writer.verbatim(lang, content).await;
+                        writer.verbatim(lang, content);
                     }
                 }
                 // `Statements` items each carry their own leading keyword — no field-level key at
                 // all is ever printed for this shape.
-                Shape::Statements(_) => Box::pin(print_shape(fv, &field.shape, writer)).await,
+                Shape::Statements(_) => print_shape(fv, &field.shape, writer),
                 // `Block`'s own key is a bare leading keyword, not a `key=value` attribute
                 // (`children { ... }`, never `children={...}`).
                 Shape::Block(_) => {
-                    writer.new_record().await;
-                    writer.atom(&field.key).await;
-                    Box::pin(print_shape(fv, &field.shape, writer)).await;
+                    writer.new_record();
+                    writer.atom(&field.key);
+                    print_shape(fv, &field.shape, writer);
                 }
                 // `Table`'s own key is likewise a bare leading keyword, but — unlike `Block` —
                 // it must always go through the dedicated SoA writer (`print_table`), never the
@@ -1961,15 +1961,15 @@ async fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mu
                 // bare-SoA lookahead) — printing it via `print_shape` here would silently regress
                 // to the AoS form for every top-level table field.
                 Shape::Table(spec_fn) => {
-                    writer.new_record().await;
-                    writer.atom(&field.key).await;
+                    writer.new_record();
+                    writer.atom(&field.key);
                     if let FieldValue::List(items) = fv {
-                        Box::pin(print_table(*spec_fn, items, writer)).await;
+                        print_table(*spec_fn, items, writer);
                     }
                 }
                 _ => {
-                    writer.atom(format!("{}=", field.key)).await;
-                    Box::pin(print_key_value(field, fv, writer)).await;
+                    writer.atom(format!("{}=", field.key));
+                    print_key_value(field, fv, writer);
                 }
             },
         }
@@ -1979,19 +1979,19 @@ async fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mu
 /// @emoji 🧲️ `key=` was just pushed by the caller — glue the value onto it with no separator,
 /// then print it normally (composed, not string-spliced, so this handles arbitrarily structured
 /// values exactly like a bare `print_shape` call would).
-async fn print_key_value(field: &FieldSpec, value: &FieldValue, writer: &mut Writer) {
-    writer.glue().await;
+fn print_key_value(field: &FieldSpec, value: &FieldValue, writer: &mut Writer) {
+    writer.glue();
     match (&field.shape, value) {
         (Shape::Enum(variants), FieldValue::Enum(ordinal)) => {
             if let Some((tag, _)) = variants.iter().find(|(_, o)| o == ordinal) {
-                writer.atom(tag).await;
+                writer.atom(tag);
             }
         }
-        _ => Box::pin(print_shape(value, &field.shape, writer)).await,
+        _ => print_shape(value, &field.shape, writer),
     }
 }
 
-async fn scalar_to_text(value: &FieldValue) -> String {
+fn scalar_to_text(value: &FieldValue) -> String {
     match value {
         FieldValue::Bool(b) => b.to_string(),
         FieldValue::Int(i) => i.to_string(),
@@ -2002,13 +2002,13 @@ async fn scalar_to_text(value: &FieldValue) -> String {
         // idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and number-shaped text, which always fall
         // through to the quoted+escaped form instead.
         FieldValue::Text(s) => {
-            if crate::os_dsl::is_bare_ident(s).await {
+            if crate::os_dsl::is_bare_ident(s) {
                 s.clone()
             } else {
                 format!("\"{}\"", crate::os_dsl::escape_text(s))
             }
         }
-        FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes).await),
+        FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes)),
         FieldValue::Enum(_) => String::new(), // resolved by caller via variants table when needed
         _ => String::new(),
     }
@@ -2027,25 +2027,25 @@ fn number_tuple_component(value: &FieldValue) -> String {
     }
 }
 
-pub async fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
+pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     match (value, shape) {
         // Must precede the generic scalar arm below: that arm's shape pattern is `_` and would
         // otherwise swallow every `FieldValue::Float` regardless of shape, printing a bare number
         // with no unit suffix even for a `Quantity`/`Angle` field.
         (FieldValue::Float(v), Shape::Quantity(unit) | Shape::Angle(unit)) => {
-            writer.atom(format!("{}{}", format_f64(*v), unit.symbol)).await;
+            writer.atom(format!("{}{}", format_f64(*v), unit.symbol));
         }
         (FieldValue::UInt(v), Shape::Count) => {
-            writer.atom(format!("x{v}")).await;
+            writer.atom(format!("x{v}"));
         }
         (FieldValue::Tuple(items), Shape::Coord(_)) => {
-            writer.atom(format!("@{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(","))).await;
+            writer.atom(format!("@{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(",")));
         }
         (FieldValue::Tuple(items), Shape::Dir) => {
-            writer.atom(format!("^{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(","))).await;
+            writer.atom(format!("^{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(",")));
         }
         (FieldValue::Tuple(items), Shape::Dim(_)) => {
-            writer.atom(items.iter().map(number_tuple_component).collect::<Vec<_>>().join("x")).await;
+            writer.atom(items.iter().map(number_tuple_component).collect::<Vec<_>>().join("x"));
         }
         (FieldValue::Tuple(items), Shape::Range) => {
             let parts: Vec<String> = items.iter().map(number_tuple_component).collect();
@@ -2054,35 +2054,35 @@ pub async fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer)
                 [lo, hi, step] => format!("{lo}..{hi},{step}"),
                 _ => parts.join(","),
             };
-            writer.atom(format!("({body})")).await;
+            writer.atom(format!("({body})"));
         }
         (FieldValue::Expr(expr), Shape::Expr) => {
-            writer.atom(format!("({})", print_expr(expr))).await;
+            writer.atom(format!("({})", print_expr(expr)));
         }
         (FieldValue::Text(content), Shape::Embed(lang)) => {
-            writer.verbatim(lang, content).await;
+            writer.verbatim(lang, content);
         }
         (FieldValue::Text(content), Shape::EmbedFrom(lang_key)) => {
             // Fallback when print_shape is called without sibling resolution — prefer plaintext fence.
             let _ = lang_key;
-            writer.verbatim("plaintext", content).await;
+            writer.verbatim("plaintext", content);
         }
         (FieldValue::Bool(_) | FieldValue::Int(_) | FieldValue::UInt(_) | FieldValue::Float(_) | FieldValue::Text(_) | FieldValue::Bytes64(_), _) => {
-            writer.atom(scalar_to_text(value).await).await;
+            writer.atom(scalar_to_text(value));
         }
         (FieldValue::Enum(ordinal), Shape::Enum(variants)) => {
             if let Some((tag, _)) = variants.iter().find(|(_, o)| o == ordinal) {
-                writer.atom(tag).await;
+                writer.atom(tag);
             }
         }
         (FieldValue::Tuple(items), Shape::Tuple(elem, _)) => {
             let mut rendered: Vec<String> = Vec::with_capacity(items.len());
             for item in items {
-                let mut sub = Writer::new().await;
-                Box::pin(print_shape(item, elem, &mut sub)).await;
-                rendered.push(sub.render(JoinMode::Inline).await);
+                let mut sub = Writer::new();
+                print_shape(item, elem, &mut sub);
+                rendered.push(sub.render(JoinMode::Inline));
             }
-            writer.atom(rendered.join(",")).await;
+            writer.atom(rendered.join(","));
         }
         // A `Table` reached here (NOT via `print_record`'s own keyed-field dispatch, which calls
         // `print_table` directly) is nested inside another shape — a table row's own column, a
@@ -2090,43 +2090,43 @@ pub async fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer)
         // its own to mark where it ends. Render the braced-row AoS list instead (see
         // `print_table_list`), matching what `parse_shape`'s own `Shape::Table` arm parses in
         // every one of these same contexts.
-        (FieldValue::List(items), Shape::Table(spec_fn)) => Box::pin(print_table_list(*spec_fn, items, writer)).await,
+        (FieldValue::List(items), Shape::Table(spec_fn)) => print_table_list(*spec_fn, items, writer),
         (FieldValue::List(items), Shape::List(elem)) => {
-            writer.atom("[").await;
+            writer.atom("[");
             for item in items {
-                Box::pin(print_shape(item, elem, writer)).await;
+                print_shape(item, elem, writer);
             }
-            writer.atom("]").await;
+            writer.atom("]");
         }
         (FieldValue::Record(record), Shape::Record(spec_fn)) => {
-            Box::pin(print_record(record, &spec_fn(), writer)).await;
+            print_record(record, &spec_fn(), writer);
         }
         (FieldValue::Block(inner_value), Shape::Block(inner_shape)) => {
-            writer.open_block().await;
-            Box::pin(print_shape(inner_value, inner_shape, writer)).await;
-            writer.close_block().await;
+            writer.open_block();
+            print_shape(inner_value, inner_shape, writer);
+            writer.close_block();
         }
         (FieldValue::Statements(items), Shape::Statements(variants)) => {
             for (keyword, record) in items {
-                writer.new_record().await;
+                writer.new_record();
                 if let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == keyword) {
-                    Box::pin(print_record(record, &spec_fn(), writer)).await;
+                    print_record(record, &spec_fn(), writer);
                 }
             }
         }
         (FieldValue::Map(entries), Shape::Map(inner)) => {
-            writer.open_block().await;
+            writer.open_block();
             let mut sorted = entries.clone();
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             for (key, value) in &sorted {
-                writer.atom(format!("{key}=")).await;
-                writer.glue().await;
-                Box::pin(print_shape(value, inner, writer)).await;
+                writer.atom(format!("{key}="));
+                writer.glue();
+                print_shape(value, inner, writer);
             }
-            writer.close_block().await;
+            writer.close_block();
         }
-        (FieldValue::Value(dsl_value), Shape::Value) => print_dsl_value(dsl_value, writer).await,
-        (FieldValue::Wire(wire), Shape::Wire) => print_wire(wire, writer).await,
+        (FieldValue::Value(dsl_value), Shape::Value) => print_dsl_value(dsl_value, writer),
+        (FieldValue::Wire(wire), Shape::Wire) => print_wire(wire, writer),
         _ => {}
     }
 }
@@ -2136,27 +2136,27 @@ pub async fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer)
 /// automatically. Header `[ ]` is glued tight on both sides (`[id:TEXT x:NUM]`); rows have no
 /// separator, one row per line in Document mode purely for readability (`new_record` is a no-op
 /// in Inline mode).
-async fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
+fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
     let element_spec = spec_fn();
-    writer.atom("[").await;
-    writer.glue().await;
+    writer.atom("[");
+    writer.glue();
     for field in &element_spec.fields {
-        writer.atom(format!("{}:{}", field.key, shape_type_name(&field.shape))).await;
+        writer.atom(format!("{}:{}", field.key, shape_type_name(&field.shape)));
     }
-    writer.glue().await;
-    writer.atom("]").await;
-    writer.open_block().await;
+    writer.glue();
+    writer.atom("]");
+    writer.open_block();
     for item in items {
-        writer.new_record().await;
+        writer.new_record();
         let FieldValue::Record(record) = item else { continue };
         for field in &element_spec.fields {
             match record.get(field.id) {
-                Some(fv) if !matches!(fv, FieldValue::Absent) => Box::pin(print_table_cell(fv, &field.shape, writer)).await,
-                _ => writer.atom("_").await,
+                Some(fv) if !matches!(fv, FieldValue::Absent) => print_table_cell(fv, &field.shape, writer),
+                _ => writer.atom("_"),
             }
         }
     }
-    writer.close_block().await;
+    writer.close_block();
 }
 
 /// @emoji 🧱️ Prints one table cell's value. See `parse_table_cell` for why a bare `Shape::Record`
@@ -2164,46 +2164,46 @@ async fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: 
 /// own `[ ]` uses, so bracing never disturbs the "no space just inside" canonical spacing rule for
 /// a one-shot wrapper — and every other shape is left to the ordinary `print_shape`, already
 /// self-delimiting.
-async fn print_table_cell(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
+fn print_table_cell(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     if let (FieldValue::Record(record), Shape::Record(spec_fn)) = (value, shape) {
-        writer.atom("{").await;
-        writer.glue().await;
-        Box::pin(print_record(record, &spec_fn(), writer)).await;
-        writer.glue().await;
-        writer.atom("}").await;
+        writer.atom("{");
+        writer.glue();
+        print_record(record, &spec_fn(), writer);
+        writer.glue();
+        writer.atom("}");
         return;
     }
-    Box::pin(print_shape(value, shape, writer)).await;
+    print_shape(value, shape, writer);
 }
 
-async fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
+fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
     match value {
-        DslValue::Null => writer.atom("null").await,
-        DslValue::Bool(b) => writer.atom(b.to_string()).await,
-        DslValue::Number(n) => writer.atom(format_f64(*n)).await,
-        DslValue::String(s) => writer.atom(format!("\"{}\"", crate::os_dsl::escape_text(s))).await,
+        DslValue::Null => writer.atom("null"),
+        DslValue::Bool(b) => writer.atom(b.to_string()),
+        DslValue::Number(n) => writer.atom(format_f64(*n)),
+        DslValue::String(s) => writer.atom(format!("\"{}\"", crate::os_dsl::escape_text(s))),
         DslValue::Array(items) => {
-            writer.atom("[").await;
+            writer.atom("[");
             for item in items {
-                Box::pin(print_dsl_value(item, writer)).await;
+                print_dsl_value(item, writer);
             }
-            writer.atom("]").await;
+            writer.atom("]");
         }
         DslValue::Object(entries) => {
             let mut sorted = entries.clone();
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
-            writer.open_block().await;
+            writer.open_block();
             for (key, value) in &sorted {
-                writer.atom(format!("{key}=")).await;
-                writer.glue().await;
-                Box::pin(print_dsl_value(value, writer)).await;
+                writer.atom(format!("{key}="));
+                writer.glue();
+                print_dsl_value(value, writer);
             }
-            writer.close_block().await;
+            writer.close_block();
         }
     }
 }
 
-async fn print_wire(wire: &WireValue, writer: &mut Writer) {
+fn print_wire(wire: &WireValue, writer: &mut Writer) {
     let map_node = |node: &WireNode| dsl_notation::EdgeNode {
         id: node.id.clone(),
         kind: node.kind.clone(),
@@ -2217,18 +2217,18 @@ async fn print_wire(wire: &WireValue, writer: &mut Writer) {
             to: map_node(to),
         }),
     };
-    writer.atom(dsl_notation::print_edge(&edge).await).await;
+    writer.atom(dsl_notation::print_edge(&edge));
     if !matches!(&wire.properties, DslValue::Object(entries) if entries.is_empty()) {
-        print_dsl_value(&wire.properties, writer).await;
+        print_dsl_value(&wire.properties, writer);
     }
 }
 
 /// @emoji 🔁️ Prints `value` against `spec` in the given join mode — the top-level entry point
 /// `dsl_derive`-generated code calls from `ArtifactDsl::print_dsl`/`OpText::print_op`.
-pub async fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
-    let mut writer = Writer::new().await;
-    Box::pin(print_record(value, spec, &mut writer)).await;
-    writer.render(mode).await
+pub fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> String {
+    let mut writer = Writer::new();
+    print_record(value, spec, &mut writer);
+    writer.render(mode)
 }
 //#endregion 🔖️Writer
 
@@ -2236,9 +2236,9 @@ pub async fn print(value: &RecordValue, spec: &RecordSpec, mode: JoinMode) -> St
 /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`: reprints whatever `parse`
 /// produces from `text`, which is the fixpoint every technology's `print_dsl` output must already
 /// be at (the round-trip law), so this doubles as the idempotence check.
-pub async fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<String, TextError> {
-    let value = parse(text, spec, opts).await?;
-    Ok(print(&value, spec, JoinMode::Document).await)
+pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<String, TextError> {
+    let value = parse(text, spec, opts)?;
+    Ok(print(&value, spec, JoinMode::Document))
 }
 //#endregion 🔖️Canonicalize
 
@@ -2256,26 +2256,26 @@ pub struct CompletionItem {
 }
 
 impl<'g> LanguageService<'g> {
-    pub async fn new(spec: &'g RecordSpec) -> Self {
+    pub fn new(spec: &'g RecordSpec) -> Self {
         Self { spec }
     }
 
-    async fn keywords(&self) -> Vec<String> {
+    fn keywords(&self) -> Vec<String> {
         let mut out = Vec::new();
         collect_keywords(self.spec, &mut out, &mut HashSet::new(), &mut HashSet::new());
         out
     }
 
-    pub async fn semantic_tokens(&self, text: &str) -> Vec<(TokenClass, TextSpan)> {
+    pub fn semantic_tokens(&self, text: &str) -> Vec<(TokenClass, TextSpan)> {
         let limits = Limits::default();
-        let tokens = lex(text, &limits, true).await.unwrap_or_default();
-        let keywords = self.keywords().await;
+        let tokens = lex(text, &limits, true).unwrap_or_default();
+        let keywords = self.keywords();
         let keyword_refs: Vec<&str> = keywords.iter().map(String::as_str).collect();
-        crate::os_dsl::token_classes(&tokens, &keyword_refs).await
+        crate::os_dsl::token_classes(&tokens, &keyword_refs)
     }
 
-    pub async fn diagnostics(&self, text: &str) -> Vec<TextError> {
-        match parse(text, self.spec, &ParseOptions::default()).await {
+    pub fn diagnostics(&self, text: &str) -> Vec<TextError> {
+        match parse(text, self.spec, &ParseOptions::default()) {
             Ok(_) => Vec::new(),
             Err(e) => vec![e],
         }
@@ -2284,9 +2284,9 @@ impl<'g> LanguageService<'g> {
     /// @emoji 💡️ Completions at `offset`: every key not yet used in the record enclosing the
     /// cursor, plus every keyword reachable from the root. A simple, always-available baseline —
     /// full context-sensitive narrowing is a natural follow-up once `Cst` gains node addressing.
-    pub async fn completions(&self, _text: &str, _offset: usize) -> Vec<CompletionItem> {
+    pub fn completions(&self, _text: &str, _offset: usize) -> Vec<CompletionItem> {
         let mut items: Vec<CompletionItem> = self.spec.fields.iter().filter(|f| !f.key.is_empty()).map(|f| CompletionItem { label: f.key.clone(), detail: Some(format!("{:?}", f.shape)) }).collect();
-        for keyword in self.keywords().await {
+        for keyword in self.keywords() {
             items.push(CompletionItem { label: keyword, detail: None });
         }
         items
@@ -2340,83 +2340,83 @@ fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashS
 mod tests {
     use super::*;
 
-    async fn assert_round_trip(text: &str, spec: &RecordSpec) {
+    fn assert_round_trip(text: &str, spec: &RecordSpec) {
         let opts = ParseOptions::default();
-        let value = parse(text, spec, &opts).await.unwrap_or_else(|e| panic!("parse failed for {text:?}: {e}"));
-        let printed = print(&value, spec, JoinMode::Document).await;
-        let reparsed = parse(&printed, spec, &opts).await.unwrap_or_else(|e| panic!("reparse of printed output failed: {e}\nprinted:\n{printed}"));
+        let value = parse(text, spec, &opts).unwrap_or_else(|e| panic!("parse failed for {text:?}: {e}"));
+        let printed = print(&value, spec, JoinMode::Document);
+        let reparsed = parse(&printed, spec, &opts).unwrap_or_else(|e| panic!("reparse of printed output failed: {e}\nprinted:\n{printed}"));
         assert_eq!(value, reparsed, "round trip diverged;\noriginal print:\n{printed}");
     }
 
-    async fn assert_document_inline_agree(text: &str, spec: &RecordSpec) {
+    fn assert_document_inline_agree(text: &str, spec: &RecordSpec) {
         let doc_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Document };
-        let value = parse(text, spec, &doc_opts).await.expect("parse document");
-        let inline_text = print(&value, spec, JoinMode::Inline).await;
+        let value = parse(text, spec, &doc_opts).expect("parse document");
+        let inline_text = print(&value, spec, JoinMode::Inline);
         assert!(!inline_text.contains('\n'), "inline render must be one line: {inline_text:?}");
         let inline_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Inline };
-        let reparsed = parse(&inline_text, spec, &inline_opts).await.unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
+        let reparsed = parse(&inline_text, spec, &inline_opts).unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
         assert_eq!(value, reparsed, "Document and Inline renders must parse to the same value");
     }
 
     // --- primitive 1: record with typed scalar fields, order-independent key=value ---
-    async fn camera_spec() -> RecordSpec {
+    fn camera_spec() -> RecordSpec {
         RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_scalar_record_round_trips_and_is_order_independent() {
-        let spec = camera_spec().await;
-        assert_round_trip("camera x=1 y=2 zoom=3", &spec).await;
-        assert_round_trip("camera zoom=3 x=1 y=2", &spec).await;
-        assert_round_trip("camera x=-1.5 y=0 zoom=2.25 label=\"hi \\\"there\\\"\"", &spec).await;
-        assert_document_inline_agree("camera x=1 y=2 zoom=3", &spec).await;
+        let spec = camera_spec();
+        assert_round_trip("camera x=1 y=2 zoom=3", &spec);
+        assert_round_trip("camera zoom=3 x=1 y=2", &spec);
+        assert_round_trip("camera x=-1.5 y=0 zoom=2.25 label=\"hi \\\"there\\\"\"", &spec);
+        assert_document_inline_agree("camera x=1 y=2 zoom=3", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_optional_field_omits_on_print_and_absent_on_parse() {
-        let spec = camera_spec().await;
-        let value = parse("camera x=1 y=2 zoom=1", &spec, &ParseOptions::default()).await.expect("parse");
+        let spec = camera_spec();
+        let value = parse("camera x=1 y=2 zoom=1", &spec, &ParseOptions::default()).expect("parse");
         assert_eq!(value.get(3), Some(&FieldValue::Absent));
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(!printed.contains("label"), "optional absent field must be omitted: {printed}");
     }
 
     // --- primitive: embed — fenced verbatim text (Document) / escaped Text (Inline) ---
-    async fn writer_note_spec() -> RecordSpec {
+    fn writer_note_spec() -> RecordSpec {
         RecordSpec::new(Some("query"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "body", Shape::Embed("jack"))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_round_trips_multiline_fenced_content_in_document_mode() {
         let spec = writer_note_spec();
-        assert_round_trip("query q1 body=```jack\nMATCH (a) RETURN a\nWHERE a.x > 1\n```", &spec.await).await;
+        assert_round_trip("query q1 body=```jack\nMATCH (a) RETURN a\nWHERE a.x > 1\n```", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_document_and_inline_renders_agree() {
         let spec = writer_note_spec();
-        assert_document_inline_agree("query q1 body=```jack\nMATCH (a) RETURN a\n```", &spec.await).await;
+        assert_document_inline_agree("query q1 body=```jack\nMATCH (a) RETURN a\n```", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_empty_lang_tag_is_accepted_and_canonicalizes_to_the_declared_lang() {
-        let spec = writer_note_spec().await;
-        let value = parse("query q1 body=```\nMATCH (a) RETURN a\n```", &spec, &ParseOptions::default()).await.expect("parse with empty lang tag");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = writer_note_spec();
+        let value = parse("query q1 body=```\nMATCH (a) RETURN a\n```", &spec, &ParseOptions::default()).expect("parse with empty lang tag");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("```jack"), "empty lang tag must canonicalize to the field's declared lang: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_rejects_a_mismatched_lang_tag() {
         let spec = writer_note_spec();
-        let error = parse("query q1 body=```python\nprint(1)\n```", &spec.await, &ParseOptions::default()).await.unwrap_err();
+        let error = parse("query q1 body=```python\nprint(1)\n```", &spec, &ParseOptions::default()).unwrap_err();
         assert!(error.message.contains("jack"), "{error}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn embed_inline_mode_accepts_a_quoted_escaped_string_directly() {
         let spec = writer_note_spec();
-        let value = parse("query q1 body=\"MATCH (a) RETURN a\"", &spec.await, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline }).await.expect("inline parse");
+        let value = parse("query q1 body=\"MATCH (a) RETURN a\"", &spec, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline }).expect("inline parse");
         let FieldValue::Text(body) = value.get(1).expect("body field") else { panic!("expected Text") };
         assert_eq!(body, "MATCH (a) RETURN a");
     }
@@ -2424,25 +2424,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn embed_empty_content_round_trips() {
         let spec = writer_note_spec();
-        assert_round_trip("query q1 body=```jack\n```", &spec.await).await;
+        assert_round_trip("query q1 body=```jack\n```", &spec);
     }
 
     // --- primitive: expr — an arithmetic formula literal ---
-    async fn formula_spec() -> RecordSpec {
+    fn formula_spec() -> RecordSpec {
         RecordSpec::new(Some("combine"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "value", Shape::Expr)])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn expr_round_trips_a_load_combination_formula() {
-        let spec = formula_spec().await;
-        assert_round_trip("combine ULS value=(1.35*G + 1.5*Q)", &spec).await;
-        assert_document_inline_agree("combine ULS value=(1.35*G + 1.5*Q)", &spec).await;
+        let spec = formula_spec();
+        assert_round_trip("combine ULS value=(1.35*G + 1.5*Q)", &spec);
+        assert_document_inline_agree("combine ULS value=(1.35*G + 1.5*Q)", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn expr_parses_with_correct_precedence() {
         let spec = formula_spec();
-        let value = parse("combine c value=(10-2*3)", &spec.await, &ParseOptions::default()).await.expect("parse");
+        let value = parse("combine c value=(10-2*3)", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
         assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(2.0)), Box::new(ExprValue::Num(3.0)))),), "10-2*3 must parse as 10-(2*3), not (10-2)*3");
     }
@@ -2450,18 +2450,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn expr_right_nested_addition_round_trips_through_parens() {
         // a+(b+c) is structurally distinct from (a+b)+c; canonical print must keep the parens.
-        let spec = formula_spec().await;
-        let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).await.expect("parse");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = formula_spec();
+        let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).expect("parse");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("(b + c)"), "right-nested addition must keep disambiguating parens: {printed}");
-        let reparsed = parse(&printed, &spec, &ParseOptions::default()).await.expect("reparse");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse");
         assert_eq!(value, reparsed);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn expr_supports_unary_minus_and_function_calls() {
         let spec = formula_spec();
-        assert_round_trip("combine c value=(min(a, b) + -1)", &spec.await).await;
+        assert_round_trip("combine c value=(min(a, b) + -1)", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2469,53 +2469,53 @@ mod tests {
         // Hand-written "10-2" (no space) hits the lexer's negative-number-literal rule, not a bare
         // Minus token; the Expr parser must still interpret it as subtraction, and re-print it with
         // real spacing so the ambiguity never reappears in canonical output.
-        let spec = formula_spec().await;
-        let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).await.expect("parse");
+        let spec = formula_spec();
+        let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
         assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Num(2.0))));
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("10 - 2"), "canonical print must space out the operator: {printed}");
     }
 
     // --- primitive: quantity/angle — a Shape::Float refinement that prints/parses a glued unit suffix ---
-    async fn material_spec() -> RecordSpec {
+    fn material_spec() -> RecordSpec {
         RecordSpec::new(
             Some("material"),
             RecordLayout::Inline,
             vec![
-                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").await.unwrap())),
-                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::unit_by_symbol("kg/m3").await.unwrap())),
-                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").await.unwrap())),
+                FieldSpec::new(0, "e", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(1, "rho", Shape::Quantity(crate::os_dsl::unit_by_symbol("kg/m3").unwrap())),
+                FieldSpec::new(2, "rotation", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
             ],
         )
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_and_angle_round_trip_in_their_declared_unit() {
-        let spec = material_spec().await;
-        assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec).await;
-        assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec).await;
-        assert_document_inline_agree("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec).await;
+        let spec = material_spec();
+        assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec);
+        assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec);
+        assert_document_inline_agree("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_accepts_a_compatible_alien_unit_and_canonicalizes_to_the_declared_one() {
-        let spec = material_spec().await;
-        let value = parse("material e=210000MPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse alien unit");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = material_spec();
+        let value = parse("material e=210000MPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse alien unit");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("e=210GPa"), "alien-unit input must canonicalize to the declared unit: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_with_no_suffix_is_already_in_the_declared_unit() {
-        let spec = material_spec().await;
-        let with_suffix = parse("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse with suffix");
-        let bare = parse("material e=210 rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).await.expect("parse bare number");
+        let spec = material_spec();
+        let with_suffix = parse("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse with suffix");
+        let bare = parse("material e=210 rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).expect("parse bare number");
         assert_eq!(with_suffix.get(0), bare.get(0), "a bare number must equal the same value spelled with its declared unit's suffix");
     }
 
     // --- primitive: coord/dir/dim/range/count/ref — sigil-and-glyph notation literals ---
-    async fn placement_spec() -> RecordSpec {
+    fn placement_spec() -> RecordSpec {
         RecordSpec::new(
             Some("object"),
             RecordLayout::Inline,
@@ -2533,35 +2533,35 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn coord_dir_dim_range_count_ref_round_trip() {
-        let spec = placement_spec().await;
-        assert_round_trip("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec).await;
-        assert_document_inline_agree("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec).await;
+        let spec = placement_spec();
+        assert_round_trip("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec);
+        assert_document_inline_agree("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn range_without_step_round_trips_with_two_elements() {
         let spec = RecordSpec::new(Some("slot"), RecordLayout::Inline, vec![FieldSpec::new(0, "window", Shape::Range)]);
-        assert_round_trip("slot window=(0..10)", &spec).await;
+        assert_round_trip("slot window=(0..10)", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn coord_dir_dim_range_count_reject_wrong_arity_or_form() {
-        let spec = placement_spec().await;
+        let spec = placement_spec();
         // Coord declared as 3 components; only 2 given.
-        let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).await.unwrap_err();
+        let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
         assert!(err.message.contains("coordinate") || err.message.contains("expected"), "{err}");
         // Dim declared as 3 components; only one number, no glued 'x' suffix at all.
-        let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).await.unwrap_err();
+        let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
         assert!(err2.message.contains("dimension"), "{err2}");
         // Count without the 'x' prefix is not a valid count literal.
-        let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).await.unwrap_err();
+        let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).unwrap_err();
         assert!(err3.message.contains("count"), "{err3}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quantity_rejects_an_incompatible_unit() {
         let spec = material_spec();
-        let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec.await, &ParseOptions::default()).await.unwrap_err();
+        let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).unwrap_err();
         assert!(error.message.contains("not compatible"), "wrong-dimension suffix must be a parse error, got: {error}");
     }
 
@@ -2572,15 +2572,15 @@ mod tests {
         RecordSpec::new(Some("layer"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "opacity", Shape::Float)])
     }
 
-    async fn document_with_layers_spec() -> RecordSpec {
+    fn document_with_layers_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_statements_collection_preserves_order_and_round_trips() {
-        let spec = document_with_layers_spec().await;
-        assert_round_trip("schema=doc layer a opacity=1 layer b opacity=0.5 layer c opacity=1", &spec).await;
-        let value = parse("schema=doc layer a opacity=1 layer b opacity=0.5", &spec, &ParseOptions::default()).await.expect("parse");
+        let spec = document_with_layers_spec();
+        assert_round_trip("schema=doc layer a opacity=1 layer b opacity=0.5 layer c opacity=1", &spec);
+        let value = parse("schema=doc layer a opacity=1 layer b opacity=0.5", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Statements(items) = value.get(1).unwrap() else { panic!("expected statements") };
         assert_eq!(items.len(), 2);
         assert_eq!(items[0].0, "layer");
@@ -2599,34 +2599,34 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_recursive_blocks_round_trip() {
         let spec = group_spec();
-        assert_round_trip("group root children { group a group b }", &spec).await;
-        assert_round_trip("group leaf", &spec).await;
+        assert_round_trip("group root children { group a group b }", &spec);
+        assert_round_trip("group leaf", &spec);
     }
 
     // --- primitive 6/7: escaped inline text, formerly-trailing free text ---
     #[semio_framework_async_macros::async_test]
     async fn primitive_escaped_text_handles_quotes_newlines_and_trailing_position() {
         let spec = camera_spec();
-        let value = parse("camera x=1 y=1 zoom=1 label=\"line1\\nline2 with \\\"quotes\\\"\"", &spec.await, &ParseOptions::default()).await.expect("parse");
+        let value = parse("camera x=1 y=1 zoom=1 label=\"line1\\nline2 with \\\"quotes\\\"\"", &spec, &ParseOptions::default()).expect("parse");
         assert_eq!(value.get(3), Some(&FieldValue::Text("line1\nline2 with \"quotes\"".to_string())));
     }
 
     // --- primitive 9: graph endpoints (wire literal) ---
-    async fn wire_spec() -> RecordSpec {
+    fn wire_spec() -> RecordSpec {
         RecordSpec::new(Some("edge"), RecordLayout::Inline, vec![FieldSpec::new(0, "link", Shape::Wire).positional(0)])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_wire_literal_directed_and_undirected_round_trip() {
-        let spec = wire_spec().await;
-        assert_round_trip("edge a:Kind@out->b:Kind2@in", &spec).await;
-        assert_round_trip("edge a--b", &spec).await;
-        assert_round_trip("edge solo", &spec).await;
-        assert_round_trip("edge a -e1:Connection> b", &spec).await;
+        let spec = wire_spec();
+        assert_round_trip("edge a:Kind@out->b:Kind2@in", &spec);
+        assert_round_trip("edge a--b", &spec);
+        assert_round_trip("edge solo", &spec);
+        assert_round_trip("edge a -e1:Connection> b", &spec);
     }
 
     // --- RecordLayout::Call: `<name> = <keyword>(args)` construction-chain notation ---
-    async fn call_spec() -> RecordSpec {
+    fn call_spec() -> RecordSpec {
         RecordSpec::new(
             Some("brep.solid.extrude"),
             RecordLayout::Call,
@@ -2641,27 +2641,27 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn call_layout_prints_name_equals_dotted_keyword_parens_args() {
-        let spec = call_spec().await;
+        let spec = call_spec();
         let opts = ParseOptions::default();
-        let value = parse("extrude = brep.solid.extrude(w1 v1 height=6)", &spec, &opts).await.expect("parse");
+        let value = parse("extrude = brep.solid.extrude(w1 v1 height=6)", &spec, &opts).expect("parse");
         assert_eq!(value.get(0), Some(&FieldValue::Text("extrude".to_string())));
         assert_eq!(value.get(1), Some(&FieldValue::Text("w1".to_string())));
-        let printed = print(&value, &spec, JoinMode::Inline).await;
+        let printed = print(&value, &spec, JoinMode::Inline);
         assert_eq!(printed, "extrude = brep.solid.extrude(w1 v1 height=6)");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn call_layout_round_trips_with_and_without_the_optional_keyed_arg() {
-        let spec = call_spec().await;
-        assert_round_trip("extrude = brep.solid.extrude(w1 v1 height=6)", &spec).await;
-        assert_round_trip("extrude = brep.solid.extrude(w1 v1)", &spec).await;
+        let spec = call_spec();
+        assert_round_trip("extrude = brep.solid.extrude(w1 v1 height=6)", &spec);
+        assert_round_trip("extrude = brep.solid.extrude(w1 v1)", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn call_layout_rejects_the_wrong_call_target() {
         let spec = call_spec();
         let opts = ParseOptions::default();
-        let err = parse("extrude = brep.solid.revolve(w1 v1)", &spec.await, &opts).await.unwrap_err();
+        let err = parse("extrude = brep.solid.revolve(w1 v1)", &spec, &opts).unwrap_err();
         assert!(err.to_string().contains("expected call target"), "unexpected error: {err}");
     }
 
@@ -2669,12 +2669,12 @@ mod tests {
     async fn call_layout_spec_without_a_call_name_field_is_a_clear_parse_error_not_a_panic() {
         let bad_spec = RecordSpec::new(Some("brep.solid.extrude"), RecordLayout::Call, vec![FieldSpec::new(0, "profile", Shape::Text).positional(0)]);
         let opts = ParseOptions::default();
-        let err = parse("extrude = brep.solid.extrude(w1)", &bad_spec, &opts).await.unwrap_err();
+        let err = parse("extrude = brep.solid.extrude(w1)", &bad_spec, &opts).unwrap_err();
         assert!(err.to_string().contains("call_name"), "unexpected error: {err}");
     }
 
     // --- primitive 10: packed tuples / lists / base64 ---
-    async fn geometry_spec() -> RecordSpec {
+    fn geometry_spec() -> RecordSpec {
         RecordSpec::new(
             Some("vertex"),
             RecordLayout::Inline,
@@ -2684,24 +2684,24 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_tuple_list_and_base64_round_trip() {
-        let spec = geometry_spec().await;
-        assert_round_trip("vertex 1,2,3", &spec).await;
-        assert_round_trip("vertex 1,2,3 tags=[a b c]", &spec).await;
-        assert_round_trip("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec).await;
-        let value = parse("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec, &ParseOptions::default()).await.expect("parse");
+        let spec = geometry_spec();
+        assert_round_trip("vertex 1,2,3", &spec);
+        assert_round_trip("vertex 1,2,3 tags=[a b c]", &spec);
+        assert_round_trip("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec);
+        let value = parse("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec, &ParseOptions::default()).expect("parse");
         assert_eq!(value.get(2), Some(&FieldValue::Bytes64(b"hello".to_vec())));
     }
 
     // --- primitive 11: dynamic value literal ---
-    async fn value_spec() -> RecordSpec {
+    fn value_spec() -> RecordSpec {
         RecordSpec::new(Some("payload"), RecordLayout::Inline, vec![FieldSpec::new(0, "data", Shape::Value)])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_dynamic_value_round_trips() {
-        let spec = value_spec().await;
-        assert_round_trip("payload data={a=1 b=[1 2 3] c=\"x\"}", &spec).await;
-        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).await.expect("parse");
+        let spec = value_spec();
+        assert_round_trip("payload data={a=1 b=[1 2 3] c=\"x\"}", &spec);
+        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Value(dsl_value) = value.get(0).unwrap().clone() else { panic!() };
         assert_eq!(dsl_value.get("a"), Some(&DslValue::Number(1.0)));
     }
@@ -2709,9 +2709,9 @@ mod tests {
     // --- primitive 12: sparse patch records (Option<T> absent != null) ---
     #[semio_framework_async_macros::async_test]
     async fn primitive_sparse_patch_distinguishes_absent_from_present() {
-        let spec = camera_spec().await;
-        let with = parse("camera x=1 y=1 zoom=1 label=\"x\"", &spec, &ParseOptions::default()).await.expect("parse with");
-        let without = parse("camera x=1 y=1 zoom=1", &spec, &ParseOptions::default()).await.expect("parse without");
+        let spec = camera_spec();
+        let with = parse("camera x=1 y=1 zoom=1 label=\"x\"", &spec, &ParseOptions::default()).expect("parse with");
+        let without = parse("camera x=1 y=1 zoom=1", &spec, &ParseOptions::default()).expect("parse without");
         assert_ne!(with.get(3), without.get(3));
         assert_eq!(without.get(3), Some(&FieldValue::Absent));
     }
@@ -2720,7 +2720,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_comments_are_skipped_as_trivia() {
         let spec = camera_spec();
-        let value = parse("# a comment\ncamera x=1 y=2 zoom=3 # trailing comment", &spec.await, &ParseOptions::default()).await.expect("parse with comments");
+        let value = parse("# a comment\ncamera x=1 y=2 zoom=3 # trailing comment", &spec, &ParseOptions::default()).expect("parse with comments");
         assert_eq!(value.get(0), Some(&FieldValue::Float(1.0)));
     }
 
@@ -2728,7 +2728,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn primitive_spans_are_real_on_parse_error() {
         let spec = camera_spec();
-        let error = parse("camera x=1\ny=notanumber zoom=1", &spec.await, &ParseOptions::default()).await.unwrap_err();
+        let error = parse("camera x=1\ny=notanumber zoom=1", &spec, &ParseOptions::default()).unwrap_err();
         assert_eq!(error.span.line, 2, "error span must point at the real line, not (1,1)");
     }
 
@@ -2736,16 +2736,16 @@ mod tests {
     // multi-word values stay quoted (unified syntax law: strings bare-preferred) ---
     #[semio_framework_async_macros::async_test]
     async fn bare_strings_print_unquoted_and_reserved_or_number_shaped_values_stay_quoted() {
-        let spec = camera_spec().await;
-        let value = parse("camera x=1 y=2 zoom=3 label=alpha", &spec, &ParseOptions::default()).await.expect("parse");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = camera_spec();
+        let value = parse("camera x=1 y=2 zoom=3 label=alpha", &spec, &ParseOptions::default()).expect("parse");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("label=alpha"), "a bare-ident-shaped value must print unquoted: {printed}");
         assert!(!printed.contains("\"alpha\""), "must not quote a value that already lexes as a bare ident: {printed}");
 
         for reserved in ["_", "true", "3", "two words"] {
-            let mut writer = Writer::new().await;
-            print_shape(&FieldValue::Text(reserved.to_string()), &Shape::Text, &mut writer).await;
-            let out = writer.render(JoinMode::Inline).await;
+            let mut writer = Writer::new();
+            print_shape(&FieldValue::Text(reserved.to_string()), &Shape::Text, &mut writer);
+            let out = writer.render(JoinMode::Inline);
             assert!(out.starts_with('"') && out.ends_with('"'), "{reserved:?} must print quoted, got {out:?}");
         }
     }
@@ -2756,50 +2756,50 @@ mod tests {
     fn nested_point_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
     }
-    async fn marker_spec() -> RecordSpec {
+    fn marker_spec() -> RecordSpec {
         RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))])
     }
-    async fn edge_keyed_wire_spec() -> RecordSpec {
+    fn edge_keyed_wire_spec() -> RecordSpec {
         RecordSpec::new(Some("edge2"), RecordLayout::Inline, vec![FieldSpec::new(0, "link", Shape::Wire)])
     }
-    async fn tags_map_spec() -> RecordSpec {
+    fn tags_map_spec() -> RecordSpec {
         RecordSpec::new(Some("meta"), RecordLayout::Inline, vec![FieldSpec::new(0, "props", Shape::Map(Box::new(Shape::Text)))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn glue_removes_the_key_equals_space_for_every_composite_shape() {
         // List
-        let spec = geometry_spec().await;
-        let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).await.expect("parse list");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = geometry_spec();
+        let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).expect("parse list");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("tags=[ a b c ]"), "List field must glue key= directly onto '[': {printed}");
         assert!(!printed.contains("tags= ["), "must never leave a stray space after 'key=': {printed}");
 
         // Value (dynamic)
-        let spec = value_spec().await;
-        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).await.expect("parse value");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = value_spec();
+        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse value");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("data={"), "Value field must glue key= directly onto '{{': {printed}");
         assert!(!printed.contains("data= {"), "must never leave a stray space before the glued brace: {printed}");
 
         // Map
-        let spec = tags_map_spec().await;
-        let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).await.expect("parse map");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = tags_map_spec();
+        let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).expect("parse map");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("props={"), "Map field must glue key= directly onto '{{': {printed}");
-        assert_round_trip("meta props={a=\"x\" b=\"y\"}", &spec).await;
+        assert_round_trip("meta props={a=\"x\" b=\"y\"}", &spec);
 
         // Record (nested, un-blocked — prints inline without its own keyword)
-        let spec = marker_spec().await;
-        let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).await.expect("parse record");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = marker_spec();
+        let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).expect("parse record");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("at=x=1"), "Record field must glue key= directly onto its first field: {printed}");
         assert!(!printed.contains("at= x=1"), "must never leave a stray space before a nested record: {printed}");
 
         // Wire (keyed, not positional)
-        let spec = edge_keyed_wire_spec().await;
-        let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).await.expect("parse wire");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let spec = edge_keyed_wire_spec();
+        let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).expect("parse wire");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("link=a->b"), "Wire field must glue key= directly onto the wire literal: {printed}");
         assert!(!printed.contains("link= a"), "must never leave a stray space before a keyed wire literal: {printed}");
     }
@@ -2808,18 +2808,18 @@ mod tests {
     // endpoints swapped ---
     #[semio_framework_async_macros::async_test]
     async fn wire_back_arrow_normalizes_to_forward_arrow_with_swapped_endpoints() {
-        let spec = wire_spec().await;
-        let backward = parse("edge b<-a", &spec, &ParseOptions::default()).await.expect("parse backward");
-        let forward = parse("edge a->b", &spec, &ParseOptions::default()).await.expect("parse forward");
+        let spec = wire_spec();
+        let backward = parse("edge b<-a", &spec, &ParseOptions::default()).expect("parse backward");
+        let forward = parse("edge a->b", &spec, &ParseOptions::default()).expect("parse forward");
         assert_eq!(backward, forward, "'b<-a' must parse to the same value as 'a->b'");
-        let printed = print(&backward, &spec, JoinMode::Document).await;
+        let printed = print(&backward, &spec, JoinMode::Document);
         assert!(printed.contains("a->b"), "must print using '->': {printed}");
         assert!(!printed.contains("<-"), "must never print '<-': {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parse_wire_text_parses_a_standalone_wire_literal_with_back_arrow() {
-        let value = parse_wire_text("b<-a").await.expect("parse_wire_text");
+        let value = parse_wire_text("b<-a").expect("parse_wire_text");
         assert_eq!(value.from.id, "a");
         let (directed, to) = value.edge.expect("edge");
         assert!(directed);
@@ -2831,16 +2831,16 @@ mod tests {
     fn table_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "x", Shape::Float), FieldSpec::new(2, "y", Shape::Float), FieldSpec::new(3, "link", Shape::Wire).optional()])
     }
-    async fn table_doc_spec() -> RecordSpec {
+    fn table_doc_spec() -> RecordSpec {
         RecordSpec::new(Some("scene"), RecordLayout::Inline, vec![FieldSpec::new(0, "nodes", Shape::Table(table_row_spec))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_soa_round_trips_with_underscore_absent_cell_and_a_wire_column() {
-        let spec = table_doc_spec().await;
+        let spec = table_doc_spec();
         let text = "scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }";
-        assert_round_trip(text, &spec).await;
-        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse");
+        assert_round_trip(text, &spec);
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
         assert_eq!(rows.len(), 2);
         let FieldValue::Record(row0) = &rows[0] else { panic!("expected a Record row") };
@@ -2848,19 +2848,19 @@ mod tests {
         let FieldValue::Record(row1) = &rows[1] else { panic!("expected a Record row") };
         assert!(matches!(row1.get(3), Some(FieldValue::Wire(_))), "the wire-typed column must parse as FieldValue::Wire");
 
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "header must print tight SoA, no inner spaces: {printed}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_accepts_verbose_aos_input_and_canonicalizes_to_soa_output() {
-        let spec = table_doc_spec().await;
+        let spec = table_doc_spec();
         let aos_text = "scene nodes=[ {id=a x=1 y=2} {id=b x=3 y=4} ]";
-        let value = parse(aos_text, &spec, &ParseOptions::default()).await.expect("parse AoS-verbose");
-        let printed = print(&value, &spec, JoinMode::Document).await;
+        let value = parse(aos_text, &spec, &ParseOptions::default()).expect("parse AoS-verbose");
+        let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "AoS input must canonicalize to the SoA header on print: {printed}");
         assert!(!printed.contains("nodes="), "must never print the old AoS '=' form: {printed}");
-        let reparsed = parse(&printed, &spec, &ParseOptions::default()).await.expect("reparse canonicalized SoA");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse canonicalized SoA");
         assert_eq!(value, reparsed, "AoS-in/SoA-out must still round trip to the same value");
     }
 
@@ -2868,7 +2868,7 @@ mod tests {
     async fn table_header_without_explicit_type_tags_is_still_parseable() {
         let spec = table_doc_spec();
         let text = "scene nodes [id x y link] { a 1 2 _  b 3 4 a@out->b@in }";
-        let value = parse(text, &spec.await, &ParseOptions::default()).await.expect("parse header without explicit types");
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse header without explicit types");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
         assert_eq!(rows.len(), 2);
     }
@@ -2876,7 +2876,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn table_document_and_inline_renders_agree() {
         let spec = table_doc_spec();
-        assert_document_inline_agree("scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }", &spec.await).await;
+        assert_document_inline_agree("scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }", &spec);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2885,11 +2885,11 @@ mod tests {
         fn unbounded_tuple_row_spec() -> RecordSpec {
             RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "vals", Shape::Tuple(Box::new(Shape::Float), None))])
         }
-        async fn bad_table_doc_spec() -> RecordSpec {
+        fn bad_table_doc_spec() -> RecordSpec {
             RecordSpec::new(Some("bad"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(unbounded_tuple_row_spec))])
         }
-        let spec = bad_table_doc_spec().await;
-        let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default()).await;
+        let spec = bad_table_doc_spec();
+        let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default());
         assert!(result.is_err(), "an unbounded Tuple column must be rejected, not silently accepted");
     }
 
@@ -2903,17 +2903,17 @@ mod tests {
     fn nested_outer_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Table(nested_inner_row_spec))])
     }
-    async fn nested_table_doc_spec() -> RecordSpec {
+    fn nested_table_doc_spec() -> RecordSpec {
         RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "items", Shape::Table(nested_outer_row_spec))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_row_containing_its_own_table_field_round_trips_without_desync() {
-        let spec = nested_table_doc_spec().await;
+        let spec = nested_table_doc_spec();
         let text = "doc items [id:TEXT children:TABLE] { p1 [ {id=c1 val=1.5} {id=c2} ]  p2 [ {id=c3 val=2} ] }";
-        assert_round_trip(text, &spec).await;
-        assert_document_inline_agree(text, &spec).await;
-        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse nested table");
+        assert_round_trip(text, &spec);
+        assert_document_inline_agree(text, &spec);
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse nested table");
         let FieldValue::List(outer_rows) = value.get(0).unwrap() else { panic!("expected outer table (List)") };
         assert_eq!(outer_rows.len(), 2);
         let FieldValue::Record(row0) = &outer_rows[0] else { panic!("expected outer Record row") };
@@ -2934,20 +2934,20 @@ mod tests {
     fn duplicate_type_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "area", Shape::Record(quantity_spec)), FieldSpec::new(2, "volume", Shape::Record(quantity_spec))])
     }
-    async fn duplicate_type_table_doc_spec() -> RecordSpec {
+    fn duplicate_type_table_doc_spec() -> RecordSpec {
         RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(duplicate_type_row_spec))])
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_row_with_two_columns_of_the_same_record_type_does_not_cross_contaminate() {
-        let spec = duplicate_type_table_doc_spec().await;
+        let spec = duplicate_type_table_doc_spec();
         // `area`'s `target` is left absent (never printed) while `volume`'s `target=4` is present
         // right after it — the exact shape of the reported corruption, since both columns share
         // the identical field name.
         let text = "doc rows [id:TEXT area:REC volume:REC] { r1 {actual=3} {target=4 actual=1} }";
-        assert_round_trip(text, &spec).await;
-        assert_document_inline_agree(text, &spec).await;
-        let value = parse(text, &spec, &ParseOptions::default()).await.expect("parse duplicate-type columns");
+        assert_round_trip(text, &spec);
+        assert_document_inline_agree(text, &spec);
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse duplicate-type columns");
         let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected table (List)") };
         let FieldValue::Record(row0) = &rows[0] else { panic!("expected Record row") };
         let FieldValue::Record(area) = row0.get(1).unwrap() else { panic!("expected area Record") };
@@ -2961,9 +2961,9 @@ mod tests {
     // --- idempotent canonicalization ---
     #[semio_framework_async_macros::async_test]
     async fn canonicalization_is_idempotent() {
-        let spec = camera_spec().await;
-        let once = canonicalize("camera   zoom=3   x=1 y=2", &spec, &ParseOptions::default()).await.expect("canonicalize once");
-        let twice = canonicalize(&once, &spec, &ParseOptions::default()).await.expect("canonicalize twice");
+        let spec = camera_spec();
+        let once = canonicalize("camera   zoom=3   x=1 y=2", &spec, &ParseOptions::default()).expect("canonicalize once");
+        let twice = canonicalize(&once, &spec, &ParseOptions::default()).expect("canonicalize twice");
         assert_eq!(once, twice, "canonicalize(canonicalize(x)) must equal canonicalize(x)");
     }
 
@@ -2986,29 +2986,29 @@ mod tests {
         let tiny_limits = Limits { max_depth: 10, ..Limits::default() };
         let opts = ParseOptions { limits: tiny_limits, mode: SourceMode::Document };
         let result = parse(&nested, &spec, &opts);
-        assert!(result.await.is_err(), "exceeding max_depth must produce an error, not a stack overflow");
+        assert!(result.is_err(), "exceeding max_depth must produce an error, not a stack overflow");
 
         let generous_limits = Limits { max_depth: 100, ..Limits::default() };
         let generous_opts = ParseOptions { limits: generous_limits, mode: SourceMode::Document };
-        assert!(parse(&nested, &spec, &generous_opts).await.is_ok(), "the same nesting must parse fine under a generous depth limit");
+        assert!(parse(&nested, &spec, &generous_opts).is_ok(), "the same nesting must parse fine under a generous depth limit");
     }
 
     // --- LanguageService ---
     #[semio_framework_async_macros::async_test]
     async fn language_service_reports_semantic_tokens_and_diagnostics() {
-        let spec = camera_spec().await;
-        let service = LanguageService::new(&spec).await;
+        let spec = camera_spec();
+        let service = LanguageService::new(&spec);
         let classes = service.semantic_tokens("camera x=1 y=2 zoom=3");
-        assert!(classes.await.iter().any(|(class, _)| *class == TokenClass::Keyword));
-        assert!(service.diagnostics("camera x=1 y=2 zoom=3").await.is_empty());
-        assert!(!service.diagnostics("camera x=notanumber").await.is_empty());
+        assert!(classes.iter().any(|(class, _)| *class == TokenClass::Keyword));
+        assert!(service.diagnostics("camera x=1 y=2 zoom=3").is_empty());
+        assert!(!service.diagnostics("camera x=notanumber").is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn language_service_completions_include_every_declared_key() {
-        let spec = camera_spec().await;
-        let service = LanguageService::new(&spec).await;
-        let labels: Vec<String> = service.completions("", 0).await.into_iter().map(|c| c.label).collect();
+        let spec = camera_spec();
+        let service = LanguageService::new(&spec);
+        let labels: Vec<String> = service.completions("", 0).into_iter().map(|c| c.label).collect();
         assert!(labels.contains(&"x".to_string()));
         assert!(labels.contains(&"zoom".to_string()));
         assert!(labels.contains(&"label".to_string()));
@@ -3017,7 +3017,7 @@ mod tests {
     // --- 10k-iteration generative round trip over the flat-scalar shape ---
     #[semio_framework_async_macros::async_test]
     async fn generative_round_trip_over_scalar_records() {
-        let spec = camera_spec().await;
+        let spec = camera_spec();
         let mut state: u64 = 0xD1B54A32D192ED03;
         let mut next = || {
             state ^= state << 13;
@@ -3030,7 +3030,7 @@ mod tests {
             let y = (next() % 2000) as i64 - 1000;
             let zoom = (next() % 2000) as i64 - 1000;
             let text = format!("camera x={x} y={y} zoom={zoom}");
-            assert_round_trip(&text, &spec).await;
+            assert_round_trip(&text, &spec);
         }
     }
 }

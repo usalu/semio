@@ -129,7 +129,7 @@ impl ArtifactEditor for EpwEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -137,14 +137,15 @@ impl ArtifactEditor for EpwEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(EPW_EDITOR_DIALECT)
-        .await.document(["stdio", "epw"])
-        .await.icon_id("cloud-sun")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::EPW_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["stdio", "epw"])
+        .icon_id("cloud-sun")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::EPW_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -38,13 +38,16 @@ impl Default for SemioObjectArtifact {
 }
 
 impl SemioObjectArtifact {
-    pub async fn to_snapshot(&self) -> SemioObjectSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioObjectSnapshot {
         SemioObjectSnapshot { schema: self.schema.clone(), transform: self.transform.clone(), brep: self.brep.clone(), mesh: self.mesh.clone(), properties: self.properties.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
         Self { schema: snapshot.schema, transform: snapshot.transform, brep: snapshot.brep, mesh: snapshot.mesh, properties: snapshot.properties }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
         self.schema = snapshot.schema;
         self.transform = snapshot.transform;
         self.brep = snapshot.brep;
@@ -53,7 +56,8 @@ impl SemioObjectArtifact {
     }
 }
 
-pub async fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_object_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.object",
         artifact: schema::FacetLeaves {
@@ -103,17 +107,20 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioObjectBuilderConstruction {
         /// 🏗️ Starts a fresh object at the identity transform, no geometry/properties children.
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             Self { snapshot: SemioObjectSnapshot::default() }
         }
         /// 🧭️ Overrides the object's placement.
-        pub async fn with_transform(mut self, transform: SemioTransform) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_transform(mut self, transform: SemioTransform) -> Self {
             self.snapshot.transform = transform;
             self
         }
         /// 🧱️ Attaches an owned brep CHILD handle (never embedded content).
-        pub async fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Self {
-            self.snapshot.brep = Some(store::ArtifactChild::new(child_id.into(), target).await);
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Self {
+            self.snapshot.brep = Some(store::ArtifactChild::new(child_id.into(), target));
             self
         }
     }

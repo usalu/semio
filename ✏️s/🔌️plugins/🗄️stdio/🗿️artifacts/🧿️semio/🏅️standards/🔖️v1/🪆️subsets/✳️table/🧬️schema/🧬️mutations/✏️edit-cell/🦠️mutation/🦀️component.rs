@@ -19,10 +19,10 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for EditCell
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "cell", kind: "edit-cell", record: "EditedCell" };
 
     async fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
     async fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
-        super::inverse::inverse(self, base).await
+        super::inverse::inverse(self, base)
     }
     async fn label(&self) -> String {
         format!("Edit cell #{} {}", self.row_index, self.column_name)

@@ -33,15 +33,18 @@ impl Default for IfcArtifact {
 }
 
 impl IfcArtifact {
-    pub async fn to_snapshot(&self) -> IfcSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> IfcSnapshot {
         IfcSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    pub async fn from_snapshot(snapshot: IfcSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.entities = snapshot.entities;
@@ -50,15 +53,17 @@ impl IfcArtifact {
     /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
-    pub async fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
         let document = crate::artifacts::ifc::schema::snapshot::to_part21_document(&self.to_snapshot());
-        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document).await
+        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document)
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ifc_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc",
         artifact: schema::FacetLeaves {
@@ -216,7 +221,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `crate::artifacts::ifc::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
 /// shim, and (via the root `crate::artifacts::ifc::engine` shim, glob-imported from v4) as
 /// `crate::artifacts::ifc::engine::empty_ifc_snapshot` too.
-pub async fn empty_ifc_snapshot() -> IfcSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_ifc_snapshot() -> IfcSnapshot {
     IfcSnapshot::default()
 }
 
@@ -226,7 +232,8 @@ pub async fn empty_ifc_snapshot() -> IfcSnapshot {
 /// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law`, now in `../🚪️io/🦀️component.rs`) and for `mutations::
 /// demo_mutation_cases()`/`diff::demo_diff_cases()`.
-pub async fn demo_ifc_snapshot() -> IfcSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_ifc_snapshot() -> IfcSnapshot {
     use crate::artifacts::ifc::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
     IfcSnapshot {
         schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
@@ -264,12 +271,13 @@ pub async fn demo_ifc_snapshot() -> IfcSnapshot {
 /// engine::register()` entry point before that override's `fn register()` shadows it.
 ///
 /// Registers codecs and the artifact schema descriptor.
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     crate::artifacts::ifc::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA).await);
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
@@ -278,7 +286,8 @@ pub async fn register() {
 /// dedicated "diff binary" role even though `🔺️diff/💾️binary/📡️component.protocol.semio` is a
 /// real, conformance-tested file — its binary form is exercised directly by `protocol_walk_law`
 /// below, just not wired through a 6th `LanguageRole`).
-pub async fn register_pilot_languages() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc",
         extension: Some("ifc"),
@@ -338,14 +347,16 @@ pub async fn register_pilot_languages() {
 /// fabricating an unrelated spec, per the recipe's own instruction.
 
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
-pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register

@@ -30,48 +30,53 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 
 //#region 🔖️GraphResolve
-async fn real_of(v: &StepValue) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn real_of(v: &StepValue) -> Option<f64> {
     match v {
         StepValue::Real(r) => Some(*r),
         StepValue::Integer(i) => Some(*i as f64),
         _ => None,
     }
 }
-async fn reference_of(v: &StepValue) -> Option<u64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn reference_of(v: &StepValue) -> Option<u64> {
     match v {
         StepValue::Reference(id) => Some(*id),
         _ => None,
     }
 }
-async fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xy_of_aggregate(v: &StepValue) -> Option<(f64, f64)> {
     match v {
-        StepValue::Aggregate(items) if items.len() >= 2 => Some((real_of(&items[0]).await?, real_of(&items[1]).await?)),
+        StepValue::Aggregate(items) if items.len() >= 2 => Some((real_of(&items[0])?, real_of(&items[1])?)),
         _ => None,
     }
 }
 
 /// 🔎️ `CARTESIAN_POINT` directly, or one hop through `AXIS2_PLACEMENT_2D`/`_3D`'s `location` ref.
-async fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)> {
     let e = idx.get(&id)?;
     match e.name.as_str() {
-        "CARTESIAN_POINT" => xy_of_aggregate(e.args.get(1)?).await,
-        "AXIS2_PLACEMENT_2D" | "AXIS2_PLACEMENT_3D" => Box::pin(resolve_point(reference_of(e.args.get(1)?).await?, idx)).await,
+        "CARTESIAN_POINT" => xy_of_aggregate(e.args.get(1)?),
+        "AXIS2_PLACEMENT_2D" | "AXIS2_PLACEMENT_3D" => Box::pin(resolve_point(reference_of(e.args.get(1)?)?, idx)),
         _ => None,
     }
 }
 
-async fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
-    let start = resolve_point(reference_of(e.args.get(1)?).await?, idx).await?;
-    let vector = idx.get(&reference_of(e.args.get(2)?).await?)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
+    let start = resolve_point(reference_of(e.args.get(1)?)?, idx)?;
+    let vector = idx.get(&reference_of(e.args.get(2)?)?)?;
     if vector.name != "VECTOR" {
         return None;
     }
-    let magnitude = real_of(vector.args.get(2)?).await?;
-    let direction = idx.get(&reference_of(vector.args.get(1)?).await?)?;
+    let magnitude = real_of(vector.args.get(2)?)?;
+    let direction = idx.get(&reference_of(vector.args.get(1)?)?)?;
     if direction.name != "DIRECTION" {
         return None;
     }
-    let (dx, dy) = xy_of_aggregate(direction.args.get(1)?).await?;
+    let (dx, dy) = xy_of_aggregate(direction.args.get(1)?)?;
     let len = (dx * dx + dy * dy).sqrt();
     if len == 0.0 {
         return None;
@@ -80,9 +85,10 @@ async fn resolve_line(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option
     Some(CadEntity::Line { a: SemioPoint2 { x: start.0, y: start.1 }, b: SemioPoint2 { x: end.0, y: end.1 } })
 }
 
-async fn resolve_circle(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
-    let center = resolve_point(reference_of(e.args.get(1)?).await?, idx).await?;
-    let radius = real_of(e.args.get(2)?).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve_circle(e: &StepEntity, idx: &HashMap<u64, &StepEntity>) -> Option<CadEntity> {
+    let center = resolve_point(reference_of(e.args.get(1)?)?, idx)?;
+    let radius = real_of(e.args.get(2)?)?;
     Some(CadEntity::Circle { center: SemioPoint2 { x: center.0, y: center.1 }, radius })
 }
 //#endregion 🔖️GraphResolve

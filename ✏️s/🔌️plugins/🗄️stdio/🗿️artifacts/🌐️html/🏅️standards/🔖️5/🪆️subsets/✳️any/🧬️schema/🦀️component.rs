@@ -25,20 +25,24 @@ impl Default for HtmlArtifact {
 }
 
 impl HtmlArtifact {
-    pub async fn to_snapshot(&self) -> HtmlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> HtmlSnapshot {
         HtmlSnapshot { schema: self.schema.clone(), doctype: self.doctype.clone(), root: self.root.clone() }
     }
-    pub async fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: HtmlSnapshot) -> Self {
         Self { schema: snapshot.schema, doctype: snapshot.doctype, root: snapshot.root }
     }
-    pub async fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: HtmlSnapshot) {
         self.schema = snapshot.schema;
         self.doctype = snapshot.doctype;
         self.root = snapshot.root;
     }
 }
 
-pub async fn html_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn html_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.html",
         artifact: schema::FacetLeaves {
@@ -101,7 +105,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_html_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <HtmlDiff as protocol::MutationDiff<HtmlSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -135,7 +139,7 @@ pub mod derived_analysis {
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if engine::sniff_real_bytes(bytes).await {
+                    if engine::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_HTML_DOCUMENT_SCHEMA.as_bytes();
@@ -146,7 +150,7 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    if engine::sniff_real_bytes(text.as_bytes()).await || text.contains(STDIO_HTML_DOCUMENT_SCHEMA) {
+                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_HTML_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

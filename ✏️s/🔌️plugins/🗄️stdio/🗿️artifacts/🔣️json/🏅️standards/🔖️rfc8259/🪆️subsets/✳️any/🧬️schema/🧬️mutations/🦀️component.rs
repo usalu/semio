@@ -31,7 +31,8 @@ pub type JsonPath = Vec<JsonPathSegment>;
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment
 /// (missing key, out-of-range index, or a segment applied to the wrong node kind).
-async fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
@@ -103,15 +104,17 @@ impl Default for JsonMutation {
 /// 🧩 Lowers a leaf [`JsonValueDiff`] (addressing the node found at `path`) into the nested
 /// modified-chain matching the recipe's tree-nesting rule — no path addressing inside diffs
 /// themselves, only at the mutation level.
-async fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDiff {
     JsonDiff { value: leaf.map(|leaf| wrap_at_path(path, leaf)) }
 }
 
-async fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
     match path.split_first() {
         None => leaf,
-        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: Box::pin(wrap_at_path(rest, leaf)).await }] } },
-        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonArrayModified { index: *index, diff: Box::pin(wrap_at_path(rest, leaf)).await }] } },
+        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: Box::pin(wrap_at_path(rest, leaf)) }] } },
+        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonArrayModified { index: *index, diff: Box::pin(wrap_at_path(rest, leaf)) }] } },
     }
 }
 //#endregion 🔖️DiffAtPath
@@ -119,14 +122,15 @@ async fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValu
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
 /// once from the pre-mutation state, applied to produce the new state, and returned.
-pub async fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
-    let outcome = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
+    let outcome = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -138,38 +142,38 @@ impl Mutation<JsonSnapshot> for JsonMutation {
     async fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JsonMutation::NoMutation => JsonDiff::default(),
-            JsonMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            JsonMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
-            JsonMutation::SetMember { path, key, value } => match resolve(&base.value, path).await {
+            JsonMutation::SetMember { path, key, value } => match resolve(&base.value, path) {
                 Some(JsonValue::Object { members }) => match members.iter().find(|m| &m.key == key) {
                     Some(existing) => {
-                        let leaf = crate::artifacts::json::schema::diff::value_diff_between(&existing.value, value).await;
+                        let leaf = crate::artifacts::json::schema::diff::value_diff_between(&existing.value, value);
                         diff_at_path(path, leaf.map(|diff| JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff }] } }))
                     }
                     None => diff_at_path(path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonObjectAdded { index: members.len(), key: key.clone(), item: value.clone() }] } })),
-                }.await,
+                },
                 _ => JsonDiff::default(),
             },
 
-            JsonMutation::RemoveMember { path, key } => match resolve(&base.value, path).await {
-                Some(JsonValue::Object { members }) if members.iter().any(|m| &m.key == key) => diff_at_path(path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() } })).await,
+            JsonMutation::RemoveMember { path, key } => match resolve(&base.value, path) {
+                Some(JsonValue::Object { members }) if members.iter().any(|m| &m.key == key) => diff_at_path(path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() } })),
                 _ => JsonDiff::default(),
             },
 
-            JsonMutation::InsertArrayElement { path, index, value } => match resolve(&base.value, path).await {
+            JsonMutation::InsertArrayElement { path, index, value } => match resolve(&base.value, path) {
                 Some(JsonValue::Array { items }) => {
-                    diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonArrayAdded { index: (*index).min(items.len()), item: value.clone() }] } })).await
+                    diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), modified: Vec::new(), added: vec![JsonArrayAdded { index: (*index).min(items.len()), item: value.clone() }] } }))
                 }
                 _ => JsonDiff::default(),
             },
 
-            JsonMutation::RemoveArrayElement { path, index } => match resolve(&base.value, path).await {
-                Some(JsonValue::Array { items }) if *index < items.len() => diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() } })).await,
+            JsonMutation::RemoveArrayElement { path, index } => match resolve(&base.value, path) {
+                Some(JsonValue::Array { items }) if *index < items.len() => diff_at_path(path, Some(JsonValueDiff::Array { diff: JsonArrayDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() } })),
                 _ => JsonDiff::default(),
             },
 
-            JsonMutation::SetScalar { path, value } => match resolve(&base.value, path).await {
-                Some(old) if old != value => diff_at_path(path, Some(JsonValueDiff::Replace { value: value.clone() })).await,
+            JsonMutation::SetScalar { path, value } => match resolve(&base.value, path) {
+                Some(old) if old != value => diff_at_path(path, Some(JsonValueDiff::Replace { value: value.clone() })),
                 _ => JsonDiff::default(),
             },
         }).await
@@ -183,7 +187,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
             JsonMutation::NoMutation => vec![JsonMutation::NoMutation],
             JsonMutation::SetSnapshot { .. } => vec![JsonMutation::SetSnapshot { snapshot: base.clone() }],
 
-            JsonMutation::SetMember { path, key, .. } => match resolve(&base.value, path).await {
+            JsonMutation::SetMember { path, key, .. } => match resolve(&base.value, path) {
                 Some(JsonValue::Object { members }) => match members.iter().find(|m| &m.key == key) {
                     Some(existing) => vec![JsonMutation::SetMember { path: path.clone(), key: key.clone(), value: existing.value.clone() }],
                     None => vec![JsonMutation::RemoveMember { path: path.clone(), key: key.clone() }],
@@ -198,7 +202,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
             // removing every member that originally followed `key`, then re-adding `key` and each
             // of them back in original order — every re-add is an append, landing them exactly
             // where they started.
-            JsonMutation::RemoveMember { path, key } => match resolve(&base.value, path).await {
+            JsonMutation::RemoveMember { path, key } => match resolve(&base.value, path) {
                 Some(JsonValue::Object { members }) => match members.iter().position(|m| &m.key == key) {
                     Some(pos) => {
                         let tail: Vec<JsonMember> = members[pos + 1..].to_vec();
@@ -212,12 +216,12 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 _ => vec![JsonMutation::NoMutation],
             },
 
-            JsonMutation::InsertArrayElement { path, index, .. } => match resolve(&base.value, path).await {
+            JsonMutation::InsertArrayElement { path, index, .. } => match resolve(&base.value, path) {
                 Some(JsonValue::Array { items }) => vec![JsonMutation::RemoveArrayElement { path: path.clone(), index: (*index).min(items.len()) }],
                 _ => vec![JsonMutation::NoMutation],
             },
 
-            JsonMutation::RemoveArrayElement { path, index } => match resolve(&base.value, path).await {
+            JsonMutation::RemoveArrayElement { path, index } => match resolve(&base.value, path) {
                 Some(JsonValue::Array { items }) => match items.get(*index) {
                     Some(item) => vec![JsonMutation::InsertArrayElement { path: path.clone(), index: *index, value: item.clone() }],
                     None => vec![JsonMutation::NoMutation],
@@ -225,7 +229,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 _ => vec![JsonMutation::NoMutation],
             },
 
-            JsonMutation::SetScalar { path, .. } => match resolve(&base.value, path).await {
+            JsonMutation::SetScalar { path, .. } => match resolve(&base.value, path) {
                 Some(old) => vec![JsonMutation::SetScalar { path: path.clone(), value: old.clone() }],
                 None => vec![JsonMutation::NoMutation],
             },
@@ -240,36 +244,43 @@ impl Mutation<JsonSnapshot> for JsonMutation {
 /// (`hex_encode`/`enc_json_value`/`split_top_level`/...) rather than duplicating them a second
 /// time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape the derive's
 /// own handcrafted-wrapper convention uses, `f6-recon-report.md` §2), one match arm per variant.
-async fn enc_json_path_segment(seg: &JsonPathSegment) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_json_path_segment(seg: &JsonPathSegment) -> String {
     match seg {
         JsonPathSegment::Key(key) => format!("K[{}]", enc_str(key)),
         JsonPathSegment::Index(index) => format!("I[{index}]"),
     }
 }
-async fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_json_path_segment(s: &str) -> Result<JsonPathSegment, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
-        "K" => Ok(JsonPathSegment::Key(dec_str(strip_brackets(rest).await?).await?)),
-        "I" => Ok(JsonPathSegment::Index(parse_usize(strip_brackets(rest).await?).await?)),
+        "K" => Ok(JsonPathSegment::Key(dec_str(strip_brackets(rest)?)?)),
+        "I" => Ok(JsonPathSegment::Index(parse_usize(strip_brackets(rest)?)?)),
         other => Err(format!("json path segment: unknown tag {other:?}")),
     }
 }
-async fn enc_json_path(p: &JsonPath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_json_path(p: &JsonPath) -> String {
     format!("[{}]", p.iter().map(enc_json_path_segment).collect::<Vec<_>>().join(","))
 }
-async fn dec_json_path(s: &str) -> Result<JsonPath, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_path_segment).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_json_path(s: &str) -> Result<JsonPath, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_path_segment).collect()
 }
-async fn enc_json_snapshot(s: &JsonSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_json_snapshot(s: &JsonSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_json_value(&s.value))
 }
-async fn dec_json_snapshot(s: &str) -> Result<JsonSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_json_snapshot(s: &str) -> Result<JsonSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, value] = parts.as_slice() else { return Err(format!("json snapshot: expected 2 fields, got {}", parts.len())) };
-    Ok(JsonSnapshot { schema: dec_str(schema).await?, value: dec_json_value(value).await? })
+    Ok(JsonSnapshot { schema: dec_str(schema)?, value: dec_json_value(value)? })
 }
 
-async fn print_json_mutation(m: &JsonMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_json_mutation(m: &JsonMutation) -> String {
     match m {
         JsonMutation::NoMutation => "no-mutation".to_string(),
         JsonMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_json_snapshot(snapshot)),
@@ -284,7 +295,8 @@ async fn print_json_mutation(m: &JsonMutation) -> String {
         JsonMutation::SetScalar { path, value } => format!("set-scalar path={} value={}", enc_json_path(path), enc_json_value(value)),
     }
 }
-async fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
     if line == "no-mutation" {
         return Ok(JsonMutation::NoMutation);
     }
@@ -293,22 +305,22 @@ async fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("json mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(JsonMutation::SetSnapshot { snapshot: dec_json_snapshot(arg("snapshot")?).await? }),
-        "set-member" => Ok(JsonMutation::SetMember { path: dec_json_path(arg("path")?).await?, key: dec_str(arg("key")?).await?, value: dec_json_value(arg("value")?).await? }),
-        "remove-member" => Ok(JsonMutation::RemoveMember { path: dec_json_path(arg("path")?).await?, key: dec_str(arg("key")?).await? }),
-        "insert-array-element" => Ok(JsonMutation::InsertArrayElement { path: dec_json_path(arg("path")?).await?, index: usize_arg("index")?, value: dec_json_value(arg("value")?).await? }),
-        "remove-array-element" => Ok(JsonMutation::RemoveArrayElement { path: dec_json_path(arg("path")?).await?, index: usize_arg("index")? }),
-        "set-scalar" => Ok(JsonMutation::SetScalar { path: dec_json_path(arg("path")?).await?, value: dec_json_value(arg("value")?).await? }),
+        "set-snapshot" => Ok(JsonMutation::SetSnapshot { snapshot: dec_json_snapshot(arg("snapshot")?)? }),
+        "set-member" => Ok(JsonMutation::SetMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_json_value(arg("value")?)? }),
+        "remove-member" => Ok(JsonMutation::RemoveMember { path: dec_json_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
+        "insert-array-element" => Ok(JsonMutation::InsertArrayElement { path: dec_json_path(arg("path")?)?, index: usize_arg("index")?, value: dec_json_value(arg("value")?)? }),
+        "remove-array-element" => Ok(JsonMutation::RemoveArrayElement { path: dec_json_path(arg("path")?)?, index: usize_arg("index")? }),
+        "set-scalar" => Ok(JsonMutation::SetScalar { path: dec_json_path(arg("path")?)?, value: dec_json_value(arg("value")?)? }),
         other => Err(format!("json mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for JsonMutation {
     async fn print_op(&self) -> String {
-        print_json_mutation(self).await
+        print_json_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_json_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_json_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -317,7 +329,8 @@ impl OpText for JsonMutation {
 /// [`enc_json_snapshot`]/[`dec_json_snapshot`] above, reusing `JsonDiff`'s `enc_json_value_bin`/
 /// `dec_json_value_bin`/`write_str_lp`/`read_str_lp` (see `../🔺️diff/🦀️component.rs`) — backs the
 /// upgraded `OpBinary` impl below. `JsonPathSegment` gets its own 1-byte tag (`0`=Key,`1`=Index).
-async fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, path.len() as u64);
     for segment in path {
         match segment {
@@ -332,26 +345,29 @@ async fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
         match tag {
-            0 => path.push(JsonPathSegment::Key(read_str_lp(reader).await?)),
-            1 => path.push(JsonPathSegment::Index(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize)),
+            0 => path.push(JsonPathSegment::Key(read_str_lp(reader)?)),
+            1 => path.push(JsonPathSegment::Index(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
             other => return Err(format!("json path binary: unknown segment tag {other}")),
         }
     }
     Ok(path)
 }
-async fn enc_json_snapshot_bin(snapshot: &JsonSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_json_snapshot_bin(snapshot: &JsonSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &snapshot.schema);
     enc_json_value_bin(&snapshot.value, out);
 }
-async fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let value = dec_json_value_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let value = dec_json_value_bin(reader)?;
     Ok(JsonSnapshot { schema, value })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -375,7 +391,7 @@ impl protocol::OpBinary for JsonMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             JsonMutation::NoMutation => {}
-            JsonMutation::SetSnapshot { snapshot } => enc_json_snapshot_bin(snapshot, &mut out).await,
+            JsonMutation::SetSnapshot { snapshot } => enc_json_snapshot_bin(snapshot, &mut out),
             JsonMutation::SetMember { path, key, value } => {
                 enc_json_path_bin(path, &mut out);
                 write_str_lp(&mut out, key);
@@ -410,34 +426,34 @@ impl protocol::OpBinary for JsonMutation {
         match tag {
             0 => Ok(JsonMutation::NoMutation),
             1 => {
-                let snapshot = dec_json_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_json_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_json_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).await.map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_json_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::SetMember { path, key, value })
             }
             3 => {
-                let path = dec_json_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).await.map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::RemoveMember { path, key })
             }
             4 => {
-                let path = dec_json_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_json_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::InsertArrayElement { path, index, value })
             }
             5 => {
-                let path = dec_json_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(JsonMutation::RemoveArrayElement { path, index })
             }
             6 => {
-                let path = dec_json_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_json_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::SetScalar { path, value })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -453,20 +469,25 @@ impl protocol::OpBinary for JsonMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, so a new variant only needs
 /// adding here once.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<JsonMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
     use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
-    async fn arr(items: Vec<JsonValue>) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
-    async fn str_(s: &str) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
-    async fn num(lexeme: &str) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
 
@@ -490,27 +511,33 @@ mod tests {
     use super::*;
     use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-    async fn snap(value: JsonValue) -> JsonSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snap(value: JsonValue) -> JsonSnapshot {
         JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value }
     }
 
-    async fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn objv(pairs: Vec<(&str, JsonValue)>) -> JsonValue {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
-    async fn arr(items: Vec<JsonValue>) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn arr(items: Vec<JsonValue>) -> JsonValue {
         JsonValue::Array { items }
     }
 
-    async fn num(lexeme: &str) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn num(lexeme: &str) -> JsonValue {
         JsonValue::Number { lexeme: lexeme.into() }
     }
 
-    async fn str_(s: &str) -> JsonValue {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn str_(s: &str) -> JsonValue {
         JsonValue::String { value: s.into() }
     }
 
-    async fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, protocol::MutationOutcome<JsonDiff>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, protocol::MutationOutcome<JsonDiff>) {
         let mut via_apply = base.clone();
         let returned = apply_json_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);

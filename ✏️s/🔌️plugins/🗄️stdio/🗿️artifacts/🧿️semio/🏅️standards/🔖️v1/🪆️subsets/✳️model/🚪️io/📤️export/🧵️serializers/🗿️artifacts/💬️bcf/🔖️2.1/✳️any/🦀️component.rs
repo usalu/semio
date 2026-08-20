@@ -29,41 +29,45 @@ impl ArtifactSerializer for SemioModelToBcf {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(bcf_from_model(from).await)
+        Ok(bcf_from_model(from))
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Serializer
 
 //#region 🔖️Convert
-async fn text_property<'a>(properties: &'a [crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn text_property<'a>(properties: &'a [crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Text { value } => Some(value.as_str()),
         _ => None,
     })
 }
 
-async fn number_property(properties: &[crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn number_property(properties: &[crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<f64> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Number { value } => Some(*value),
         _ => None,
     })
 }
 
-async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
     let empty: Vec<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property> = Vec::new();
     let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map(|p| p.properties.as_slice()).unwrap_or(&empty);
     let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map(|p| p.properties.as_slice()).unwrap_or(&empty);
 
-    let count = number_property(comments_props, "count").await.unwrap_or(0.0) as usize;
+    let count = number_property(comments_props, "count").unwrap_or(0.0) as usize;
     let comments = (0..count)
         .map(|i| BcfComment {
-            guid: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_guid"))).unwrap_or_default().to_string(),
-            date: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_date"))).unwrap_or_default().to_string(),
-            author: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_author"))).unwrap_or_default().to_string(),
-            text: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_text"))).unwrap_or_default().to_string(),
-            viewpoint_ref: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_viewpointRef"))).map(str::to_string),
+            guid: text_property(comments_props, &format!("comment_{i}_guid")).unwrap_or_default().to_string(),
+            date: text_property(comments_props, &format!("comment_{i}_date")).unwrap_or_default().to_string(),
+            author: text_property(comments_props, &format!("comment_{i}_author")).unwrap_or_default().to_string(),
+            text: text_property(comments_props, &format!("comment_{i}_text")).unwrap_or_default().to_string(),
+            viewpoint_ref: text_property(comments_props, &format!("comment_{i}_viewpointRef")).map(str::to_string),
         })
         .collect();
 
@@ -75,13 +79,13 @@ async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::su
 
     BcfTopic {
         guid: element.id.clone(),
-        title: text_property(topic_props, "title").await.unwrap_or_default().to_string(),
-        description: text_property(topic_props, "description").await.unwrap_or_default().to_string(),
-        status: text_property(topic_props, "status").await.unwrap_or_default().to_string(),
-        priority: text_property(topic_props, "priority").await.unwrap_or_default().to_string(),
-        labels: text_property(topic_props, "labels").await.map(|s| s.split('|').filter(|l| !l.is_empty()).map(str::to_string).collect()).unwrap_or_default(),
-        creation_date: text_property(topic_props, "creationDate").await.unwrap_or_default().to_string(),
-        creation_author: text_property(topic_props, "creationAuthor").await.unwrap_or_default().to_string(),
+        title: text_property(topic_props, "title").unwrap_or_default().to_string(),
+        description: text_property(topic_props, "description").unwrap_or_default().to_string(),
+        status: text_property(topic_props, "status").unwrap_or_default().to_string(),
+        priority: text_property(topic_props, "priority").unwrap_or_default().to_string(),
+        labels: text_property(topic_props, "labels").map(|s| s.split('|').filter(|l| !l.is_empty()).map(str::to_string).collect()).unwrap_or_default(),
+        creation_date: text_property(topic_props, "creationDate").unwrap_or_default().to_string(),
+        creation_author: text_property(topic_props, "creationAuthor").unwrap_or_default().to_string(),
         comments,
         viewpoints,
     }
@@ -89,7 +93,8 @@ async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::su
 //#endregion 🔖️Convert
 
 //#region 🔖️Entry
-pub async fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn bcf_from_model(from: &SemioModelSnapshot) -> BcfSnapshot {
     let topics = from
         .elements
         .iter()
@@ -111,7 +116,8 @@ mod tests {
     use crate::artifacts::bcf::schema::snapshot::{BcfComment as BcfCommentT, BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT};
     use crate::artifacts::semio::standards::v1::subsets::model::io::import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
 
-    async fn fixture() -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> BcfSnapshot {
         BcfSnapshot {
             schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),

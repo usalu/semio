@@ -398,7 +398,7 @@ pub async fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
     for raw in &raw_ifds {
         let mut entries = Vec::with_capacity(raw.entries.len());
         for entry in &raw.entries {
-            let kind = TiffFieldType::from_u16(entry.typ).await?;
+            let kind = TiffFieldType::from_u16(entry.typ)?;
             let values = read_tag_values(data, entry, e, kind).await?;
             entries.push(TiffTag { tag: entry.tag, kind, values });
         }
@@ -477,8 +477,8 @@ async fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
 /// `SetTag`-set metadata round-trips. `byte_order` is honored (real round-trip, unlike the
 /// pre-migration engine which always emitted little-endian).
 async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
-    let width = snap.width().await.ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
-    let height = snap.height().await.ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
+    let width = snap.width().ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
+    let height = snap.height().ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
     if width == 0 || height == 0 {
         return Err("tiff: empty image".into());
     }
@@ -517,8 +517,8 @@ async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>
     let mut cursor = out_of_line_start;
     for t in &entries {
         write_u16(&mut out, t.tag, snap.byte_order);
-        write_u16(&mut out, t.kind.to_u16().await, snap.byte_order);
-        write_u32(&mut out, t.values.count().await, snap.byte_order);
+        write_u16(&mut out, t.kind.to_u16(), snap.byte_order);
+        write_u32(&mut out, t.values.count(), snap.byte_order);
         let vb = value_bytes(&t.values, snap.byte_order).await;
         if vb.len() <= 4 {
             let mut field = [0u8; 4];

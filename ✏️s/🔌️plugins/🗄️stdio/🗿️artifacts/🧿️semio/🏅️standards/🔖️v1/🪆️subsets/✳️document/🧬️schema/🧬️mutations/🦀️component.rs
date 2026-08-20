@@ -48,7 +48,8 @@ pub struct DocBlockPath {
 }
 
 impl DocBlockPath {
-    pub async fn top(index: usize) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn top(index: usize) -> Self {
         Self { segments: Vec::new(), index }
     }
 }
@@ -56,21 +57,22 @@ impl DocBlockPath {
 /// 🧭️ Resolves the block list a path's segments navigate to (the parent list `path.index` slots
 /// into), immutable form. `pub(crate)` so builder/composer callers can reuse it without
 /// duplicating the traversal.
-pub(crate) async fn resolve_blocks<'a>(body: &'a [DocBlock], segments: &[DocPathSegment]) -> Option<&'a [DocBlock]> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn resolve_blocks<'a>(body: &'a [DocBlock], segments: &[DocPathSegment]) -> Option<&'a [DocBlock]> {
     match segments.split_first() {
         None => Some(body),
         Some((seg, rest)) => match seg {
             DocPathSegment::Quote { block_index } => {
                 let DocBlock::Quote { blocks } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(blocks, rest)).await
+                Box::pin(resolve_blocks(blocks, rest))
             }
             DocPathSegment::ListItem { block_index, item } => {
                 let DocBlock::List { items, .. } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(&items.get(*item)?.blocks, rest)).await
+                Box::pin(resolve_blocks(&items.get(*item)?.blocks, rest))
             }
             DocPathSegment::TableCell { block_index, row, cell } => {
                 let DocBlock::Table { rows } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(&rows.get(*row)?.cells.get(*cell)?.blocks, rest)).await
+                Box::pin(resolve_blocks(&rows.get(*row)?.cells.get(*cell)?.blocks, rest))
             }
         },
     }
@@ -83,7 +85,8 @@ enum DocBlockLeaf {
 }
 
 impl DocBlockLeaf {
-    async fn into_blocks_diff(self, index: usize) -> BlocksDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn into_blocks_diff(self, index: usize) -> BlocksDiff {
         match self {
             Self::Modified(diff) => BlocksDiff { modified: vec![IndexModified { index, diff }], ..Default::default() },
             Self::Inserted(block) => BlocksDiff { added: vec![IndexAdded { index, item: block }], ..Default::default() },
@@ -95,25 +98,27 @@ impl DocBlockLeaf {
 /// 🧭️ Lowers a `leaf` diff targeting the block addressed by `path` into a full
 /// `SemioDocumentDiff` by nesting it through `Quote`/`List`/`Table` from the document root down
 /// to that depth (mirrors docx's `wrap_body_diff`, generalized to 3 container kinds).
-async fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff {
-    async fn go(segments: &[DocPathSegment], index: usize, leaf: DocBlockLeaf) -> BlocksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn go(segments: &[DocPathSegment], index: usize, leaf: DocBlockLeaf) -> BlocksDiff {
         match segments.split_first() {
-            None => leaf.into_blocks_diff(index).await,
+            None => leaf.into_blocks_diff(index),
             Some((seg, rest)) => {
                 let inner = go(rest, index, leaf);
                 match seg {
                     DocPathSegment::Quote { block_index } => {
-                        let qd = DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(Box::pin(inner).await) });
+                        let qd = DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(Box::pin(inner)) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: qd }], ..Default::default() }
                     }
                     DocPathSegment::ListItem { block_index, item } => {
-                        let item_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(Box::pin(inner).await) };
+                        let item_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(Box::pin(inner)) };
                         let items_diff: ListItemsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *item, diff: item_diff }], ..Default::default() };
                         let ld = DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: None, items: Some(items_diff) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: ld }], ..Default::default() }
                     }
                     DocPathSegment::TableCell { block_index, row, cell } => {
-                        let cell_diff = DocTableCellDiff { blocks: Some(Box::pin(inner).await) };
+                        let cell_diff = DocTableCellDiff { blocks: Some(Box::pin(inner)) };
                         let cells_diff: TableCellsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *cell, diff: cell_diff }], ..Default::default() };
                         let row_diff = DocTableRowDiff { cells: Some(cells_diff) };
                         let rows_diff: TableRowsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *row, diff: row_diff }], ..Default::default() };
@@ -125,7 +130,7 @@ async fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumen
         }
     }
     let blocks = go(&path.segments, path.index, leaf);
-    SemioDocumentDiff { styles: None, images: None, blocks: Some(blocks.await) }
+    SemioDocumentDiff { styles: None, images: None, blocks: Some(blocks) }
 }
 //#endregion 🔖️PathAddressing
 
@@ -226,23 +231,28 @@ pub enum SemioDocumentMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub async fn apply_semio_document_mutation(snapshot: &mut SemioDocumentSnapshot, mutation: &SemioDocumentMutation) -> protocol::MutationOutcome<SemioDocumentDiff> {
-    let outcome = Mutation::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_document_mutation(snapshot: &mut SemioDocumentSnapshot, mutation: &SemioDocumentMutation) -> protocol::MutationOutcome<SemioDocumentDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-async fn block_at<'a>(base: &'a SemioDocumentSnapshot, path: &DocBlockPath) -> Option<&'a DocBlock> {
-    resolve_blocks(&base.blocks, &path.segments).await?.get(path.index)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn block_at<'a>(base: &'a SemioDocumentSnapshot, path: &DocBlockPath) -> Option<&'a DocBlock> {
+    resolve_blocks(&base.blocks, &path.segments)?.get(path.index)
 }
-async fn style_at<'a>(base: &'a SemioDocumentSnapshot, id: &str) -> Option<&'a DocStyle> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn style_at<'a>(base: &'a SemioDocumentSnapshot, id: &str) -> Option<&'a DocStyle> {
     base.styles.iter().find(|s| s.id == id)
 }
-async fn image_at<'a>(base: &'a SemioDocumentSnapshot, id: &str) -> Option<&'a DocImage> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn image_at<'a>(base: &'a SemioDocumentSnapshot, id: &str) -> Option<&'a DocImage> {
     base.images.iter().find(|i| i.id == id)
 }
-async fn runs_of(block: &DocBlock) -> Option<&Vec<DocRun>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn runs_of(block: &DocBlock) -> Option<&Vec<DocRun>> {
     match block {
         DocBlock::Paragraph { runs, .. } | DocBlock::Heading { runs, .. } => Some(runs),
         _ => None,
@@ -250,7 +260,8 @@ async fn runs_of(block: &DocBlock) -> Option<&Vec<DocRun>> {
 }
 /// 🎯️ Wraps a `RunsDiff` into the right `DocBlockDiff` variant depending on whether `block` is a
 /// `Paragraph` or a `Heading` (the only two run-carrying kinds).
-async fn wrap_runs_diff(block: &DocBlock, runs: RunsDiff) -> Option<DocBlockDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_runs_diff(block: &DocBlock, runs: RunsDiff) -> Option<DocBlockDiff> {
     match block {
         DocBlock::Paragraph { .. } => Some(DocBlockDiff::Paragraph(DocParagraphDiff { style_id: None, runs: Some(runs) })),
         DocBlock::Heading { .. } => Some(DocBlockDiff::Heading(DocHeadingDiff { level: None, style_id: None, runs: Some(runs) })),
@@ -266,46 +277,46 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
     async fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioDocumentMutation::NoMutation => SemioDocumentDiff::default(),
-            SemioDocumentMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            SemioDocumentMutation::InsertBlock { path, block } => wrap_body_diff(path, DocBlockLeaf::Inserted(block.clone())).await,
-            SemioDocumentMutation::RemoveBlock { path } => wrap_body_diff(path, DocBlockLeaf::Removed).await,
-            SemioDocumentMutation::SetBlockContent { path, block } => match block_at(base, path).await {
-                Some(old) => match diff_block(old, block).await {
-                    Some(d) => wrap_body_diff(path, DocBlockLeaf::Modified(d)).await,
+            SemioDocumentMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            SemioDocumentMutation::InsertBlock { path, block } => wrap_body_diff(path, DocBlockLeaf::Inserted(block.clone())),
+            SemioDocumentMutation::RemoveBlock { path } => wrap_body_diff(path, DocBlockLeaf::Removed),
+            SemioDocumentMutation::SetBlockContent { path, block } => match block_at(base, path) {
+                Some(old) => match diff_block(old, block) {
+                    Some(d) => wrap_body_diff(path, DocBlockLeaf::Modified(d)),
                     None => SemioDocumentDiff::default(),
                 },
                 None => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::SetParagraphStyle { path, style_id } => match block_at(base, path).await {
-                Some(DocBlock::Paragraph { style_id: old, .. }) if old != style_id => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Paragraph(DocParagraphDiff { style_id: Some(style_id.clone()), runs: None }))).await,
+            SemioDocumentMutation::SetParagraphStyle { path, style_id } => match block_at(base, path) {
+                Some(DocBlock::Paragraph { style_id: old, .. }) if old != style_id => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Paragraph(DocParagraphDiff { style_id: Some(style_id.clone()), runs: None }))),
                 _ => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::SetHeadingLevel { path, level } => match block_at(base, path).await {
-                Some(DocBlock::Heading { level: old, .. }) if old != level => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Heading(DocHeadingDiff { level: Some(*level), style_id: None, runs: None }))).await,
+            SemioDocumentMutation::SetHeadingLevel { path, level } => match block_at(base, path) {
+                Some(DocBlock::Heading { level: old, .. }) if old != level => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::Heading(DocHeadingDiff { level: Some(*level), style_id: None, runs: None }))),
                 _ => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::SetListOrdered { path, ordered } => match block_at(base, path).await {
+            SemioDocumentMutation::SetListOrdered { path, ordered } => match block_at(base, path) {
                 Some(DocBlock::List { ordered: old, .. }) if old != ordered => {
-                    wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None }))).await
+                    wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None })))
                 }
                 _ => SemioDocumentDiff::default(),
             },
             SemioDocumentMutation::SetRunText { path, run_index, text } => {
-                let Some(block) = block_at(base, path).await else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(runs) = runs_of(block).await else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
                 let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
                 if &run.text == text {
                     return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await;
                 }
                 let rd: RunsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *run_index, diff: DocRunDiff { text: Some(text.clone()), style: None } }], ..Default::default() };
-                match wrap_runs_diff(block, rd).await {
-                    Some(bd) => wrap_body_diff(path, DocBlockLeaf::Modified(bd)).await,
+                match wrap_runs_diff(block, rd) {
+                    Some(bd) => wrap_body_diff(path, DocBlockLeaf::Modified(bd)),
                     None => SemioDocumentDiff::default(),
                 }
             }
             SemioDocumentMutation::SetRunStyle { path, run_index, style } => {
-                let Some(block) = block_at(base, path).await else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(runs) = runs_of(block).await else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
                 let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
                 if &run.style == style {
                     return protocol::MutationOutcome::new(SemioDocumentDiff::default());
@@ -320,16 +331,16 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                     link: Some(style.link.clone()),
                 };
                 let rd: RunsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *run_index, diff: DocRunDiff { text: None, style: Some(style_diff) } }], ..Default::default() };
-                match wrap_runs_diff(block, rd).await {
-                    Some(bd) => wrap_body_diff(path, DocBlockLeaf::Modified(bd)).await,
+                match wrap_runs_diff(block, rd) {
+                    Some(bd) => wrap_body_diff(path, DocBlockLeaf::Modified(bd)),
                     None => SemioDocumentDiff::default(),
                 }
             }
-            SemioDocumentMutation::SetImageBlock { path, image_id, alt, width, height } => match block_at(base, path).await {
+            SemioDocumentMutation::SetImageBlock { path, image_id, alt, width, height } => match block_at(base, path) {
                 Some(old @ DocBlock::Image { .. }) => {
                     let new = DocBlock::Image { image_id: image_id.clone(), alt: alt.clone(), width: *width, height: *height };
-                    match diff_block(old, &new).await {
-                        Some(d) => wrap_body_diff(path, DocBlockLeaf::Modified(d)).await,
+                    match diff_block(old, &new) {
+                        Some(d) => wrap_body_diff(path, DocBlockLeaf::Modified(d)),
                         None => SemioDocumentDiff::default(),
                     }
                 }
@@ -341,7 +352,7 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
             SemioDocumentMutation::RemoveStyle { id } => {
                 SemioDocumentDiff { styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff { removed: vec![id.clone()], ..Default::default() }), images: None, blocks: None }
             }
-            SemioDocumentMutation::SetStyleName { id, name } => match style_at(base, id).await {
+            SemioDocumentMutation::SetStyleName { id, name } => match style_at(base, id) {
                 Some(old) if &old.name != name => SemioDocumentDiff {
                     styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
                         modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified {
@@ -355,7 +366,7 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 },
                 _ => SemioDocumentDiff::default(),
             },
-            SemioDocumentMutation::SetStyleBasedOn { id, based_on } => match style_at(base, id).await {
+            SemioDocumentMutation::SetStyleBasedOn { id, based_on } => match style_at(base, id) {
                 Some(old) if &old.based_on != based_on => SemioDocumentDiff {
                     styles: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::StylesDiff {
                         modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedModified {
@@ -375,7 +386,7 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
             SemioDocumentMutation::RemoveImage { id } => {
                 SemioDocumentDiff { styles: None, images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
             }
-            SemioDocumentMutation::SetImageBytes { id, mime, bytes } => match image_at(base, id).await {
+            SemioDocumentMutation::SetImageBytes { id, mime, bytes } => match image_at(base, id) {
                 Some(old) if &old.mime != mime || &old.bytes != bytes => SemioDocumentDiff {
                     styles: None,
                     images: Some(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::ImagesDiff {
@@ -397,59 +408,59 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
             SemioDocumentMutation::NoMutation => vec![SemioDocumentMutation::NoMutation],
             SemioDocumentMutation::SetSnapshot { .. } => vec![SemioDocumentMutation::SetSnapshot { snapshot: base.clone() }],
             SemioDocumentMutation::InsertBlock { path, .. } => vec![SemioDocumentMutation::RemoveBlock { path: path.clone() }],
-            SemioDocumentMutation::RemoveBlock { path } => match block_at(base, path).await {
+            SemioDocumentMutation::RemoveBlock { path } => match block_at(base, path) {
                 Some(block) => vec![SemioDocumentMutation::InsertBlock { path: path.clone(), block: block.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetBlockContent { path, .. } => match block_at(base, path).await {
+            SemioDocumentMutation::SetBlockContent { path, .. } => match block_at(base, path) {
                 Some(block) => vec![SemioDocumentMutation::SetBlockContent { path: path.clone(), block: block.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetParagraphStyle { path, .. } => match block_at(base, path).await {
+            SemioDocumentMutation::SetParagraphStyle { path, .. } => match block_at(base, path) {
                 Some(DocBlock::Paragraph { style_id, .. }) => vec![SemioDocumentMutation::SetParagraphStyle { path: path.clone(), style_id: style_id.clone() }],
                 _ => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetHeadingLevel { path, .. } => match block_at(base, path).await {
+            SemioDocumentMutation::SetHeadingLevel { path, .. } => match block_at(base, path) {
                 Some(DocBlock::Heading { level, .. }) => vec![SemioDocumentMutation::SetHeadingLevel { path: path.clone(), level: *level }],
                 _ => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetListOrdered { path, .. } => match block_at(base, path).await {
+            SemioDocumentMutation::SetListOrdered { path, .. } => match block_at(base, path) {
                 Some(DocBlock::List { ordered, .. }) => vec![SemioDocumentMutation::SetListOrdered { path: path.clone(), ordered: *ordered }],
                 _ => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetRunText { path, run_index, .. } => match block_at(base, path).await.and_then(runs_of).and_then(|r| r.get(*run_index)) {
+            SemioDocumentMutation::SetRunText { path, run_index, .. } => match block_at(base, path).and_then(runs_of).and_then(|r| r.get(*run_index)) {
                 Some(run) => vec![SemioDocumentMutation::SetRunText { path: path.clone(), run_index: *run_index, text: run.text.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetRunStyle { path, run_index, .. } => match block_at(base, path).await.and_then(runs_of).and_then(|r| r.get(*run_index)) {
+            SemioDocumentMutation::SetRunStyle { path, run_index, .. } => match block_at(base, path).and_then(runs_of).and_then(|r| r.get(*run_index)) {
                 Some(run) => vec![SemioDocumentMutation::SetRunStyle { path: path.clone(), run_index: *run_index, style: run.style.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetImageBlock { path, .. } => match block_at(base, path).await {
+            SemioDocumentMutation::SetImageBlock { path, .. } => match block_at(base, path) {
                 Some(DocBlock::Image { image_id, alt, width, height }) => {
                     vec![SemioDocumentMutation::SetImageBlock { path: path.clone(), image_id: image_id.clone(), alt: alt.clone(), width: *width, height: *height }]
                 }
                 _ => vec![SemioDocumentMutation::NoMutation],
             },
             SemioDocumentMutation::InsertStyle { style } => vec![SemioDocumentMutation::RemoveStyle { id: style.id.clone() }],
-            SemioDocumentMutation::RemoveStyle { id } => match style_at(base, id).await {
+            SemioDocumentMutation::RemoveStyle { id } => match style_at(base, id) {
                 Some(style) => vec![SemioDocumentMutation::InsertStyle { style: style.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetStyleName { id, .. } => match style_at(base, id).await {
+            SemioDocumentMutation::SetStyleName { id, .. } => match style_at(base, id) {
                 Some(style) => vec![SemioDocumentMutation::SetStyleName { id: id.clone(), name: style.name.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetStyleBasedOn { id, .. } => match style_at(base, id).await {
+            SemioDocumentMutation::SetStyleBasedOn { id, .. } => match style_at(base, id) {
                 Some(style) => vec![SemioDocumentMutation::SetStyleBasedOn { id: id.clone(), based_on: style.based_on.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
             SemioDocumentMutation::InsertImage { image } => vec![SemioDocumentMutation::RemoveImage { id: image.id.clone() }],
-            SemioDocumentMutation::RemoveImage { id } => match image_at(base, id).await {
+            SemioDocumentMutation::RemoveImage { id } => match image_at(base, id) {
                 Some(image) => vec![SemioDocumentMutation::InsertImage { image: image.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
-            SemioDocumentMutation::SetImageBytes { id, .. } => match image_at(base, id).await {
+            SemioDocumentMutation::SetImageBytes { id, .. } => match image_at(base, id) {
                 Some(image) => vec![SemioDocumentMutation::SetImageBytes { id: id.clone(), mime: image.mime.clone(), bytes: image.bytes.clone() }],
                 None => vec![SemioDocumentMutation::NoMutation],
             },
@@ -461,83 +472,97 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
 //#region OpCodecs
 /// 🎙️ Hand-rolled `OpText`/`OpBinary`: `keyword arg=value ...` grammar (space-separated), same
 /// shape docx/svg/gif's hand-rolled ops use.
-async fn enc_path_segment(seg: &DocPathSegment) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_path_segment(seg: &DocPathSegment) -> String {
     match seg {
         DocPathSegment::Quote { block_index } => format!("Q[{block_index}]"),
         DocPathSegment::ListItem { block_index, item } => format!("L[{block_index},{item}]"),
         DocPathSegment::TableCell { block_index, row, cell } => format!("T[{block_index},{row},{cell}]"),
     }
 }
-async fn dec_path_segment(s: &str) -> Result<DocPathSegment, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_path_segment(s: &str) -> Result<DocPathSegment, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
-    let parts = split_top_level(inner, ',').await;
+    let inner = strip_brackets(rest)?;
+    let parts = split_top_level(inner, ',');
     match tag {
         "Q" => {
             let [block_index] = parts.as_slice() else { return Err(format!("quote segment: expected 1 field, got {}", parts.len())) };
-            Ok(DocPathSegment::Quote { block_index: parse_usize(block_index).await? })
+            Ok(DocPathSegment::Quote { block_index: parse_usize(block_index)? })
         }
         "L" => {
             let [block_index, item] = parts.as_slice() else { return Err(format!("list-item segment: expected 2 fields, got {}", parts.len())) };
-            Ok(DocPathSegment::ListItem { block_index: parse_usize(block_index).await?, item: parse_usize(item).await? })
+            Ok(DocPathSegment::ListItem { block_index: parse_usize(block_index)?, item: parse_usize(item)? })
         }
         "T" => {
             let [block_index, row, cell] = parts.as_slice() else { return Err(format!("table-cell segment: expected 3 fields, got {}", parts.len())) };
-            Ok(DocPathSegment::TableCell { block_index: parse_usize(block_index).await?, row: parse_usize(row).await?, cell: parse_usize(cell).await? })
+            Ok(DocPathSegment::TableCell { block_index: parse_usize(block_index)?, row: parse_usize(row)?, cell: parse_usize(cell)? })
         }
         other => Err(format!("path segment: unknown tag {other:?}")),
     }
 }
-async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_block_path(p: &DocBlockPath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block_path(p: &DocBlockPath) -> String {
     format!("[{},{}]", enc_list(&p.segments, enc_path_segment), p.index)
 }
-async fn dec_block_path(s: &str) -> Result<DocBlockPath, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block_path(s: &str) -> Result<DocBlockPath, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [segments, index] = parts.as_slice() else { return Err(format!("block path: expected 2 fields, got {}", parts.len())) };
-    Ok(DocBlockPath { segments: dec_list(segments, dec_path_segment).await?, index: parse_usize(index).await? })
+    Ok(DocBlockPath { segments: dec_list(segments, dec_path_segment)?, index: parse_usize(index)? })
 }
-async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 /// 🌱 Full (non-diff) `DocBlock`/`SemioDocumentSnapshot` codecs -- only `SetSnapshot`/
 /// `InsertBlock`/`SetBlockContent`'s whole-payload encoding needs these; reuses `SemioDocumentDiff`'s
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
-async fn enc_block(b: &DocBlock) -> String {
-    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::enc_block(b).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block(b: &DocBlock) -> String {
+    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::enc_block(b)
 }
-async fn dec_block(s: &str) -> Result<DocBlock, String> {
-    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::dec_block(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block(s: &str) -> Result<DocBlock, String> {
+    crate::artifacts::semio::standards::v1::subsets::document::schema::diff::dec_block(s)
 }
-async fn enc_run_style_full(s: &RunStyle) -> String {
-    enc_run_style(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_run_style_full(s: &RunStyle) -> String {
+    enc_run_style(s)
 }
-async fn dec_run_style_full(s: &str) -> Result<RunStyle, String> {
-    dec_run_style(s).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_run_style_full(s: &str) -> Result<RunStyle, String> {
+    dec_run_style(s)
 }
-async fn enc_snapshot(s: &SemioDocumentSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_snapshot(s: &SemioDocumentSnapshot) -> String {
     format!("[{},{},{}]", enc_list(&s.styles, enc_style), enc_list(&s.images, enc_image), enc_list(&s.blocks, enc_block))
 }
-async fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [styles, images, blocks] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
     Ok(SemioDocumentSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
-        styles: dec_list(styles, dec_style).await?,
-        images: dec_list(images, dec_image).await?,
-        blocks: dec_list(blocks, dec_block).await?,
+        styles: dec_list(styles, dec_style)?,
+        images: dec_list(images, dec_image)?,
+        blocks: dec_list(blocks, dec_block)?,
     })
 }
 
-async fn print_document_mutation(m: &SemioDocumentMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_document_mutation(m: &SemioDocumentMutation) -> String {
     match m {
         SemioDocumentMutation::NoMutation => "no-mutation".to_string(),
         SemioDocumentMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -561,7 +586,8 @@ async fn print_document_mutation(m: &SemioDocumentMutation) -> String {
         SemioDocumentMutation::SetImageBytes { id, mime, bytes } => format!("set-image-bytes id={} mime={} bytes={}", enc_str(id), enc_str(mime), hex_encode(bytes)),
     }
 }
-async fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioDocumentMutation::NoMutation);
     }
@@ -571,39 +597,39 @@ async fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, St
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("document mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(SemioDocumentMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?).await? }),
-        "insert-block" => Ok(SemioDocumentMutation::InsertBlock { path: dec_block_path(arg("path")?).await?, block: dec_block(arg("block")?).await? }),
-        "remove-block" => Ok(SemioDocumentMutation::RemoveBlock { path: dec_block_path(arg("path")?).await? }),
-        "set-block-content" => Ok(SemioDocumentMutation::SetBlockContent { path: dec_block_path(arg("path")?).await?, block: dec_block(arg("block")?).await? }),
-        "set-paragraph-style" => Ok(SemioDocumentMutation::SetParagraphStyle { path: dec_block_path(arg("path")?).await?, style_id: decode_option(arg("style-id")?, dec_str).await? }),
-        "set-heading-level" => Ok(SemioDocumentMutation::SetHeadingLevel { path: dec_block_path(arg("path")?).await?, level: dec_u8(arg("level")?).await? }),
-        "set-list-ordered" => Ok(SemioDocumentMutation::SetListOrdered { path: dec_block_path(arg("path")?).await?, ordered: dec_bool(arg("ordered")?).await? }),
-        "set-run-text" => Ok(SemioDocumentMutation::SetRunText { path: dec_block_path(arg("path")?).await?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?).await? }),
-        "set-run-style" => Ok(SemioDocumentMutation::SetRunStyle { path: dec_block_path(arg("path")?).await?, run_index: usize_arg("run-index")?, style: dec_run_style_full(arg("style")?).await? }),
+        "set-snapshot" => Ok(SemioDocumentMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? }),
+        "insert-block" => Ok(SemioDocumentMutation::InsertBlock { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "remove-block" => Ok(SemioDocumentMutation::RemoveBlock { path: dec_block_path(arg("path")?)? }),
+        "set-block-content" => Ok(SemioDocumentMutation::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "set-paragraph-style" => Ok(SemioDocumentMutation::SetParagraphStyle { path: dec_block_path(arg("path")?)?, style_id: decode_option(arg("style-id")?, dec_str)? }),
+        "set-heading-level" => Ok(SemioDocumentMutation::SetHeadingLevel { path: dec_block_path(arg("path")?)?, level: dec_u8(arg("level")?)? }),
+        "set-list-ordered" => Ok(SemioDocumentMutation::SetListOrdered { path: dec_block_path(arg("path")?)?, ordered: dec_bool(arg("ordered")?)? }),
+        "set-run-text" => Ok(SemioDocumentMutation::SetRunText { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?)? }),
+        "set-run-style" => Ok(SemioDocumentMutation::SetRunStyle { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, style: dec_run_style_full(arg("style")?)? }),
         "set-image-block" => Ok(SemioDocumentMutation::SetImageBlock {
-            path: dec_block_path(arg("path")?).await?,
-            image_id: dec_str(arg("image-id")?).await?,
-            alt: dec_str(arg("alt")?).await?,
-            width: decode_option(arg("width")?, dec_f64).await?,
-            height: decode_option(arg("height")?, dec_f64).await?,
+            path: dec_block_path(arg("path")?)?,
+            image_id: dec_str(arg("image-id")?)?,
+            alt: dec_str(arg("alt")?)?,
+            width: decode_option(arg("width")?, dec_f64)?,
+            height: decode_option(arg("height")?, dec_f64)?,
         }),
-        "insert-style" => Ok(SemioDocumentMutation::InsertStyle { style: dec_style(arg("style")?).await? }),
-        "remove-style" => Ok(SemioDocumentMutation::RemoveStyle { id: dec_str(arg("id")?).await? }),
-        "set-style-name" => Ok(SemioDocumentMutation::SetStyleName { id: dec_str(arg("id")?).await?, name: dec_str(arg("name")?).await? }),
-        "set-style-based-on" => Ok(SemioDocumentMutation::SetStyleBasedOn { id: dec_str(arg("id")?).await?, based_on: decode_option(arg("based-on")?, dec_str).await? }),
-        "insert-image" => Ok(SemioDocumentMutation::InsertImage { image: dec_image(arg("image")?).await? }),
-        "remove-image" => Ok(SemioDocumentMutation::RemoveImage { id: dec_str(arg("id")?).await? }),
-        "set-image-bytes" => Ok(SemioDocumentMutation::SetImageBytes { id: dec_str(arg("id")?).await?, mime: dec_str(arg("mime")?).await?, bytes: hex_decode(arg("bytes")?).await? }),
+        "insert-style" => Ok(SemioDocumentMutation::InsertStyle { style: dec_style(arg("style")?)? }),
+        "remove-style" => Ok(SemioDocumentMutation::RemoveStyle { id: dec_str(arg("id")?)? }),
+        "set-style-name" => Ok(SemioDocumentMutation::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? }),
+        "set-style-based-on" => Ok(SemioDocumentMutation::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? }),
+        "insert-image" => Ok(SemioDocumentMutation::InsertImage { image: dec_image(arg("image")?)? }),
+        "remove-image" => Ok(SemioDocumentMutation::RemoveImage { id: dec_str(arg("id")?)? }),
+        "set-image-bytes" => Ok(SemioDocumentMutation::SetImageBytes { id: dec_str(arg("id")?)?, mime: dec_str(arg("mime")?)?, bytes: hex_decode(arg("bytes")?)? }),
         other => Err(format!("document mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioDocumentMutation {
     async fn print_op(&self) -> String {
-        print_document_mutation(self).await
+        print_document_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_document_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_document_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -629,7 +655,8 @@ const OP_KEYWORDS: [&str; 18] = [
     "remove-image",
     "set-image-bytes",
 ];
-async fn variant_ordinal(m: &SemioDocumentMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioDocumentMutation) -> u8 {
     match m {
         SemioDocumentMutation::NoMutation => 0,
         SemioDocumentMutation::SetSnapshot { .. } => 1,
@@ -654,8 +681,9 @@ async fn variant_ordinal(m: &SemioDocumentMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_document_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
-async fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
-    match print_document_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
+    match print_document_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -671,8 +699,8 @@ async fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
 impl OpBinary for SemioDocumentMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_document_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_document_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -697,7 +725,8 @@ impl OpBinary for SemioDocumentMutation {
 /// this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
     let table_block = DocBlock::Table {
         rows: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableRow {
             cells: vec![crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }],
@@ -736,7 +765,8 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    async fn fixture() -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: "s.stdio.semio.document".into(),
             styles: vec![DocStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
@@ -745,7 +775,8 @@ mod tests {
         }
     }
 
-    async fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocBlockPath {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocBlockPath {
         DocBlockPath { segments: vec![DocPathSegment::TableCell { block_index, row, cell }], index }
     }
 
@@ -846,7 +877,8 @@ mod tests {
     /// reverse direction (asserted in `field_sweep`) exercises `blocks.added` carrying a whole
     /// recursively-structured `Table`. `styles`/`images` each get one removed, one
     /// modified-in-every-field, one added.
-    async fn sweep_a() -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: "s.stdio.semio.document".into(),
             styles: vec![DocStyle { id: "keep".into(), name: "Keep".into(), based_on: None }, DocStyle { id: "toModify".into(), name: "old".into(), based_on: None }, DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None }],
@@ -859,7 +891,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: "s.stdio.semio.document".into(),
             styles: vec![
@@ -874,7 +907,8 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️MutationDiffLaw
-    async fn sample_mutations() -> Vec<SemioDocumentMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_mutations() -> Vec<SemioDocumentMutation> {
         vec![
             SemioDocumentMutation::NoMutation,
             SemioDocumentMutation::SetSnapshot { snapshot: sweep_b() },
@@ -893,7 +927,8 @@ mod tests {
         ]
     }
 
-    async fn apply_valid(diff: &SemioDocumentDiff, base: &SemioDocumentSnapshot) -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply_valid(diff: &SemioDocumentDiff, base: &SemioDocumentSnapshot) -> SemioDocumentSnapshot {
         MutationDiff::apply(diff, base).expect("valid Semio document diff fixture")
     }
 
@@ -936,7 +971,8 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn assert_absorb_matches_sequential(base: &SemioDocumentSnapshot, d1: &SemioDocumentDiff, d2: &SemioDocumentDiff) -> SemioDocumentDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &SemioDocumentSnapshot, d1: &SemioDocumentDiff, d2: &SemioDocumentDiff) -> SemioDocumentDiff {
         let sequential = apply_valid(d2, &apply_valid(d1, base));
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -944,7 +980,8 @@ mod tests {
         absorbed
     }
 
-    async fn blocks_diff(diff: &SemioDocumentDiff) -> &BlocksDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn blocks_diff(diff: &SemioDocumentDiff) -> &BlocksDiff {
         diff.blocks.as_ref().expect("blocks diff present")
     }
 

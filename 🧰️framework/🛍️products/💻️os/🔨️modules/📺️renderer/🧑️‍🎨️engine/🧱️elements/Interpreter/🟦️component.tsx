@@ -207,7 +207,7 @@ const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
   "text-editor": "textEditor",
   table: "table",
   "paint-2d": "paint2d",
-  virtualFileSystem: "virtualFileSystem",
+  "virtual-file-system": "virtualFileSystem",
   "tiled-map": "tiledMap",
   "board-2d": "board2d",
   "icon-render": "iconRender",
@@ -224,26 +224,52 @@ function menuRefFromContract(menu: UiNodeRecord["menu"]): UiMenuRef | undefined 
   return { id: menu.id, args };
 }
 
+/** 🌉️ True when `docSchema` (`"<kind>@<version>"`) is a shape this bridge can even attempt to decode
+ * — the contract itself never validates it against `kind` (see `SurfaceProps`'s own doc: "a mismatch
+ * ... is a scene-crate-level authoring bug, not a contract violation"), so this Interpreter is exactly
+ * where that gate has to live. Only the SHAPE is checked (non-empty name + numeric version), never a
+ * per-kind version registry this file has no visibility into — an unrecognised but well-formed schema
+ * still renders through `sceneField`'s per-kind switch; only a malformed one is refused outright. */
+function isWellFormedDocSchema(docSchema: string): boolean {
+  const at = docSchema.lastIndexOf("@");
+  return at > 0 && /^\d+$/.test(docSchema.slice(at + 1));
+}
+
 /** 🌉️ Bridges `Component::Surface`'s `SurfaceProps` (one opaque pack-encoded `doc.bytes` payload,
  * keyed by `docSchema`) onto the OLD `UiComponentSceneNode` the 14 scene-host elements (Canvas2dHost,
  * World3dHost, ...) still expect — those elements are outside this packet's OWNS and are unchanged,
  * so this Interpreter decodes the new contract's opaque payload into the exact per-kind scene field
  * shape those hosts already know how to read, rather than duplicating 14 host components. The
  * contract never parses `doc.bytes` itself (see `🦀️surface.rs`'s own doc); this is the one place that
- * decodes it, and only to hand it straight through unmodified. */
-function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps): UiComponentSceneNode {
-  // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — ts-rs renders it as a plain `number[]`, not a `Uint8Array` or
-  // the old `"pk:"`-prefixed string `decodeScenePackField` (used by `parseSceneJsonField` below for
-  // still-string-shaped scene sub-fields) expects. Raw bytes decode straight through `decodePackValue`.
-  const decoded = props.doc.bytes.length > 0 ? (decodePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
+ * decodes it, and only to hand it straight through unmodified.
+ *
+ * `surfaceId`/`controllerId` no longer exist on `SurfaceProps` (six placement fields were dropped in
+ * the `ui-w4-core` mirror regeneration) — the record's own `id` is the stable per-node identity now,
+ * so it substitutes for both; `paneId`/`bindingId` have no contract equivalent and are simply absent
+ * (both optional on `UiComponentSceneNode`). Returns `null`, never throws, on a malformed `docSchema`
+ * or a decode failure — the caller renders a placeholder + logs the fault, per this ticket's own
+ * "never throw, never drop the surrounding patch" rule for an unknown `doc_schema`. */
+function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps): UiComponentSceneNode | null {
+  if (!isWellFormedDocSchema(props.docSchema)) {
+    console.error("[Interpreter] malformed Component::Surface docSchema", { nodeId: record.id, kind: props.kind, docSchema: props.docSchema });
+    return null;
+  }
+  let decoded: Record<string, unknown> | undefined;
+  try {
+    // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — ts-rs renders it as a plain `number[]`, not a `Uint8Array`
+    // or the old `"pk:"`-prefixed string `decodeScenePackField` (used by `parseSceneJsonField` below
+    // for still-string-shaped scene sub-fields) expects. Raw bytes decode via `decodePackValue`.
+    decoded = props.doc.bytes.length > 0 ? (decodePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
+  } catch (error) {
+    console.error("[Interpreter] failed to decode Component::Surface doc bytes", { nodeId: record.id, kind: props.kind, docSchema: props.docSchema, error });
+    return null;
+  }
   const sceneField = SURFACE_KIND_SCENE_FIELD[props.kind];
   const node: Record<string, unknown> = {
     type: "componentScene",
-    surfaceId: props.surfaceId,
-    controllerId: props.controllerId,
+    surfaceId: String(record.id),
+    controllerId: String(record.id),
     componentKind: props.kind,
-    paneId: props.paneId,
-    bindingId: props.bindingId,
     menu: menuRefFromContract(record.menu),
   };
   if (sceneField && decoded !== undefined) node[sceneField] = decoded;
@@ -252,7 +278,14 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
 
 function renderComponentSceneHost(record: UiNodeRecord, props: SurfaceProps, onAction: (action: ActionDescriptor) => void, requestContextMenu?: UiInterpreterContext["requestContextMenu"]): ReactNode {
   const node = surfacePropsToComponentSceneNode(record, props);
-  if (props.kind === "virtualFileSystem") {
+  if (!node) {
+    return (
+      <p className="text-muted-foreground text-xs" data-unknown-surface-schema={props.docSchema}>
+        {interpLabel("ui.common.unknownComponent")}: {props.kind}
+      </p>
+    );
+  }
+  if (props.kind === "virtual-file-system") {
     return (
       <ShellFaultBoundary boundaryId="surface-virtualFileSystem" fallbackLabel={shellLabel("ui.common.renderError")}>
         <VirtualFileSystemHost node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
@@ -407,7 +440,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
             const menu = await openSurfaceContextMenu(
               requestContextMenu,
               {
-                menu: { id: "virtualFileSystem" },
+                menu: { id: "virtualFileSystem", args: null },
                 surface: { surfaceId: node.surfaceId, kind: "virtualFileSystem", hits: [{ domain: "row", id: rowId }], selection: selectedRowIds && selectedRowIds.length > 0 ? [{ domain: "row", ids: selectedRowIds }] : [] },
                 windowInstanceId: windowInstanceId ?? undefined,
                 point: { x: event.clientX, y: event.clientY },
@@ -438,8 +471,8 @@ function spaceTokenRem(token: SpaceToken): string {
 
 function edgeSpaceToPadding(edge: EdgeSpace): string {
   if ("all" in edge) return spaceTokenRem(edge.all);
-  if ("vertical" in edge) return `${spaceTokenRem(edge.vertical)} ${spaceTokenRem(edge.horizontal)}`;
-  return `${spaceTokenRem(edge.top)} ${spaceTokenRem(edge.right)} ${spaceTokenRem(edge.bottom)} ${spaceTokenRem(edge.left)}`;
+  if ("symmetric" in edge) return `${spaceTokenRem(edge.symmetric.vertical)} ${spaceTokenRem(edge.symmetric.horizontal)}`;
+  return `${spaceTokenRem(edge.each.top)} ${spaceTokenRem(edge.each.right)} ${spaceTokenRem(edge.each.bottom)} ${spaceTokenRem(edge.each.left)}`;
 }
 
 function sizingToCss(sizing: Sizing): string | undefined {
@@ -607,7 +640,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   }
   if (component.role === "field") {
     return (
-      <Field label={component.label ? wireLabel(component.label) : ""} description={component.description} required={component.required} error={component.error}>
+      <Field label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
         {describedBy}
         {children}
       </Field>
@@ -673,7 +706,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
         data-ui-node-id={record.id}
         className="min-h-[4.5rem] w-full min-w-0"
         value={component.value}
-        placeholder={component.placeholder}
+        placeholder={component.placeholder ?? undefined}
         onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)}
         onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
       />
@@ -687,11 +720,11 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       type={inputType}
       className="h-medium w-full min-w-0"
       value={component.kind === "file" ? undefined : component.value}
-      placeholder={component.placeholder}
-      min={component.min}
-      max={component.max}
-      step={component.step}
-      accept={component.kind === "file" ? component.accept : undefined}
+      placeholder={component.placeholder ?? undefined}
+      min={component.min ?? undefined}
+      max={component.max ?? undefined}
+      step={component.step ?? undefined}
+      accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur ? undefined : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
       onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : undefined}
     />
@@ -718,7 +751,7 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
 
 function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  return <Toggle id={`node-${record.id}`} pressed={component.on} text={component.text} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  return <Toggle id={`node-${record.id}`} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
@@ -816,17 +849,17 @@ function treeItemToTreeData(state: UiDocumentState, node: TreeWalkNode, context:
     label: props.label,
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
-    defaultOpen: props.defaultOpen,
+    defaultOpen: props.defaultOpen ?? undefined,
     isSelected: presence.selected ?? false,
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
-    isHidden: props.dimmed,
-    draggable: props.draggable,
-    dragData: props.dragData,
+    isHidden: props.dimmed ?? undefined,
+    draggable: props.draggable ?? undefined,
+    dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(state, child, context, overlay)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : undefined,
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
-    actions: props.rowActions.length > 0 ? props.rowActions.map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
+    actions: props.rowActions.length > 0 ? props.rowActions.map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
   };
 }
 
@@ -843,7 +876,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       return {
         id: String(sectionRecord.id),
         label: sectionProps.label ?? "",
-        defaultOpen: sectionProps.defaultOpen,
+        defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
         items: items.map((item) => treeItemToTreeData(state, item, context, overlay)),
@@ -984,12 +1017,15 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onActi
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
 
+  const TEST_STYLE: StyleSpec = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
+  const TEST_ACCESSIBILITY: AccessibilitySpec = { label: null, description: null, live: "off", shortcut: null, hidden: false };
+
   function leaf(id: number, key: string, component: Component, children: readonly number[] = []): UiNodeRecord {
-    return { id, key, component, layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, activity: "idle", accessibility: {}, children: [...children] };
+    return { id, key, component, layout: { kind: "leaf", width: "hug", height: "hug" }, style: TEST_STYLE, activity: "idle", disabled: false, transition: null, accessibility: TEST_ACCESSIBILITY, bindings: [], menu: null, children: [...children] };
   }
 
   function snapshot(root: number, nodes: readonly UiNodeRecord[]): UiSnapshot {
-    return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0 };
+    return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0n };
   }
 
   const noopContext: UiInterpreterContext = { store: new UiDocumentStore("noop"), onAction: () => {}, onIntent: () => {} };
@@ -1021,9 +1057,9 @@ if (import.meta.vitest) {
       // fire on any descendant commit, which is not what this test measures.
       store.loadSnapshot(
         snapshot(0, [
-          leaf(0, "root", { type: "container" }, [1, 2]),
-          leaf(1, "a", { type: "text", value: "A" }),
-          leaf(2, "b", { type: "text", value: "B" }),
+          leaf(0, "root", { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, [1, 2]),
+          leaf(1, "a", { type: "text", value: "A", emphasize: null, dataAttributes: null }),
+          leaf(2, "b", { type: "text", value: "B", emphasize: null, dataAttributes: null }),
         ]),
       );
 
@@ -1044,7 +1080,7 @@ if (import.meta.vitest) {
       bRenders.mockClear();
 
       act(() => {
-        const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 1, component: { type: "text", value: "A changed" } }] });
+        const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 1, component: { type: "text", value: "A changed", emphasize: null, dataAttributes: null } }] });
         expect(result.ok).toBe(true);
       });
 

@@ -1,7 +1,7 @@
 // #region 📊️TableWindowKit
 /// <reference types="vitest/importMeta" />
 /** @emoji 📊️ `@semio-tech/plugin-window-kits` — TS twin of Rust `TableWindowKit` (`framework.window.table`). */
-import type { ActionDescriptor, TableScene, UiComponentSceneNode, UiNode } from "@semio-tech/framework";
+import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 /** 🆔️ Frozen kind id — twin of Rust `TableWindowKit::KIND_ID`. */
 export const TABLE_WINDOW_KIND_ID = "framework.window.table";
@@ -13,7 +13,7 @@ export type TableView = {
 };
 
 /** 📊️ Twin of Rust `TableWindowKit::render` — builds a `table` component scene from `view`. */
-export function renderTable(view: TableView): UiNode {
+export function renderTable(view: TableView): UiComponentSceneNode {
   const scene: TableScene = { columnsJson: JSON.stringify(view.columns), rowsJson: JSON.stringify(view.rows) };
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: TABLE_WINDOW_KIND_ID, controllerId: TABLE_WINDOW_KIND_ID, componentKind: "table", table: scene };
   return node;
@@ -38,7 +38,7 @@ export type TableRowsView = { readonly columns: readonly string[]; readonly rows
 /** 🆔️ Twin of Rust `TableWindowKit::render_rows` — stamps a real per-row `id` and, when any row
  * declares one, a trailing actions column of button cells, instead of `renderTable`'s flat
  * positional-string grid. */
-export function renderTableRows(view: TableRowsView): UiNode {
+export function renderTableRows(view: TableRowsView): UiComponentSceneNode {
   const hasActions = view.rows.some((row) => (row.actions?.length ?? 0) > 0);
   const columns: { id: string; label: string }[] = view.columns.map((label, index) => ({ id: `col${index}`, label }));
   if (hasActions) columns.push({ id: "actions", label: view.actionsLabel ?? "" });

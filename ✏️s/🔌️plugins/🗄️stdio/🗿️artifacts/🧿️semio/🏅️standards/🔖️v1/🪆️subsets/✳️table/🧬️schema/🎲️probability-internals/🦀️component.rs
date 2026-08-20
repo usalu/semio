@@ -24,7 +24,8 @@ pub enum ProbabilityError {
 /// 🧮️ Natural log of the gamma function via the Lanczos approximation (g=7, 9-term coefficient
 /// set), with the reflection formula `Γ(x)Γ(1-x) = π/sin(πx)` used for `x < 0.5` to keep the
 /// Lanczos series in its region of validity. Numerical Recipes §6.1 `gammln`.
-pub async fn ln_gamma(x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ln_gamma(x: f64) -> f64 {
     const G: f64 = 7.0;
     const COEFFS: [f64; 9] =
         [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1_259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.507_343_278_686_905, -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6, 1.505_632_735_149_311_6e-7];
@@ -43,7 +44,8 @@ pub async fn ln_gamma(x: f64) -> f64 {
 
 /// 🧮️ Regularized lower incomplete gamma `P(a, x) = γ(a, x) / Γ(a)`: a power series for `x < a+1`,
 /// a modified-Lentz continued fraction (via [`gamma_q`]) otherwise. Numerical Recipes §6.2 `gser`/`gcf`.
-pub async fn gamma_p(a: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gamma_p(a: f64, x: f64) -> f64 {
     if x < 0.0 || a <= 0.0 {
         return f64::NAN;
     }
@@ -51,7 +53,7 @@ pub async fn gamma_p(a: f64, x: f64) -> f64 {
         return 0.0;
     }
     if x < a + 1.0 {
-        gamma_series(a, x).await
+        gamma_series(a, x)
     } else {
         1.0 - gamma_cf(a, x)
     }
@@ -60,7 +62,8 @@ pub async fn gamma_p(a: f64, x: f64) -> f64 {
 /// 🧮️ Regularized upper incomplete gamma `Q(a, x) = 1 - P(a, x)`, computed directly via the
 /// continued-fraction branch when `x >= a+1` to avoid the cancellation that `1.0 - gamma_p(a, x)`
 /// would suffer in that regime.
-pub async fn gamma_q(a: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gamma_q(a: f64, x: f64) -> f64 {
     if x < 0.0 || a <= 0.0 {
         return f64::NAN;
     }
@@ -70,11 +73,12 @@ pub async fn gamma_q(a: f64, x: f64) -> f64 {
     if x < a + 1.0 {
         1.0 - gamma_series(a, x)
     } else {
-        gamma_cf(a, x).await
+        gamma_cf(a, x)
     }
 }
 
-async fn gamma_series(a: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gamma_series(a: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 200;
     const EPS: f64 = 1e-15;
     let gln = ln_gamma(a);
@@ -92,7 +96,8 @@ async fn gamma_series(a: f64, x: f64) -> f64 {
     sum * (-x + a * x.ln() - gln).exp()
 }
 
-async fn gamma_cf(a: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gamma_cf(a: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 200;
     const EPS: f64 = 1e-15;
     const TINY: f64 = 1e-300;
@@ -123,7 +128,8 @@ async fn gamma_cf(a: f64, x: f64) -> f64 {
 }
 
 /// 🧮️ Error function via the identity `erf(x) = sign(x) * P(1/2, x²)`.
-pub async fn erf(x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn erf(x: f64) -> f64 {
     if x == 0.0 {
         return 0.0;
     }
@@ -133,26 +139,29 @@ pub async fn erf(x: f64) -> f64 {
 
 /// 🧮️ Complementary error function `1 - erf(x)`, computed via the `gamma_q` continued-fraction
 /// branch for `x > 0` to avoid the cancellation `1.0 - erf(x)` would suffer for large `x`.
-pub async fn erfc(x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn erfc(x: f64) -> f64 {
     if x == 0.0 {
         return 1.0;
     }
     if x < 0.0 {
         1.0 + gamma_p(0.5, x * x)
     } else {
-        gamma_q(0.5, x * x).await
+        gamma_q(0.5, x * x)
     }
 }
 
 /// 🧮️ Natural log of the beta function `B(a, b) = Γ(a)Γ(b) / Γ(a+b)`.
-pub async fn ln_beta(a: f64, b: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ln_beta(a: f64, b: f64) -> f64 {
     ln_gamma(a) + ln_gamma(b) - ln_gamma(a + b)
 }
 
 /// 🧮️ Regularized incomplete beta `I_x(a, b)` via a modified-Lentz continued fraction, with the
 /// symmetry swap `I_x(a,b) = 1 - I_{1-x}(b,a)` applied when `x > (a+1)/(a+b+2)` to keep the
 /// fraction in its fast-converging region. Numerical Recipes §6.4 `betai`/`betacf`.
-pub async fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
     if !(0.0..=1.0).contains(&x) {
         return f64::NAN;
     }
@@ -167,7 +176,8 @@ pub async fn beta_inc(a: f64, b: f64, x: f64) -> f64 {
     }
 }
 
-async fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
     const MAX_ITER: usize = 300;
     const EPS: f64 = 1e-15;
     const TINY: f64 = 1e-300;
@@ -217,7 +227,8 @@ async fn beta_cf(a: f64, b: f64, x: f64) -> f64 {
 /// 🧮️ Standard normal inverse CDF via Acklam's rational approximation (~1.15e-9 relative
 /// accuracy), refined by one Halley step using [`erfc`] to push accuracy to ~1e-14. Returns
 /// `NaN` for `p` outside `[0, 1]`, and `-inf`/`+inf` exactly at `p == 0.0`/`p == 1.0`.
-pub async fn normal_quantile(p: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn normal_quantile(p: f64) -> f64 {
     if !(0.0..=1.0).contains(&p) {
         return f64::NAN;
     }
@@ -273,7 +284,8 @@ pub trait Discrete {
 /// 🧭️ Inverts a monotone `f` at `target` by Newton's method seeded at `x0`, falling back to
 /// bisection on `[lo, hi]` the moment a Newton step would leave the bracket — shared by every
 /// non-closed-form `quantile` in this crate (all continuous distributions except [`Normal`]).
-async fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64) -> Result<f64, ProbabilityError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64) -> Result<f64, ProbabilityError> {
     const MAX_ITER: usize = 100;
     const EPS: f64 = 1e-12;
     const H: f64 = 1e-6;
@@ -310,9 +322,10 @@ async fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0
 
 /// 🎲️ Marsaglia–Tsang (2000) gamma-variate sampler: squeeze method for `shape >= 1`, boosted by
 /// `U^(1/shape)` for `shape < 1` via the identity `Gamma(shape) = Gamma(shape+1) * U^(1/shape)`.
-async fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
     if shape < 1.0 {
-        let u = rng.next_f64().await;
+        let u = rng.next_f64();
         return gamma_sample(shape + 1.0, rng) * u.powf(1.0 / shape);
     }
     let d = shape - 1.0 / 3.0;
@@ -329,7 +342,7 @@ async fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rn
             }
         }
         v = v * v * v;
-        let u = rng.next_f64().await;
+        let u = rng.next_f64();
         if u < 1.0 - 0.0331 * x * x * x * x {
             return d * v;
         }
@@ -354,7 +367,8 @@ impl Normal {
     /// 🔔️ Standard normal, `mean = 0`, `std_dev = 1`.
     pub const STANDARD: Self = Self { mean: 0.0, std_dev: 1.0 };
 
-    pub async fn new(mean: f64, std_dev: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(mean: f64, std_dev: f64) -> Result<Self, ProbabilityError> {
         if std_dev.is_nan() || std_dev <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "std_dev", value: std_dev });
         }
@@ -409,7 +423,8 @@ pub struct Uniform {
 }
 
 impl Uniform {
-    pub async fn new(low: f64, high: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(low: f64, high: f64) -> Result<Self, ProbabilityError> {
         if low.is_nan() || high.is_nan() || low >= high {
             return Err(ProbabilityError::InvalidParameter { name: "high", value: high });
         }
@@ -461,7 +476,8 @@ pub struct ChiSquared {
 }
 
 impl ChiSquared {
-    pub async fn new(dof: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
         }
@@ -489,7 +505,7 @@ impl Continuous for ChiSquared {
         if x < 0.0 {
             return 0.0;
         }
-        gamma_p(self.dof / 2.0, x / 2.0).await
+        gamma_p(self.dof / 2.0, x / 2.0)
     }
 
     /// 📐️ Newton's method seeded with the Wilson–Hilferty cube-root approximation, safeguarded
@@ -512,7 +528,7 @@ impl Continuous for ChiSquared {
         while self.cdf(upper) < p {
             upper *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, 0.0, upper, seed).await
+        newton_bisect(|x| self.cdf(x), p, 0.0, upper, seed)
     }
 
     /// 🎲️ `2 * gamma_sample(dof/2)`.
@@ -530,7 +546,8 @@ pub struct StudentT {
 }
 
 impl StudentT {
-    pub async fn new(dof: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
         }
@@ -568,19 +585,19 @@ impl Continuous for StudentT {
         if p == 1.0 {
             return Ok(f64::INFINITY);
         }
-        let seed = normal_quantile(p).await;
+        let seed = normal_quantile(p);
         let mut bound = seed.abs().max(1.0) * 4.0 + 10.0;
         while self.cdf(bound) < p {
             bound *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, -bound, bound, seed).await
+        newton_bisect(|x| self.cdf(x), p, -bound, bound, seed)
     }
 
     /// 🎲️ `normal_sample / sqrt(chi2_sample(dof) / dof)`.
     async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         let z = Normal::STANDARD.sample(rng);
         let chi2 = 2.0 * gamma_sample(self.dof / 2.0, rng);
-        z / (chi2 / self.dof).sqrt().await
+        z / (chi2 / self.dof).sqrt()
     }
 }
 // #endregion 🔖️StudentT
@@ -594,7 +611,8 @@ pub struct FisherF {
 }
 
 impl FisherF {
-    pub async fn new(dof1: f64, dof2: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(dof1: f64, dof2: f64) -> Result<Self, ProbabilityError> {
         if dof1.is_nan() || dof1 <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof1", value: dof1 });
         }
@@ -625,7 +643,7 @@ impl Continuous for FisherF {
         if x <= 0.0 {
             return 0.0;
         }
-        beta_inc(self.dof1 / 2.0, self.dof2 / 2.0, self.dof1 * x / (self.dof1 * x + self.dof2)).await
+        beta_inc(self.dof1 / 2.0, self.dof2 / 2.0, self.dof1 * x / (self.dof1 * x + self.dof2))
     }
 
     async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
@@ -642,7 +660,7 @@ impl Continuous for FisherF {
         while self.cdf(upper) < p {
             upper *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, 0.0, upper, upper / 2.0).await
+        newton_bisect(|x| self.cdf(x), p, 0.0, upper, upper / 2.0)
     }
 
     /// 🎲️ `(chi2_sample(dof1)/dof1) / (chi2_sample(dof2)/dof2)`.
@@ -666,7 +684,8 @@ pub struct Bernoulli {
 }
 
 impl Bernoulli {
-    pub async fn new(p: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
         }
@@ -716,7 +735,8 @@ pub struct Binomial {
 }
 
 impl Binomial {
-    pub async fn new(n: u64, p: f64) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(n: u64, p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
         }
@@ -761,7 +781,7 @@ impl Discrete for Binomial {
         if k >= self.n {
             return 1.0;
         }
-        beta_inc(self.n as f64 - k as f64, k as f64 + 1.0, 1.0 - self.p).await
+        beta_inc(self.n as f64 - k as f64, k as f64 + 1.0, 1.0 - self.p)
     }
 
     /// 🎯️ Walks the CDF from `0` upward — O(n), acceptable since `n` is small in the intended
@@ -795,7 +815,8 @@ pub struct Multinomial {
 }
 
 impl Multinomial {
-    pub async fn new(n: u64, probs: Vec<f64>) -> Result<Self, ProbabilityError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(n: u64, probs: Vec<f64>) -> Result<Self, ProbabilityError> {
         let sum: f64 = probs.iter().sum();
         if (sum - 1.0).abs() > 1e-9 {
             return Err(ProbabilityError::InvalidParameter { name: "probs_sum", value: sum });
@@ -806,7 +827,8 @@ impl Multinomial {
         Ok(Self { n, probs })
     }
 
-    pub async fn ln_pmf(&self, counts: &[u64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ln_pmf(&self, counts: &[u64]) -> f64 {
         if counts.len() != self.probs.len() || counts.iter().sum::<u64>() != self.n {
             return f64::NEG_INFINITY;
         }
@@ -817,16 +839,18 @@ impl Multinomial {
                 result += count as f64 * p.ln();
             }
         }
-        result.await
+        result
     }
 
-    pub async fn pmf(&self, counts: &[u64]) -> f64 {
-        self.ln_pmf(counts).await.exp()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn pmf(&self, counts: &[u64]) -> f64 {
+        self.ln_pmf(counts).exp()
     }
 
     /// 🎲️ Sequential conditional binomial draws: category `i`'s count is `Binomial(remaining,
     /// p_i / (1 - sum of earlier p's))`, decrementing `remaining` after each draw.
-    pub async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> Vec<u64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> Vec<u64> {
         let mut remaining = self.n;
         let mut remaining_prob = 1.0;
         let mut counts = Vec::with_capacity(self.probs.len());
@@ -837,7 +861,7 @@ impl Multinomial {
             }
             let conditional_p = if remaining_prob > 0.0 { (p / remaining_prob).clamp(0.0, 1.0) } else { 0.0 };
             let draw = Binomial { n: remaining, p: conditional_p }.sample(rng);
-            counts.push(draw.await);
+            counts.push(draw);
             remaining -= draw;
             remaining_prob -= p;
         }

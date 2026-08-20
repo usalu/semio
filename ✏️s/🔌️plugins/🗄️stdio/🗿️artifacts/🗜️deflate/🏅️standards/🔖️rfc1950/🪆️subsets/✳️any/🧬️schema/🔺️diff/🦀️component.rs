@@ -107,19 +107,23 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
-    DeflateDiff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
+    DeflateDiff::between(base, snapshot)
 }
 /// 🧩 Builds a set-compression-params diff.
-pub async fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
     DeflateDiff { compression_method: Some(method), window_bits: Some(window_bits), compression_level_hint: Some(level_hint), ..Default::default() }
 }
 /// 🧩 Builds a set-preset-dictionary diff.
-pub async fn diff_set_preset_dictionary(dict_id: Option<u32>) -> DeflateDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_preset_dictionary(dict_id: Option<u32>) -> DeflateDiff {
     DeflateDiff { dict_id: Some(dict_id), ..Default::default() }
 }
 /// 🧩 Builds a set-payload diff.
-pub async fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
     DeflateDiff { payload: Some(payload), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -131,7 +135,8 @@ pub async fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<DeflateDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
     let a = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"demo-cases-a-payload".to_vec() };
@@ -180,19 +185,23 @@ pub(crate) async fn demo_diff_cases() -> Vec<DeflateDiff> {
 /// Worked example: `compression-method=9 window-bits=6 level=m dict-id=[1,3735928559] payload=` (empty
 /// payload prints as a zero-length hex string after `=`).
 //#region 🔖️Primitives
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn parse_u8(s: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -200,7 +209,8 @@ async fn parse_u32(s: &str) -> Result<u32, String> {
 /// because `decode_option`'s own `[0]`/`[1,<v>]` payload can itself contain a `,` (none here
 /// today, but the primitive is the shared grammar contract every hand-rolled codec in this repo
 /// uses, per `f6-recon-report.md` §5 -- kept verbatim rather than hand-simplified).
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -221,18 +231,21 @@ async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -241,7 +254,8 @@ async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-async fn enc_level_hint(h: DeflateLevelHint) -> char {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_level_hint(h: DeflateLevelHint) -> char {
     match h {
         DeflateLevelHint::Fastest => 'f',
         DeflateLevelHint::Fast => 'a',
@@ -249,7 +263,8 @@ async fn enc_level_hint(h: DeflateLevelHint) -> char {
         DeflateLevelHint::Maximum => 'm',
     }
 }
-async fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
     match s {
         "f" => Ok(DeflateLevelHint::Fastest),
         "a" => Ok(DeflateLevelHint::Fast),
@@ -261,7 +276,8 @@ async fn dec_level_hint(s: &str) -> Result<DeflateLevelHint, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_deflate_diff(d: &DeflateDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_deflate_diff(d: &DeflateDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.compression_method {
         tokens.push(format!("compression-method={v}"));
@@ -280,22 +296,23 @@ async fn print_deflate_diff(d: &DeflateDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
     let mut d = DeflateDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("compression-method=") {
-            d.compression_method = Some(parse_u8(rest).await?);
+            d.compression_method = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("window-bits=") {
-            d.window_bits = Some(parse_u8(rest).await?);
+            d.window_bits = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("level=") {
-            d.compression_level_hint = Some(dec_level_hint(rest).await?);
+            d.compression_level_hint = Some(dec_level_hint(rest)?);
         } else if let Some(rest) = token.strip_prefix("dict-id=") {
-            d.dict_id = Some(decode_option(rest, parse_u32).await?);
+            d.dict_id = Some(decode_option(rest, parse_u32)?);
         } else if let Some(rest) = token.strip_prefix("payload=") {
-            d.payload = Some(hex_decode(rest).await?);
+            d.payload = Some(hex_decode(rest)?);
         } else {
             return Err(format!("deflate diff: unknown token {token:?}"));
         }
@@ -305,10 +322,10 @@ async fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
 
 impl protocol::DiffCodec for DeflateDiff {
     async fn print_diff(&self) -> String {
-        print_deflate_diff(self).await
+        print_deflate_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_deflate_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_deflate_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [compression_method][window_bits]
     /// [compression_level_hint][dict_id][payload]`), matching
@@ -344,7 +361,7 @@ impl protocol::DiffCodec for DeflateDiff {
             out.push(v);
         }
         if let Some(v) = self.compression_level_hint {
-            out.push(v.to_bits().await);
+            out.push(v.to_bits());
         }
         if let Some(dict_id) = &self.dict_id {
             out.push(if dict_id.is_some() { 1 } else { 0 });
@@ -412,10 +429,12 @@ mod tests {
         0xf9,
     ];
 
-    async fn sweep_a() -> DeflateSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fastest, dict_id: None, payload: b"sweep-a-payload".to_vec() }
     }
-    async fn sweep_b() -> DeflateSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> DeflateSnapshot {
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 9, window_bits: 6, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0xDEAD_BEEF), payload: b"sweep-b-different-longer-payload".to_vec() }
     }
     //#endregion Fixtures

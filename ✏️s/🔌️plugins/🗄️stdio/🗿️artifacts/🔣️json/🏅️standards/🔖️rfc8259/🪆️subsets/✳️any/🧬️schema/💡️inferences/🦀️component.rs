@@ -25,7 +25,7 @@ pub struct JsonInference {
 
 impl Inference<JsonSnapshot> for JsonInference {
     async fn infer(snapshot: &JsonSnapshot) -> Self {
-        Self { outline: JsonOutline::compute(snapshot).await }
+        Self { outline: JsonOutline::compute(snapshot) }
     }
 }
 
@@ -62,7 +62,8 @@ impl ArtifactInferrer for crate::artifacts::json::standards::v_rfc8259::subsets:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.json.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `json_artifact_schema_descriptor`'s registration.
-pub async fn json_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn json_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.json.inference",
         inference: schema::FacetLeaves {

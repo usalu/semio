@@ -81,7 +81,8 @@ pub mod derived_construction {
             "</p:presentation>",
         );
 
-        async fn strict_snapshot() -> PptxSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn strict_snapshot() -> PptxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");
@@ -145,19 +146,23 @@ pub mod derived_analysis {
 
     /// 🧭️ Locates the root officeDocument part regardless of whether the package declares the
     /// Transitional or Strict officeDocument relationship type.
-    async fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn main_part_path(opc: &OpcPackage) -> Option<String> {
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
     }
 
-    async fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
-        opc.part_bytes(path).await.and_then(|b| std::str::from_utf8(b).ok())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
+        opc.part_bytes(path).and_then(|b| std::str::from_utf8(b).ok())
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -165,12 +170,13 @@ pub mod derived_analysis {
     /// `PptxSnapshot`. Shared single source of truth: `PptxStrictComposer::compose` hard-gates on
     /// this (pre-serialization, authoritative), `PptxStrictBuilder::build` hard-gates on this too,
     /// and the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub async fn check_strict_conformance(snapshot: &PptxSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_strict_conformance(snapshot: &PptxSnapshot) -> Vec<Diagnostic> {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_part_path(opc).await {
-            Some(path) => match part_text(opc, &path).await {
+        match main_part_path(opc) {
+            Some(path) => match part_text(opc, &path) {
                 Some(text) => {
                     if !text.contains(STRICT_MAIN_NS) {
                         out.push(hard(CODE_MAIN_NS, format!("root officeDocument part {path} does not declare the Strict PresentationML main namespace ({STRICT_MAIN_NS})")));
@@ -232,7 +238,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot).await;
+                let checks = check_strict_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -255,7 +261,8 @@ pub mod derived_analysis {
             "</p:presentation>",
         );
 
-        async fn strict_snapshot() -> PptxSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn strict_snapshot() -> PptxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");

@@ -72,10 +72,12 @@ struct BitWriter {
     nbits: u32,
 }
 impl BitWriter {
-    async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new() -> Self {
         Self { out: Vec::new(), cur: 0, nbits: 0 }
     }
-    async fn write_bits(&mut self, value: u32, count: u8) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn write_bits(&mut self, value: u32, count: u8) {
         self.cur |= value << self.nbits;
         self.nbits += count as u32;
         while self.nbits >= 8 {
@@ -84,7 +86,8 @@ impl BitWriter {
             self.nbits -= 8;
         }
     }
-    async fn finish(mut self) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn finish(mut self) -> Vec<u8> {
         if self.nbits > 0 {
             self.out.push((self.cur & 0xFF) as u8);
         }
@@ -99,10 +102,12 @@ struct BitReader<'a> {
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
-    async fn new(data: &'a [u8]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0, cur: 0, nbits: 0 }
     }
-    async fn read_bits(&mut self, count: u8) -> Result<u32, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read_bits(&mut self, count: u8) -> Result<u32, String> {
         while self.nbits < count as u32 {
             if self.pos >= self.data.len() {
                 return Err("unexpected end of lzw stream".into());
@@ -132,17 +137,18 @@ impl<'a> BitReader<'a> {
 /// in a throwaway scratch-crate harness before porting here — a symmetric `>=`/`>=` pairing
 /// passed self-consistency tests against its own output but produced invalid codes against a
 /// real third-party-encoded file, exactly the kind of bug hand-tracing alone tends to miss.
-pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
     let clear_code: u32 = 1 << min_code_size;
     let end_code: u32 = clear_code + 1;
     let mut code_size: u32 = min_code_size as u32 + 1;
     let mut next_code: u32 = end_code + 1;
     let mut dict: HashMap<(i64, u8), u32> = HashMap::new();
-    let mut bw = BitWriter::new().await;
-    bw.write_bits(clear_code, code_size as u8).await;
+    let mut bw = BitWriter::new();
+    bw.write_bits(clear_code, code_size as u8);
     if indices.is_empty() {
-        bw.write_bits(end_code, code_size as u8).await;
-        return bw.finish().await;
+        bw.write_bits(end_code, code_size as u8);
+        return bw.finish();
     }
     let mut current: i64 = indices[0] as i64;
     // 🐛→✅ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: tracks
@@ -154,7 +160,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
         if let Some(&code) = dict.get(&key) {
             current = code as i64;
         } else {
-            bw.write_bits(current as u32, code_size as u8).await;
+            bw.write_bits(current as u32, code_size as u8);
             wrote_since_clear = true;
             dict.insert(key, next_code);
             next_code += 1;
@@ -162,7 +168,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
                 code_size += 1;
             }
             if next_code >= 4096 {
-                bw.write_bits(clear_code, code_size as u8).await;
+                bw.write_bits(clear_code, code_size as u8);
                 dict.clear();
                 code_size = min_code_size as u32 + 1;
                 next_code = end_code + 1;
@@ -171,7 +177,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
             current = sym as i64;
         }
     }
-    bw.write_bits(current as u32, code_size as u8).await;
+    bw.write_bits(current as u32, code_size as u8);
     // 🐛→✅ A real, previously-latent bug (found via this ticket's field_sweep-style test data —
     // a plain period-2 alternating sequence, never exercised by the pre-existing pseudo-random/
     // solid-run test suite): `lzw_decode` performs an insert-then-maybe-grow step for EVERY code
@@ -191,19 +197,20 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
             code_size += 1;
         }
     }
-    bw.write_bits(end_code, code_size as u8).await;
-    bw.finish().await
+    bw.write_bits(end_code, code_size as u8);
+    bw.finish()
 }
 
 /// 🧬️ GIF-variant LZW decode; see [`lzw_encode`] for the growth-threshold asymmetry.
-pub async fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, String> {
     if !(2..=8).contains(&min_code_size) {
         return Err(format!("invalid lzw minimum code size {min_code_size} (must be 2..=8)"));
     }
     let clear_code: u32 = 1 << min_code_size;
     let end_code: u32 = clear_code + 1;
     let mut code_size: u32 = min_code_size as u32 + 1;
-    let mut br = BitReader::new(data).await;
+    let mut br = BitReader::new(data);
     let base_len = (clear_code + 2) as usize;
     let mut table: Vec<Vec<u8>> = (0..clear_code).map(|i| vec![i as u8]).collect();
     table.push(Vec::new());
@@ -211,7 +218,7 @@ pub async fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, Strin
     let mut out = Vec::new();
     let mut prev: Option<Vec<u8>> = None;
     loop {
-        let code = br.read_bits(code_size as u8).await?;
+        let code = br.read_bits(code_size as u8)?;
         if code == clear_code {
             table.truncate(base_len);
             code_size = min_code_size as u32 + 1;
@@ -251,7 +258,8 @@ pub async fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, Strin
 //#region SubBlocks
 /// 📦️ GIF data sub-blocks: length-prefixed (max 255 bytes) chunks terminated by a zero-length
 /// block — used for LZW image data and every extension body (GCE, application, comment, ...).
-pub async fn pack_sub_blocks(data: &[u8]) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pack_sub_blocks(data: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(data.len() + data.len() / 255 + 2);
     for chunk in data.chunks(255) {
         out.push(chunk.len() as u8);
@@ -262,7 +270,8 @@ pub async fn pack_sub_blocks(data: &[u8]) -> Vec<u8> {
 }
 
 /// 📦️ Inverse of [`pack_sub_blocks`]; advances `pos` past the terminating zero-length block.
-pub async fn unpack_sub_blocks(data: &[u8], pos: &mut usize) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unpack_sub_blocks(data: &[u8], pos: &mut usize) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     loop {
         let len = *data.get(*pos).ok_or("truncated gif sub-block sequence")? as usize;
@@ -286,7 +295,8 @@ pub type Rgb = [u8; 3];
 
 /// 📐️ The 3-bit "size" field GIF stores for a color table of `len` entries: table size on disk
 /// is always `2^(size+1)`, so this is the smallest `size` whose power covers `len`.
-pub async fn color_table_size_field(len: usize) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn color_table_size_field(len: usize) -> u8 {
     let mut size = 0u8;
     while (1usize << (size as usize + 1)) < len.max(1) {
         size += 1;
@@ -294,7 +304,8 @@ pub async fn color_table_size_field(len: usize) -> u8 {
     size
 }
 
-pub async fn read_color_table(data: &[u8], pos: &mut usize, size_field: u8) -> Result<Vec<Rgb>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn read_color_table(data: &[u8], pos: &mut usize, size_field: u8) -> Result<Vec<Rgb>, String> {
     let n = 1usize << (size_field as usize + 1);
     let end = pos.checked_add(n * 3).ok_or("gif color table size overflow")?;
     if end > data.len() {
@@ -312,7 +323,8 @@ pub async fn read_color_table(data: &[u8], pos: &mut usize, size_field: u8) -> R
 /// 📐️ Writes `palette` padded to its `2^(size+1)` disk size with black filler entries — the
 /// filler RGB values are never referenced by any index we emit, only present to satisfy the
 /// fixed-power-of-two on-disk shape.
-pub async fn write_color_table(out: &mut Vec<u8>, palette: &[Rgb]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn write_color_table(out: &mut Vec<u8>, palette: &[Rgb]) {
     let size_field = color_table_size_field(palette.len());
     let target = 1usize << (size_field as usize + 1);
     for i in 0..target {
@@ -324,7 +336,8 @@ pub async fn write_color_table(out: &mut Vec<u8>, palette: &[Rgb]) {
 //#region Quantize
 /// 📐️ Smallest legal LZW minimum code size (2..=8, GIF caps at 8 since a color index is a byte)
 /// whose `2^bits` covers `palette_len` entries.
-pub async fn min_code_size_for(palette_len: usize) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn min_code_size_for(palette_len: usize) -> u8 {
     let mut bits = 2u8;
     while (1usize << bits) < palette_len.max(1) {
         bits += 1;
@@ -337,7 +350,8 @@ pub async fn min_code_size_for(palette_len: usize) -> u8 {
 /// frame, so keying transparency off color value alone would corrupt any opaque pixel that
 /// happens to share that RGB (e.g. opaque black colliding with a transparent pixel's undefined
 /// placeholder color).
-pub async fn quantize_rgba(rgba: &[u8]) -> Result<(Vec<Rgb>, Vec<u8>, Option<u8>), String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn quantize_rgba(rgba: &[u8]) -> Result<(Vec<Rgb>, Vec<u8>, Option<u8>), String> {
     let has_transparent = rgba.chunks_exact(4).any(|px| px[3] == 0);
     let mut palette: Vec<Rgb> = Vec::new();
     let mut lookup: HashMap<Rgb, u8> = HashMap::new();
@@ -372,7 +386,8 @@ pub async fn quantize_rgba(rgba: &[u8]) -> Result<(Vec<Rgb>, Vec<u8>, Option<u8>
 
 /// 🎨️ Inverse of [`quantize_rgba`]. Transparent-index pixels normalize to `[0,0,0,0]` — the
 /// spec leaves that index's RGB entry undefined, so there is no canonical color to preserve.
-pub async fn indices_to_rgba(indices: &[u8], palette: &[Rgb], transparent_index: Option<u8>) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn indices_to_rgba(indices: &[u8], palette: &[Rgb], transparent_index: Option<u8>) -> Vec<u8> {
     let mut out = Vec::with_capacity(indices.len() * 4);
     for &idx in indices {
         if Some(idx) == transparent_index {
@@ -391,7 +406,8 @@ pub async fn indices_to_rgba(indices: &[u8], palette: &[Rgb], transparent_index:
 /// stored 0,8,16,...; 4,12,20,...; 2,6,10,...; 1,3,5,... in the compressed stream. We only ever
 /// need to de-interlace on decode — [`encode_gif`]/89a's frame encoder always emit progressive
 /// (non-interlaced) data, which is spec-legal and simpler while still losing no pixel data.
-pub async fn deinterlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn deinterlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
     let mut out = vec![0u8; width * height];
     let mut src_row = 0usize;
     for (start, step) in [(0usize, 8usize), (4, 8), (2, 4), (1, 2)] {
@@ -412,7 +428,8 @@ pub async fn deinterlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u
 /// 🪜️ Inverse of [`deinterlace_rows`] — reorders NATURAL row-major indices into the on-disk
 /// interlaced pass order for encoding. Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION:
 /// needed now that `interlace` is a real, round-trippable snapshot field (not decode-only).
-pub async fn interlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn interlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8> {
     let mut out = vec![0u8; width * height];
     let mut dst_row = 0usize;
     for (start, step) in [(0usize, 8usize), (4, 8), (2, 4), (1, 2)] {
@@ -434,10 +451,12 @@ pub async fn interlace_rows(rows: &[u8], width: usize, height: usize) -> Vec<u8>
 //#region ColorTableConv
 /// 🔀️ `Vec<GifRgb>` <-> the byte-level `Vec<Rgb>` ([u8;3]) shape the LZW/sub-block helpers above
 /// speak — a thin, allocation-only bridge between the typed snapshot model and the byte codec.
-pub async fn color_table_to_bytes(table: &GifColorTable) -> Vec<Rgb> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn color_table_to_bytes(table: &GifColorTable) -> Vec<Rgb> {
     table.colors.iter().map(|c| [c.r, c.g, c.b]).collect()
 }
-pub async fn color_table_from_bytes(colors: Vec<Rgb>, sorted: bool) -> GifColorTable {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn color_table_from_bytes(colors: Vec<Rgb>, sorted: bool) -> GifColorTable {
     GifColorTable { sorted, colors: colors.into_iter().map(|[r, g, b]| GifRgb { r, g, b }).collect() }
 }
 //#endregion ColorTableConv
@@ -448,7 +467,8 @@ pub async fn color_table_from_bytes(colors: Vec<Rgb>, sorted: bool) -> GifColorT
 /// Descriptors) even without any extension — this encoder writes every `snap.images` entry in
 /// order. Palette indices are written exactly as stored (lossless-payload exception) — no
 /// re-quantization from pixel content happens here.
-pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     if snap.width == 0 || snap.height == 0 {
         return Err("gif87a: empty logical screen".into());
     }
@@ -465,7 +485,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     let gct_bytes = snap.gct.as_ref().map(color_table_to_bytes);
     match &gct_bytes {
         Some(colors) => {
-            let size_field = validated_color_table_size_field(colors.len(), "gif87a: global").await?;
+            let size_field = validated_color_table_size_field(colors.len(), "gif87a: global")?;
             let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
             out.push(0x80 | (sorted as u8) << 3 | size_field);
         }
@@ -501,7 +521,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         let mut ipacked = (image.interlace as u8) << 6;
         let min_code_size;
         if let Some(colors) = &local_bytes {
-            let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local")).await?;
+            let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local"))?;
             let sorted = image.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
             ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
             min_code_size = min_code_size_for(colors.len());
@@ -512,9 +532,9 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if let Some(colors) = &local_bytes {
             write_color_table(&mut out, colors);
         }
-        let on_disk_indices = if image.interlace { interlace_rows(&image.indices, image.width as usize, image.height as usize).await } else { image.indices.clone() };
-        out.push(min_code_size.await);
-        out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size.await)));
+        let on_disk_indices = if image.interlace { interlace_rows(&image.indices, image.width as usize, image.height as usize) } else { image.indices.clone() };
+        out.push(min_code_size);
+        out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size)));
     }
     out.push(0x3B);
     Ok(out)
@@ -525,14 +545,16 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
 /// filler entries up to that size by [`write_color_table`] (matching real encoders; a table
 /// constructed from e.g. `quantize_rgba`'s exact used-color count is rarely already a power of
 /// two). Only genuinely unrepresentable lengths (`> 256`) are a typed error.
-async fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, String> {
     if len > 256 {
         return Err(format!("{what} color table length {len} exceeds the on-disk maximum of 256"));
     }
-    Ok(color_table_size_field(len).await)
+    Ok(color_table_size_field(len))
 }
 
-pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     if data.len() < 13 || &data[0..6] != b"GIF87a" {
         return Err("not a GIF87a file (bad magic)".into());
     }
@@ -544,7 +566,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     let mut pos = 13usize;
     let gct = if (screen_packed & 0x80) != 0 {
         let sorted = (screen_packed & 0x08) != 0;
-        Some(color_table_from_bytes(read_color_table(data, &mut pos, screen_packed & 0x07).await?, sorted))
+        Some(color_table_from_bytes(read_color_table(data, &mut pos, screen_packed & 0x07)?, sorted))
     } else {
         None
     };
@@ -566,22 +588,22 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 pos += 10;
                 let local = if (ipacked & 0x80) != 0 {
                     let sorted = (ipacked & 0x20) != 0;
-                    Some(color_table_from_bytes(read_color_table(data, &mut pos, ipacked & 0x07).await?, sorted))
+                    Some(color_table_from_bytes(read_color_table(data, &mut pos, ipacked & 0x07)?, sorted))
                 } else {
                     None
                 };
                 let table = local.as_ref().or(gct.as_ref()).ok_or("gif87a: image has no color table (neither global nor local)")?;
                 let min_code_size = *data.get(pos).ok_or("truncated gif87a: missing lzw minimum code size")?;
                 pos += 1;
-                let sub = unpack_sub_blocks(data, &mut pos).await?;
-                let mut indices = lzw_decode(&sub, min_code_size).await?;
+                let sub = unpack_sub_blocks(data, &mut pos)?;
+                let mut indices = lzw_decode(&sub, min_code_size)?;
                 let expected = (iw as usize) * (ih as usize);
                 if indices.len() < expected {
                     return Err("gif87a: lzw stream decoded fewer pixels than the image needs".into());
                 }
                 indices.truncate(expected);
                 if interlaced {
-                    indices = deinterlace_rows(&indices, iw as usize, ih as usize).await;
+                    indices = deinterlace_rows(&indices, iw as usize, ih as usize);
                 }
                 let _ = table;
                 images.push(GifImage { left, top, width: iw, height: ih, interlace: interlaced, lct: local, indices });
@@ -606,7 +628,8 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 /// `parse_dsl` would strip and hex-decode just the 6-byte prefix. `magic` is the standard's own
 /// version string (`GIF87a`/`GIF89a`); a mismatch or too-short/malformed source is Low, never a
 /// constant — replaces the prior stub that discarded `source` and always answered `Medium`.
-pub async fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[u8; 6]) -> semio_framework_plugin::IoConfidence {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[u8; 6]) -> semio_framework_plugin::IoConfidence {
     use semio_framework_plugin::{AnalyzeSource, IoConfidence};
     match source {
         AnalyzeSource::Binary(bytes) => {
@@ -643,20 +666,22 @@ pub async fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, mag
 //#endregion Sniff
 
 //#region 🔖️Register
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     crate::artifacts::gif::io_registry::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor().await);
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA).await);
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
 }
 
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the
@@ -666,7 +691,8 @@ pub async fn register_artifact_inferences() {
 /// own shape exactly (the 5-role scheme has no dedicated "diff binary" role, even though
 /// `🔺️diff/💾️binary/📡️component.protocol.semio` is a real, conformance-tested file — its
 /// binary form is exercised directly by `protocol_walk_law` below).
-pub async fn register_pilot_languages() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.gif",
         extension: Some("gif"),
@@ -730,12 +756,14 @@ pub async fn register_pilot_languages() {
 /// recipe's §5 consolidated table) rather than fabricating an unrelated spec to satisfy the
 /// API.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.gif", GifSnapshot::__dsl_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 //#endregion 🔖️Register
 
 //#region 🧪️Tests
@@ -749,7 +777,8 @@ mod tests {
     /// exactly this kind of "construct a frame from pixel content" test/tooling use, even though
     /// `encode_gif`/`decode_gif` no longer call them (the codec now writes/reads whatever palette
     /// + indices are already in the snapshot, never re-quantizing).
-    async fn checkerboard(width: u32, height: u32) -> GifImage {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn checkerboard(width: u32, height: u32) -> GifImage {
         let mut rgba = vec![0u8; (width * height * 4) as usize];
         for y in 0..height {
             for x in 0..width {
@@ -848,7 +877,8 @@ mod tests {
         assert!(decode_gif(b"GIF89a").is_err(), "87a decoder must reject 89a magic");
     }
 
-    async fn sample_snapshot() -> GifSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> GifSnapshot {
         GifSnapshot { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 37, height: 29, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![checkerboard(37, 29)] }
     }
 

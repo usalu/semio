@@ -26,25 +26,28 @@ use crate::artifacts::zip::opc::OpcPackage;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-async fn transform_from_frame(f: &SlideFrame) -> PptxTransform {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_from_frame(f: &SlideFrame) -> PptxTransform {
     PptxTransform { x: f.origin.x.round() as i64, y: f.origin.y.round() as i64, cx: f.width.round() as i64, cy: f.height.round() as i64 }
 }
 
-async fn map_semio_run(run: &DocRun) -> PptxRun {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_semio_run(run: &DocRun) -> PptxRun {
     PptxRun { text: run.text.clone(), bold: run.style.bold, italic: run.style.italic, font_size: run.style.size.map(|s| s.round() as u32) }
 }
 
 /// 🧱 One `DocBlock` -> zero or more `PptxParagraph`s — flattening non-`Paragraph` kinds since a
 /// pptx text frame only supports flat paragraphs of runs (see module doc comment).
-pub(crate) async fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagraph> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagraph> {
     match block {
         DocBlock::Paragraph { runs, .. } => vec![PptxParagraph { runs: runs.iter().map(map_semio_run).collect() }],
         DocBlock::Heading { runs, .. } => vec![PptxParagraph { runs: runs.iter().map(map_semio_run).collect() }],
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(block_to_pptx_paragraphs)).collect(),
         DocBlock::Table { rows } => rows.iter().flat_map(|row| row.cells.iter().flat_map(|cell| cell.blocks.iter().flat_map(block_to_pptx_paragraphs))).collect(),
-        DocBlock::Code { text, .. } => vec![PptxParagraph::text(text.clone()).await],
+        DocBlock::Code { text, .. } => vec![PptxParagraph::text(text.clone())],
         DocBlock::Quote { blocks } => blocks.iter().flat_map(block_to_pptx_paragraphs).collect(),
-        DocBlock::Image { alt, .. } => vec![PptxParagraph::text(alt.clone()).await],
+        DocBlock::Image { alt, .. } => vec![PptxParagraph::text(alt.clone())],
         DocBlock::PageBreak => Vec::new(),
     }
 }
@@ -52,7 +55,8 @@ pub(crate) async fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagr
 /// 🏷️ `PlaceholderKind` -> pptx `ST_PlaceholderType` string (canonical form — `Title` always
 /// emits `"title"`, never `"ctrTitle"`; a real, documented normalization, not data loss of
 /// meaning).
-pub(crate) async fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
     match kind {
         PlaceholderKind::Title => "title".into(),
         PlaceholderKind::Subtitle => "subTitle".into(),
@@ -64,12 +68,13 @@ pub(crate) async fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
     }
 }
 
-async fn map_shape(shape: &SlideShape) -> Option<PptxShape> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_shape(shape: &SlideShape) -> Option<PptxShape> {
     match shape {
-        SlideShape::TextBox { frame, blocks } => Some(PptxShape::TextBox { text_frame: blocks.iter().flat_map(block_to_pptx_paragraphs).collect(), position: transform_from_frame(frame).await }),
-        SlideShape::Picture { frame, image } => Some(PptxShape::Picture { blip_rel_id: image.asset_id.clone(), position: transform_from_frame(frame).await }),
+        SlideShape::TextBox { frame, blocks } => Some(PptxShape::TextBox { text_frame: blocks.iter().flat_map(block_to_pptx_paragraphs).collect(), position: transform_from_frame(frame) }),
+        SlideShape::Picture { frame, image } => Some(PptxShape::Picture { blip_rel_id: image.asset_id.clone(), position: transform_from_frame(frame) }),
         SlideShape::Table { .. } => None,
-        SlideShape::Placeholder { frame, kind } => Some(PptxShape::Placeholder { kind: placeholder_kind_to_str(kind).await, text_frame: Vec::new(), position: transform_from_frame(frame).await }),
+        SlideShape::Placeholder { frame, kind } => Some(PptxShape::Placeholder { kind: placeholder_kind_to_str(kind), text_frame: Vec::new(), position: transform_from_frame(frame) }),
     }
 }
 //#endregion 🔖️FieldMapping
@@ -85,7 +90,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }).await)
+        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }))
     }
 }
 //#endregion 🔖️Serializer
@@ -98,7 +103,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::RunStyle;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlidePictureImage, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
-    async fn sample_semio() -> SemioPresentationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
             masters: Vec::new(),

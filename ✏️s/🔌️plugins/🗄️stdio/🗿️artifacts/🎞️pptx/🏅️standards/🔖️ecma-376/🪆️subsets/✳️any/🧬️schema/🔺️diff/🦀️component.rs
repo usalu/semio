@@ -244,7 +244,8 @@ pub struct PptxDiff {
 //#region 🔖️GenericIndexedEngine
 /// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
 /// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-async fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
 where
     T: Clone + PartialEq,
 {
@@ -266,39 +267,40 @@ where
     }
 }
 
-async fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     T: Clone,
 {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for m in &diff.modified {
         if m.index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
         }
         if removed.contains(&m.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
         }
         if !modified.insert(m.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
         }
     }
     let final_len = items.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for add in &diff.added {
         if add.index >= final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
         }
         if !added.insert(add.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
         }
     }
     for m in &diff.modified {
@@ -317,7 +319,8 @@ where
     Ok(())
 }
 
-async fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
 {
@@ -326,7 +329,7 @@ where
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -341,7 +344,8 @@ where
 
 /// 🧮️ Maps a base-side index through a diff's OWN removed/added to the position it ends up at
 /// once that diff has been applied (svg `SvgDiff`'s `transform_index`, generalized).
-async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -362,7 +366,8 @@ enum ItemOrigin {
     Added(usize),
 }
 
-async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -377,7 +382,8 @@ async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[In
 /// `absorb_item` recursively absorbs two per-field diffs of the SAME item; `apply_item` patches a
 /// `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-async fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -394,7 +400,7 @@ where
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified;
@@ -444,7 +450,7 @@ where
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(IndexAdded { index: final_index.await, item: add.item });
+        added.push(IndexAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -456,7 +462,8 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️GenericNamedEngine
-async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -489,7 +496,8 @@ where
     }
 }
 
-async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -497,27 +505,27 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist"));
         }
         if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated"));
         }
     }
     for (position, key) in diff.modified.iter().enumerate() {
         if !keys.contains(&key.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist"));
         }
         if diff.removed.contains(&key.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item"));
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == key.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated"));
         }
     }
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || diff.added.iter().filter(|candidate| key_of(candidate) == key).count() != 1 {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists"));
         }
     }
     items.retain(|i| !diff.removed.contains(&key_of(i)));
@@ -531,7 +539,8 @@ where
     Ok(())
 }
 
-async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -555,7 +564,8 @@ where
 /// 🧮️ Name-keyed absorb -- identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -598,7 +608,8 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️PresentationDiffLogic
-async fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
     if old == new {
         return None;
     }
@@ -610,7 +621,8 @@ async fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
     })
 }
 
-async fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -626,21 +638,25 @@ async fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult
     Ok(())
 }
 
-async fn inverse_run(base: &PptxRun, diff: &PptxRunDiff) -> PptxRunDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_run(base: &PptxRun, diff: &PptxRunDiff) -> PptxRunDiff {
     PptxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), font_size: diff.font_size.map(|_| base.font_size) }
 }
 
-async fn absorb_run_diff(a: PptxRunDiff, b: PptxRunDiff) -> PptxRunDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_run_diff(a: PptxRunDiff, b: PptxRunDiff) -> PptxRunDiff {
     PptxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), font_size: b.font_size.or(a.font_size) }
 }
 
-async fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn run_with_diff_applied(run: &PptxRun, diff: &PptxRunDiff) -> PptxRun {
     let mut out = run.clone();
     apply_run_for_absorb(&mut out, diff);
     out
 }
 
-async fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
     if let Some(value) = &diff.text {
         run.text = value.clone();
     }
@@ -655,8 +671,9 @@ async fn apply_run_for_absorb(run: &mut PptxRun, diff: &PptxRunDiff) {
     }
 }
 
-async fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagraphDiff> {
-    let runs = between_indexed(&old.runs, &new.runs, diff_run).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagraphDiff> {
+    let runs = between_indexed(&old.runs, &new.runs, diff_run);
     if runs.is_none() {
         None
     } else {
@@ -664,45 +681,51 @@ async fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<Pptx
     }
 }
 
-async fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
     if let Some(rd) = &diff.runs {
-        apply_indexed(&mut p.runs, rd, apply_run).await.map_err(|error| error.under(["runs"]))?;
+        apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
     }
     Ok(())
 }
 
-async fn inverse_paragraph(base: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraphDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_paragraph(base: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraphDiff {
     PptxParagraphDiff { runs: diff.runs.as_ref().map(|rd| inverse_indexed(&base.runs, rd, inverse_run)) }
 }
 
-async fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> PptxParagraphDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> PptxParagraphDiff {
     a.runs = match (a.runs.take(), b.runs) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied).await),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
     };
     a
 }
 
-async fn paragraph_with_diff_applied(p: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraph {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn paragraph_with_diff_applied(p: &PptxParagraph, diff: &PptxParagraphDiff) -> PptxParagraph {
     let mut out = p.clone();
     apply_paragraph_for_absorb(&mut out, diff);
     out
 }
 
-async fn apply_paragraph_for_absorb(paragraph: &mut PptxParagraph, diff: &PptxParagraphDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_paragraph_for_absorb(paragraph: &mut PptxParagraph, diff: &PptxParagraphDiff) {
     if let Some(runs) = &diff.runs {
         apply_indexed_for_absorb(&mut paragraph.runs, runs, apply_run_for_absorb);
     }
 }
 
-async fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
     if old == new {
         return None;
     }
     match (old, new) {
         (PptxShape::TextBox { text_frame: otf, position: op }, PptxShape::TextBox { text_frame: ntf, position: np }) => {
-            let text_frame = between_indexed(otf, ntf, diff_paragraph).await;
+            let text_frame = between_indexed(otf, ntf, diff_paragraph);
             let position = (op != np).then_some(*np);
             if text_frame.is_none() && position.is_none() {
                 None
@@ -721,7 +744,7 @@ async fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
         }
         (PptxShape::Placeholder { kind: ok, text_frame: otf, position: op }, PptxShape::Placeholder { kind: nk, text_frame: ntf, position: np }) => {
             let kind = (ok != nk).then(|| nk.clone());
-            let text_frame = between_indexed(otf, ntf, diff_paragraph).await;
+            let text_frame = between_indexed(otf, ntf, diff_paragraph);
             let position = (op != np).then_some(*np);
             if kind.is_none() && text_frame.is_none() && position.is_none() {
                 None
@@ -733,15 +756,16 @@ async fn diff_shape(old: &PptxShape, new: &PptxShape) -> Option<PptxShapeDiff> {
     }
 }
 
-async fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApplyResult<()> {
     match diff {
         PptxShapeDiff::Replace { shape: new } => *shape = new.clone(),
         PptxShapeDiff::TextBox(td) => {
             let PptxShape::TextBox { text_frame, position } = shape else {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text-box diff targets another shape kind").await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text-box diff targets another shape kind"));
             };
             if let Some(tfd) = &td.text_frame {
-                apply_indexed(text_frame, tfd, apply_paragraph).await.map_err(|error| error.under(["textFrame"]))?;
+                apply_indexed(text_frame, tfd, apply_paragraph).map_err(|error| error.under(["textFrame"]))?;
             }
             if let Some(p) = &td.position {
                 *position = *p;
@@ -749,7 +773,7 @@ async fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApp
         }
         PptxShapeDiff::Picture(pd) => {
             let PptxShape::Picture { blip_rel_id, position } = shape else {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "picture diff targets another shape kind").await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "picture diff targets another shape kind"));
             };
             if let Some(v) = &pd.blip_rel_id {
                 *blip_rel_id = v.clone();
@@ -760,13 +784,13 @@ async fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApp
         }
         PptxShapeDiff::Placeholder(phd) => {
             let PptxShape::Placeholder { kind, text_frame, position } = shape else {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "placeholder diff targets another shape kind").await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "placeholder diff targets another shape kind"));
             };
             if let Some(k) = &phd.kind {
                 *kind = k.clone();
             }
             if let Some(tfd) = &phd.text_frame {
-                apply_indexed(text_frame, tfd, apply_paragraph).await.map_err(|error| error.under(["textFrame"]))?;
+                apply_indexed(text_frame, tfd, apply_paragraph).map_err(|error| error.under(["textFrame"]))?;
             }
             if let Some(p) = &phd.position {
                 *position = *p;
@@ -776,13 +800,15 @@ async fn apply_shape(shape: &mut PptxShape, diff: &PptxShapeDiff) -> MutationApp
     Ok(())
 }
 
-async fn shape_with_diff_applied(shape: &PptxShape, diff: &PptxShapeDiff) -> PptxShape {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shape_with_diff_applied(shape: &PptxShape, diff: &PptxShapeDiff) -> PptxShape {
     let mut out = shape.clone();
     apply_shape_for_absorb(&mut out, diff);
     out
 }
 
-async fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
     match diff {
         PptxShapeDiff::Replace { shape: new } => *shape = new.clone(),
         PptxShapeDiff::TextBox(change) => {
@@ -821,7 +847,8 @@ async fn apply_shape_for_absorb(shape: &mut PptxShape, diff: &PptxShapeDiff) {
     }
 }
 
-async fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff {
     match diff {
         PptxShapeDiff::Replace { .. } => PptxShapeDiff::Replace { shape: base.clone() },
         PptxShapeDiff::TextBox(td) => {
@@ -843,30 +870,33 @@ async fn inverse_shape(base: &PptxShape, diff: &PptxShapeDiff) -> PptxShapeDiff 
     }
 }
 
-async fn absorb_shape_diff(a: PptxShapeDiff, b: PptxShapeDiff) -> PptxShapeDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_shape_diff(a: PptxShapeDiff, b: PptxShapeDiff) -> PptxShapeDiff {
     match (a, b) {
         (_, PptxShapeDiff::Replace { shape }) => PptxShapeDiff::Replace { shape },
-        (PptxShapeDiff::Replace { shape }, b) => PptxShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b).await },
-        (PptxShapeDiff::TextBox(ta), PptxShapeDiff::TextBox(tb)) => PptxShapeDiff::TextBox(absorb_text_box_diff(ta, tb).await),
-        (PptxShapeDiff::Picture(pa), PptxShapeDiff::Picture(pb)) => PptxShapeDiff::Picture(absorb_picture_diff(pa, pb).await),
-        (PptxShapeDiff::Placeholder(pa), PptxShapeDiff::Placeholder(pb)) => PptxShapeDiff::Placeholder(absorb_placeholder_diff(pa, pb).await),
+        (PptxShapeDiff::Replace { shape }, b) => PptxShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
+        (PptxShapeDiff::TextBox(ta), PptxShapeDiff::TextBox(tb)) => PptxShapeDiff::TextBox(absorb_text_box_diff(ta, tb)),
+        (PptxShapeDiff::Picture(pa), PptxShapeDiff::Picture(pb)) => PptxShapeDiff::Picture(absorb_picture_diff(pa, pb)),
+        (PptxShapeDiff::Placeholder(pa), PptxShapeDiff::Placeholder(pb)) => PptxShapeDiff::Placeholder(absorb_placeholder_diff(pa, pb)),
         (_, b) => b,
     }
 }
 
-async fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextBoxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextBoxDiff {
     if b.position.is_some() {
         a.position = b.position;
     }
     a.text_frame = match (a.text_frame.take(), b.text_frame) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied).await),
+        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
     };
     a
 }
 
-async fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> PptxPictureDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> PptxPictureDiff {
     if b.blip_rel_id.is_some() {
         a.blip_rel_id = b.blip_rel_id;
     }
@@ -876,7 +906,8 @@ async fn absorb_picture_diff(mut a: PptxPictureDiff, b: PptxPictureDiff) -> Pptx
     a
 }
 
-async fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -> PptxPlaceholderDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -> PptxPlaceholderDiff {
     if b.kind.is_some() {
         a.kind = b.kind;
     }
@@ -886,13 +917,14 @@ async fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderD
     a.text_frame = match (a.text_frame.take(), b.text_frame) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied).await),
+        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
     };
     a
 }
 
-async fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
+    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
     if shapes.is_none() {
         None
     } else {
@@ -900,26 +932,30 @@ async fn diff_slide(old: &PptxSlide, new: &PptxSlide) -> Option<PptxSlideDiff> {
     }
 }
 
-async fn apply_slide(slide: &mut PptxSlide, diff: &PptxSlideDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_slide(slide: &mut PptxSlide, diff: &PptxSlideDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.shapes {
-        apply_indexed(&mut slide.shapes, sd, apply_shape).await.map_err(|error| error.under(["shapes"]))?;
+        apply_indexed(&mut slide.shapes, sd, apply_shape).map_err(|error| error.under(["shapes"]))?;
     }
     Ok(())
 }
 
-async fn slide_with_diff_applied(slide: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlide {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn slide_with_diff_applied(slide: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlide {
     let mut out = slide.clone();
     apply_slide_for_absorb(&mut out, diff);
     out
 }
 
-async fn apply_slide_for_absorb(slide: &mut PptxSlide, diff: &PptxSlideDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_slide_for_absorb(slide: &mut PptxSlide, diff: &PptxSlideDiff) {
     if let Some(shapes) = &diff.shapes {
         apply_indexed_for_absorb(&mut slide.shapes, shapes, apply_shape_for_absorb);
     }
 }
 
-async fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
 where
     T: Clone,
 {
@@ -938,21 +974,24 @@ where
     }
 }
 
-async fn inverse_slide(base: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlideDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_slide(base: &PptxSlide, diff: &PptxSlideDiff) -> PptxSlideDiff {
     PptxSlideDiff { shapes: diff.shapes.as_ref().map(|sd| inverse_indexed(&base.shapes, sd, inverse_shape)) }
 }
 
-async fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
     a.shapes = match (a.shapes.take(), b.shapes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_shape_diff, shape_with_diff_applied).await),
+        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_shape_diff, shape_with_diff_applied)),
     };
     a
 }
 
-async fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Option<PptxPresentationDiff> {
-    let slides = between_indexed(&base.slides, &other.slides, diff_slide).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) -> Option<PptxPresentationDiff> {
+    let slides = between_indexed(&base.slides, &other.slides, diff_slide);
     if slides.is_none() {
         None
     } else {
@@ -960,34 +999,39 @@ async fn diff_presentation(base: &PptxPresentation, other: &PptxPresentation) ->
     }
 }
 
-async fn apply_presentation_diff(presentation: &mut PptxPresentation, diff: &PptxPresentationDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_presentation_diff(presentation: &mut PptxPresentation, diff: &PptxPresentationDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.slides {
-        apply_indexed(&mut presentation.slides, sd, apply_slide).await.map_err(|error| error.under(["slides"]))?;
+        apply_indexed(&mut presentation.slides, sd, apply_slide).map_err(|error| error.under(["slides"]))?;
     }
     Ok(())
 }
 
-async fn inverse_presentation_diff(base: &PptxPresentation, diff: &PptxPresentationDiff) -> PptxPresentationDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_presentation_diff(base: &PptxPresentation, diff: &PptxPresentationDiff) -> PptxPresentationDiff {
     PptxPresentationDiff { slides: diff.slides.as_ref().map(|sd| inverse_indexed(&base.slides, sd, inverse_slide)) }
 }
 
-async fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) -> PptxPresentationDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) -> PptxPresentationDiff {
     PptxPresentationDiff {
         slides: match (a.slides, b.slides) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_slide_diff, slide_with_diff_applied).await),
+            (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_slide_diff, slide_with_diff_applied)),
         },
     }
 }
 //#endregion 🔖️PresentationDiffLogic
 
 //#region 🔖️OpcDiffLogic
-async fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<PptxOpcCtEntriesDiff> {
-    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone())).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<PptxOpcCtEntriesDiff> {
+    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtEntriesDiff) -> MutationApplyResult<()> {
     apply_named(
         entries,
         diff,
@@ -996,22 +1040,25 @@ async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &PptxOpcCtE
             *value = next.clone();
             Ok(())
         },
-    ).await
+    )
 }
 
-async fn inverse_ct_entries(base: &[(String, String)], diff: &PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
-    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_ct_entries(base: &[(String, String)], diff: &PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
+    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone())
 }
 
-async fn absorb_ct_entries(a: PptxOpcCtEntriesDiff, b: PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_ct_entries(a: PptxOpcCtEntriesDiff, b: PptxOpcCtEntriesDiff) -> PptxOpcCtEntriesDiff {
     // 🏷️ `D = String` here is already a whole-value replace (LWW) -- absorbing two such diffs on
     // the SAME key is just "the later one wins", i.e. `b`.
-    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone()).await
+    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone())
 }
 
-async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<PptxOpcContentTypesDiff> {
-    let defaults = diff_ct_entries(&old.defaults, &new.defaults).await;
-    let overrides = diff_ct_entries(&old.overrides, &new.overrides).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<PptxOpcContentTypesDiff> {
+    let defaults = diff_ct_entries(&old.defaults, &new.defaults);
+    let overrides = diff_ct_entries(&old.overrides, &new.overrides);
     if defaults.is_none() && overrides.is_none() {
         None
     } else {
@@ -1019,14 +1066,16 @@ async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Opt
     }
 }
 
-async fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<PptxOpcPartDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<PptxOpcPartDiff> {
     if old == new {
         return None;
     }
     Some(PptxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
-async fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
     if let Some(v) = &diff.content_type {
         part.content_type = v.clone();
     }
@@ -1035,17 +1084,20 @@ async fn apply_part(part: &mut OpcPart, diff: &PptxOpcPartDiff) {
     }
 }
 
-async fn part_with_diff_applied(part: &OpcPart, diff: &PptxOpcPartDiff) -> OpcPart {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part_with_diff_applied(part: &OpcPart, diff: &PptxOpcPartDiff) -> OpcPart {
     let mut out = part.clone();
     apply_part(&mut out, diff);
     out
 }
 
-async fn inverse_part(base: &OpcPart, diff: &PptxOpcPartDiff) -> PptxOpcPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_part(base: &OpcPart, diff: &PptxOpcPartDiff) -> PptxOpcPartDiff {
     PptxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
-async fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpcPartDiff {
     if b.content_type.is_some() {
         a.content_type = b.content_type;
     }
@@ -1055,18 +1107,21 @@ async fn absorb_part_diff(mut a: PptxOpcPartDiff, b: PptxOpcPartDiff) -> PptxOpc
     a
 }
 
-async fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<PptxOpcPartsDiff> {
-    between_named(old, new, |p| p.path.clone(), diff_part).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<PptxOpcPartsDiff> {
+    between_named(old, new, |p| p.path.clone(), diff_part)
 }
 
-async fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<PptxOpcRelDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<PptxOpcRelDiff> {
     if old == new {
         return None;
     }
     Some(PptxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
-async fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
     if let Some(v) = &diff.rel_type {
         rel.rel_type = v.clone();
     }
@@ -1078,11 +1133,13 @@ async fn apply_rel(rel: &mut OpcRelationship, diff: &PptxOpcRelDiff) {
     }
 }
 
-async fn inverse_rel(base: &OpcRelationship, diff: &PptxOpcRelDiff) -> PptxOpcRelDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rel(base: &OpcRelationship, diff: &PptxOpcRelDiff) -> PptxOpcRelDiff {
     PptxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
-async fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRelDiff {
     if b.rel_type.is_some() {
         a.rel_type = b.rel_type;
     }
@@ -1095,11 +1152,13 @@ async fn absorb_rel_diff(mut a: PptxOpcRelDiff, b: PptxOpcRelDiff) -> PptxOpcRel
     a
 }
 
-async fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<PptxOpcRelListDiff> {
-    between_named(old, new, |r| r.id.clone(), diff_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<PptxOpcRelListDiff> {
+    between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDiff) -> MutationApplyResult<()> {
     apply_named(
         list,
         diff,
@@ -1108,10 +1167,11 @@ async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &PptxOpcRelListDi
             apply_rel(relationship, change);
             Ok(())
         },
-    ).await
+    )
 }
 
-async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> Vec<OpcRelationship> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
     out.retain(|relationship| !diff.removed.contains(&relationship.id));
     for modified in &diff.modified {
@@ -1123,22 +1183,25 @@ async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &PptxOpcRelL
     out
 }
 
-async fn inverse_rel_list(base: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> PptxOpcRelListDiff {
-    inverse_named(base, diff, |r| r.id.clone(), inverse_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rel_list(base: &[OpcRelationship], diff: &PptxOpcRelListDiff) -> PptxOpcRelListDiff {
+    inverse_named(base, diff, |r| r.id.clone(), inverse_rel)
 }
 
-async fn absorb_rel_list_diff(a: PptxOpcRelListDiff, b: PptxOpcRelListDiff) -> PptxOpcRelListDiff {
-    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_rel_list_diff(a: PptxOpcRelListDiff, b: PptxOpcRelListDiff) -> PptxOpcRelListDiff {
+    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel)
 }
 
-async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
         match new.get(owner) {
             None => removed.push(owner.clone()),
             Some(nlist) => {
-                if let Some(d) = diff_rel_list(list, nlist).await {
+                if let Some(d) = diff_rel_list(list, nlist) {
                     modified.push(NamedModified { key: owner.clone(), diff: d });
                 }
             }
@@ -1157,32 +1220,33 @@ async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &H
     }
 }
 
-async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     for (position, owner) in diff.removed.iter().enumerate() {
         if !rels.contains_key(owner) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
         }
         if diff.removed[..position].contains(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner removal is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner removal is repeated"));
         }
     }
     for (position, m) in diff.modified.iter().enumerate() {
         if !rels.contains_key(&m.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
         }
         if diff.removed.contains(&m.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both removed and modified").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both removed and modified"));
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == m.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner modification is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner modification is repeated"));
         }
     }
     for (position, (owner, _)) in diff.added.iter().enumerate() {
         if rels.contains_key(owner) || diff.added[..position].iter().any(|(candidate, _)| candidate == owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists"));
         }
         if diff.removed.contains(owner) || diff.modified.iter().any(|candidate| candidate.key == *owner) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both changed and added").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both changed and added"));
         }
     }
     for owner in &diff.removed {
@@ -1190,7 +1254,7 @@ async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, d
     }
     for m in &diff.modified {
         let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"))?;
-        apply_rel_list(list, &m.diff).await.map_err(|error| error.under(["modified"]))?;
+        apply_rel_list(list, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for (owner, list) in &diff.added {
         rels.insert(owner.clone(), list.clone());
@@ -1198,7 +1262,8 @@ async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, d
     Ok(())
 }
 
-async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -1215,14 +1280,16 @@ async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, dif
     PptxOpcRelationshipsDiff { removed, modified, added }
 }
 
-async fn absorb_relationships(d1: PptxOpcRelationshipsDiff, d2: PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
-    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_relationships(d1: PptxOpcRelationshipsDiff, d2: PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
-async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
-    let content_types = diff_content_types(&base.content_types, &other.content_types).await;
-    let parts = diff_parts(&base.parts, &other.parts).await;
-    let relationships = diff_relationships(&base.relationships, &other.relationships).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> {
+    let content_types = diff_content_types(&base.content_types, &other.content_types);
+    let parts = diff_parts(&base.parts, &other.parts);
+    let relationships = diff_relationships(&base.relationships, &other.relationships);
     if content_types.is_none() && parts.is_none() && relationships.is_none() {
         None
     } else {
@@ -1230,13 +1297,14 @@ async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<PptxOpcDiff> 
     }
 }
 
-async fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
-            apply_ct_entries(&mut opc.content_types.defaults, dd).await.map_err(|error| error.under(["contentTypes", "defaults"]))?;
+            apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
         }
         if let Some(dd) = &d.overrides {
-            apply_ct_entries(&mut opc.content_types.overrides, dd).await.map_err(|error| error.under(["contentTypes", "overrides"]))?;
+            apply_ct_entries(&mut opc.content_types.overrides, dd).map_err(|error| error.under(["contentTypes", "overrides"]))?;
         }
     }
     if let Some(d) = &diff.parts {
@@ -1249,15 +1317,16 @@ async fn apply_opc_diff(opc: &mut OpcPackage, diff: &PptxOpcDiff) -> MutationApp
                 Ok(())
             },
         )
-        .await.map_err(|error| error.under(["parts"]))?;
+        .map_err(|error| error.under(["parts"]))?;
     }
     if let Some(d) = &diff.relationships {
-        apply_relationships(&mut opc.relationships, d).await.map_err(|error| error.under(["relationships"]))?;
+        apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
     Ok(())
 }
 
-async fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
         content_types: diff
             .content_types
@@ -1268,7 +1337,8 @@ async fn inverse_opc_diff(base: &OpcPackage, diff: &PptxOpcDiff) -> PptxOpcDiff 
     }
 }
 
-async fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
     PptxOpcDiff {
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
@@ -1277,24 +1347,24 @@ async fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
                 defaults: match (ca.defaults, cb.defaults) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
                 },
                 overrides: match (ca.overrides, cb.overrides) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
                 },
             }),
         },
         parts: match (a.parts, b.parts) {
             (None, x) => x,
             (x, None) => x,
-            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff)).await),
+            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff))),
         },
         relationships: match (a.relationships, b.relationships) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb).await),
+            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb)),
         },
     }
 }
@@ -1305,10 +1375,10 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
     async fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d).await.map_err(|error| error.under(["opc"]))?;
+            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
         }
         if let Some(d) = &self.presentation {
-            apply_presentation_diff(&mut next.presentation, d).await.map_err(|error| error.under(["presentation"]))?;
+            apply_presentation_diff(&mut next.presentation, d).map_err(|error| error.under(["presentation"]))?;
         }
         if let Some(xml_parts) = &self.xml_parts {
             next.xml_parts = xml_parts.clone();
@@ -1321,12 +1391,12 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b)),
         };
         self.presentation = match (self.presentation.take(), other.presentation) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_presentation_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_presentation_diff(a, b)),
         };
         if other.xml_parts.is_some() {
             self.xml_parts = other.xml_parts;
@@ -1346,7 +1416,7 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
     }
 
     async fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
-        PptxDiff { opc: diff_opc(&base.opc, &other.opc).await, presentation: diff_presentation(&base.presentation, &other.presentation).await, xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()) }
+        PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()) }
     }
 
     async fn is_empty(&self) -> bool {
@@ -1358,18 +1428,21 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<PptxSnapshot>` full-replace slot -- this IS `PptxDiff::between`.
-pub async fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
-    PptxDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
+    PptxDiff::between(base, next)
 }
 
 /// 🧩 Builds the diff for inserting `slide` at `index` (FINAL state).
-pub async fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_slide(index: usize, slide: PptxSlide) -> PptxDiff {
     let slides = PptxSlidesDiff { added: vec![IndexAdded { index, item: slide }], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for removing the slide at `index` (BASE-state index).
-pub async fn diff_remove_slide(index: usize) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_slide(index: usize) -> PptxDiff {
     let slides = PptxSlidesDiff { removed: vec![index], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
@@ -1378,7 +1451,8 @@ pub async fn diff_remove_slide(index: usize) -> PptxDiff {
 /// -- represented as a plain removed+added pair (the collection triple has no separate "moved"
 /// concept; `apply_indexed`'s own remove-then-insert semantics already reconstruct a move
 /// correctly from that pair, same as any other index-keyed collection in this recipe).
-pub async fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: usize) -> PptxDiff {
     let Some(slide) = presentation.slides.get(from) else { return PptxDiff::default() };
     if from == to {
         return PptxDiff::default();
@@ -1387,50 +1461,55 @@ pub async fn diff_move_slide(presentation: &PptxPresentation, from: usize, to: u
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
-async fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_slide_diff(slide_index: usize, slide_diff: PptxSlideDiff) -> PptxDiff {
     let slides = PptxSlidesDiff { modified: vec![IndexModified { index: slide_index, diff: slide_diff }], ..Default::default() };
     PptxDiff { opc: None, presentation: Some(PptxPresentationDiff { slides: Some(slides) }), xml_parts: None }
 }
 
 /// 🧩 Builds the diff for inserting `shape` at `shape_index` (FINAL state) on the slide at
 /// `slide_index` (BASE-state index -- slides are not reindexed by this mutation).
-pub async fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: PptxShape) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: PptxShape) -> PptxDiff {
     let shapes = PptxShapesDiff { added: vec![IndexAdded { index: shape_index, item: shape }], ..Default::default() };
-    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) }).await
+    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
 
 /// 🧩 Builds the diff for removing the shape at `shape_index` (BASE-state index) on the slide at
 /// `slide_index`.
-pub async fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
     let shapes = PptxShapesDiff { removed: vec![shape_index], ..Default::default() };
-    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) }).await
+    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
 
 /// 🧩 Builds the diff for replacing a `TextBox`/`Placeholder` shape's `text_frame`. A no-op
 /// (`PptxDiff::default()`) if the shape doesn't exist or doesn't carry a text frame (`Picture`,
 /// `Other`).
-pub async fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: Vec<PptxParagraph>) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: Vec<PptxParagraph>) -> PptxDiff {
     let Some(slide) = presentation.slides.get(slide_index) else { return PptxDiff::default() };
     let Some(shape) = slide.shapes.get(shape_index) else { return PptxDiff::default() };
     let shape_diff = match shape {
         PptxShape::TextBox { text_frame: old_tf, .. } => {
-            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph).await else { return PptxDiff::default() };
+            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph) else { return PptxDiff::default() };
             PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame: Some(tf_diff), position: None })
         }
         PptxShape::Placeholder { text_frame: old_tf, .. } => {
-            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph).await else { return PptxDiff::default() };
+            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph) else { return PptxDiff::default() };
             PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind: None, text_frame: Some(tf_diff), position: None })
         }
         PptxShape::Picture { .. } | PptxShape::Other { .. } => return PptxDiff::default(),
     };
     let shapes = PptxShapesDiff { modified: vec![IndexModified { index: shape_index, diff: shape_diff }], ..Default::default() };
-    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) }).await
+    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
 
 /// 🧩 Builds the diff for setting a shape's `position`. A no-op if the shape doesn't exist or
 /// already has that position (`Other` never carries a typed position -- its raw `xml` is never
 /// touched by this mutation).
-pub async fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, position: PptxTransform) -> PptxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, position: PptxTransform) -> PptxDiff {
     let Some(slide) = presentation.slides.get(slide_index) else { return PptxDiff::default() };
     let Some(shape) = slide.shapes.get(shape_index) else { return PptxDiff::default() };
     let shape_diff = match shape {
@@ -1440,7 +1519,7 @@ pub async fn diff_set_shape_position(presentation: &PptxPresentation, slide_inde
         _ => return PptxDiff::default(),
     };
     let shapes = PptxShapesDiff { modified: vec![IndexModified { index: shape_index, diff: shape_diff }], ..Default::default() };
-    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) }).await
+    wrap_slide_diff(slide_index, PptxSlideDiff { shapes: Some(shapes) })
 }
 //#endregion 🔖️SetSnapshot
 
@@ -1595,7 +1674,8 @@ impl protocol::DiffCodec for PptxDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()` establishes.
 #[cfg(test)]
-pub(crate) async fn demo_snapshot_a() -> PptxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -1622,7 +1702,8 @@ pub(crate) async fn demo_snapshot_a() -> PptxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_snapshot_b() -> PptxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snapshot_b() -> PptxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -1649,7 +1730,8 @@ pub(crate) async fn demo_snapshot_b() -> PptxSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<PptxDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();
     vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &a)]
@@ -1663,7 +1745,8 @@ mod handcrafted_diff_codec_tests {
     use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
     use protocol::DiffCodec;
 
-    async fn elem_snapshot(slides: Vec<PptxSlide>) -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn elem_snapshot(slides: Vec<PptxSlide>) -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", b"<p:presentation/>".to_vec());

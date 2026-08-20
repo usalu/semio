@@ -29,13 +29,16 @@ impl Default for SemioDocumentArtifact {
 }
 
 impl SemioDocumentArtifact {
-    pub async fn to_snapshot(&self) -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioDocumentSnapshot {
         SemioDocumentSnapshot { schema: self.schema.clone(), styles: self.styles.clone(), images: self.images.clone(), blocks: self.blocks.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioDocumentSnapshot) -> Self {
         Self { schema: snapshot.schema, styles: snapshot.styles, images: snapshot.images, blocks: snapshot.blocks }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioDocumentSnapshot) {
         self.schema = snapshot.schema;
         self.styles = snapshot.styles;
         self.images = snapshot.images;
@@ -43,7 +46,8 @@ impl SemioDocumentArtifact {
     }
 }
 
-pub async fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.document",
         artifact: schema::FacetLeaves {
@@ -90,17 +94,20 @@ pub mod derived_construction {
 
     impl SemioDocumentBuilderConstruction {
         /// 🎨️ Fluent: appends a named style.
-        pub async fn with_style(mut self, style: DocStyle) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_style(mut self, style: DocStyle) -> Self {
             self.snapshot.styles.push(style);
             self
         }
         /// 🖼️ Fluent: appends a named image.
-        pub async fn with_image(mut self, image: DocImage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_image(mut self, image: DocImage) -> Self {
             self.snapshot.images.push(image);
             self
         }
         /// 🧱️ Fluent: appends a top-level block.
-        pub async fn with_block(mut self, block: DocBlock) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_block(mut self, block: DocBlock) -> Self {
             self.snapshot.blocks.push(block);
             self
         }
@@ -124,7 +131,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_document_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -241,7 +248,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocStyle};
 
-        async fn rich_snapshot() -> SemioDocumentSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn rich_snapshot() -> SemioDocumentSnapshot {
             SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: vec![DocStyle { id: "n".into(), name: "Normal".into(), based_on: None }], images: Vec::new(), blocks: vec![DocBlock::paragraph("hi")] }
         }
 

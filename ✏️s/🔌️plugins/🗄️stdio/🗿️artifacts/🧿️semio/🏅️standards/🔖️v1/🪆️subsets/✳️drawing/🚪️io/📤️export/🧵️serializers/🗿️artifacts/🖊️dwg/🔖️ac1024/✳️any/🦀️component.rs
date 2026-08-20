@@ -28,7 +28,8 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 const DWG_CODEC_VERSION: &str = "AC1015";
 
 //#region 🔖️SegmentMap
-async fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
     match *segment {
         PathSegment::MoveTo { to } => DwgPathSegment::Move { to: [to.x, to.y] },
         PathSegment::LineTo { to } => DwgPathSegment::Line { to: [to.x, to.y] },
@@ -41,7 +42,8 @@ async fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
 //#endregion 🔖️SegmentMap
 
 //#region 🔖️Walk
-async fn collect_node(node: &DrawNode, paths: &mut Vec<Vec<DwgPathSegment>>, texts: &mut Vec<(SemioPoint2, String)>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn collect_node(node: &DrawNode, paths: &mut Vec<Vec<DwgPathSegment>>, texts: &mut Vec<(SemioPoint2, String)>) {
     match node {
         DrawNode::Group { children, .. } => {
             for child in children {
@@ -76,19 +78,19 @@ impl ArtifactSerializer for SemioDrawingToDwg {
             let mut texts = Vec::new();
             collect_node(&layer.root, &mut paths, &mut texts);
 
-            let sub = paths_to_dwg_drawing(&paths).await;
+            let sub = paths_to_dwg_drawing(&paths);
             for mut entity in sub.entities {
-                entity.layer = layer_index.await;
+                entity.layer = layer_index;
                 drawing.entities.push(entity);
             }
             for (at, content) in texts {
-                drawing.entities.push(DwgEntity { layer: layer_index.await, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });
+                drawing.entities.push(DwgEntity { layer: layer_index, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });
             }
         }
 
         let mut snapshot = DwgSnapshot::default();
         snapshot.version = DWG_CODEC_VERSION.into();
-        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).await.map_err(store::PackError::Schema)?;
+        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
 }
@@ -103,7 +105,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn sample_drawing() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             layers: vec![DrawLayer {
                 id: "0".into(),

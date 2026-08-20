@@ -17,7 +17,8 @@ pub struct TxtOutline {
 }
 
 impl TxtOutline {
-    pub async fn compute(snapshot: &TxtSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn compute(snapshot: &TxtSnapshot) -> Self {
         let line_count = snapshot.lines.len() as u32;
         let word_count = snapshot.lines.iter().map(|line| line.split_whitespace().count() as u32).sum();
         let char_count = snapshot.lines.iter().map(|line| line.chars().count() as u32).sum();

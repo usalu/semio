@@ -63,7 +63,8 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        async fn gradient_image(w: u32, h: u32) -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn gradient_image(w: u32, h: u32) -> Vec<u8> {
             let mut out = vec![0u8; (w * h * 4) as usize];
             for y in 0..h {
                 for x in 0..w {
@@ -121,11 +122,13 @@ pub mod derived_analysis {
     pub const CODE_HUFFMAN_TABLE_COUNT: &str = "stdio.jpg.baseline.huffman-table-count";
     pub const CODE_COMPONENT_SAMPLING: &str = "stdio.jpg.baseline.component-sampling";
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -134,7 +137,8 @@ pub mod derived_analysis {
     /// `JpgBaselineComposer::compose` hard-gates on this (pre-serialization, authoritative),
     /// `JpgBaselineBuilder::build` hard-gates on this too, and the registered `SubsetValidator`
     /// re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
-    pub async fn check_baseline_conformance(snapshot: &JpgSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_baseline_conformance(snapshot: &JpgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
 
         let Some(frame) = &snapshot.frame else {
@@ -190,7 +194,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_baseline_conformance(snapshot).await;
+                let checks = check_baseline_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -206,7 +210,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanTable};
 
-        async fn conforming_snapshot() -> JpgSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn conforming_snapshot() -> JpgSnapshot {
             JpgSnapshot {
                 frame: Some(JpgFrameHeader {
                     precision: 8,

@@ -64,19 +64,23 @@ impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
 }
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-pub async fn diff_set_snapshot(base: &Mp3Snapshot, snapshot: &Mp3Snapshot) -> Mp3Diff {
-    Mp3Diff::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &Mp3Snapshot, snapshot: &Mp3Snapshot) -> Mp3Diff {
+    Mp3Diff::between(base, snapshot)
 }
 /// 🧩 Builds a set-id3v2 diff (`None` clears the tag).
-pub async fn diff_set_id3v2(id3v2: Option<Id3v2Tag>) -> Mp3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_id3v2(id3v2: Option<Id3v2Tag>) -> Mp3Diff {
     Mp3Diff { id3v2: Some(id3v2), ..Default::default() }
 }
 /// 🧩 Builds a set-frames diff.
-pub async fn diff_set_frames(frames: Vec<Mp3Frame>) -> Mp3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_frames(frames: Vec<Mp3Frame>) -> Mp3Diff {
     Mp3Diff { frames: Some(frames), ..Default::default() }
 }
 /// 🧩 Builds a set-id3v1 diff (`None` clears the tag).
-pub async fn diff_set_id3v1(id3v1: Option<Id3v1Tag>) -> Mp3Diff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_id3v1(id3v1: Option<Id3v1Tag>) -> Mp3Diff {
     Mp3Diff { id3v1: Some(id3v1), ..Default::default() }
 }
 //#endregion 🔖️Diff
@@ -91,10 +95,12 @@ pub async fn diff_set_id3v1(id3v1: Option<Id3v1Tag>) -> Mp3Diff {
 /// `[0]`=unchanged-inner-None / `[1,<T>]`=inner-Some(T) tri-state tag via `encode_option`/
 /// `decode_option`; `frames` is a `[frame1;frame2;…]` list.
 //#region 🔖️Primitives
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -102,7 +108,8 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the shared grammar contract every
 /// hand-rolled codec in this repo uses (`f6-recon-report.md` §5), kept verbatim.
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -123,37 +130,44 @@ async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-async fn parse_u8(s: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn parse_u16(s: &str) -> Result<u16, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn parse_bool(s: &str) -> Result<bool, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bad bool {other:?}")),
     }
 }
-async fn enc_bool(b: bool) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
@@ -165,45 +179,54 @@ async fn enc_bool(b: bool) -> &'static str {
 //#region 🔖️ValueCodecs
 /// 🧭️ `Id3Frame.id` is a 4-char printable ID3 frame id (`TIT2`/`TPE1`/…) — never contains
 /// `,`/`[`/`]`/`;` in practice, so it's safe as a bare top-level token.
-async fn enc_id3_frame(f: &Id3Frame) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_id3_frame(f: &Id3Frame) -> String {
     format!("[{},{},{}]", f.id, f.flags, hex_encode(&f.data))
 }
-async fn dec_id3_frame(s: &str) -> Result<Id3Frame, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_id3_frame(s: &str) -> Result<Id3Frame, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 3 {
         return Err(format!("id3 frame: expected 3 fields, got {}", parts.len()));
     }
-    Ok(Id3Frame { id: parts[0].to_string(), flags: parse_u16(parts[1]).await?, data: hex_decode(parts[2]).await? })
+    Ok(Id3Frame { id: parts[0].to_string(), flags: parse_u16(parts[1])?, data: hex_decode(parts[2])? })
 }
-async fn enc_id3_frames(frames: &[Id3Frame]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_id3_frames(frames: &[Id3Frame]) -> String {
     format!("[{}]", frames.iter().map(enc_id3_frame).collect::<Vec<_>>().join(";"))
 }
-async fn dec_id3_frames(s: &str) -> Result<Vec<Id3Frame>, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_id3_frames(s: &str) -> Result<Vec<Id3Frame>, String> {
+    let inner = strip_brackets(s)?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_id3_frame).collect()
 }
 
-async fn enc_id3v2(tag: &Id3v2Tag) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_id3v2(tag: &Id3v2Tag) -> String {
     format!("[{},{},{},{}]", tag.major_version, tag.minor_version, tag.flags, enc_id3_frames(&tag.frames))
 }
-async fn dec_id3v2(s: &str) -> Result<Id3v2Tag, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_id3v2(s: &str) -> Result<Id3v2Tag, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 4 {
         return Err(format!("id3v2: expected 4 fields, got {}", parts.len()));
     }
-    Ok(Id3v2Tag { major_version: parse_u8(parts[0]).await?, minor_version: parse_u8(parts[1]).await?, flags: parse_u8(parts[2]).await?, frames: dec_id3_frames(parts[3]).await? })
+    Ok(Id3v2Tag { major_version: parse_u8(parts[0])?, minor_version: parse_u8(parts[1])?, flags: parse_u8(parts[2])?, frames: dec_id3_frames(parts[3])? })
 }
 
-async fn enc_id3v1(tag: &Id3v1Tag) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_id3v1(tag: &Id3v1Tag) -> String {
     format!("[{}]", hex_encode(&tag.raw))
 }
-async fn dec_id3v1(s: &str) -> Result<Id3v1Tag, String> {
-    Ok(Id3v1Tag { raw: hex_decode(strip_brackets(s).await?).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_id3v1(s: &str) -> Result<Id3v1Tag, String> {
+    Ok(Id3v1Tag { raw: hex_decode(strip_brackets(s)?)? })
 }
 
-async fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         h.mpeg_version_id,
@@ -222,53 +245,59 @@ async fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
 }
 /// 🧭️ `s` is the header's OWN bracketed group (e.g. `[3,1,1,9,0,0,0,3,0,0,1,0]`) — callers strip
 /// it from its enclosing token first (see `dec_mp3_frame`).
-async fn dec_mp3_header(s: &str) -> Result<Mp3FrameHeader, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_mp3_header(s: &str) -> Result<Mp3FrameHeader, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 12 {
         return Err(format!("mp3 frame header: expected 12 fields, got {}", parts.len()));
     }
     Ok(Mp3FrameHeader {
-        mpeg_version_id: parse_u8(parts[0]).await?,
-        layer: parse_u8(parts[1]).await?,
-        protection_bit: parse_bool(parts[2]).await?,
-        bitrate_index: parse_u8(parts[3]).await?,
-        sample_rate_index: parse_u8(parts[4]).await?,
-        padding: parse_bool(parts[5]).await?,
-        private_bit: parse_bool(parts[6]).await?,
-        channel_mode: parse_u8(parts[7]).await?,
-        mode_extension: parse_u8(parts[8]).await?,
-        copyright: parse_bool(parts[9]).await?,
-        original: parse_bool(parts[10]).await?,
-        emphasis: parse_u8(parts[11]).await?,
+        mpeg_version_id: parse_u8(parts[0])?,
+        layer: parse_u8(parts[1])?,
+        protection_bit: parse_bool(parts[2])?,
+        bitrate_index: parse_u8(parts[3])?,
+        sample_rate_index: parse_u8(parts[4])?,
+        padding: parse_bool(parts[5])?,
+        private_bit: parse_bool(parts[6])?,
+        channel_mode: parse_u8(parts[7])?,
+        mode_extension: parse_u8(parts[8])?,
+        copyright: parse_bool(parts[9])?,
+        original: parse_bool(parts[10])?,
+        emphasis: parse_u8(parts[11])?,
     })
 }
-async fn enc_mp3_frame(f: &Mp3Frame) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_mp3_frame(f: &Mp3Frame) -> String {
     format!("[{},{}]", enc_mp3_header(&f.header), hex_encode(&f.payload))
 }
-async fn dec_mp3_frame(s: &str) -> Result<Mp3Frame, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_mp3_frame(s: &str) -> Result<Mp3Frame, String> {
+    let inner = strip_brackets(s)?;
     // 🧭️ The header is itself a bracketed 12-field group, so at depth-0 it is ONE token (same
     // nesting trick `decode_option` relies on) — split at depth 0 gives exactly
     // `["[12 header fields]", "<payload-hex>"]`, 2 top-level tokens, never 13.
-    let parts = split_top_level(inner, ',').await;
+    let parts = split_top_level(inner, ',');
     if parts.len() != 2 {
         return Err(format!("mp3 frame: expected header+payload=2 top-level fields, got {}", parts.len()));
     }
-    let header = dec_mp3_header(parts[0]).await?;
-    Ok(Mp3Frame { header, payload: hex_decode(parts[1]).await? })
+    let header = dec_mp3_header(parts[0])?;
+    Ok(Mp3Frame { header, payload: hex_decode(parts[1])? })
 }
-async fn enc_mp3_frames(frames: &[Mp3Frame]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_mp3_frames(frames: &[Mp3Frame]) -> String {
     format!("[{}]", frames.iter().map(enc_mp3_frame).collect::<Vec<_>>().join(";"))
 }
-async fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
+    let inner = strip_brackets(s)?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_mp3_frame).collect()
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_mp3_diff(d: &Mp3Diff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_mp3_diff(d: &Mp3Diff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.id3v2 {
         tokens.push(format!("id3v2={}", encode_option(v, |t| enc_id3v2(t))));
@@ -281,18 +310,19 @@ async fn print_mp3_diff(d: &Mp3Diff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
     let mut d = Mp3Diff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("id3v2=") {
-            d.id3v2 = Some(decode_option(rest, dec_id3v2).await?);
+            d.id3v2 = Some(decode_option(rest, dec_id3v2)?);
         } else if let Some(rest) = token.strip_prefix("frames=") {
-            d.frames = Some(dec_mp3_frames(rest).await?);
+            d.frames = Some(dec_mp3_frames(rest)?);
         } else if let Some(rest) = token.strip_prefix("id3v1=") {
-            d.id3v1 = Some(decode_option(rest, dec_id3v1).await?);
+            d.id3v1 = Some(decode_option(rest, dec_id3v1)?);
         } else {
             return Err(format!("mp3 diff: unknown token {token:?}"));
         }
@@ -302,10 +332,10 @@ async fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
 
 impl protocol::DiffCodec for Mp3Diff {
     async fn print_diff(&self) -> String {
-        print_mp3_diff(self).await
+        print_mp3_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_mp3_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_mp3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
@@ -326,16 +356,19 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    async fn frame() -> Mp3Frame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame() -> Mp3Frame {
         Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 4],
         }
     }
-    async fn sweep_a() -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> Mp3Snapshot {
         Mp3Snapshot { id3v2: None, frames: vec![frame()], id3v1: None, ..Mp3Snapshot::default() }
     }
-    async fn sweep_b() -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> Mp3Snapshot {
         Mp3Snapshot {
             id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0, b'x'] }] }),
             frames: vec![frame(), frame()],

@@ -641,23 +641,29 @@ fn artifact_child_spec() -> crate::os_dsl::RecordSpec {
     crate::os_dsl::RecordSpec::new(None, crate::os_dsl::RecordLayout::Inline, vec![crate::os_dsl::FieldSpec::new(0, "child_id", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "target", crate::os_dsl::Shape::Text)])
 }
 
-async fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::RecordValue {
+// 🚫️async: E1 pure — record conversion with no suspension point, consumed by the sync
+// `DslField::to_value` impl below. See R9.
+fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
     record.fields.insert(0, crate::os_dsl::FieldValue::Text(child.child_id.clone()));
-    record.fields.insert(1, crate::os_dsl::FieldValue::Text(child.target.to_uri().await));
+    record.fields.insert(1, crate::os_dsl::FieldValue::Text(child.target.to_uri()));
     record
 }
 
-async fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
+// 🚫️async: E1 pure — same sync consumer as `artifact_child_to_record`. See R9.
+fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
     let child_id = match record.get(0) {
         Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected child_id, found {other:?}")),
     };
     let target = match record.get(1) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s).await?,
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
         other => return Err(format!("expected target, found {other:?}")),
     };
-    Ok(ArtifactChild::new(child_id, target).await)
+    // 🧱️ Constructed directly rather than through the still-async `ArtifactChild::new`: this fn is
+    // sync (E1, above) and `new` is a plain struct literal, so inlining it here avoids forcing an
+    // async->sync flip across `new`'s 108 call sites in crates other packets own.
+    Ok(ArtifactChild { child_id, target, _snapshot: PhantomData })
 }
 
 impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
@@ -665,12 +671,12 @@ impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(artifact_child_spec)
     }
-    async fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(artifact_child_to_record(self).await)
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(artifact_child_to_record(self))
     }
-    async fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => artifact_child_from_record(record).await,
+            crate::os_dsl::FieldValue::Record(record) => artifact_child_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -685,17 +691,17 @@ fn owner_ref_spec() -> crate::os_dsl::RecordSpec {
     )
 }
 
-async fn owner_ref_to_record(owner: &OwnerRef) -> crate::os_dsl::RecordValue {
+fn owner_ref_to_record(owner: &OwnerRef) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, crate::os_dsl::FieldValue::Text(owner.parent.to_uri().await));
+    record.fields.insert(0, crate::os_dsl::FieldValue::Text(owner.parent.to_uri()));
     record.fields.insert(1, crate::os_dsl::FieldValue::Text(owner.slot.clone()));
     record.fields.insert(2, crate::os_dsl::FieldValue::Text(owner.child_id.clone()));
     record
 }
 
-async fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef, String> {
+fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef, String> {
     let parent = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s).await?,
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
         other => return Err(format!("expected parent, found {other:?}")),
     };
     let slot = match record.get(1) {
@@ -714,12 +720,12 @@ impl crate::os_dsl::DslField for OwnerRef {
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(owner_ref_spec)
     }
-    async fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(owner_ref_to_record(self).await)
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(owner_ref_to_record(self))
     }
-    async fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => owner_ref_from_record(record).await,
+            crate::os_dsl::FieldValue::Record(record) => owner_ref_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -740,7 +746,7 @@ fn link_pin_spec() -> crate::os_dsl::RecordSpec {
     )
 }
 
-async fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
+fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
     match pin {
         LinkPin::Head => {
@@ -760,7 +766,7 @@ async fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
     record
 }
 
-async fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, String> {
+fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, String> {
     let ordinal = match record.get(0) {
         Some(crate::os_dsl::FieldValue::Enum(n)) => *n,
         other => return Err(format!("expected kind, found {other:?}")),
@@ -798,12 +804,12 @@ impl crate::os_dsl::DslField for LinkPin {
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(link_pin_spec)
     }
-    async fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(link_pin_to_record(self).await)
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(link_pin_to_record(self))
     }
-    async fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => link_pin_from_record(record).await,
+            crate::os_dsl::FieldValue::Record(record) => link_pin_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -818,21 +824,21 @@ fn artifact_link_spec() -> crate::os_dsl::RecordSpec {
     )
 }
 
-async fn artifact_link_to_record(link: &ArtifactLink) -> crate::os_dsl::RecordValue {
+fn artifact_link_to_record(link: &ArtifactLink) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, crate::os_dsl::FieldValue::Text(link.target.to_uri().await));
-    record.fields.insert(1, crate::os_dsl::FieldValue::Record(link_pin_to_record(&link.pin).await));
+    record.fields.insert(0, crate::os_dsl::FieldValue::Text(link.target.to_uri()));
+    record.fields.insert(1, crate::os_dsl::FieldValue::Record(link_pin_to_record(&link.pin)));
     record.fields.insert(2, crate::os_dsl::FieldValue::Text(link.role.clone()));
     record
 }
 
-async fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<ArtifactLink, String> {
+fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<ArtifactLink, String> {
     let target = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s).await?,
+        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
         other => return Err(format!("expected target, found {other:?}")),
     };
     let pin = match record.get(1) {
-        Some(crate::os_dsl::FieldValue::Record(record)) => link_pin_from_record(record).await?,
+        Some(crate::os_dsl::FieldValue::Record(record)) => link_pin_from_record(record)?,
         other => return Err(format!("expected pin, found {other:?}")),
     };
     let role = match record.get(2) {
@@ -847,12 +853,12 @@ impl crate::os_dsl::DslField for ArtifactLink {
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Record(artifact_link_spec)
     }
-    async fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(artifact_link_to_record(self).await)
+    fn to_value(&self) -> crate::os_dsl::FieldValue {
+        crate::os_dsl::FieldValue::Record(artifact_link_to_record(self))
     }
-    async fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => artifact_link_from_record(record).await,
+            crate::os_dsl::FieldValue::Record(record) => artifact_link_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -2349,17 +2355,17 @@ impl OpText for OpsHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -2367,7 +2373,7 @@ impl OpText for OpsHeaderLine {
 impl OpBinary for OpsHeaderLine {
     async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
@@ -2392,7 +2398,7 @@ impl OpBinary for OpsHeaderLine {
         let body = &bytes[reader.position().await..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position().await as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -3018,7 +3024,7 @@ async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvel
     // 🌀️ `ArtifactRef::to_uri` is async (🚪️io, out of this packet's scope) so it cannot run inside
     // `Option`/`Iterator::map`'s sync closures (R10 shape 1) — hoisted into explicit loops instead.
     let owner = match envelope.owner.as_ref() {
-        Some(owner) => Some((owner.parent.to_uri().await, owner.slot.clone(), owner.child_id.clone())),
+        Some(owner) => Some((owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())),
         None => None,
     };
     let dialect = envelope.dialect.as_ref().map(|dialect| (dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone()));
@@ -3026,7 +3032,7 @@ async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvel
     for checkpoint in envelope.vcs.checkpoints.iter().filter(|checkpoint| !checkpoint.composition_pins.is_empty()) {
         let mut pins = Vec::with_capacity(checkpoint.composition_pins.len());
         for pin in &checkpoint.composition_pins {
-            pins.push((pin.child_ref.to_uri().await, pin.checkpoint_id.clone()));
+            pins.push((pin.child_ref.to_uri(), pin.checkpoint_id.clone()));
         }
         checkpoint_pins.push((checkpoint.id.clone(), pins));
     }
@@ -3040,7 +3046,7 @@ async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvel
 /// the authoritative history rather than being silently discarded.
 async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) -> Result<(), VcsError> {
     envelope.owner = match &composition.owner {
-        Some((parent, slot, child_id)) => Some(OwnerRef { parent: crate::os_io::ArtifactRef::parse_uri(parent).await.map_err(VcsError::Deserialize)?, slot: slot.clone(), child_id: child_id.clone() }),
+        Some((parent, slot, child_id)) => Some(OwnerRef { parent: crate::os_io::ArtifactRef::parse_uri(parent).map_err(VcsError::Deserialize)?, slot: slot.clone(), child_id: child_id.clone() }),
         None => None,
     };
     envelope.dialect = composition.dialect.as_ref().map(|(artifact_kind, standard, subset)| crate::os_io::ArtifactDialect { artifact_kind: artifact_kind.clone(), standard: standard.clone(), subset: subset.clone() });
@@ -3048,7 +3054,7 @@ async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<
         let checkpoint = envelope.vcs.checkpoints.iter_mut().find(|checkpoint| checkpoint.id == *checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.clone()))?;
         let mut resolved_pins = Vec::with_capacity(pins.len());
         for (child_uri, pin_checkpoint_id) in pins {
-            let child_ref = crate::os_io::ArtifactRef::parse_uri(child_uri).await.map_err(VcsError::Deserialize)?;
+            let child_ref = crate::os_io::ArtifactRef::parse_uri(child_uri).map_err(VcsError::Deserialize)?;
             resolved_pins.push(crate::os_vcs::CompositionPin { child_ref, checkpoint_id: pin_checkpoint_id.clone() });
         }
         checkpoint.composition_pins = resolved_pins;
@@ -3594,17 +3600,17 @@ impl OpText for CommandHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -3612,7 +3618,7 @@ impl OpText for CommandHeaderLine {
 impl OpBinary for CommandHeaderLine {
     async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
@@ -3637,7 +3643,7 @@ impl OpBinary for CommandHeaderLine {
         let body = &bytes[reader.position().await..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position().await as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -4390,8 +4396,8 @@ async fn edit_actor_from_meta(mutation_meta: &[MutationMeta]) -> Option<String> 
 async fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Result<(), VcsError> {
     let mut children = HashSet::new();
     for pin in pins {
-        let child_uri = pin.child_ref.to_uri().await;
-        let reparsed = crate::os_io::ArtifactRef::parse_uri(&child_uri).await.map_err(VcsError::ValidationFailed)?;
+        let child_uri = pin.child_ref.to_uri();
+        let reparsed = crate::os_io::ArtifactRef::parse_uri(&child_uri).map_err(VcsError::ValidationFailed)?;
         if reparsed != pin.child_ref || pin.child_ref.artifact_id.trim().is_empty() || pin.checkpoint_id.trim().is_empty() {
             return Err(VcsError::ValidationFailed(format!("invalid composition pin {child_uri}")));
         }
@@ -6429,17 +6435,17 @@ impl OpText for BackboneMessage {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -6447,7 +6453,7 @@ impl OpText for BackboneMessage {
 impl OpBinary for BackboneMessage {
     async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
@@ -6472,7 +6478,7 @@ impl OpBinary for BackboneMessage {
         let body = &bytes[reader.position().await..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position().await as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -8227,7 +8233,7 @@ async fn fold_compensation_error(original: VcsError, report: GroupUndoReport) ->
         // sync closure into an explicit loop (R10 shape 1).
         let mut skipped_desc: Vec<String> = Vec::with_capacity(report.skipped.len());
         for (reference, error) in &report.skipped {
-            skipped_desc.push(format!("{}: {error}", reference.to_uri().await));
+            skipped_desc.push(format!("{}: {error}", reference.to_uri()));
         }
         VcsError::CompensationFailed(format!("original error: {original}; members that failed to roll back: [{}]", skipped_desc.join(", ")))
     }
@@ -8409,7 +8415,7 @@ impl TransactionCoordinator {
         //#region Phase1Validate
         let mut all_messages: Vec<crate::os_spr::MutationMessage> = Vec::new();
         if !parent_ops.is_empty() {
-            all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops).await, &parent_ref.to_uri().await).await);
+            all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops).await, &parent_ref.to_uri()).await);
         }
         for (member, dispatch) in children.iter() {
             match relation {
@@ -8424,7 +8430,7 @@ impl TransactionCoordinator {
                 }
             }
             if !dispatch.ops.is_empty() {
-                all_messages.extend(prefix_message_target(member.preview_wire(&dispatch.ops).await, &dispatch.child.to_uri().await).await);
+                all_messages.extend(prefix_message_target(member.preview_wire(&dispatch.ops).await, &dispatch.child.to_uri()).await);
             }
         }
         let parent_edit_fingerprint = concat_ops_fingerprint(&parent_ops).await;
@@ -8484,7 +8490,7 @@ impl TransactionCoordinator {
                 return Err(fold_compensation_error(error, report).await);
             }
             if relation == MemberRelation::Peer {
-                let initiator = crate::os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate().await) };
+                let initiator = crate::os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate()) };
                 if let Err(error) = children[index].0.stamp_tail_origin(crate::os_spr::MutationOrigin::Transaction { initiator }).await {
                     let report = Self::compensate(parent_ref, parent, children, &applied_children, None).await;
                     return Err(fold_compensation_error(error, report).await);
@@ -9173,12 +9179,12 @@ mod tests {
                 Ok((_, rest)) => rest,
                 Err(_) => text,
             };
-            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document }).await?;
-            Self::__dsl_from_record(&record).await
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+            Self::__dsl_from_record(&record)
         }
         async fn print_dsl(&self) -> String {
-            let record = self.__dsl_to_record().await;
-            let body = crate::os_dsl::print(&record, &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document).await;
+            let record = self.__dsl_to_record();
+            let body = crate::os_dsl::print(&record, &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
         }
@@ -9186,7 +9192,7 @@ mod tests {
     /// 📦️ Handcrafted ArtifactPack (P6).
     impl ArtifactPack for DemoSnapshot {
         async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
@@ -9196,7 +9202,7 @@ mod tests {
                 return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
             }
             let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-            Self::__dsl_from_record(&record).await.map_err(text_error_to_pack_error)
+            Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
         }
         async fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
             Some(Self::__dsl_spec())
@@ -9258,17 +9264,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
     }
 
@@ -9276,7 +9282,7 @@ mod tests {
     impl OpBinary for DemoMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
@@ -9301,7 +9307,7 @@ mod tests {
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let record_offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
     //#endregion 🔖️OpCodec
@@ -11042,17 +11048,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
     }
 
@@ -11060,7 +11066,7 @@ mod tests {
     impl OpBinary for TimestampedMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
@@ -11085,7 +11091,7 @@ mod tests {
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let record_offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
     //#endregion 🔖️OpCodec
@@ -11326,17 +11332,17 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
     }
 
@@ -11344,7 +11350,7 @@ mod tests {
     impl OpBinary for SeverityMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
@@ -11369,7 +11375,7 @@ mod tests {
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let record_offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
 
@@ -12204,24 +12210,24 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline }).await?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
     }
 
     impl OpBinary for ValidatedMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             const OP_BINARY_FORMAT: u8 = 1;
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
             let spec = (variants[ordinal].1)();
@@ -12246,7 +12252,7 @@ mod tests {
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let record_offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
         }
     }
 
@@ -12277,13 +12283,13 @@ mod tests {
 
         let spec = artifact_child_spec();
         let record = artifact_child_to_record(&child);
-        let bytes = crate::os_pack::encode_record_body(&spec, &record.await, &PackEncodeOptions::default()).await.expect("encode");
+        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
         let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
-        let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).await.expect("from_record");
+        let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).expect("from_record");
         assert_eq!(decoded, child);
 
         let value = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::to_value(&child);
-        let via_field = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::from_value(&value.await).await.expect("from_value");
+        let via_field = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::from_value(&value).expect("from_value");
         assert_eq!(via_field, child);
 
         assert_eq!(child.to_child_ref("mesh-slot").await, ChildRef { slot: "mesh-slot".into(), child_id: "child-1".into(), target: child.target.clone() });
@@ -12298,9 +12304,9 @@ mod tests {
         };
         let spec = owner_ref_spec();
         let record = owner_ref_to_record(&owner);
-        let bytes = crate::os_pack::encode_record_body(&spec, &record.await, &PackEncodeOptions::default()).await.expect("encode");
+        let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
         let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
-        let decoded = owner_ref_from_record(&decoded_record).await.expect("from_record");
+        let decoded = owner_ref_from_record(&decoded_record).expect("from_record");
         assert_eq!(decoded, owner);
     }
 
@@ -12312,9 +12318,9 @@ mod tests {
             let link = ArtifactLink { target: target.clone(), pin: pin.clone(), role: "cover-image".into() };
             let spec = artifact_link_spec();
             let record = artifact_link_to_record(&link);
-            let bytes = crate::os_pack::encode_record_body(&spec, &record.await, &PackEncodeOptions::default()).await.expect("encode");
+            let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).await.expect("encode");
             let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).await.expect("decode");
-            let decoded = artifact_link_from_record(&decoded_record).await.expect("from_record");
+            let decoded = artifact_link_from_record(&decoded_record).expect("from_record");
             assert_eq!(decoded, link, "round trip diverged for pin variant {pin:?}");
         }
     }
@@ -13070,10 +13076,10 @@ mod tests {
         assert_eq!(receipt.messages.len(), 2, "one Warning from the parent, one from the child");
         assert_eq!(receipt.messages[0].level, crate::os_dsl::Severity::Warning);
         assert_eq!(receipt.messages[0].code.0, "mutation.clamped");
-        assert_eq!(receipt.messages[0].target, vec![parent_ref.to_uri().await], "the parent's own message is prefixed with the parent's own path, collected before any child's");
+        assert_eq!(receipt.messages[0].target, vec![parent_ref.to_uri()], "the parent's own message is prefixed with the parent's own path, collected before any child's");
         assert_eq!(receipt.messages[1].level, crate::os_dsl::Severity::Warning);
         assert_eq!(receipt.messages[1].code.0, "mutation.clamped");
-        assert_eq!(receipt.messages[1].target, vec![child_ref.to_uri().await], "the child's message is prefixed with the CHILD's own path, not the parent's");
+        assert_eq!(receipt.messages[1].target, vec![child_ref.to_uri()], "the child's message is prefixed with the CHILD's own path, not the parent's");
     }
     //#endregion 🔖️PhasePolicyTests
     //#endregion 🔖️CompositionTests

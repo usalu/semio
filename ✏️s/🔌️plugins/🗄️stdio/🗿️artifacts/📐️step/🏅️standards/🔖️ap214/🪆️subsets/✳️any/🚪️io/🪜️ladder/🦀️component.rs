@@ -15,7 +15,8 @@ use super::part21::{Part21Document, Part21Value};
 /// instance (including the bare `SHAPE_REPRESENTATION` base type) is treated as rung 2 — the
 /// minimal geometry-bearing representation CC1 (config data only) already forbids outright, so it
 /// can never honestly be classified as rung 1 (there is no rung 1: CC1 means "none present").
-pub async fn ladder_rung_of(entity_type: &str) -> Option<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ladder_rung_of(entity_type: &str) -> Option<u8> {
     let t = entity_type.to_ascii_uppercase();
     if !t.ends_with("SHAPE_REPRESENTATION") {
         return None;
@@ -34,11 +35,12 @@ pub async fn ladder_rung_of(entity_type: &str) -> Option<u8> {
 /// complex instance, any of its entity names — is a `*_SHAPE_REPRESENTATION` subtype, paired
 /// with its ladder rung. Real scan over the full lossless Part21 graph (`Part21Document.instances`
 /// via each `Part21Instance.entities`), never fabricated against an unmodeled field.
-pub async fn shape_representation_instances(doc: &Part21Document) -> Vec<(u64, String, u8)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn shape_representation_instances(doc: &Part21Document) -> Vec<(u64, String, u8)> {
     let mut out = Vec::new();
     for inst in &doc.instances {
         for (name, _) in &inst.entities {
-            if let Some(rung) = ladder_rung_of(name).await {
+            if let Some(rung) = ladder_rung_of(name) {
                 out.push((inst.id, name.clone(), rung));
             }
         }
@@ -49,7 +51,8 @@ pub async fn shape_representation_instances(doc: &Part21Document) -> Vec<(u64, S
 /// 🚧️ The subset of `shape_representation_instances` whose rung exceeds `max_rung` — the exact
 /// HARD-flag set every `✳️ccN` analyzer reports (CC1 passes `max_rung = 1`, which every real
 /// rung of 2..=6 exceeds, matching "CC1 allows no `*_SHAPE_REPRESENTATION` instance at all").
-pub async fn ladder_violations(doc: &Part21Document, max_rung: u8) -> Vec<(u64, String, u8)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ladder_violations(doc: &Part21Document, max_rung: u8) -> Vec<(u64, String, u8)> {
     shape_representation_instances(doc).into_iter().filter(|(_, _, rung)| *rung > max_rung).collect()
 }
 //#endregion 🔖️Ladder
@@ -60,12 +63,14 @@ pub async fn ladder_violations(doc: &Part21Document, max_rung: u8) -> Vec<(u64, 
 /// lists? `Part21Header.file_schema` is genuinely `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`'s parsed
 /// arg list — a list wrapping a list wrapping the schema-name string — so this walks the real
 /// retained structure rather than assuming its exact nesting depth.
-pub async fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bool {
-    async fn walk(value: &Part21Value, schema_name: &str) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn walk(value: &Part21Value, schema_name: &str) -> bool {
         match value {
             Part21Value::Str(s) => s.eq_ignore_ascii_case(schema_name),
-            Part21Value::List(items) => items.iter().any(|v| semio_framework_plugin::resolve_ready(walk(v, schema_name))),
-            Part21Value::Typed(_, items) => items.iter().any(|v| semio_framework_plugin::resolve_ready(walk(v, schema_name))),
+            Part21Value::List(items) => items.iter().any(|v| walk(v, schema_name)),
+            Part21Value::Typed(_, items) => items.iter().any(|v| walk(v, schema_name)),
             _ => false,
         }
     }
@@ -76,7 +81,8 @@ pub async fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bo
 /// identity chain types (`PRODUCT`, `PRODUCT_DEFINITION_FORMATION`, `PRODUCT_DEFINITION`)? A
 /// presence-only check (not full referential linkage) — honestly scoped to what `Part21Document`'s
 /// own `by_type` alone can verify over the generic instance graph.
-pub async fn has_product_definition_chain(doc: &Part21Document) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn has_product_definition_chain(doc: &Part21Document) -> bool {
     doc.by_type("PRODUCT").next().is_some() && doc.by_type("PRODUCT_DEFINITION_FORMATION").next().is_some() && doc.by_type("PRODUCT_DEFINITION").next().is_some()
 }
 
@@ -84,8 +90,9 @@ pub async fn has_product_definition_chain(doc: &Part21Document) -> bool {
 /// does; otherwise replaces the header record outright) — the composer duty every `✳️ccN`
 /// composer performs before hard-gating serialization, so a composer-built document always
 /// carries a schema declaration compatible with the class it's being stamped at.
-pub async fn ensure_file_schema(doc: &mut Part21Document, schema_name: &str) {
-    if file_schema_contains(doc, schema_name).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ensure_file_schema(doc: &mut Part21Document, schema_name: &str) {
+    if file_schema_contains(doc, schema_name) {
         return;
     }
     doc.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str(schema_name.to_string())])];

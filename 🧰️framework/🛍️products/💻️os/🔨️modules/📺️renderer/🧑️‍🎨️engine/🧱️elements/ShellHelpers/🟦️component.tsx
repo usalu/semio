@@ -1379,7 +1379,7 @@ const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
 
 /** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
  * `loadedPluginsRef`, which only updates after the next React commit. */
-type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
+export type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
 
 export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   try {
@@ -1475,7 +1475,12 @@ export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconNam
   };
 }
 
-/** @emoji 🌳️ Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey` to render. */
+/** @emoji 🌳️ Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey`
+ * to render. `PanelTabDefinition` (required `children: T[]`, no leaf variant) satisfies this
+ * constraint directly; `PanelTabNode` (`PanelTabLeaf | PanelTabBranch`, `PanelTabLeaf` carrying no
+ * `children` key at all) is a TS "weak type" mismatch against a constraint of only-optional
+ * properties — callers with that shape use `flattenPanelTabNodeLeaves` (`ShellHost`'s own, built on
+ * `panelTabChildren`'s union-aware accessor) instead of fighting the weak-type check here. */
 export function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
   return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
 }
@@ -2172,7 +2177,7 @@ export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSess
 }
 
 /** @emoji 🎥️ Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
-type TutorialUiBridgeContext = {
+export type TutorialUiBridgeContext = {
   readonly session: ActiveSession | null;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
   readonly terminology: string;
@@ -2905,8 +2910,14 @@ export function isEditableEventTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
+/** 🩹️ Structural, not `React.KeyboardEvent`/`globalThis.KeyboardEvent` specifically —
+ * `keyboardEventMatchesChord` only ever reads the five fields below, which both shapes carry
+ * identically, and its real callers legitimately hold either (a native `useShellKeydown` listener vs a
+ * React `onKeyDown` handler). */
+export type KeyboardEventLike = { readonly key: string; readonly ctrlKey: boolean; readonly metaKey: boolean; readonly shiftKey: boolean; readonly altKey: boolean };
+
 /** ⌨️ True when a keydown event matches one `+`-joined chord (e.g. `"mod+shift+z"`), where `mod` accepts either ctrl or meta. */
-export function keyboardEventMatchesChord(event: KeyboardEvent, chord: string): boolean {
+export function keyboardEventMatchesChord(event: KeyboardEventLike, chord: string): boolean {
   const parts = chord.split("+").map((part) => part.trim());
   const key = parts[parts.length - 1] ?? "";
   const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
@@ -3080,7 +3091,7 @@ export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
 }
 
 /** 🧰️ Slice of the {@link ActionPaneState} the {@link windowActionPaneNode} builder reads. */
-type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeUtilityByWindowId">;
+export type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeUtilityByWindowId">;
 
 /**
  * 🧰️ Sibling of {@link utilityBarNode}: resolves a window kind's panel-eligible actions and returns a

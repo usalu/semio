@@ -27,14 +27,15 @@ pub mod derived_construction {
     /// construction (mirrors the ✳️any subset's `build_minimal_docx` shape), just with the strict
     /// namespace, root `conformance="strict"` attribute, and strict officeDocument relationship base
     /// written from the start instead of the transitional ones.
-    async fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
-        let mut opc = OpcPackage::empty().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
+        let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        let bytes = xml_document_to_text(&document_to_strict_xml(&document)).await.into_bytes();
-        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, bytes).await;
-        opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART).await;
-        DocxSnapshot::from_parts(opc, document).await
+        let bytes = xml_document_to_text(&document_to_strict_xml(&document)).into_bytes();
+        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, bytes);
+        opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART);
+        DocxSnapshot::from_parts(opc, document)
     }
 
     /// ✍️ Same paragraph/run -> XML shape as the ✳️any subset's `engine::document_to_xml`, just with
@@ -44,7 +45,8 @@ pub mod derived_construction {
     /// enrichment; a `Table` block reaching this builder via `SetSnapshot`/raw `mutate` still survives
     /// losslessly through the shared `✳️any` engine's `document_to_xml`, this fn is only the TYPED
     /// convenience path for `add_paragraph`/`add_text_paragraph`/`add_runs`).
-    async fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
         let body_children = doc
             .body
             .iter()
@@ -99,20 +101,23 @@ pub mod derived_construction {
 
     impl DocxStrictBuilderConstruction {
         /// ➕️ Appends a paragraph, re-serializing the strict-namespaced `word/document.xml` part.
-        pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(crate::artifacts::docx::schema::snapshot::DocxBlock::Paragraph(paragraph));
-            self.snapshot = build_minimal_strict_docx(self.snapshot.document).await;
+            self.snapshot = build_minimal_strict_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(DocxParagraph::text(text.into()).await).await
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
+            self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
-            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() }).await
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
+            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
     }
 
@@ -122,7 +127,7 @@ pub mod derived_construction {
         type Diff = DocxDiff;
 
         async fn empty() -> Self {
-            Self { snapshot: build_minimal_strict_docx(DocxDocument::default()).await }
+            Self { snapshot: build_minimal_strict_docx(DocxDocument::default()) }
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -139,7 +144,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -226,21 +231,25 @@ pub mod derived_analysis {
     /// relationship carries the SAME suffix under the strict base namespace (that swap is exactly what
     /// `CODE_REL_BASE` below checks for) -- matching by suffix here keeps this lookup honest for both
     /// conformance classes instead of silently failing to find the main part on any strict document.
-    async fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
-        let rel = opc.relationships_for("").await.iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
+        let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
-        opc.part(&path).await.map(|p| (p, path))
+        opc.part(&path).map(|p| (p, path))
     }
 
-    async fn part_contains(bytes: &[u8], needle: &str) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn part_contains(bytes: &[u8], needle: &str) -> bool {
         !needle.is_empty() && bytes.windows(needle.len()).any(|w| w == needle.as_bytes())
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
@@ -248,11 +257,12 @@ pub mod derived_analysis {
     /// `DocxSnapshot`. Shared single source of truth: `DocxStrictComposer::compose` hard-gates on
     /// this (pre-serialization, authoritative), `DocxStrictBuilder::build` hard-gates on this too, and
     /// the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub async fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_document_part(opc).await {
+        match main_document_part(opc) {
             Some((part, path)) => {
                 if !part_contains(&part.bytes, STRICT_MAIN_NS) {
                     out.push(hard(CODE_MAIN_NS_MISSING, format!("main document part {path} does not declare the strict WordprocessingML namespace {STRICT_MAIN_NS}")));
@@ -265,13 +275,13 @@ pub mod derived_analysis {
         }
 
         for part in &opc.parts {
-            if part_contains(&part.bytes, TRANSITIONAL_MAIN_NS).await {
+            if part_contains(&part.bytes, TRANSITIONAL_MAIN_NS) {
                 out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {} contains the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS} -- strict conformance forbids mixed namespaces", part.path)));
             }
-            if part_contains(&part.bytes, VML_NS).await {
+            if part_contains(&part.bytes, VML_NS) {
                 out.push(hard(CODE_VML_PRESENT, format!("part {} contains the VML namespace {VML_NS} -- VML is transitional-only markup, forbidden under strict conformance", part.path)));
             }
-            if part_contains(&part.bytes, "mc:AlternateContent").await {
+            if part_contains(&part.bytes, "mc:AlternateContent") {
                 out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {} contains mc:AlternateContent compatibility markup", part.path)));
             }
         }
@@ -309,7 +319,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot).await;
+                let checks = check_strict_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -325,11 +335,13 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-        async fn strict_document_bytes() -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn strict_document_bytes() -> Vec<u8> {
             format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes()
         }
 
-        async fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn snapshot_with_main_part(rel_type: &str, doc_bytes: Vec<u8>) -> DocxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");

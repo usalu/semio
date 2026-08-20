@@ -29,10 +29,10 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
     async fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
-            Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()).await,
-            Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()).await,
-            Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()).await,
+            Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()),
+            Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()),
+            Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()),
         }).await
     }
 
@@ -49,14 +49,15 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
-pub async fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
-    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
+    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Mutation
@@ -95,18 +96,21 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    async fn frame() -> Mp3Frame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame() -> Mp3Frame {
         Mp3Frame {
             header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 },
             payload: vec![0u8; 4],
         }
     }
 
-    async fn base_snapshot() -> Mp3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> Mp3Snapshot {
         Mp3Snapshot { frames: vec![frame()], ..Mp3Snapshot::default() }
     }
 
-    async fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
         vec![
             Mp3Mutation::NoMutation,
             Mp3Mutation::SetSnapshot { snapshot: Mp3Snapshot { frames: vec![frame(), frame()], ..base.clone() } },

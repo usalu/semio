@@ -23,13 +23,15 @@ pub struct GltfOrientationIndicators {
 pub struct GltfOrientationInference;
 
 impl GltfOrientationInference {
-    pub(crate) async fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
-        orientation_consistency::infer_pair(pair).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+        orientation_consistency::infer_pair(pair)
     }
 
-    pub(crate) async fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
         if part_count > 1 {
-            indicators.orientation_consistency = orientation_consistency::unavailable_for_assembly(sample_count, topology).await;
+            indicators.orientation_consistency = orientation_consistency::unavailable_for_assembly(sample_count, topology);
         }
     }
 }
@@ -38,14 +40,14 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfOrientationInference {
     type Output = GltfOrientationIndicators;
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output { main_axis_direction: main_axis_direction::infer(context).await, face_normal_distribution: face_normal_distribution::infer(context).await, orientation_consistency: orientation_consistency::infer(context).await }
+        Self::Output { main_axis_direction: main_axis_direction::infer(context), face_normal_distribution: face_normal_distribution::infer(context), orientation_consistency: orientation_consistency::infer(context) }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            main_axis_direction: main_axis_direction::unavailable_measure(diagnostic_ids).await,
-            face_normal_distribution: face_normal_distribution::unavailable_measure(diagnostic_ids).await,
-            orientation_consistency: orientation_consistency::unavailable_measure(diagnostic_ids).await,
+            main_axis_direction: main_axis_direction::unavailable_measure(diagnostic_ids),
+            face_normal_distribution: face_normal_distribution::unavailable_measure(diagnostic_ids),
+            orientation_consistency: orientation_consistency::unavailable_measure(diagnostic_ids),
         }
     }
 }

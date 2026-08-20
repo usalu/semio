@@ -20,37 +20,41 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 /// Part-21 exchange file's convention (dense, monotonically-issued `#N` ids).
 struct IdGen(u64);
 impl IdGen {
-    async fn next(&mut self) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
     }
 }
 
-async fn point_entity(id: u64, x: f64, y: f64) -> StepEntity {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_entity(id: u64, x: f64, y: f64) -> StepEntity {
     StepEntity { id, name: "CARTESIAN_POINT".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(0.0)])], complex: vec![] }
 }
 
 /// 📐️ Real `LINE` → `CARTESIAN_POINT` + `DIRECTION` + `VECTOR` decomposition (the inverse of the
 /// import leaf's resolution): direction is the normalized `b - a`, magnitude is `|b - a|`.
-async fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, b: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2) -> Vec<StepEntity> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, b: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2) -> Vec<StepEntity> {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let magnitude = (dx * dx + dy * dy).sqrt();
     let (ndx, ndy) = if magnitude > 0.0 { (dx / magnitude, dy / magnitude) } else { (1.0, 0.0) };
-    let p = point_entity(ids.next().await, a.x, a.y).await;
-    let dir = StepEntity { id: ids.next().await, name: "DIRECTION".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(ndx), StepValue::Real(ndy), StepValue::Real(0.0)])], complex: vec![] };
+    let p = point_entity(ids.next(), a.x, a.y);
+    let dir = StepEntity { id: ids.next(), name: "DIRECTION".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(ndx), StepValue::Real(ndy), StepValue::Real(0.0)])], complex: vec![] };
     let vec_id = ids.next();
-    let vector = StepEntity { id: vec_id.await, name: "VECTOR".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(dir.id), StepValue::Real(magnitude)], complex: vec![] };
-    let line = StepEntity { id: ids.next().await, name: "LINE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Reference(vector.id)], complex: vec![] };
+    let vector = StepEntity { id: vec_id, name: "VECTOR".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(dir.id), StepValue::Real(magnitude)], complex: vec![] };
+    let line = StepEntity { id: ids.next(), name: "LINE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Reference(vector.id)], complex: vec![] };
     vec![p, dir, vector, line]
 }
 
 /// ⭕️ Real `CIRCLE` → `AXIS2_PLACEMENT_3D` → `CARTESIAN_POINT` decomposition (axis/refdirection
 /// left `Unset` — `$`, spec-legal for an unoriented 2D-only placement, matching real AP214 usage
 /// when orientation is unspecified).
-async fn circle_entities(ids: &mut IdGen, center: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, radius: f64) -> Vec<StepEntity> {
-    let p = point_entity(ids.next().await, center.x, center.y).await;
-    let placement = StepEntity { id: ids.next().await, name: "AXIS2_PLACEMENT_3D".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Unset, StepValue::Unset], complex: vec![] };
-    let circle = StepEntity { id: ids.next().await, name: "CIRCLE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(placement.id), StepValue::Real(radius)], complex: vec![] };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn circle_entities(ids: &mut IdGen, center: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, radius: f64) -> Vec<StepEntity> {
+    let p = point_entity(ids.next(), center.x, center.y);
+    let placement = StepEntity { id: ids.next(), name: "AXIS2_PLACEMENT_3D".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Unset, StepValue::Unset], complex: vec![] };
+    let circle = StepEntity { id: ids.next(), name: "CIRCLE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(placement.id), StepValue::Real(radius)], complex: vec![] };
     vec![p, placement, circle]
 }
 //#endregion 🔖️GraphBuild
@@ -87,7 +91,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord;
 
-    async fn sample_cad() -> SemioCadSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_cad() -> SemioCadSnapshot {
         SemioCadSnapshot {
             entities: vec![
                 CadEntityRecord { handle: "h1".into(), layer: "0".into(), entity: CadEntity::Line { a: SemioPoint2 { x: 0.0, y: 0.0 }, b: SemioPoint2 { x: 5.0, y: 0.0 } } },

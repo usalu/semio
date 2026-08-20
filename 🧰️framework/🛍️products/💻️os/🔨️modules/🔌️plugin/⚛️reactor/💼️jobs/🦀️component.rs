@@ -547,11 +547,11 @@ fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin
 /// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
 async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
-    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).await.map_err(|message| fault("job.io-run", message))?;
-    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).await.map_err(|message| fault("job.io-run", message))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
     let descriptor = match semio_framework::io::io_mechanism::io_entries().await.into_iter().find(|entry| entry.from == source && entry.into == target) {
         Some(descriptor) => descriptor,
-        None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate().await, target.to_coordinate().await))),
+        None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate()))),
     };
     let fidelity = descriptor.fidelity;
     let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
@@ -563,8 +563,8 @@ async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 /// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
 async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
-    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).await.map_err(|message| fault("job.io-sniff", message))?;
-    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).await.map_err(|message| fault("job.io-sniff", message))?;
+    let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
+    let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
     let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
         semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
         semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,

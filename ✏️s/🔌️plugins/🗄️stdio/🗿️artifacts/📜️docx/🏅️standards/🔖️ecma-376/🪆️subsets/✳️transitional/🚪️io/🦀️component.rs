@@ -57,7 +57,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <DocxSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_transitional_conformance(&snapshot).await,
+                Some(snapshot) => check_transitional_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.docx.transitional.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -72,7 +72,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<DocxTransitionalValidator>)
     }
 
@@ -80,8 +81,9 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the ecma-376 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is aggregated separately by the standard-level composer
     /// (`crate::artifacts::docx::standards::v_ecma_376::engine::io_registry::entries()`).
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -94,7 +96,8 @@ pub mod derived_composition {
 
         const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-        async fn transitional_snapshot() -> DocxSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn transitional_snapshot() -> DocxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
             opc.content_types.set_default("xml", "application/xml");

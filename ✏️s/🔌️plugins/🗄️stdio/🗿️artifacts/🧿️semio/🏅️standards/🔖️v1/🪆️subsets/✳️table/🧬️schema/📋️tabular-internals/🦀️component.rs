@@ -39,7 +39,8 @@ pub struct CategoricalColumn {
 impl CategoricalColumn {
     /// 🏷️ Builds a column from string labels; `""` encodes a missing value, other labels are assigned
     /// levels in first-seen order.
-    pub async fn from_labels(labels: &[&str]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_labels(labels: &[&str]) -> Self {
         let mut levels: Vec<String> = Vec::new();
         let mut index: std::collections::HashMap<&str, u32> = std::collections::HashMap::new();
         let mut codes = Vec::with_capacity(labels.len());
@@ -58,7 +59,8 @@ impl CategoricalColumn {
     }
 
     /// 🏷️ Builds a column from already-encoded parts, validating every non-missing code is in range.
-    pub async fn from_parts(levels: Vec<String>, codes: Vec<u32>) -> Result<Self, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_parts(levels: Vec<String>, codes: Vec<u32>) -> Result<Self, TabularError> {
         for &code in &codes {
             if code != MISSING_CODE && code as usize >= levels.len() {
                 return Err(TabularError::IndexOutOfBounds(code as usize));
@@ -67,36 +69,44 @@ impl CategoricalColumn {
         Ok(Self { levels, codes })
     }
 
-    pub async fn len(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn len(&self) -> usize {
         self.codes.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.codes.is_empty()
     }
 
-    pub async fn n_levels(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn n_levels(&self) -> usize {
         self.levels.len()
     }
 
-    pub async fn codes(&self) -> &[u32] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn codes(&self) -> &[u32] {
         &self.codes
     }
 
-    pub async fn levels(&self) -> &[String] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn levels(&self) -> &[String] {
         &self.levels
     }
 
-    pub async fn level(&self, code: u32) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn level(&self, code: u32) -> Option<&str> {
         self.levels.get(code as usize).map(String::as_str)
     }
 
-    pub async fn code_of(&self, label: &str) -> Option<u32> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn code_of(&self, label: &str) -> Option<u32> {
         self.levels.iter().position(|l| l == label).map(|i| i as u32)
     }
 
     /// 🔢️ Per-level occurrence counts, missing values excluded.
-    pub async fn counts(&self) -> Vec<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn counts(&self) -> Vec<usize> {
         let mut counts = vec![0usize; self.levels.len()];
         for &code in &self.codes {
             if code != MISSING_CODE {
@@ -108,7 +118,8 @@ impl CategoricalColumn {
 
     /// 🔢️ One-hot encoding, one `Vec<f64>` per row; a missing row is filled with `NaN` indicators.
     /// When `drop_first`, level `0`'s indicator column is omitted (the usual reference-level encoding).
-    pub async fn one_hot(&self, drop_first: bool) -> Vec<Vec<f64>> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn one_hot(&self, drop_first: bool) -> Vec<Vec<f64>> {
         let skip = usize::from(drop_first);
         let width = self.levels.len().saturating_sub(skip);
         self.codes
@@ -139,18 +150,21 @@ pub enum Column {
 }
 
 impl Column {
-    pub async fn len(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn len(&self) -> usize {
         match self {
             Self::Continuous(values) => values.len(),
-            Self::Categorical(column) => column.len().await,
+            Self::Categorical(column) => column.len(),
         }
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub async fn is_missing_at(&self, row: usize) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_missing_at(&self, row: usize) -> bool {
         match self {
             Self::Continuous(values) => values[row].is_nan(),
             Self::Categorical(column) => column.codes[row] == MISSING_CODE,
@@ -169,103 +183,118 @@ pub struct Table {
 }
 
 impl Table {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new() -> Self {
         Self::default()
     }
 
-    pub async fn n_rows(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn n_rows(&self) -> usize {
         self.rows
     }
 
-    pub async fn n_cols(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn n_cols(&self) -> usize {
         self.columns.len()
     }
 
-    pub async fn names(&self) -> &[String] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn names(&self) -> &[String] {
         &self.names
     }
 
     /// 🗃️ Appends a column, returning its new index. The first pushed column fixes the table's row
     /// count; every later column must match it.
-    pub async fn push_column(&mut self, name: &str, column: Column) -> Result<usize, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn push_column(&mut self, name: &str, column: Column) -> Result<usize, TabularError> {
         if self.names.iter().any(|existing| existing == name) {
             return Err(TabularError::DuplicateName(name.to_string()));
         }
         if self.columns.is_empty() {
-            self.rows = column.len().await;
+            self.rows = column.len();
         } else if column.len() != self.rows {
-            return Err(TabularError::LengthMismatch { expected: self.rows, found: column.len().await });
+            return Err(TabularError::LengthMismatch { expected: self.rows, found: column.len() });
         }
         self.names.push(name.to_string());
         self.columns.push(column);
         Ok(self.columns.len() - 1)
     }
 
-    pub async fn push_continuous(&mut self, name: &str, values: Vec<f64>) -> Result<usize, TabularError> {
-        self.push_column(name, Column::Continuous(values)).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn push_continuous(&mut self, name: &str, values: Vec<f64>) -> Result<usize, TabularError> {
+        self.push_column(name, Column::Continuous(values))
     }
 
-    pub async fn push_categorical(&mut self, name: &str, labels: &[&str]) -> Result<usize, TabularError> {
-        self.push_column(name, Column::Categorical(CategoricalColumn::from_labels(labels).await)).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn push_categorical(&mut self, name: &str, labels: &[&str]) -> Result<usize, TabularError> {
+        self.push_column(name, Column::Categorical(CategoricalColumn::from_labels(labels)))
     }
 
-    pub async fn column_index(&self, name: &str) -> Result<usize, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn column_index(&self, name: &str) -> Result<usize, TabularError> {
         self.names.iter().position(|n| n == name).ok_or_else(|| TabularError::UnknownColumn(name.to_string()))
     }
 
     /// 🔎️ Infallible variant of [`Table::column_index`].
-    pub async fn index_of(&self, name: &str) -> Option<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn index_of(&self, name: &str) -> Option<usize> {
         self.names.iter().position(|n| n == name)
     }
 
-    pub async fn column(&self, index: usize) -> Result<&Column, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn column(&self, index: usize) -> Result<&Column, TabularError> {
         self.columns.get(index).ok_or(TabularError::IndexOutOfBounds(index))
     }
 
-    pub async fn continuous(&self, index: usize) -> Result<&[f64], TabularError> {
-        match self.column(index).await? {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn continuous(&self, index: usize) -> Result<&[f64], TabularError> {
+        match self.column(index)? {
             Column::Continuous(values) => Ok(values),
             Column::Categorical(_) => Err(TabularError::NotContinuous(self.names[index].clone())),
         }
     }
 
-    pub async fn categorical(&self, index: usize) -> Result<&CategoricalColumn, TabularError> {
-        match self.column(index).await? {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn categorical(&self, index: usize) -> Result<&CategoricalColumn, TabularError> {
+        match self.column(index)? {
             Column::Categorical(column) => Ok(column),
             Column::Continuous(_) => Err(TabularError::NotCategorical(self.names[index].clone())),
         }
     }
 
     /// 🔀️ Projects the table to the given columns (order preserved, repeats allowed).
-    pub async fn select_columns(&self, indices: &[usize]) -> Result<Table, TabularError> {
-        let mut out = Table::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn select_columns(&self, indices: &[usize]) -> Result<Table, TabularError> {
+        let mut out = Table::new();
         for &index in indices {
-            let column = self.column(index).await?.clone();
-            out.push_column(&self.names[index], column).await?;
+            let column = self.column(index)?.clone();
+            out.push_column(&self.names[index], column)?;
         }
         Ok(out)
     }
 
     /// 🔀️ Gathers rows by index (repeats allowed — needed for bootstrap resampling).
-    pub async fn select_rows(&self, indices: &[usize]) -> Result<Table, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn select_rows(&self, indices: &[usize]) -> Result<Table, TabularError> {
         for &row in indices {
             if row >= self.rows {
                 return Err(TabularError::IndexOutOfBounds(row));
             }
         }
-        let mut out = Table::new().await;
+        let mut out = Table::new();
         for (name, column) in self.names.iter().zip(self.columns.iter()) {
             let gathered = match column {
                 Column::Continuous(values) => Column::Continuous(indices.iter().map(|&row| values[row]).collect()),
                 Column::Categorical(cat) => Column::Categorical(CategoricalColumn { levels: cat.levels.clone(), codes: indices.iter().map(|&row| cat.codes[row]).collect() }),
             };
-            out.push_column(name, gathered).await?;
+            out.push_column(name, gathered)?;
         }
         Ok(out)
     }
 
     /// ✅️ Row indices, ascending, where none of the given columns is missing.
-    pub async fn complete_rows(&self, columns: &[usize]) -> Result<Vec<usize>, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn complete_rows(&self, columns: &[usize]) -> Result<Vec<usize>, TabularError> {
         for &index in columns {
             if index >= self.columns.len() {
                 return Err(TabularError::IndexOutOfBounds(index));
@@ -275,26 +304,29 @@ impl Table {
     }
 
     /// ✅️ `select_rows(complete_rows(columns))` — the complete-case sub-table.
-    pub async fn drop_missing(&self, columns: &[usize]) -> Result<Table, TabularError> {
-        let rows = self.complete_rows(columns).await?;
-        self.select_rows(&rows).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn drop_missing(&self, columns: &[usize]) -> Result<Table, TabularError> {
+        let rows = self.complete_rows(columns)?;
+        self.select_rows(&rows)
     }
 
     /// 🏗️ Builds a table from parallel-named `f64` column vectors.
-    pub async fn from_f64_columns(names: Vec<String>, columns: Vec<Vec<f64>>) -> Result<Table, TabularError> {
-        let mut out = Table::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_f64_columns(names: Vec<String>, columns: Vec<Vec<f64>>) -> Result<Table, TabularError> {
+        let mut out = Table::new();
         for (name, values) in names.into_iter().zip(columns) {
-            out.push_continuous(&name, values).await?;
+            out.push_continuous(&name, values)?;
         }
         Ok(out)
     }
 
     /// 🏗️ Builds a table from parallel-named `(codes, level_names)` categorical column pairs.
-    pub async fn from_categorical_columns(names: Vec<String>, columns: Vec<(Vec<u32>, Vec<String>)>) -> Result<Table, TabularError> {
-        let mut out = Table::new().await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_categorical_columns(names: Vec<String>, columns: Vec<(Vec<u32>, Vec<String>)>) -> Result<Table, TabularError> {
+        let mut out = Table::new();
         for (name, (codes, levels)) in names.into_iter().zip(columns) {
-            let column = CategoricalColumn::from_parts(levels, codes).await?;
-            out.push_column(&name, Column::Categorical(column)).await?;
+            let column = CategoricalColumn::from_parts(levels, codes)?;
+            out.push_column(&name, Column::Categorical(column))?;
         }
         Ok(out)
     }
@@ -317,7 +349,8 @@ impl Default for CsvOptions {
 
 /// 📄️ Splits `text` into rows of raw string fields via a single-pass RFC-4180-subset state machine:
 /// quoted fields, doubled-quote escaping, delimiters/newlines inside quotes, and CRLF/LF line endings.
-async fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
     let mut rows = Vec::new();
     let mut row: Vec<String> = Vec::new();
     let mut field = String::new();
@@ -362,11 +395,13 @@ async fn split_csv_fields(text: &str, delimiter: char) -> Vec<Vec<String>> {
     rows
 }
 
-async fn is_missing_token(field: &str) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_missing_token(field: &str) -> bool {
     field.is_empty() || field.eq_ignore_ascii_case("na") || field.eq_ignore_ascii_case("nan")
 }
 
-async fn quote_csv_field(field: &str, delimiter: char) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn quote_csv_field(field: &str, delimiter: char) -> String {
     if field.contains(delimiter) || field.contains('"') || field.contains('\n') {
         format!("\"{}\"", field.replace('"', "\"\""))
     } else {
@@ -378,12 +413,13 @@ impl Table {
     /// 📄️ Parses CSV text, inferring each column's type: `Continuous` if every non-missing field
     /// parses as `f64`, `Categorical` otherwise. Missing tokens are empty fields, `NA`, and `NaN`
     /// (case-insensitive).
-    pub async fn parse_csv(text: &str, options: CsvOptions) -> Result<Table, TabularError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn parse_csv(text: &str, options: CsvOptions) -> Result<Table, TabularError> {
         let rows = split_csv_fields(text, options.delimiter);
         let mut rows = rows.into_iter();
         let first = rows.next();
         let Some(first) = first else {
-            return Ok(Table::new().await);
+            return Ok(Table::new());
         };
         let n_cols = first.len();
         let (names, data_rows): (Vec<String>, Vec<Vec<String>>) = if options.has_header { (first, rows.collect()) } else { ((0..n_cols).map(|i| format!("c{i}")).collect(), std::iter::once(first).chain(rows).collect()) };
@@ -392,7 +428,7 @@ impl Table {
                 return Err(TabularError::Csv { line: line + 1, message: format!("expected {n_cols} fields, found {}", row.len()) });
             }
         }
-        let mut table = Table::new().await;
+        let mut table = Table::new();
         for (col_index, name) in names.iter().enumerate() {
             let field_of = |row: &Vec<String>| row[col_index].trim().to_string();
             let all_numeric = data_rows.iter().all(|row| {
@@ -411,11 +447,11 @@ impl Table {
                         }
                     })
                     .collect();
-                table.push_continuous(name, values).await?;
+                table.push_continuous(name, values)?;
             } else {
                 let labels: Vec<String> = data_rows.iter().map(field_of).collect();
                 let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
-                table.push_categorical(name, &refs).await?;
+                table.push_categorical(name, &refs)?;
             }
         }
         Ok(table)
@@ -423,7 +459,8 @@ impl Table {
 
     /// 📄️ Serializes to CSV text: missing values become empty fields, floats use Rust's shortest
     /// round-trip `Display`, and fields containing the delimiter/quote/newline are quoted.
-    pub async fn to_csv(&self, options: CsvOptions) -> String {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_csv(&self, options: CsvOptions) -> String {
         let mut out = String::new();
         if options.has_header {
             let header: Vec<String> = self.names.iter().map(|name| quote_csv_field(name, options.delimiter)).collect();
@@ -442,7 +479,7 @@ impl Table {
                             values[row].to_string()
                         }
                     }
-                    Column::Categorical(cat) => semio_framework_plugin::resolve_ready(cat.level(cat.codes[row])).map(|label| quote_csv_field(label, options.delimiter)).unwrap_or_default(),
+                    Column::Categorical(cat) => cat.level(cat.codes[row]).map(|label| quote_csv_field(label, options.delimiter)).unwrap_or_default(),
                 })
                 .collect();
             out.push_str(&fields.join(&options.delimiter.to_string()));
@@ -458,7 +495,8 @@ impl Table {
 mod tests {
     use super::*;
 
-    async fn nan_aware_eq(a: &[f64], b: &[f64]) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn nan_aware_eq(a: &[f64], b: &[f64]) -> bool {
         a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x.is_nan() && y.is_nan()) || (x - y).abs() < 1e-12)
     }
 

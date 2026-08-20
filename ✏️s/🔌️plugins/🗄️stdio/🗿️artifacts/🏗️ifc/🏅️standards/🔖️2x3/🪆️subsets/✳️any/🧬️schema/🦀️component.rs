@@ -33,15 +33,18 @@ impl Default for Ifc2x3Artifact {
 }
 
 impl Ifc2x3Artifact {
-    pub async fn to_snapshot(&self) -> Ifc2x3Snapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> Ifc2x3Snapshot {
         Ifc2x3Snapshot { schema: self.schema.clone(), document: self.document.clone(), edm_preamble: self.edm_preamble.clone() }
     }
 
-    pub async fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
         Self { schema: snapshot.schema, document: snapshot.document, edm_preamble: snapshot.edm_preamble }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
         self.schema = snapshot.schema;
         self.document = snapshot.document;
         self.edm_preamble = snapshot.edm_preamble;
@@ -50,7 +53,8 @@ impl Ifc2x3Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ifc2x3_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc.2x3",
         artifact: schema::FacetLeaves {
@@ -152,7 +156,8 @@ pub mod derived_analysis {
     /// 🔍️ Real, honest confidence probe: `High` when the text/bytes look like a Part-21 envelope AND
     /// declare `IFC2X3` in `FILE_SCHEMA`; `Medium` for a Part-21 envelope of an unknown schema (could
     /// still decode -- IFC2X3 is layered on the same generic tokenizer); `Low` otherwise.
-    async fn sniff_text(body: &str) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sniff_text(body: &str) -> IoConfidence {
         let trimmed = body.trim_start();
         if trimmed.starts_with("ISO-10303-21") {
             if trimmed.contains("IFC2X3") {
@@ -180,10 +185,10 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    sniff_text(body).await
+                    sniff_text(body)
                 }
                 AnalyzeSource::Binary(bytes) => match std::str::from_utf8(bytes) {
-                    Ok(text) => sniff_text(text).await,
+                    Ok(text) => sniff_text(text),
                     Err(_) => IoConfidence::Low,
                 },
             }
@@ -266,7 +271,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::ifc::standards::v2x3::engine::empty_ifc2x3_snapshot` through the `engine`
 /// barrel shim.
-pub async fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     Ifc2x3Snapshot::default()
 }
 
@@ -277,7 +283,8 @@ pub async fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// schema gate accepts it. Fodder for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`
 /// and this standard's own `conformance_laws` tests (a non-empty snapshot, unlike the prior
 /// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
-pub async fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
         header: Part21Header {
@@ -319,13 +326,14 @@ pub async fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `engine::register()`, extended by this ticket to also union `v2x3::composer::entries()` —
 /// calling it a second time here would be a redundant registration, same reasoning gif's
 /// `89a::engine::register` doc comment gives).
-pub async fn register() {
-    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
+    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     let _ = store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(
         crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
-    ).await);
+    ));
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.
@@ -337,8 +345,9 @@ pub async fn register() {
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to the schema descriptor registration above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor());
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
@@ -349,7 +358,8 @@ pub async fn register_artifact_inferences() {
 /// conformance-tested file — its binary form is exercised directly by `protocol_walk_law` below,
 /// just not wired through a 6th `LanguageRole`), same precedent `4`'s own
 /// `register_pilot_languages` established.
-pub async fn register_pilot_languages() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::{diff, mutations, snapshot};
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.ifc.2x3",

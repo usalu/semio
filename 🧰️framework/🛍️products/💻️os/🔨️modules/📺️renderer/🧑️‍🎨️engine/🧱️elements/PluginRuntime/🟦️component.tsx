@@ -394,7 +394,7 @@ export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: 
  * `UiDocumentState` — needed only where a `Map` must cross a `JSON.stringify`/hash boundary; the
  * store's own consumers read `.nodes` directly and never need this round trip. */
 function retainedSurfaceToSnapshot(surface: RetainedSurface): UiSnapshot {
-  return { surface: surface.surface, revision: surface.revision, root: surface.root ?? 0, nodes: [...surface.nodes.values()], layoutEpoch: 0 };
+  return { surface: surface.surface, revision: surface.revision, root: surface.root ?? 0, nodes: [...surface.nodes.values()], layoutEpoch: 0n };
 }
 //#endregion 🔖️RetainedUiPatch
 

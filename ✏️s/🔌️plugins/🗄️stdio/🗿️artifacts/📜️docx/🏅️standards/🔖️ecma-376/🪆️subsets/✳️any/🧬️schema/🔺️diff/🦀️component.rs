@@ -273,7 +273,8 @@ enum DocxBlockLeaf {
 }
 
 impl DocxBlockLeaf {
-    async fn into_blocks_diff(self, index: usize) -> DocxBlocksDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn into_blocks_diff(self, index: usize) -> DocxBlocksDiff {
         match self {
             Self::Modified(diff) => DocxBlocksDiff { modified: vec![IndexModified { index, diff }], ..Default::default() },
             Self::Inserted(block) => DocxBlocksDiff { added: vec![IndexAdded { index, item: block }], ..Default::default() },
@@ -285,13 +286,15 @@ impl DocxBlockLeaf {
 /// 🧭️ Lowers a `leaf` diff targeting the block addressed by `path` into a full `DocxDiff` by
 /// nesting it through `Table -> rows -> cells -> blocks` from the document root down to that
 /// depth. `path.segments == []` addresses `document.body` directly.
-async fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
-    async fn go(segments: &[DocxPathSegment], index: usize, leaf: DocxBlockLeaf) -> DocxBlocksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn go(segments: &[DocxPathSegment], index: usize, leaf: DocxBlockLeaf) -> DocxBlocksDiff {
         match segments.split_first() {
-            None => leaf.into_blocks_diff(index).await,
+            None => leaf.into_blocks_diff(index),
             Some((seg, rest)) => {
                 let inner = go(rest, index, leaf);
-                let cell_diff = DocxTableCellDiff { blocks: Some(Box::pin(inner).await) };
+                let cell_diff = DocxTableCellDiff { blocks: Some(Box::pin(inner)) };
                 let cells_diff = DocxTableCellsDiff { modified: vec![IndexModified { index: seg.cell, diff: cell_diff }], ..Default::default() };
                 let row_diff = DocxTableRowDiff { cells: Some(cells_diff) };
                 let rows_diff = DocxTableRowsDiff { modified: vec![IndexModified { index: seg.row, diff: row_diff }], ..Default::default() };
@@ -301,20 +304,21 @@ async fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
         }
     }
     let body = go(&path.segments, path.index, leaf);
-    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: Some(body.await), styles: None }) }
+    DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: Some(body), styles: None }) }
 }
 
 /// 🧭️ Resolves the block list a path's segments navigate to (the parent list `path.index` slots
 /// into), immutable form. `pub` so the mutations module can look up prior state for its own
 /// handcrafted `diff()`/`inverse()` bodies without duplicating this traversal.
-pub async fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -> Option<&'a [DocxBlock]> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -> Option<&'a [DocxBlock]> {
     match segments.split_first() {
         None => Some(body),
         Some((seg, rest)) => {
             let DocxBlock::Table(table) = body.get(seg.block_index)? else { return None };
             let row = table.rows.get(seg.row)?;
             let cell = row.cells.get(seg.cell)?;
-            Box::pin(resolve_blocks(&cell.blocks, rest)).await
+            Box::pin(resolve_blocks(&cell.blocks, rest))
         }
     }
 }
@@ -323,7 +327,8 @@ pub async fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegme
 //#region 🔖️GenericIndexedEngine
 /// 🧮️ Between (positional, per the recipe's index-keyed matching rule): pairwise-compares
 /// `0..min(base,other)` as `modified`, base tail as `removed`, other tail as `added`.
-async fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_indexed<T, D>(base: &[T], other: &[T], diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<IndexedTripleDiff<D, T>>
 where
     T: Clone + PartialEq,
 {
@@ -345,39 +350,40 @@ where
     }
 }
 
-async fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     T: Clone,
 {
     let mut removed = std::collections::HashSet::new();
     for &idx in &diff.removed {
         if idx >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await.at(vec!["removed".to_string(), idx.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec!["removed".to_string(), idx.to_string()]));
         }
         if !removed.insert(idx) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await.at(vec!["removed".to_string(), idx.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec!["removed".to_string(), idx.to_string()]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for m in &diff.modified {
         if m.index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await.at(vec!["modified".to_string(), m.index.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec!["modified".to_string(), m.index.to_string()]));
         }
         if removed.contains(&m.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await.at(vec!["modified".to_string(), m.index.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec!["modified".to_string(), m.index.to_string()]));
         }
         if !modified.insert(m.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await.at(vec!["modified".to_string(), m.index.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec!["modified".to_string(), m.index.to_string()]));
         }
     }
     let final_len = items.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for add in &diff.added {
         if add.index >= final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await.at(vec!["added".to_string(), add.index.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec!["added".to_string(), add.index.to_string()]));
         }
         if !added.insert(add.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await.at(vec!["added".to_string(), add.index.to_string()]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec!["added".to_string(), add.index.to_string()]));
         }
     }
     for m in &diff.modified {
@@ -397,7 +403,8 @@ where
     Ok(())
 }
 
-async fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
 {
@@ -406,7 +413,7 @@ where
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -421,7 +428,8 @@ where
 
 /// 🧮️ Maps a base-side index through a diff's OWN removed/added to the position it ends up at
 /// once that diff has been applied (svg `SvgDiff`'s `transform_index`, generalized).
-async fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transform_index<T>(idx: usize, removed: &[usize], added: &[IndexAdded<T>]) -> usize {
     let removed_before = removed.iter().filter(|&&r| r < idx).count();
     let pos = idx - removed_before;
     let mut order: Vec<usize> = added.iter().map(|a| a.index).collect();
@@ -442,7 +450,8 @@ enum ItemOrigin {
     Added(usize),
 }
 
-async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdded<T>]) -> Vec<ItemOrigin> {
     let mut mid: Vec<ItemOrigin> = (0..base_len).filter(|i| !removed.contains(i)).map(ItemOrigin::Base).collect();
     let mut order: Vec<(usize, usize)> = added.iter().enumerate().map(|(k, a)| (a.index, k)).collect();
     order.sort_by_key(|(idx, _)| *idx);
@@ -457,7 +466,8 @@ async fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[In
 /// generalized): `absorb_item` recursively absorbs two per-field diffs of the SAME item;
 /// `apply_item` patches a `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
-async fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
@@ -474,7 +484,7 @@ where
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified;
@@ -524,7 +534,7 @@ where
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(IndexAdded { index: final_index.await, item: add.item });
+        added.push(IndexAdded { index: final_index, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -536,7 +546,8 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️GenericNamedEngine
-async fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -569,7 +580,8 @@ where
     }
 }
 
-async fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -577,24 +589,24 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for key in &diff.removed {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at(["removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
         }
     }
     for (index, key) in diff.removed.iter().enumerate() {
         if diff.removed[..index].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at(["removed"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
         }
     }
     let mut modified_keys = Vec::new();
     for modified in &diff.modified {
         if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
         }
         if modified_keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at(["modified"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
         }
         modified_keys.push(modified.key.clone());
     }
@@ -602,7 +614,7 @@ where
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || added_keys.contains(&key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await.at(["added"]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at(["added"]));
         }
         added_keys.push(key);
     }
@@ -617,7 +629,8 @@ where
     Ok(())
 }
 
-async fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -641,7 +654,8 @@ where
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position), so no index transport is needed:
 /// a `d2`-removal of a `d1`-added key annihilates the add; a `d2`-modify of a `d1`-added key
 /// patches into the carried payload; everything else composes directly on the shared key space.
-async fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -684,19 +698,21 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️DocumentDiffLogic
-async fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_block(old: &DocxBlock, new: &DocxBlock) -> Option<DocxBlockDiff> {
     if old == new {
         return None;
     }
     match (old, new) {
-        (DocxBlock::Paragraph(op), DocxBlock::Paragraph(np)) => diff_paragraph(op, np).await.map(DocxBlockDiff::Paragraph),
-        (DocxBlock::Table(ot), DocxBlock::Table(nt)) => diff_table(ot, nt).await.map(DocxBlockDiff::Table),
+        (DocxBlock::Paragraph(op), DocxBlock::Paragraph(np)) => diff_paragraph(op, np).map(DocxBlockDiff::Paragraph),
+        (DocxBlock::Table(ot), DocxBlock::Table(nt)) => diff_table(ot, nt).map(DocxBlockDiff::Table),
         _ => Some(DocxBlockDiff::Replace { block: new.clone() }),
     }
 }
 
-async fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
-    let runs = between_indexed(&old.runs, &new.runs, diff_run).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<DocxParagraphDiff> {
+    let runs = between_indexed(&old.runs, &new.runs, diff_run);
     let style = if old.style != new.style { Some(new.style.clone()) } else { None };
     if runs.is_none() && style.is_none() {
         None
@@ -705,7 +721,8 @@ async fn diff_paragraph(old: &DocxParagraph, new: &DocxParagraph) -> Option<Docx
     }
 }
 
-async fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
     if old == new {
         return None;
     }
@@ -717,8 +734,9 @@ async fn diff_run(old: &DocxRun, new: &DocxRun) -> Option<DocxRunDiff> {
     })
 }
 
-async fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
-    let rows = between_indexed(&old.rows, &new.rows, diff_row).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
+    let rows = between_indexed(&old.rows, &new.rows, diff_row);
     if rows.is_none() {
         None
     } else {
@@ -726,8 +744,9 @@ async fn diff_table(old: &DocxTable, new: &DocxTable) -> Option<DocxTableDiff> {
     }
 }
 
-async fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
-    let cells = between_indexed(&old.cells, &new.cells, diff_cell).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRowDiff> {
+    let cells = between_indexed(&old.cells, &new.cells, diff_cell);
     if cells.is_none() {
         None
     } else {
@@ -735,8 +754,9 @@ async fn diff_row(old: &DocxTableRow, new: &DocxTableRow) -> Option<DocxTableRow
     }
 }
 
-async fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTableCellDiff> {
+    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
     if blocks.is_none() {
         None
     } else {
@@ -744,16 +764,18 @@ async fn diff_cell(old: &DocxTableCell, new: &DocxTableCell) -> Option<DocxTable
     }
 }
 
-async fn diff_style(old: &DocxStyle, new: &DocxStyle) -> Option<DocxStyleDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_style(old: &DocxStyle, new: &DocxStyle) -> Option<DocxStyleDiff> {
     if old == new {
         return None;
     }
     Some(DocxStyleDiff { name: (old.name != new.name).then(|| new.name.clone()), based_on: (old.based_on != new.based_on).then(|| new.based_on.clone()) })
 }
 
-async fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocumentDiff> {
-    let body = between_indexed(&base.body, &other.body, diff_block).await;
-    let styles = between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocumentDiff> {
+    let body = between_indexed(&base.body, &other.body, diff_block);
+    let styles = between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style);
     if body.is_none() && styles.is_none() {
         None
     } else {
@@ -761,15 +783,16 @@ async fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<Docx
     }
 }
 
-async fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResult<()> {
     match diff {
         DocxBlockDiff::Replace { block: new } => *block = new.clone(),
         DocxBlockDiff::Paragraph(pd) => {
             let DocxBlock::Paragraph(p) = block else {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block").await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block"));
             };
             if let Some(rd) = &pd.runs {
-                apply_indexed(&mut p.runs, rd, apply_run).await.map_err(|error| error.under(["runs"]))?;
+                apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
             }
             if let Some(s) = &pd.style {
                 p.style = s.clone();
@@ -777,17 +800,18 @@ async fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApp
         }
         DocxBlockDiff::Table(td) => {
             let DocxBlock::Table(t) = block else {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "table diff targets a non-table block").await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "table diff targets a non-table block"));
             };
             if let Some(rd) = &td.rows {
-                apply_indexed(&mut t.rows, rd, apply_row).await.map_err(|error| error.under(["rows"]))?;
+                apply_indexed(&mut t.rows, rd, apply_row).map_err(|error| error.under(["rows"]))?;
             }
         }
     }
     Ok(())
 }
 
-async fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -803,21 +827,24 @@ async fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult
     Ok(())
 }
 
-async fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_indexed(&mut row.cells, cd, apply_cell).await.map_err(|error| error.under(["cells"]))?;
+        apply_indexed(&mut row.cells, cd, apply_cell).map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
 }
 
-async fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.blocks {
-        apply_indexed(&mut cell.blocks, bd, apply_block).await.map_err(|error| error.under(["blocks"]))?;
+        apply_indexed(&mut cell.blocks, bd, apply_block).map_err(|error| error.under(["blocks"]))?;
     }
     Ok(())
 }
 
-async fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.name {
         style.name = v.clone();
     }
@@ -827,41 +854,47 @@ async fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApp
     Ok(())
 }
 
-async fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.body {
-        apply_indexed(&mut doc.body, bd, apply_block).await.map_err(|error| error.under(["body"]))?;
+        apply_indexed(&mut doc.body, bd, apply_block).map_err(|error| error.under(["body"]))?;
     }
     if let Some(sd) = &diff.styles {
-        apply_named(&mut doc.styles, sd, |s| s.id.clone(), apply_style).await.map_err(|error| error.under(["styles"]))?;
+        apply_named(&mut doc.styles, sd, |s| s.id.clone(), apply_style).map_err(|error| error.under(["styles"]))?;
     }
     Ok(())
 }
 
-async fn block_with_diff_applied(block: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlock {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn block_with_diff_applied(block: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlock {
     let mut out = block.clone();
     apply_block_for_absorb(&mut out, diff);
     out
 }
 
-async fn run_with_diff_applied(run: &DocxRun, diff: &DocxRunDiff) -> DocxRun {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn run_with_diff_applied(run: &DocxRun, diff: &DocxRunDiff) -> DocxRun {
     let mut out = run.clone();
     apply_run_for_absorb(&mut out, diff);
     out
 }
 
-async fn row_with_diff_applied(row: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRow {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn row_with_diff_applied(row: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRow {
     let mut out = row.clone();
     apply_row_for_absorb(&mut out, diff);
     out
 }
 
-async fn cell_with_diff_applied(cell: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn cell_with_diff_applied(cell: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell {
     let mut out = cell.clone();
     apply_cell_for_absorb(&mut out, diff);
     out
 }
 
-async fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
 where
     T: Clone,
 {
@@ -880,7 +913,8 @@ where
     }
 }
 
-async fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
     match diff {
         DocxBlockDiff::Replace { block: new } => *block = new.clone(),
         DocxBlockDiff::Paragraph(pd) => {
@@ -903,7 +937,8 @@ async fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
     }
 }
 
-async fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
     if let Some(value) = &diff.text {
         run.text = value.clone();
     }
@@ -918,19 +953,22 @@ async fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
     }
 }
 
-async fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
     if let Some(cells) = &diff.cells {
         apply_indexed_for_absorb(&mut row.cells, cells, apply_cell_for_absorb);
     }
 }
 
-async fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
     if let Some(blocks) = &diff.blocks {
         apply_indexed_for_absorb(&mut cell.blocks, blocks, apply_block_for_absorb);
     }
 }
 
-async fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
     if let Some(value) = &diff.name {
         style.name = value.clone();
     }
@@ -939,7 +977,8 @@ async fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
     }
 }
 
-async fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
     match diff {
         DocxBlockDiff::Replace { .. } => DocxBlockDiff::Replace { block: base.clone() },
         DocxBlockDiff::Paragraph(pd) => {
@@ -953,80 +992,92 @@ async fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff 
     }
 }
 
-async fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_run(base: &DocxRun, diff: &DocxRunDiff) -> DocxRunDiff {
     DocxRunDiff { text: diff.text.as_ref().map(|_| base.text.clone()), bold: diff.bold.map(|_| base.bold), italic: diff.italic.map(|_| base.italic), underline: diff.underline.map(|_| base.underline) }
 }
 
-async fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_row(base: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRowDiff {
     DocxTableRowDiff { cells: diff.cells.as_ref().map(|cd| inverse_indexed(&base.cells, cd, inverse_cell)) }
 }
 
-async fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCellDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_cell(base: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCellDiff {
     DocxTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
 }
 
-async fn inverse_style(base: &DocxStyle, diff: &DocxStyleDiff) -> DocxStyleDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_style(base: &DocxStyle, diff: &DocxStyleDiff) -> DocxStyleDiff {
     DocxStyleDiff { name: diff.name.as_ref().map(|_| base.name.clone()), based_on: diff.based_on.as_ref().map(|_| base.based_on.clone()) }
 }
 
-async fn inverse_document_diff(base: &DocxDocument, diff: &DocxDocumentDiff) -> DocxDocumentDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_document_diff(base: &DocxDocument, diff: &DocxDocumentDiff) -> DocxDocumentDiff {
     DocxDocumentDiff { body: diff.body.as_ref().map(|bd| inverse_indexed(&base.body, bd, inverse_block)), styles: diff.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)) }
 }
 
-async fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_block_diff(a: DocxBlockDiff, b: DocxBlockDiff) -> DocxBlockDiff {
     match (a, b) {
         (_, DocxBlockDiff::Replace { block }) => DocxBlockDiff::Replace { block },
-        (DocxBlockDiff::Replace { block }, b) => DocxBlockDiff::Replace { block: block_with_diff_applied(&block, &b).await },
-        (DocxBlockDiff::Paragraph(pa), DocxBlockDiff::Paragraph(pb)) => DocxBlockDiff::Paragraph(absorb_paragraph_diff(pa, pb).await),
-        (DocxBlockDiff::Table(ta), DocxBlockDiff::Table(tb)) => DocxBlockDiff::Table(absorb_table_diff(ta, tb).await),
+        (DocxBlockDiff::Replace { block }, b) => DocxBlockDiff::Replace { block: block_with_diff_applied(&block, &b) },
+        (DocxBlockDiff::Paragraph(pa), DocxBlockDiff::Paragraph(pb)) => DocxBlockDiff::Paragraph(absorb_paragraph_diff(pa, pb)),
+        (DocxBlockDiff::Table(ta), DocxBlockDiff::Table(tb)) => DocxBlockDiff::Table(absorb_table_diff(ta, tb)),
         (_, b) => b,
     }
 }
 
-async fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> DocxParagraphDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> DocxParagraphDiff {
     if b.style.is_some() {
         a.style = b.style;
     }
     a.runs = match (a.runs.take(), b.runs) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied).await),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
     };
     a
 }
 
-async fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_run_diff(a: DocxRunDiff, b: DocxRunDiff) -> DocxRunDiff {
     DocxRunDiff { text: b.text.or(a.text), bold: b.bold.or(a.bold), italic: b.italic.or(a.italic), underline: b.underline.or(a.underline) }
 }
 
-async fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
     a.rows = match (a.rows.take(), b.rows) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied).await),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied)),
     };
     a
 }
 
-async fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRowDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRowDiff {
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied).await),
+        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied)),
     };
     a
 }
 
-async fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTableCellDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTableCellDiff {
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
     };
     a
 }
 
-async fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleDiff {
     if b.name.is_some() {
         a.name = b.name;
     }
@@ -1036,28 +1087,31 @@ async fn absorb_style_diff(mut a: DocxStyleDiff, b: DocxStyleDiff) -> DocxStyleD
     a
 }
 
-async fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumentDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumentDiff {
     DocxDocumentDiff {
         body: match (a.body, b.body) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
+            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
         },
         styles: match (a.styles, b.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style_for_absorb).await),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style_for_absorb)),
         },
     }
 }
 //#endregion 🔖️DocumentDiffLogic
 
 //#region 🔖️OpcDiffLogic
-async fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<DocxOpcCtEntriesDiff> {
-    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone())).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<DocxOpcCtEntriesDiff> {
+    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) -> MutationApplyResult<()> {
     apply_named(
         entries,
         diff,
@@ -1066,22 +1120,25 @@ async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtE
             *v = nv.clone();
             Ok(())
         },
-    ).await
+    )
 }
 
-async fn inverse_ct_entries(base: &[(String, String)], diff: &DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
-    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_ct_entries(base: &[(String, String)], diff: &DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
+    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone())
 }
 
-async fn absorb_ct_entries(a: DocxOpcCtEntriesDiff, b: DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_ct_entries(a: DocxOpcCtEntriesDiff, b: DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
     // 🏷️ `D = String` here is already a whole-value replace (LWW) -- absorbing two such diffs on
     // the SAME key is just "the later one wins", i.e. `b`.
-    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone()).await
+    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone())
 }
 
-async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<DocxOpcContentTypesDiff> {
-    let defaults = diff_ct_entries(&old.defaults, &new.defaults).await;
-    let overrides = diff_ct_entries(&old.overrides, &new.overrides).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<DocxOpcContentTypesDiff> {
+    let defaults = diff_ct_entries(&old.defaults, &new.defaults);
+    let overrides = diff_ct_entries(&old.overrides, &new.overrides);
     if defaults.is_none() && overrides.is_none() {
         None
     } else {
@@ -1089,14 +1146,16 @@ async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Opt
     }
 }
 
-async fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<DocxOpcPartDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_part(old: &OpcPart, new: &OpcPart) -> Option<DocxOpcPartDiff> {
     if old == new {
         return None;
     }
     Some(DocxOpcPartDiff { content_type: (old.content_type != new.content_type).then(|| new.content_type.clone()), bytes: (old.bytes != new.bytes).then(|| new.bytes.clone()) })
 }
 
-async fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
     if let Some(v) = &diff.content_type {
         part.content_type = v.clone();
     }
@@ -1105,17 +1164,20 @@ async fn apply_part(part: &mut OpcPart, diff: &DocxOpcPartDiff) {
     }
 }
 
-async fn part_with_diff_applied(part: &OpcPart, diff: &DocxOpcPartDiff) -> OpcPart {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part_with_diff_applied(part: &OpcPart, diff: &DocxOpcPartDiff) -> OpcPart {
     let mut out = part.clone();
     apply_part(&mut out, diff);
     out
 }
 
-async fn inverse_part(base: &OpcPart, diff: &DocxOpcPartDiff) -> DocxOpcPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_part(base: &OpcPart, diff: &DocxOpcPartDiff) -> DocxOpcPartDiff {
     DocxOpcPartDiff { content_type: diff.content_type.as_ref().map(|_| base.content_type.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
-async fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpcPartDiff {
     if b.content_type.is_some() {
         a.content_type = b.content_type;
     }
@@ -1125,18 +1187,21 @@ async fn absorb_part_diff(mut a: DocxOpcPartDiff, b: DocxOpcPartDiff) -> DocxOpc
     a
 }
 
-async fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<DocxOpcPartsDiff> {
-    between_named(old, new, |p| p.path.clone(), diff_part).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<DocxOpcPartsDiff> {
+    between_named(old, new, |p| p.path.clone(), diff_part)
 }
 
-async fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<DocxOpcRelDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<DocxOpcRelDiff> {
     if old == new {
         return None;
     }
     Some(DocxOpcRelDiff { rel_type: (old.rel_type != new.rel_type).then(|| new.rel_type.clone()), target: (old.target != new.target).then(|| new.target.clone()), target_mode: (old.target_mode != new.target_mode).then_some(new.target_mode) })
 }
 
-async fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
     if let Some(v) = &diff.rel_type {
         rel.rel_type = v.clone();
     }
@@ -1148,11 +1213,13 @@ async fn apply_rel(rel: &mut OpcRelationship, diff: &DocxOpcRelDiff) {
     }
 }
 
-async fn inverse_rel(base: &OpcRelationship, diff: &DocxOpcRelDiff) -> DocxOpcRelDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rel(base: &OpcRelationship, diff: &DocxOpcRelDiff) -> DocxOpcRelDiff {
     DocxOpcRelDiff { rel_type: diff.rel_type.as_ref().map(|_| base.rel_type.clone()), target: diff.target.as_ref().map(|_| base.target.clone()), target_mode: diff.target_mode.map(|_| base.target_mode) }
 }
 
-async fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRelDiff {
     if b.rel_type.is_some() {
         a.rel_type = b.rel_type;
     }
@@ -1165,11 +1232,13 @@ async fn absorb_rel_diff(mut a: DocxOpcRelDiff, b: DocxOpcRelDiff) -> DocxOpcRel
     a
 }
 
-async fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<DocxOpcRelListDiff> {
-    between_named(old, new, |r| r.id.clone(), diff_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<DocxOpcRelListDiff> {
+    between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) -> MutationApplyResult<()> {
     apply_named(
         list,
         diff,
@@ -1178,10 +1247,11 @@ async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDi
             apply_rel(relationship, change);
             Ok(())
         },
-    ).await
+    )
 }
 
-async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> Vec<OpcRelationship> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
     out.retain(|relationship| !diff.removed.contains(&relationship.id));
     for modified in &diff.modified {
@@ -1193,22 +1263,25 @@ async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelL
     out
 }
 
-async fn inverse_rel_list(base: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> DocxOpcRelListDiff {
-    inverse_named(base, diff, |r| r.id.clone(), inverse_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rel_list(base: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> DocxOpcRelListDiff {
+    inverse_named(base, diff, |r| r.id.clone(), inverse_rel)
 }
 
-async fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpcRelListDiff {
-    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpcRelListDiff {
+    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel)
 }
 
-async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
         match new.get(owner) {
             None => removed.push(owner.clone()),
             Some(nlist) => {
-                if let Some(d) = diff_rel_list(list, nlist).await {
+                if let Some(d) = diff_rel_list(list, nlist) {
                     modified.push(NamedModified { key: owner.clone(), diff: d });
                 }
             }
@@ -1227,27 +1300,28 @@ async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &H
     }
 }
 
-async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     let mut added = std::collections::HashSet::new();
     for owner in &diff.removed {
         if !rels.contains_key(owner) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await.at(vec!["removed".to_string(), owner.clone()]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["removed".to_string(), owner.clone()]));
         }
         if !added.insert(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner is repeated").await.at(vec!["removed".to_string(), owner.clone()]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner is repeated").at(vec!["removed".to_string(), owner.clone()]));
         }
     }
     for modified in &diff.modified {
         if !rels.contains_key(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await.at(vec!["modified".to_string(), modified.key.clone()]).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), modified.key.clone()]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is removed and modified").await.at(vec!["modified".to_string(), modified.key.clone()]).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is removed and modified").at(vec!["modified".to_string(), modified.key.clone()]));
         }
     }
     for (owner, _) in &diff.added {
         if rels.contains_key(owner) || !added.insert(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").await.at(vec!["added".to_string(), owner.clone()]).await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").at(vec!["added".to_string(), owner.clone()]));
         }
     }
     for owner in &diff.removed {
@@ -1255,7 +1329,7 @@ async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, d
     }
     for m in &diff.modified {
         let list = rels.get_mut(&m.key).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist")).at(vec!["modified".to_string(), m.key.clone()]))?;
-        apply_rel_list(list, &m.diff).await.map_err(|error| error.under(vec!["modified".to_string(), m.key.clone()]))?;
+        apply_rel_list(list, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.key.clone()]))?;
     }
     for (owner, list) in &diff.added {
         rels.insert(owner.clone(), list.clone());
@@ -1263,7 +1337,8 @@ async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, d
     Ok(())
 }
 
-async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
@@ -1280,14 +1355,16 @@ async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, dif
     DocxOpcRelationshipsDiff { removed, modified, added }
 }
 
-async fn absorb_relationships(d1: DocxOpcRelationshipsDiff, d2: DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
-    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_relationships(d1: DocxOpcRelationshipsDiff, d2: DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
 }
 
-async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
-    let content_types = diff_content_types(&base.content_types, &other.content_types).await;
-    let parts = diff_parts(&base.parts, &other.parts).await;
-    let relationships = diff_relationships(&base.relationships, &other.relationships).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
+    let content_types = diff_content_types(&base.content_types, &other.content_types);
+    let parts = diff_parts(&base.parts, &other.parts);
+    let relationships = diff_relationships(&base.relationships, &other.relationships);
     if content_types.is_none() && parts.is_none() && relationships.is_none() {
         None
     } else {
@@ -1295,13 +1372,14 @@ async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> 
     }
 }
 
-async fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
-            apply_ct_entries(&mut opc.content_types.defaults, dd).await.map_err(|error| error.under(["contentTypes", "defaults"]))?;
+            apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
         }
         if let Some(dd) = &d.overrides {
-            apply_ct_entries(&mut opc.content_types.overrides, dd).await.map_err(|error| error.under(["contentTypes", "overrides"]))?;
+            apply_ct_entries(&mut opc.content_types.overrides, dd).map_err(|error| error.under(["contentTypes", "overrides"]))?;
         }
     }
     if let Some(d) = &diff.parts {
@@ -1314,15 +1392,16 @@ async fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApp
                 Ok(())
             },
         )
-        .await.map_err(|error| error.under(["parts"]))?;
+        .map_err(|error| error.under(["parts"]))?;
     }
     if let Some(d) = &diff.relationships {
-        apply_relationships(&mut opc.relationships, d).await.map_err(|error| error.under(["relationships"]))?;
+        apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
     Ok(())
 }
 
-async fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
         content_types: diff
             .content_types
@@ -1333,7 +1412,8 @@ async fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff 
     }
 }
 
-async fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
     DocxOpcDiff {
         content_types: match (a.content_types, b.content_types) {
             (None, x) => x,
@@ -1342,24 +1422,24 @@ async fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
                 defaults: match (ca.defaults, cb.defaults) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
                 },
                 overrides: match (ca.overrides, cb.overrides) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
                 },
             }),
         },
         parts: match (a.parts, b.parts) {
             (None, x) => x,
             (x, None) => x,
-            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff)).await),
+            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff))),
         },
         relationships: match (a.relationships, b.relationships) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb).await),
+            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb)),
         },
     }
 }
@@ -1370,10 +1450,10 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
     async fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d).await.map_err(|error| error.under(["opc"]))?;
+            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
         }
         if let Some(d) = &self.document {
-            apply_document_diff(&mut next.document, d).await.map_err(|error| error.under(["document"]))?;
+            apply_document_diff(&mut next.document, d).map_err(|error| error.under(["document"]))?;
         }
         Ok(next)
     }
@@ -1382,12 +1462,12 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b)),
         };
         self.document = match (self.document.take(), other.document) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_document_diff(a, b).await),
+            (Some(a), Some(b)) => Some(absorb_document_diff(a, b)),
         };
     }
 }
@@ -1400,7 +1480,7 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
     }
 
     async fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
-        DocxDiff { opc: diff_opc(&base.opc, &other.opc).await, document: diff_document(&base.document, &other.document).await }
+        DocxDiff { opc: diff_opc(&base.opc, &other.opc), document: diff_document(&base.document, &other.document) }
     }
 
     async fn is_empty(&self) -> bool {
@@ -1412,34 +1492,39 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 //#region 🔖️SetSnapshot
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<DocxSnapshot>` full-replace slot -- this IS `DocxDiff::between`.
-pub async fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
-    DocxDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
+    DocxDiff::between(base, next)
 }
 
 /// 🧩 Builds the diff for inserting `block` at `path` (`path.index` = insertion index, FINAL
 /// state).
-pub async fn diff_insert_block(path: &DocxBlockPath, block: DocxBlock) -> DocxDiff {
-    wrap_body_diff(path, DocxBlockLeaf::Inserted(block)).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_block(path: &DocxBlockPath, block: DocxBlock) -> DocxDiff {
+    wrap_body_diff(path, DocxBlockLeaf::Inserted(block))
 }
 
 /// 🧩 Builds the diff for removing the block at `path` (`path.index` = BASE-state index).
-pub async fn diff_remove_block(path: &DocxBlockPath) -> DocxDiff {
-    wrap_body_diff(path, DocxBlockLeaf::Removed).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_block(path: &DocxBlockPath) -> DocxDiff {
+    wrap_body_diff(path, DocxBlockLeaf::Removed)
 }
 
 /// 🧩 Builds the diff for replacing the block at `path` (BASE-state index) with `new_block`'s full
 /// content, via a real structural comparison against `old_block` (never full-replace unless the
 /// block KIND actually changed).
-pub async fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_block: &DocxBlock) -> DocxDiff {
-    match diff_block(old_block, new_block).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_block_content(path: &DocxBlockPath, old_block: &DocxBlock, new_block: &DocxBlock) -> DocxDiff {
+    match diff_block(old_block, new_block) {
         None => DocxDiff::default(),
-        Some(d) => wrap_body_diff(path, DocxBlockLeaf::Modified(d)).await,
+        Some(d) => wrap_body_diff(path, DocxBlockLeaf::Modified(d)),
     }
 }
 
 /// 🧩 Builds the diff for editing one run's text within the paragraph at `path`.
-pub async fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, text: &str) -> DocxDiff {
-    let Some(blocks) = resolve_blocks(&document.body, &path.segments).await else { return DocxDiff::default() };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, text: &str) -> DocxDiff {
+    let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
     let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
     let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
     if run.text == text {
@@ -1448,13 +1533,14 @@ pub async fn diff_set_run_text(document: &DocxDocument, path: &DocxBlockPath, ru
     let run_diff = DocxRunDiff { text: Some(text.to_string()), bold: None, italic: None, underline: None };
     let runs_diff = DocxRunsDiff { modified: vec![IndexModified { index: run_index, diff: run_diff }], ..Default::default() };
     let block_diff = DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: Some(runs_diff), style: None });
-    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff)).await
+    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff))
 }
 
 /// 🧩 Builds the diff for setting one run's bold/italic/underline flags within the paragraph at
 /// `path`.
-pub async fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, bold: bool, italic: bool, underline: bool) -> DocxDiff {
-    let Some(blocks) = resolve_blocks(&document.body, &path.segments).await else { return DocxDiff::default() };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPath, run_index: usize, bold: bool, italic: bool, underline: bool) -> DocxDiff {
+    let Some(blocks) = resolve_blocks(&document.body, &path.segments) else { return DocxDiff::default() };
     let Some(DocxBlock::Paragraph(p)) = blocks.get(path.index) else { return DocxDiff::default() };
     let Some(run) = p.runs.get(run_index) else { return DocxDiff::default() };
     let run_diff = DocxRunDiff { text: None, bold: (run.bold != bold).then_some(bold), italic: (run.italic != italic).then_some(italic), underline: (run.underline != underline).then_some(underline) };
@@ -1463,38 +1549,43 @@ pub async fn diff_set_run_formatting(document: &DocxDocument, path: &DocxBlockPa
     }
     let runs_diff = DocxRunsDiff { modified: vec![IndexModified { index: run_index, diff: run_diff }], ..Default::default() };
     let block_diff = DocxBlockDiff::Paragraph(DocxParagraphDiff { runs: Some(runs_diff), style: None });
-    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff)).await
+    wrap_body_diff(path, DocxBlockLeaf::Modified(block_diff))
 }
 
 /// 🧩 Builds the diff for inserting a style.
-pub async fn diff_insert_style(style: DocxStyle) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_style(style: DocxStyle) -> DocxDiff {
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { added: vec![style], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for removing a style by id.
-pub async fn diff_remove_style(id: &str) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_style(id: &str) -> DocxDiff {
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { removed: vec![id.to_string()], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting a style's name.
-pub async fn diff_set_style_name(id: &str, name: &str) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_style_name(id: &str, name: &str) -> DocxDiff {
     let sd = DocxStyleDiff { name: Some(name.to_string()), based_on: None };
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting (or clearing, `based_on: None`) a style's `based_on`.
-pub async fn diff_set_style_based_on(id: &str, based_on: Option<String>) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_style_based_on(id: &str, based_on: Option<String>) -> DocxDiff {
     let sd = DocxStyleDiff { name: None, based_on: Some(based_on) };
     DocxDiff { opc: None, document: Some(DocxDocumentDiff { body: None, styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: id.to_string(), diff: sd }], ..Default::default() }) }) }
 }
 
 /// 🧩 Builds the diff for setting a raw OPC part (content this typed layer doesn't cover).
-pub async fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Vec<u8>) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, bytes: Vec<u8>) -> DocxDiff {
     let p = path.trim_start_matches('/').to_string();
     match opc.parts.iter().find(|part| part.path == p) {
         Some(existing) => {
             let new_part = OpcPart { path: p, content_type: content_type.to_string(), bytes };
-            match diff_part(existing, &new_part).await {
+            match diff_part(existing, &new_part) {
                 None => DocxDiff::default(),
                 Some(d) => {
                     DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { modified: vec![NamedModified { key: existing.path.clone(), diff: d }], ..Default::default() }), relationships: None }), document: None }
@@ -1506,7 +1597,8 @@ pub async fn diff_set_part(opc: &OpcPackage, path: &str, content_type: &str, byt
 }
 
 /// 🧩 Builds the diff for removing a raw OPC part by path.
-pub async fn diff_remove_part(path: &str) -> DocxDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_part(path: &str) -> DocxDiff {
     let p = path.trim_start_matches('/').to_string();
     DocxDiff { opc: Some(DocxOpcDiff { content_types: None, parts: Some(DocxOpcPartsDiff { removed: vec![p], ..Default::default() }), relationships: None }), document: None }
 }
@@ -1526,40 +1618,48 @@ pub async fn diff_remove_part(path: &str) -> DocxDiff {
 /// row/cell/`styles`/OPC-parts/OPC-relationships instantiation, instead of five-plus bespoke
 /// per-collection encoders.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_bool(b: &bool) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
         "0".to_string()
     }
 }
-pub(crate) async fn dec_bool(s: &str) -> Result<bool, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
         other => Err(format!("bool: bad value {other:?}")),
     }
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1580,28 +1680,33 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -1611,15 +1716,18 @@ pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>
 /// hand-rolled codecs use (own copy per the no-shared-helpers-module convention). Needed here
 /// because every `extra_*_properties: Vec<XmlNode>` raw-retention field (on `DocxRun`/
 /// `DocxParagraph`/`DocxTableCell`/`DocxTableRow`/`DocxTable`) carries this type verbatim.
-async fn enc_attr(a: &XmlAttr) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_attr(a: &XmlAttr) -> String {
     format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
 }
-async fn dec_attr(s: &str) -> Result<XmlAttr, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_attr(s: &str) -> Result<XmlAttr, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
-    Ok(XmlAttr { name: dec_str(name).await?, value: dec_str(value).await? })
+    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
 }
-pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
     match n {
         XmlNode::Element { name, attrs, children } => {
             let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
@@ -1632,24 +1740,25 @@ pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
         XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
     }
 }
-pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
         "E" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
-            let attrs = split_top_level(strip_brackets(attrs).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
-            let children = split_top_level(strip_brackets(children).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
-            Ok(XmlNode::Element { name: dec_str(name).await?, attrs, children })
+            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
+            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
         }
-        "T" => Ok(XmlNode::Text { text: dec_str(inner).await? }),
-        "D" => Ok(XmlNode::CData { text: dec_str(inner).await? }),
-        "M" => Ok(XmlNode::Comment { text: dec_str(inner).await? }),
+        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
+        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
+        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
         "P" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
-            Ok(XmlNode::ProcessingInstruction { target: dec_str(target).await?, data: dec_str(data).await? })
+            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
         }
         other => Err(format!("xml node: unknown tag {other:?}")),
     }
@@ -1661,13 +1770,15 @@ pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
 /// `SetSnapshot`'s mutation-side codec (see `mutations/component.rs`) carry whole. `pub(crate)` so
 /// the mutations file reuses them rather than re-deriving its own copies (same intra-artifact reuse
 /// pattern `SvgDiff`/`SvgMutation` established).
-pub(crate) async fn enc_target_mode(m: &OpcTargetMode) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_target_mode(m: &OpcTargetMode) -> String {
     match m {
         OpcTargetMode::Internal => "0".to_string(),
         OpcTargetMode::External => "1".to_string(),
     }
 }
-pub(crate) async fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
     match s {
         "0" => Ok(OpcTargetMode::Internal),
         "1" => Ok(OpcTargetMode::External),
@@ -1675,121 +1786,143 @@ pub(crate) async fn dec_target_mode(s: &str) -> Result<OpcTargetMode, String> {
     }
 }
 
-async fn enc_run(r: &DocxRun) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_run(r: &DocxRun) -> String {
     format!("[{},{},{},{},{}]", enc_str(&r.text), enc_bool(&r.bold), enc_bool(&r.italic), enc_bool(&r.underline), enc_list(&r.extra_run_properties, enc_xml_node))
 }
-async fn dec_run(s: &str) -> Result<DocxRun, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_run(s: &str) -> Result<DocxRun, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [text, bold, italic, underline, extra] = parts.as_slice() else { return Err(format!("run: expected 5 fields, got {}", parts.len())) };
-    Ok(DocxRun { text: dec_str(text).await?, bold: dec_bool(bold).await?, italic: dec_bool(italic).await?, underline: dec_bool(underline).await?, extra_run_properties: dec_list(extra, dec_xml_node).await? })
+    Ok(DocxRun { text: dec_str(text)?, bold: dec_bool(bold)?, italic: dec_bool(italic)?, underline: dec_bool(underline)?, extra_run_properties: dec_list(extra, dec_xml_node)? })
 }
 
-async fn enc_paragraph(p: &DocxParagraph) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_paragraph(p: &DocxParagraph) -> String {
     format!("[{},{},{}]", enc_list(&p.runs, enc_run), encode_option(&p.style, |v| enc_str(v)), enc_list(&p.extra_paragraph_properties, enc_xml_node))
 }
-async fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [runs, style, extra] = parts.as_slice() else { return Err(format!("paragraph: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxParagraph { runs: dec_list(runs, dec_run).await?, style: decode_option(style, dec_str).await?, extra_paragraph_properties: dec_list(extra, dec_xml_node).await? })
+    Ok(DocxParagraph { runs: dec_list(runs, dec_run)?, style: decode_option(style, dec_str)?, extra_paragraph_properties: dec_list(extra, dec_xml_node)? })
 }
 
-async fn enc_cell(c: &DocxTableCell) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_cell(c: &DocxTableCell) -> String {
     format!("[{},{}]", enc_list(&c.blocks, enc_block), enc_list(&c.extra_cell_properties, enc_xml_node))
 }
-async fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [blocks, extra] = parts.as_slice() else { return Err(format!("cell: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTableCell { blocks: dec_list(blocks, dec_block).await?, extra_cell_properties: dec_list(extra, dec_xml_node).await? })
+    Ok(DocxTableCell { blocks: dec_list(blocks, dec_block)?, extra_cell_properties: dec_list(extra, dec_xml_node)? })
 }
 
-async fn enc_row(r: &DocxTableRow) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_row(r: &DocxTableRow) -> String {
     format!("[{},{}]", enc_list(&r.cells, enc_cell), enc_list(&r.extra_row_properties, enc_xml_node))
 }
-async fn dec_row(s: &str) -> Result<DocxTableRow, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_row(s: &str) -> Result<DocxTableRow, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [cells, extra] = parts.as_slice() else { return Err(format!("row: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTableRow { cells: dec_list(cells, dec_cell).await?, extra_row_properties: dec_list(extra, dec_xml_node).await? })
+    Ok(DocxTableRow { cells: dec_list(cells, dec_cell)?, extra_row_properties: dec_list(extra, dec_xml_node)? })
 }
 
-async fn enc_table(t: &DocxTable) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table(t: &DocxTable) -> String {
     format!("[{},{}]", enc_list(&t.rows, enc_row), enc_list(&t.extra_table_properties, enc_xml_node))
 }
-async fn dec_table(s: &str) -> Result<DocxTable, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table(s: &str) -> Result<DocxTable, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [rows, extra] = parts.as_slice() else { return Err(format!("table: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTable { rows: dec_list(rows, dec_row).await?, extra_table_properties: dec_list(extra, dec_xml_node).await? })
+    Ok(DocxTable { rows: dec_list(rows, dec_row)?, extra_table_properties: dec_list(extra, dec_xml_node)? })
 }
 
 /// 🌳️ `P[paragraph]` / `T[table]` -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node`.
-pub(crate) async fn enc_block(b: &DocxBlock) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block(b: &DocxBlock) -> String {
     match b {
         DocxBlock::Paragraph(p) => format!("P{}", enc_paragraph(p)),
         DocxBlock::Table(t) => format!("T{}", enc_table(t)),
     }
 }
-pub(crate) async fn dec_block(s: &str) -> Result<DocxBlock, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
-        "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest).await?)),
-        "T" => Ok(DocxBlock::Table(dec_table(rest).await?)),
+        "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest)?)),
+        "T" => Ok(DocxBlock::Table(dec_table(rest)?)),
         other => Err(format!("block: unknown tag {other:?}")),
     }
 }
 
-pub(crate) async fn enc_style(s: &DocxStyle) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_style(s: &DocxStyle) -> String {
     format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
 }
-pub(crate) async fn dec_style(s: &str) -> Result<DocxStyle, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxStyle { id: dec_str(id).await?, name: dec_str(name).await?, based_on: decode_option(based_on, dec_str).await? })
+    Ok(DocxStyle { id: dec_str(id)?, name: dec_str(name)?, based_on: decode_option(based_on, dec_str)? })
 }
 
-pub(crate) async fn enc_opc_part(p: &OpcPart) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_opc_part(p: &OpcPart) -> String {
     format!("[{},{},{}]", enc_str(&p.path), enc_str(&p.content_type), hex_encode(&p.bytes))
 }
-pub(crate) async fn dec_opc_part(s: &str) -> Result<OpcPart, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_opc_part(s: &str) -> Result<OpcPart, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [path, content_type, bytes] = parts.as_slice() else { return Err(format!("opc part: expected 3 fields, got {}", parts.len())) };
-    Ok(OpcPart { path: dec_str(path).await?, content_type: dec_str(content_type).await?, bytes: hex_decode(bytes).await? })
+    Ok(OpcPart { path: dec_str(path)?, content_type: dec_str(content_type)?, bytes: hex_decode(bytes)? })
 }
 
-pub(crate) async fn enc_rel(r: &OpcRelationship) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rel(r: &OpcRelationship) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_str(&r.rel_type), enc_str(&r.target), enc_target_mode(&r.target_mode))
 }
-pub(crate) async fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [id, rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("relationship: expected 4 fields, got {}", parts.len())) };
-    Ok(OpcRelationship { id: dec_str(id).await?, rel_type: dec_str(rel_type).await?, target: dec_str(target).await?, target_mode: dec_target_mode(target_mode).await? })
+    Ok(OpcRelationship { id: dec_str(id)?, rel_type: dec_str(rel_type)?, target: dec_str(target)?, target_mode: dec_target_mode(target_mode)? })
 }
 
-pub(crate) async fn enc_ct_entry(e: &(String, String)) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_ct_entry(e: &(String, String)) -> String {
     format!("[{},{}]", enc_str(&e.0), enc_str(&e.1))
 }
-pub(crate) async fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [k, v] = parts.as_slice() else { return Err(format!("ct entry: expected 2 fields, got {}", parts.len())) };
-    Ok((dec_str(k).await?, dec_str(v).await?))
+    Ok((dec_str(k)?, dec_str(v)?))
 }
 
 /// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
-pub(crate) async fn enc_rel_owner_entry(e: &(String, Vec<OpcRelationship>)) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rel_owner_entry(e: &(String, Vec<OpcRelationship>)) -> String {
     format!("[{},{}]", enc_str(&e.0), enc_list(&e.1, enc_rel))
 }
-pub(crate) async fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [owner, list] = parts.as_slice() else { return Err(format!("rel owner entry: expected 2 fields, got {}", parts.len())) };
-    Ok((dec_str(owner).await?, dec_list(list, dec_rel).await?))
+    Ok((dec_str(owner)?, dec_list(list, dec_rel)?))
 }
 //#endregion 🔖️ValueCodecs
 
@@ -1797,17 +1930,19 @@ pub(crate) async fn dec_rel_owner_entry(s: &str) -> Result<(String, Vec<OpcRelat
 /// 🌳️ `[removed];[modified];[added]` -- generic over `IndexedTripleDiff<D,T>`'s own `D`/`T`, reused
 /// for every index-keyed collection (`body`/`runs`/table rows/cells) instead of one bespoke
 /// encoder per collection.
-async fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1815,7 +1950,7 @@ async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, 
             Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1829,17 +1964,19 @@ async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, 
 /// 🏷️ `[removed];[modified];[added]` -- generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`,
 /// reused for `styles` and every OPC-layer name-keyed collection (content-type entries, parts,
 /// relationship lists, relationships-by-owner).
-async fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1847,195 +1984,237 @@ async fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K,
             Ok(NamedModified { key: dec_k(key)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_runs_diff(d: &DocxRunsDiff) -> String {
-    enc_indexed_triple(d, enc_run_diff, enc_run).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_runs_diff(d: &DocxRunsDiff) -> String {
+    enc_indexed_triple(d, enc_run_diff, enc_run)
 }
-async fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> {
-    dec_indexed_triple(s, dec_run_diff, dec_run).await
-}
-
-async fn enc_blocks_diff(d: &DocxBlocksDiff) -> String {
-    enc_indexed_triple(d, enc_block_diff, enc_block).await
-}
-async fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> {
-    dec_indexed_triple(s, dec_block_diff, dec_block).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_runs_diff(s: &str) -> Result<DocxRunsDiff, String> {
+    dec_indexed_triple(s, dec_run_diff, dec_run)
 }
 
-async fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String {
-    enc_indexed_triple(d, enc_table_row_diff, enc_row).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_blocks_diff(d: &DocxBlocksDiff) -> String {
+    enc_indexed_triple(d, enc_block_diff, enc_block)
 }
-async fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> {
-    dec_indexed_triple(s, dec_table_row_diff, dec_row).await
-}
-
-async fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String {
-    enc_indexed_triple(d, enc_table_cell_diff, enc_cell).await
-}
-async fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> {
-    dec_indexed_triple(s, dec_table_cell_diff, dec_cell).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_blocks_diff(s: &str) -> Result<DocxBlocksDiff, String> {
+    dec_indexed_triple(s, dec_block_diff, dec_block)
 }
 
-async fn enc_styles_diff(d: &DocxStylesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_rows_diff(d: &DocxTableRowsDiff) -> String {
+    enc_indexed_triple(d, enc_table_row_diff, enc_row)
 }
-async fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
-    dec_named_triple(s, dec_str, dec_style_diff, dec_style).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_rows_diff(s: &str) -> Result<DocxTableRowsDiff, String> {
+    dec_indexed_triple(s, dec_table_row_diff, dec_row)
 }
 
-async fn enc_run_diff(d: &DocxRunDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_cells_diff(d: &DocxTableCellsDiff) -> String {
+    enc_indexed_triple(d, enc_table_cell_diff, enc_cell)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_cells_diff(s: &str) -> Result<DocxTableCellsDiff, String> {
+    dec_indexed_triple(s, dec_table_cell_diff, dec_cell)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_styles_diff(d: &DocxStylesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_styles_diff(s: &str) -> Result<DocxStylesDiff, String> {
+    dec_named_triple(s, dec_str, dec_style_diff, dec_style)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_run_diff(d: &DocxRunDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.bold, enc_bool), encode_option(&d.italic, enc_bool), encode_option(&d.underline, enc_bool))
 }
-async fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_run_diff(s: &str) -> Result<DocxRunDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [text, bold, italic, underline] = parts.as_slice() else { return Err(format!("run diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DocxRunDiff { text: decode_option(text, dec_str).await?, bold: decode_option(bold, dec_bool).await?, italic: decode_option(italic, dec_bool).await?, underline: decode_option(underline, dec_bool).await? })
+    Ok(DocxRunDiff { text: decode_option(text, dec_str)?, bold: decode_option(bold, dec_bool)?, italic: decode_option(italic, dec_bool)?, underline: decode_option(underline, dec_bool)? })
 }
 
-async fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_paragraph_diff(pd: &DocxParagraphDiff) -> String {
     format!("[{},{}]", encode_option(&pd.runs, enc_runs_diff), encode_option(&pd.style, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
 }
-async fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_paragraph_diff(s: &str) -> Result<DocxParagraphDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [runs, style] = parts.as_slice() else { return Err(format!("paragraph diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff).await?, style: decode_option(style, |s| decode_option(s, dec_str)).await? })
+    Ok(DocxParagraphDiff { runs: decode_option(runs, dec_runs_diff)?, style: decode_option(style, |s| decode_option(s, dec_str))? })
 }
 
-async fn enc_table_diff(d: &DocxTableDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_diff(d: &DocxTableDiff) -> String {
     format!("[{}]", encode_option(&d.rows, enc_table_rows_diff))
 }
-async fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
-    let inner = strip_brackets(s).await?;
-    Ok(DocxTableDiff { rows: decode_option(inner, dec_table_rows_diff).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_diff(s: &str) -> Result<DocxTableDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableDiff { rows: decode_option(inner, dec_table_rows_diff)? })
 }
 
-async fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_row_diff(d: &DocxTableRowDiff) -> String {
     format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
 }
-async fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
-    let inner = strip_brackets(s).await?;
-    Ok(DocxTableRowDiff { cells: decode_option(inner, dec_table_cells_diff).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_row_diff(s: &str) -> Result<DocxTableRowDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableRowDiff { cells: decode_option(inner, dec_table_cells_diff)? })
 }
 
-async fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_cell_diff(d: &DocxTableCellDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
 }
-async fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
-    let inner = strip_brackets(s).await?;
-    Ok(DocxTableCellDiff { blocks: decode_option(inner, dec_blocks_diff).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_cell_diff(s: &str) -> Result<DocxTableCellDiff, String> {
+    let inner = strip_brackets(s)?;
+    Ok(DocxTableCellDiff { blocks: decode_option(inner, dec_blocks_diff)? })
 }
 
-async fn enc_style_diff(d: &DocxStyleDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_style_diff(d: &DocxStyleDiff) -> String {
     format!("[{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.based_on, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))))
 }
-async fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_style_diff(s: &str) -> Result<DocxStyleDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [name, based_on] = parts.as_slice() else { return Err(format!("style diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxStyleDiff { name: decode_option(name, dec_str).await?, based_on: decode_option(based_on, |s| decode_option(s, dec_str)).await? })
+    Ok(DocxStyleDiff { name: decode_option(name, dec_str)?, based_on: decode_option(based_on, |s| decode_option(s, dec_str))? })
 }
 
 /// 🌳️ `P[paragraph diff]` / `T[table diff]` / `R[block]` (wholesale replace, node-KIND changed).
-async fn enc_block_diff(d: &DocxBlockDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block_diff(d: &DocxBlockDiff) -> String {
     match d {
         DocxBlockDiff::Paragraph(pd) => format!("P{}", enc_paragraph_diff(pd)),
         DocxBlockDiff::Table(td) => format!("T{}", enc_table_diff(td)),
         DocxBlockDiff::Replace { block } => format!("R[{}]", enc_block(block)),
     }
 }
-async fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block_diff(s: &str) -> Result<DocxBlockDiff, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
-        "P" => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff(rest).await?)),
-        "T" => Ok(DocxBlockDiff::Table(dec_table_diff(rest).await?)),
-        "R" => Ok(DocxBlockDiff::Replace { block: dec_block(strip_brackets(rest).await?).await? }),
+        "P" => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff(rest)?)),
+        "T" => Ok(DocxBlockDiff::Table(dec_table_diff(rest)?)),
+        "R" => Ok(DocxBlockDiff::Replace { block: dec_block(strip_brackets(rest)?)? }),
         other => Err(format!("block diff: unknown tag {other:?}")),
     }
 }
 
-async fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_ct_entries_diff(d: &DocxOpcCtEntriesDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), |v: &String| enc_str(v), enc_ct_entry)
 }
-async fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> {
-    dec_named_triple(s, dec_str, dec_str, dec_ct_entry).await
-}
-
-async fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part).await
-}
-async fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> {
-    dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_ct_entries_diff(s: &str) -> Result<DocxOpcCtEntriesDiff, String> {
+    dec_named_triple(s, dec_str, dec_str, dec_ct_entry)
 }
 
-async fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_parts_diff(d: &DocxOpcPartsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_opc_part_diff, enc_opc_part)
 }
-async fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> {
-    dec_named_triple(s, dec_str, dec_rel_diff, dec_rel).await
-}
-
-async fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry).await
-}
-async fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> {
-    dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_parts_diff(s: &str) -> Result<DocxOpcPartsDiff, String> {
+    dec_named_triple(s, dec_str, dec_opc_part_diff, dec_opc_part)
 }
 
-async fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rel_list_diff(d: &DocxOpcRelListDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_rel_diff, enc_rel)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rel_list_diff(s: &str) -> Result<DocxOpcRelListDiff, String> {
+    dec_named_triple(s, dec_str, dec_rel_diff, dec_rel)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_relationships_diff(d: &DocxOpcRelationshipsDiff) -> String {
+    enc_named_triple(d, |k| enc_str(k), enc_rel_list_diff, enc_rel_owner_entry)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_relationships_diff(s: &str) -> Result<DocxOpcRelationshipsDiff, String> {
+    dec_named_triple(s, dec_str, dec_rel_list_diff, dec_rel_owner_entry)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_part_diff(d: &DocxOpcPartDiff) -> String {
     format!("[{},{}]", encode_option(&d.content_type, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
 }
-async fn dec_opc_part_diff(s: &str) -> Result<DocxOpcPartDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_part_diff(s: &str) -> Result<DocxOpcPartDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [ct, bytes] = parts.as_slice() else { return Err(format!("opc part diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxOpcPartDiff { content_type: decode_option(ct, dec_str).await?, bytes: decode_option(bytes, hex_decode).await? })
+    Ok(DocxOpcPartDiff { content_type: decode_option(ct, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
 }
 
-async fn enc_rel_diff(d: &DocxOpcRelDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rel_diff(d: &DocxOpcRelDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, enc_target_mode))
 }
-async fn dec_rel_diff(s: &str) -> Result<DocxOpcRelDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rel_diff(s: &str) -> Result<DocxOpcRelDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [rel_type, target, target_mode] = parts.as_slice() else { return Err(format!("rel diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxOpcRelDiff { rel_type: decode_option(rel_type, dec_str).await?, target: decode_option(target, dec_str).await?, target_mode: decode_option(target_mode, dec_target_mode).await? })
+    Ok(DocxOpcRelDiff { rel_type: decode_option(rel_type, dec_str)?, target: decode_option(target, dec_str)?, target_mode: decode_option(target_mode, dec_target_mode)? })
 }
 
-async fn enc_content_types_diff(d: &DocxOpcContentTypesDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_content_types_diff(d: &DocxOpcContentTypesDiff) -> String {
     format!("[{},{}]", encode_option(&d.defaults, enc_ct_entries_diff), encode_option(&d.overrides, enc_ct_entries_diff))
 }
-async fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_content_types_diff(s: &str) -> Result<DocxOpcContentTypesDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff).await?, overrides: decode_option(overrides, dec_ct_entries_diff).await? })
+    Ok(DocxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff)?, overrides: decode_option(overrides, dec_ct_entries_diff)? })
 }
 
-async fn enc_opc_diff(d: &DocxOpcDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_diff(d: &DocxOpcDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff))
 }
-async fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_diff(s: &str) -> Result<DocxOpcDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [ct, p, rel] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxOpcDiff { content_types: decode_option(ct, dec_content_types_diff).await?, parts: decode_option(p, dec_parts_diff).await?, relationships: decode_option(rel, dec_relationships_diff).await? })
+    Ok(DocxOpcDiff { content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(rel, dec_relationships_diff)? })
 }
 
-async fn enc_document_diff(d: &DocxDocumentDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_document_diff(d: &DocxDocumentDiff) -> String {
     format!("[{},{}]", encode_option(&d.body, enc_blocks_diff), encode_option(&d.styles, enc_styles_diff))
 }
-async fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [body, styles] = parts.as_slice() else { return Err(format!("document diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxDocumentDiff { body: decode_option(body, dec_blocks_diff).await?, styles: decode_option(styles, dec_styles_diff).await? })
+    Ok(DocxDocumentDiff { body: decode_option(body, dec_blocks_diff)?, styles: decode_option(styles, dec_styles_diff)? })
 }
 //#endregion 🔖️DiffValueCodecs
 
@@ -2051,35 +2230,42 @@ async fn dec_document_diff(s: &str) -> Result<DocxDocumentDiff, String> {
 /// per-artifact hand-roll convention (no shared "hand-roll helpers" module exists yet, see this
 /// file's own `HandcraftedDiffCodec` doc comment).
 //#region 🔖️BinaryPrimitives
-pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️XmlValueBinaryCodecs
 /// 🌳️ Binary twin of `enc_xml_node`/`dec_xml_node` -- 1-byte kind tag (`0`=Element/`1`=Text/
 /// `2`=CData/`3`=Comment/`4`=ProcessingInstruction, matching xml's own binary tag numbering).
-pub(crate) async fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.name);
     write_str_lp(out, &a.value);
 }
-pub(crate) async fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
-    let name = read_str_lp(reader).await?;
-    let value = read_str_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
+    let name = read_str_lp(reader)?;
+    let value = read_str_lp(reader)?;
     Ok(XmlAttr { name, value })
 }
-pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
     match node {
         XmlNode::Element { name, attrs, children } => {
             out.push(0);
@@ -2112,45 +2298,48 @@ pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = read_str_lp(reader).await?;
-            let attr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let name = read_str_lp(reader)?;
+            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut attrs = Vec::with_capacity(attr_count as usize);
             for _ in 0..attr_count {
-                attrs.push(dec_attr_bin(reader).await?);
+                attrs.push(dec_attr_bin(reader)?);
             }
-            let child_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(Box::pin(dec_xml_node_bin(reader)).await?);
+                children.push(Box::pin(dec_xml_node_bin(reader))?);
             }
             Ok(XmlNode::Element { name, attrs, children })
         }
-        1 => Ok(XmlNode::Text { text: read_str_lp(reader).await? }),
-        2 => Ok(XmlNode::CData { text: read_str_lp(reader).await? }),
-        3 => Ok(XmlNode::Comment { text: read_str_lp(reader).await? }),
+        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
+        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
+        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
         4 => {
-            let target = read_str_lp(reader).await?;
-            let data = read_str_lp(reader).await?;
+            let target = read_str_lp(reader)?;
+            let data = read_str_lp(reader)?;
             Ok(XmlNode::ProcessingInstruction { target, data })
         }
         other => Err(format!("xml node binary: unknown tag {other}")),
     }
 }
-async fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, nodes.len() as u64);
     for n in nodes {
         enc_xml_node_bin(n, out);
     }
 }
-async fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(dec_xml_node_bin(reader).await?);
+        out.push(dec_xml_node_bin(reader)?);
     }
     Ok(out)
 }
@@ -2160,37 +2349,42 @@ async fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec
 /// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️ValueCodecs`'s text
 /// forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
 /// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
-pub(crate) async fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
     out.push(match m {
         OpcTargetMode::Internal => 0,
         OpcTargetMode::External => 1,
     });
 }
-pub(crate) async fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(OpcTargetMode::Internal),
         1 => Ok(OpcTargetMode::External),
         other => Err(format!("target mode binary: bad value {other}")),
     }
 }
 
-async fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
     write_str_lp(out, &r.text);
     out.push(r.bold as u8);
     out.push(r.italic as u8);
     out.push(r.underline as u8);
     enc_xml_node_list_bin(&r.extra_run_properties, out);
 }
-async fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
-    let text = read_str_lp(reader).await?;
-    let bold = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let italic = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let underline = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let extra_run_properties = dec_xml_node_list_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
+    let text = read_str_lp(reader)?;
+    let bold = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let italic = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let underline = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let extra_run_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxRun { text, bold, italic, underline, extra_run_properties })
 }
 
-async fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.runs.len() as u64);
     for r in &p.runs {
         enc_run_bin(r, out);
@@ -2201,70 +2395,78 @@ async fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
     }
     enc_xml_node_list_bin(&p.extra_paragraph_properties, out);
 }
-async fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
-    let run_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
+    let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut runs = Vec::with_capacity(run_count as usize);
     for _ in 0..run_count {
-        runs.push(dec_run_bin(reader).await?);
+        runs.push(dec_run_bin(reader)?);
     }
-    let style = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let extra_paragraph_properties = dec_xml_node_list_bin(reader).await?;
+    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let extra_paragraph_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxParagraph { runs, style, extra_paragraph_properties })
 }
 
-async fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, c.blocks.len() as u64);
     for b in &c.blocks {
         enc_block_bin(b, out);
     }
     enc_xml_node_list_bin(&c.extra_cell_properties, out);
 }
-async fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
-    let block_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
+    let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
-        blocks.push(Box::pin(dec_block_bin(reader)).await?);
+        blocks.push(Box::pin(dec_block_bin(reader))?);
     }
-    let extra_cell_properties = dec_xml_node_list_bin(reader).await?;
+    let extra_cell_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTableCell { blocks, extra_cell_properties })
 }
 
-async fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for c in &r.cells {
         enc_cell_bin(c, out);
     }
     enc_xml_node_list_bin(&r.extra_row_properties, out);
 }
-async fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
-    let cell_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
+    let cell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(cell_count as usize);
     for _ in 0..cell_count {
-        cells.push(Box::pin(dec_cell_bin(reader)).await?);
+        cells.push(Box::pin(dec_cell_bin(reader))?);
     }
-    let extra_row_properties = dec_xml_node_list_bin(reader).await?;
+    let extra_row_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTableRow { cells, extra_row_properties })
 }
 
-async fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, t.rows.len() as u64);
     for r in &t.rows {
         enc_row_bin(r, out);
     }
     enc_xml_node_list_bin(&t.extra_table_properties, out);
 }
-async fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
-    let row_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
+    let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
-        rows.push(Box::pin(dec_row_bin(reader)).await?);
+        rows.push(Box::pin(dec_row_bin(reader))?);
     }
-    let extra_table_properties = dec_xml_node_list_bin(reader).await?;
+    let extra_table_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTable { rows, extra_table_properties })
 }
 
 /// 🌳️ `0`=Paragraph / `1`=Table -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node_bin`.
-pub(crate) async fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
     match b {
         DocxBlock::Paragraph(p) => {
             out.push(0);
@@ -2276,15 +2478,17 @@ pub(crate) async fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
         }
     }
 }
-pub(crate) async fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
-        0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader).await?)),
-        1 => Ok(DocxBlock::Table(Box::pin(dec_table_bin(reader)).await?)),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
+        1 => Ok(DocxBlock::Table(Box::pin(dec_table_bin(reader))?)),
         other => Err(format!("block binary: unknown tag {other}")),
     }
 }
 
-pub(crate) async fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
     write_str_lp(out, &s.id);
     write_str_lp(out, &s.name);
     out.push(if s.based_on.is_some() { 1 } else { 0 });
@@ -2292,63 +2496,72 @@ pub(crate) async fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
         write_str_lp(out, based_on);
     }
 }
-pub(crate) async fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
-    let id = read_str_lp(reader).await?;
-    let name = read_str_lp(reader).await?;
-    let based_on = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
+    let id = read_str_lp(reader)?;
+    let name = read_str_lp(reader)?;
+    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     Ok(DocxStyle { id, name, based_on })
 }
 
-pub(crate) async fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
     write_str_lp(out, &p.path);
     write_str_lp(out, &p.content_type);
     write_bytes_lp(out, &p.bytes);
 }
-pub(crate) async fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
-    let path = read_str_lp(reader).await?;
-    let content_type = read_str_lp(reader).await?;
-    let bytes = read_bytes_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
+    let path = read_str_lp(reader)?;
+    let content_type = read_str_lp(reader)?;
+    let bytes = read_bytes_lp(reader)?;
     Ok(OpcPart { path, content_type, bytes })
 }
 
-pub(crate) async fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
     write_str_lp(out, &r.id);
     write_str_lp(out, &r.rel_type);
     write_str_lp(out, &r.target);
     enc_target_mode_bin(&r.target_mode, out);
 }
-pub(crate) async fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
-    let id = read_str_lp(reader).await?;
-    let rel_type = read_str_lp(reader).await?;
-    let target = read_str_lp(reader).await?;
-    let target_mode = dec_target_mode_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
+    let id = read_str_lp(reader)?;
+    let rel_type = read_str_lp(reader)?;
+    let target = read_str_lp(reader)?;
+    let target_mode = dec_target_mode_bin(reader)?;
     Ok(OpcRelationship { id, rel_type, target, target_mode })
 }
 
-pub(crate) async fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
     write_str_lp(out, &e.0);
     write_str_lp(out, &e.1);
 }
-pub(crate) async fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
-    let k = read_str_lp(reader).await?;
-    let v = read_str_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
+    let k = read_str_lp(reader)?;
+    let v = read_str_lp(reader)?;
     Ok((k, v))
 }
 
 /// 🗺️ One `relationships` map entry (owner path -> that owner's relationship list).
-pub(crate) async fn enc_rel_owner_entry_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rel_owner_entry_bin(e: &(String, Vec<OpcRelationship>), out: &mut Vec<u8>) {
     write_str_lp(out, &e.0);
     store::pack_rt::write_varint_u64(out, e.1.len() as u64);
     for r in &e.1 {
         enc_rel_bin(r, out);
     }
 }
-pub(crate) async fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
-    let owner = read_str_lp(reader).await?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
+    let owner = read_str_lp(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        list.push(dec_rel_bin(reader).await?);
+        list.push(dec_rel_bin(reader)?);
     }
     Ok((owner, list))
 }
@@ -2357,7 +2570,8 @@ pub(crate) async fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) 
 //#region 🔖️GenericTripleBinaryCodecs
 /// 🌳️ Binary twin of `enc_indexed_triple`/`dec_indexed_triple` -- three varint-counted sections
 /// (removed indices / modified index+diff pairs / added index+item pairs), generic over `D`/`T`.
-async fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for i in &diff.removed {
         store::pack_rt::write_varint_u64(out, *i as u64);
@@ -2373,23 +2587,24 @@ async fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: imp
         enc_t(&a.item, out);
     }
 }
-async fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = dec_d(reader)?;
         modified.push(IndexModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_t(reader)?;
         added.push(IndexAdded { index, item });
     }
@@ -2398,7 +2613,8 @@ async fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d:
 
 /// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
 /// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-async fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
     for k in &diff.removed {
         enc_k(k, out);
@@ -2413,25 +2629,26 @@ async fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: i
         enc_t(t, out);
     }
 }
-async fn dec_named_triple_bin<K, D, T>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_named_triple_bin<K, D, T>(
     reader: &mut store::ByteReader<'_>,
     dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -2441,42 +2658,53 @@ async fn dec_named_triple_bin<K, D, T>(
 //#endregion 🔖️GenericTripleBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-async fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out)
 }
-async fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
-    dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin).await
-}
-
-async fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out).await
-}
-async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
-    dec_indexed_triple_bin(reader, dec_block_diff_bin, dec_block_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_run_diff_bin, dec_run_bin)
 }
 
-async fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out)
 }
-async fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
-    dec_indexed_triple_bin(reader, dec_table_row_diff_bin, dec_row_bin).await
-}
-
-async fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out).await
-}
-async fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
-    dec_indexed_triple_bin(reader, dec_table_cell_diff_bin, dec_cell_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
+    dec_indexed_triple_bin(reader, dec_block_diff_bin, dec_block_bin)
 }
 
-async fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out)
 }
-async fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_table_row_diff_bin, dec_row_bin)
 }
 
-async fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
+    enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
+    dec_indexed_triple_bin(reader, dec_table_cell_diff_bin, dec_cell_bin)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
     out.push(if d.text.is_some() { 1 } else { 0 });
     if let Some(v) = &d.text {
         write_str_lp(out, v);
@@ -2494,15 +2722,17 @@ async fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
         out.push(v as u8);
     }
 }
-async fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
-    let text = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let bold = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
-    let italic = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
-    let underline = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
+    let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bold = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let italic = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let underline = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     Ok(DocxRunDiff { text, bold, italic, underline })
 }
 
-async fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
     out.push(if pd.runs.is_some() { 1 } else { 0 });
     if let Some(runs) = &pd.runs {
         enc_runs_diff_bin(runs, out);
@@ -2515,46 +2745,54 @@ async fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
-    let runs = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader).await?) } else { None };
-    let style = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None }) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
+    let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
+    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxParagraphDiff { runs, style })
 }
 
-async fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
     out.push(if d.rows.is_some() { 1 } else { 0 });
     if let Some(rows) = &d.rows {
         enc_table_rows_diff_bin(rows, out);
     }
 }
-async fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
-    let rows = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
+    let rows = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
     Ok(DocxTableDiff { rows })
 }
 
-async fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
     out.push(if d.cells.is_some() { 1 } else { 0 });
     if let Some(cells) = &d.cells {
         enc_table_cells_diff_bin(cells, out);
     }
 }
-async fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
-    let cells = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
+    let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
     Ok(DocxTableRowDiff { cells })
 }
 
-async fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
     out.push(if d.blocks.is_some() { 1 } else { 0 });
     if let Some(blocks) = &d.blocks {
         enc_blocks_diff_bin(blocks, out);
     }
 }
-async fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
-    let blocks = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
+    let blocks = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
     Ok(DocxTableCellDiff { blocks })
 }
 
-async fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
     out.push(if d.name.is_some() { 1 } else { 0 });
     if let Some(v) = &d.name {
         write_str_lp(out, v);
@@ -2567,15 +2805,17 @@ async fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
-    let name = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let based_on = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None }) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
+    let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxStyleDiff { name, based_on })
 }
 
 /// 🌳️ `0`=Paragraph / `1`=Table / `2`=Replace (wholesale replace, block KIND changed) -- binary
 /// twin of `enc_block_diff`/`dec_block_diff`.
-async fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
     match d {
         DocxBlockDiff::Paragraph(pd) => {
             out.push(0);
@@ -2591,23 +2831,27 @@ async fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
-        0 => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff_bin(reader).await?)),
-        1 => Ok(DocxBlockDiff::Table(dec_table_diff_bin(reader).await?)),
-        2 => Ok(DocxBlockDiff::Replace { block: dec_block_bin(reader).await? }),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff_bin(reader)?)),
+        1 => Ok(DocxBlockDiff::Table(dec_table_diff_bin(reader)?)),
+        2 => Ok(DocxBlockDiff::Replace { block: dec_block_bin(reader)? }),
         other => Err(format!("block diff binary: unknown tag {other}")),
     }
 }
 
-async fn enc_ct_entries_diff_bin(d: &DocxOpcCtEntriesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_ct_entries_diff_bin(d: &DocxOpcCtEntriesDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
 }
-async fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcCtEntriesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcCtEntriesDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
 }
 
-async fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
     out.push(if d.content_type.is_some() { 1 } else { 0 });
     if let Some(v) = &d.content_type {
         write_str_lp(out, v);
@@ -2617,20 +2861,24 @@ async fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
         write_bytes_lp(out, v);
     }
 }
-async fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
-    let content_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let bytes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
+    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(DocxOpcPartDiff { content_type, bytes })
 }
 
-async fn enc_parts_diff_bin(d: &DocxOpcPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_parts_diff_bin(d: &DocxOpcPartsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
 }
-async fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
 }
 
-async fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
     out.push(if d.rel_type.is_some() { 1 } else { 0 });
     if let Some(v) = &d.rel_type {
         write_str_lp(out, v);
@@ -2644,28 +2892,34 @@ async fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
         enc_target_mode_bin(v, out);
     }
 }
-async fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
-    let rel_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let target = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
-    let target_mode = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
+    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
     Ok(DocxOpcRelDiff { rel_type, target, target_mode })
 }
 
-async fn enc_rel_list_diff_bin(d: &DocxOpcRelListDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rel_list_diff_bin(d: &DocxOpcRelListDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
 }
-async fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelListDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin).await
-}
-
-async fn enc_relationships_diff_bin(d: &DocxOpcRelationshipsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_rel_owner_entry_bin, out).await
-}
-async fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelationshipsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_rel_owner_entry_bin).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelListDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
 }
 
-async fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_relationships_diff_bin(d: &DocxOpcRelationshipsDiff, out: &mut Vec<u8>) {
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_rel_owner_entry_bin, out)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelationshipsDiff, String> {
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_rel_owner_entry_bin)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
     out.push(if d.defaults.is_some() { 1 } else { 0 });
     if let Some(v) = &d.defaults {
         enc_ct_entries_diff_bin(v, out);
@@ -2675,13 +2929,15 @@ async fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u
         enc_ct_entries_diff_bin(v, out);
     }
 }
-async fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
-    let defaults = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader).await?) } else { None };
-    let overrides = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
+    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
     Ok(DocxOpcContentTypesDiff { defaults, overrides })
 }
 
-pub(crate) async fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
     out.push(if d.content_types.is_some() { 1 } else { 0 });
     if let Some(v) = &d.content_types {
         enc_content_types_diff_bin(v, out);
@@ -2695,14 +2951,16 @@ pub(crate) async fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
         enc_relationships_diff_bin(v, out);
     }
 }
-pub(crate) async fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
-    let content_types = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader).await?) } else { None };
-    let parts = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader).await?) } else { None };
-    let relationships = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
+    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
+    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
+    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
     Ok(DocxOpcDiff { content_types, parts, relationships })
 }
 
-pub(crate) async fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
     out.push(if d.body.is_some() { 1 } else { 0 });
     if let Some(v) = &d.body {
         enc_blocks_diff_bin(v, out);
@@ -2712,16 +2970,18 @@ pub(crate) async fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8
         enc_styles_diff_bin(v, out);
     }
 }
-pub(crate) async fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
-    let body = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader).await?) } else { None };
-    let styles = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_styles_diff_bin(reader).await?) } else { None };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
+    let body = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
+    let styles = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_styles_diff_bin(reader)?) } else { None };
     Ok(DocxDocumentDiff { body, styles })
 }
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-async fn print_docx_diff(d: &DocxDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_docx_diff(d: &DocxDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.opc {
         tokens.push(format!("opc={}", enc_opc_diff(v)));
@@ -2731,16 +2991,17 @@ async fn print_docx_diff(d: &DocxDiff) -> String {
     }
     tokens.join(" ")
 }
-async fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
     let mut d = DocxDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("opc=") {
-            d.opc = Some(dec_opc_diff(rest).await?);
+            d.opc = Some(dec_opc_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("document=") {
-            d.document = Some(dec_document_diff(rest).await?);
+            d.document = Some(dec_document_diff(rest)?);
         } else {
             return Err(format!("docx diff: unknown token {token:?}"));
         }
@@ -2750,10 +3011,10 @@ async fn parse_docx_diff(line: &str) -> Result<DocxDiff, String> {
 
 impl protocol::DiffCodec for DocxDiff {
     async fn print_diff(&self) -> String {
-        print_docx_diff(self).await
+        print_docx_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_docx_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_docx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][document]`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
@@ -2784,8 +3045,8 @@ impl protocol::DiffCodec for DocxDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).await.map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let document = if flags & 0b10 != 0 { Some(dec_document_diff_bin(&mut reader).await.map_err(|e| malformed("diff document", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let document = if flags & 0b10 != 0 { Some(dec_document_diff_bin(&mut reader).map_err(|e| malformed("diff document", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(DocxDiff { opc, document })
     }
 }
@@ -2800,12 +3061,14 @@ impl protocol::DiffCodec for DocxDiff {
 /// conformance tests, same shape `📷️png/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()`
 /// establishes.
 #[cfg(test)]
-pub(crate) async fn xml_node(name: &str) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn xml_node(name: &str) -> XmlNode {
     XmlNode::Element { name: name.to_string(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![] }
 }
 
 #[cfg(test)]
-pub(crate) async fn snapshot_a() -> DocxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn snapshot_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -2827,7 +3090,8 @@ pub(crate) async fn snapshot_a() -> DocxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn snapshot_b() -> DocxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn snapshot_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -2853,7 +3117,8 @@ pub(crate) async fn snapshot_b() -> DocxSnapshot {
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<DocxDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
     let a = snapshot_a();
     let b = snapshot_b();
     vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)]

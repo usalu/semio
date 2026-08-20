@@ -15,17 +15,20 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `create_pptx_viewer` (this subset's surface root).
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Slides", "Folien"), icon_id: "presentation".into(), ..DocumentWindowKit::window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Slides", "Folien"), icon_id: "presentation".into(), ..DocumentWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn paragraph_text(paragraph: &PptxParagraph) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn paragraph_text(paragraph: &PptxParagraph) -> String {
     paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")
 }
 
-async fn shape_text(shape: &PptxShape) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shape_text(shape: &PptxShape) -> Option<String> {
     match shape {
         PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.iter().map(paragraph_text).collect::<Vec<_>>().join("\n")),
         PptxShape::Picture { .. } | PptxShape::Other { .. } => None,
@@ -33,9 +36,10 @@ async fn shape_text(shape: &PptxShape) -> Option<String> {
 }
 
 /// 👁️ Pure `PptxSnapshot -> UiNode` read: one `DocumentPage` per slide.
-pub async fn render(document: &PptxSnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &PptxSnapshot) -> UiNode {
     let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
-    DocumentWindowKit::render(&DocumentView { pages }).await
+    DocumentWindowKit::render(&DocumentView { pages })
 }
 //#endregion 🔖️Render
 

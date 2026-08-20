@@ -46,11 +46,13 @@ pub struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    pub async fn new(data: &'a [u8]) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(data: &'a [u8]) -> Self {
         Self { data, byte_pos: 0, bit_pos: 0 }
     }
 
-    pub async fn u1(&mut self) -> Result<u32, H264Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn u1(&mut self) -> Result<u32, H264Error> {
         let &byte = self.data.get(self.byte_pos).ok_or(H264Error::Truncated)?;
         let bit = (byte >> (7 - self.bit_pos)) & 1;
         self.bit_pos += 1;
@@ -61,18 +63,20 @@ impl<'a> BitReader<'a> {
         Ok(u32::from(bit))
     }
 
-    pub async fn u(&mut self, n: u8) -> Result<u32, H264Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn u(&mut self, n: u8) -> Result<u32, H264Error> {
         let mut v = 0u32;
         for _ in 0..n {
-            v = (v << 1) | self.u1().await?;
+            v = (v << 1) | self.u1()?;
         }
         Ok(v)
     }
 
     /// 🧮️ Exp-Golomb unsigned code (`ue(v)`, clause 9.1).
-    pub async fn ue(&mut self) -> Result<u32, H264Error> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ue(&mut self) -> Result<u32, H264Error> {
         let mut leading_zero_bits = 0u32;
-        while self.u1().await? == 0 {
+        while self.u1()? == 0 {
             leading_zero_bits += 1;
             if leading_zero_bits > 31 {
                 return Err(H264Error::Malformed("exp-golomb code exceeds 31 leading zero bits"));
@@ -81,7 +85,7 @@ impl<'a> BitReader<'a> {
         if leading_zero_bits == 0 {
             return Ok(0);
         }
-        let suffix = self.u(leading_zero_bits as u8).await?;
+        let suffix = self.u(leading_zero_bits as u8)?;
         Ok((1u32 << leading_zero_bits) - 1 + suffix)
     }
 }
@@ -90,7 +94,8 @@ impl<'a> BitReader<'a> {
 //#region 🔖️Rbsp
 /// 🧹️ Removes `emulation_prevention_three_byte`s (`00 00 03` → `00 00`), moved verbatim from
 /// remodel's `strip_emulation_prevention`. <https://www.itu.int/rec/T-REC-H.264> (clause 7.4.1.1)
-pub async fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn strip_emulation_prevention(ebsp: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(ebsp.len());
     let mut i = 0;
     while i < ebsp.len() {
@@ -112,17 +117,19 @@ pub struct NalUnit {
     pub rbsp: Vec<u8>,
 }
 
-pub async fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_nal(nal_bytes: &[u8]) -> Result<NalUnit, H264Error> {
     let &header = nal_bytes.first().ok_or(H264Error::Truncated)?;
     if header & 0x80 != 0 {
         return Err(H264Error::Malformed("nal forbidden_zero_bit is set"));
     }
     let nal_unit_type = header & 0x1F;
-    Ok(NalUnit { nal_unit_type, rbsp: strip_emulation_prevention(&nal_bytes[1..]).await })
+    Ok(NalUnit { nal_unit_type, rbsp: strip_emulation_prevention(&nal_bytes[1..]) })
 }
 
 /// ✂️ Splits one AVCC length-prefixed access unit into NAL byte ranges (moved from `split_avcc_nals`).
-pub async fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn split_avcc_nals(data: &[u8], length_size: u8) -> Result<Vec<&[u8]>, H264Error> {
     let n = length_size as usize;
     if !(1..=4).contains(&n) || n == 3 {
         return Err(H264Error::Unsupported("nal length size other than 1, 2 or 4 bytes"));
@@ -151,37 +158,38 @@ pub struct SpsDimensions {
     pub height_px: u32,
 }
 
-pub async fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
-    let mut b = BitReader::new(rbsp).await;
-    let profile_idc = b.u(8).await?;
-    b.u(8).await?;
-    b.u(8).await?;
-    b.ue().await?;
-    b.ue().await?;
-    let pic_order_cnt_type = b.ue().await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
+    let mut b = BitReader::new(rbsp);
+    let profile_idc = b.u(8)?;
+    b.u(8)?;
+    b.u(8)?;
+    b.ue()?;
+    b.ue()?;
+    let pic_order_cnt_type = b.ue()?;
     if pic_order_cnt_type == 0 {
-        b.ue().await?;
+        b.ue()?;
     } else if pic_order_cnt_type == 1 {
         return Err(H264Error::Unsupported("pic_order_cnt_type 1"));
     } else if pic_order_cnt_type > 2 {
         return Err(H264Error::Malformed("pic_order_cnt_type out of range"));
     }
-    b.ue().await?;
-    b.u1().await?;
-    let pic_width_in_mbs = b.ue().await? + 1;
-    let pic_height_in_map_units = b.ue().await? + 1;
-    let frame_mbs_only_flag = b.u1().await?;
+    b.ue()?;
+    b.u1()?;
+    let pic_width_in_mbs = b.ue()? + 1;
+    let pic_height_in_map_units = b.ue()? + 1;
+    let frame_mbs_only_flag = b.u1()?;
     if frame_mbs_only_flag == 0 {
         return Err(H264Error::Unsupported("interlaced sps (frame_mbs_only_flag == 0)"));
     }
-    b.u1().await?;
-    let frame_cropping_flag = b.u1().await?;
+    b.u1()?;
+    let frame_cropping_flag = b.u1()?;
     let (mut crop_left, mut crop_right, mut crop_top, mut crop_bottom) = (0u32, 0u32, 0u32, 0u32);
     if frame_cropping_flag == 1 {
-        crop_left = b.ue().await?;
-        crop_right = b.ue().await?;
-        crop_top = b.ue().await?;
-        crop_bottom = b.ue().await?;
+        crop_left = b.ue()?;
+        crop_right = b.ue()?;
+        crop_top = b.ue()?;
+        crop_bottom = b.ue()?;
     }
     let _ = profile_idc;
     let width_px = pic_width_in_mbs * 16 - 2 * (crop_left + crop_right);
@@ -199,12 +207,14 @@ pub async fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Erro
 /// flattens SPS/PPS into one `(u16 len, NAL)*` buffer — this artifact's `Mp4Codec` schema
 /// wants them as separate lists, so the adaptation only changes the output container shape, not
 /// the parse logic). <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
-pub async fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
-    let (sps, pps, nal_length_size, _) = parse_avcc_extended(avcc).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
+    let (sps, pps, nal_length_size, _) = parse_avcc_extended(avcc)?;
     Ok((sps, pps, nal_length_size))
 }
 
-pub async fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
     let mut pos = 4usize;
     let length_size_byte = *avcc.get(pos).ok_or(H264Error::Truncated)?;
     pos += 1;
@@ -253,11 +263,13 @@ pub async fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u
 /// `compat`/`level` are read back out of the first SPS when present (bytes 1..4 of the RBSP,
 /// clause 7.3.2.1.1's `profile_idc`/`constraint flags`/`level_idc`) so a round-tripped file
 /// reports the same AVC profile it was decoded from, instead of a fixed placeholder.
-pub async fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8) -> Vec<u8> {
-    build_avcc_extended(sps_list, pps_list, nal_length_size, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn build_avcc(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8) -> Vec<u8> {
+    build_avcc_extended(sps_list, pps_list, nal_length_size, None)
 }
 
-pub async fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_length_size: u8, extension: Option<&crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>) -> Vec<u8> {
     let (profile, compat, level) = sps_list.first().and_then(|s| s.get(1..4)).map_or((66, 0, 30), |b| (b[0], b[1], b[2]));
     let mut out = vec![1, profile, compat, level, 0xFC | (nal_length_size.saturating_sub(1) & 0x03), 0xE0 | (sps_list.len() as u8 & 0x1F)];
     for nal in sps_list {
@@ -279,7 +291,7 @@ pub async fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal
             out.extend_from_slice(nal);
         }
     }
-    crate::artifacts::mp4::standards::isobmff::subsets::any::io::boxes::write_box(b"avcC", &out).await
+    crate::artifacts::mp4::standards::isobmff::subsets::any::io::boxes::write_box(b"avcC", &out)
 }
 //#endregion 🔖️AvcC
 

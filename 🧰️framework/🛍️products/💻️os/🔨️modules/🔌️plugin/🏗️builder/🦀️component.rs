@@ -795,11 +795,11 @@ mod plugin_builder_dependency_tests {
         let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
-        let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("typed bridge declaration");
+        let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.await.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("typed bridge declaration");
         let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media")
             .await.label("Builder Test Media")
             .await.version("0.1.0")
-            .await.artifact_kind(kind.clone())
+            .await.artifact_kind(kind.await.clone())
             .await.host_media_handler(bridge.clone())
             .await.host_media_handler(bridge)
             .await.try_build()
@@ -816,8 +816,8 @@ mod plugin_builder_dependency_tests {
         let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind();
-        let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("first bridge");
-        let second = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.second", kind.clone(), kind.await.schema.clone(), alternate_mesh_dwg_importer).await.expect("second bridge");
+        let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.await.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("first bridge");
+        let second = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.second", kind.await.clone(), kind.await.schema.clone(), alternate_mesh_dwg_importer).await.expect("second bridge");
         let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media-conflict")
             .await.label("Builder Test Media Conflict")
             .await.version("0.1.0")
@@ -845,7 +845,7 @@ mod plugin_builder_dependency_tests {
             .await.flow_extension(
                 plugin
                     .flow_extensions()
-                    .into_iter()
+                    .await.into_iter()
                     .next()
                     .map(|descriptor| FlowExtensionDeclaration::new(descriptor.id, descriptor.manifest, descriptor.executable_identity))
                     .expect("a flow extension to rebuild from")
@@ -903,8 +903,15 @@ mod schema_stamping_tests {
             Ok(Emit::default())
         }
 
-        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
-            crate::ui_text(crate::Label::data("schema-stamp-editor").await).await
+        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+            semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                "text",
+                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps {
+                    value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()),
+                    emphasize: None,
+                    data_attributes: None,
+                }),
+            ))
         }
     }
 
@@ -932,8 +939,15 @@ mod schema_stamping_tests {
             Ok(ViewEmit::default())
         }
 
-        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
-            crate::ui_text(crate::Label::data("schema-stamp-viewer").await).await
+        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+            semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                "text",
+                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps {
+                    value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()),
+                    emphasize: None,
+                    data_attributes: None,
+                }),
+            ))
         }
     }
 

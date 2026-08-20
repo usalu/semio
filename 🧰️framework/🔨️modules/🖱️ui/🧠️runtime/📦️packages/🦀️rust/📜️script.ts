@@ -15,7 +15,7 @@ const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], packageRoot, ["...rest]);
+    runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }
 //#endregion 🔖️test

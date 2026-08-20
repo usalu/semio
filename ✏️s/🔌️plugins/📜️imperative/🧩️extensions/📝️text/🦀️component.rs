@@ -6,7 +6,7 @@ use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, Operator
 pub struct TextConcat;
 
 impl Operator for TextConcat {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let left = read_string(input, "left")?;
         let right = read_string(input, "right")?;
         write_into(input, Value::Atom(Atom::String(format!("{left}{right}"))))
@@ -18,7 +18,7 @@ impl Operator for TextConcat {
 pub struct TextUppercase;
 
 impl Operator for TextUppercase {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let text = read_string(input, "text")?;
         write_into(input, Value::Atom(Atom::String(text.to_uppercase())))
     }
@@ -29,7 +29,7 @@ impl Operator for TextUppercase {
 pub struct TextLength;
 
 impl Operator for TextLength {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let text = read_string(input, "text")?;
         write_into(input, Value::Atom(Atom::Decimal(text.chars().count() as f64)))
     }
@@ -37,37 +37,37 @@ impl Operator for TextLength {
 // #endregion 🔖️TextLength
 
 // #region 🔖️Helpers
-async fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn write_into(input: &Dictionary, value: Value) -> Result<Dictionary, EvalError> {
+fn write_into(input: &Dictionary, value: Value) -> Result<Dictionary, EvalError> {
     let into = read_string(input, "into")?;
     Ok(Dictionary::new().insert(into, value))
 }
 
-async fn string_channel(name: &str) -> ChannelSpec {
+fn string_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("S", "Str", name, name)
 }
 
-async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
+fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "text".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:📝️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
 // 🗺️ Generic over the concrete operator, not `Box<dyn Operator>` — see the sibling note in
 // `🧠️logic/🦀️component.rs` and R11.
-async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
     registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("text.concat", "Text Concat", "Cat", "Concatenates two strings and writes the result into scope", vec![string_channel("left"), string_channel("right"), string_channel("into")]), TextConcat);
     register_simple(registry, operator_info("text.uppercase", "Text Uppercase", "Up", "Uppercases a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), TextUppercase);
     register_simple(registry, operator_info("text.length", "Text Length", "Len", "Returns the character length of a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), TextLength);
     registry.finalize();
 }
 
-pub async fn catalogue_json(registry: &Registry) -> String {
+pub fn catalogue_json(registry: &Registry) -> String {
     let items: Vec<serde_json::Value> = ["text.concat", "text.uppercase", "text.length"]
         .iter()
         .filter_map(|kind| registry.operator_info(kind))
@@ -97,7 +97,7 @@ pub async fn catalogue_json(registry: &Registry) -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub async fn module_registry() -> Registry {
+pub fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -108,7 +108,7 @@ pub async fn module_registry() -> Registry {
 const EXTENSION_ID: &str = "imperative-extension-text";
 const MODULE_VERSION: &str = "0.1.0";
 
-pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "text", "Text", "message-square", "text", "Text", MODULE_VERSION, &registry, Some(&catalogue))
@@ -116,14 +116,14 @@ pub async fn imperative_module_contribution() -> semio_framework::ProgramContrib
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_topic_contribution("text", "Text", "message-square", "text", "Text", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn bundle() -> semio_framework_plugin::ExtensionBundle {
+fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Text", MODULE_VERSION)
         .extends("imperative")

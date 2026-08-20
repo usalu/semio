@@ -3,6 +3,7 @@ use crate::artifacts::json::JsonSnapshot;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &JsonSnapshot, mutation: &JsonMutation) -> Vec<JsonMutation> {
-    <JsonMutation as Mutation<JsonSnapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &JsonSnapshot, mutation: &JsonMutation) -> Vec<JsonMutation> {
+    <JsonMutation as Mutation<JsonSnapshot>>::inverse(mutation, base)
 }

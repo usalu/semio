@@ -9,17 +9,18 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{Dra
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some(old) = base.styles.iter().find(|s| s.name == payload.style_name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]).await;
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]);
     };
     if let Some(w) = payload.new_width {
         if !w.is_finite() {
-            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new stroke width is not finite.", payload.style_name), [payload.style_name.clone()]).await;
+            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new stroke width is not finite.", payload.style_name), [payload.style_name.clone()]);
         }
     }
     if old.stroke_width == payload.new_width {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name)).await;
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name));
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,
@@ -29,6 +30,6 @@ pub async fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> p
             added: Vec::new(),
         }),
         layers: None,
-    }).await
+    })
 }
 //#endregion 🔖️Diff

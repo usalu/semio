@@ -60,7 +60,8 @@ pub use derived_composition::*;
 
 //#region 🔖️XmlHelpers
 /// 🌳️ Narrows an `XmlNode` to its `Element` shape, if it is one.
-async fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
     match node {
         XmlNode::Element { name, attrs, children } => Some((name.as_str(), attrs.as_slice(), children.as_slice())),
         _ => None,
@@ -68,24 +69,28 @@ async fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
 }
 
 /// 🔎️ First direct child element named `name`.
-async fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
-    children.iter().find(|c| semio_framework_plugin::resolve_ready(as_element(c)).map(|(n, _, _)| n == name).unwrap_or(false))
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
+    children.iter().find(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false))
 }
 
 /// 🔎️ All direct child elements named `name`, in document order.
-async fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
-    children.iter().filter(|c| semio_framework_plugin::resolve_ready(as_element(c)).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
+    children.iter().filter(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
 }
 
 /// 🏷️ Attribute value by name.
-async fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
     attrs.iter().find(|a| a.name == name).map(|a| a.value.as_str())
 }
 
 /// 🔤️ Concatenated text/CDATA content of an element's direct children (BCF's leaf elements are
 /// always simple text content, never mixed markup).
-async fn text_content(node: &XmlNode) -> String {
-    let Some((_, _, children)) = as_element(node).await else { return String::new() };
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn text_content(node: &XmlNode) -> String {
+    let Some((_, _, children)) = as_element(node) else { return String::new() };
     let mut out = String::new();
     for child in children {
         match child {
@@ -98,18 +103,21 @@ async fn text_content(node: &XmlNode) -> String {
 
 /// 🔤️ Wraps a leaf text element `<name>text</name>` (only emitted when `text` is non-empty,
 /// mirroring how real BCF writers omit optional leaf elements rather than emit them empty).
-async fn text_element(name: &str, text: &str) -> Option<XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn text_element(name: &str, text: &str) -> Option<XmlNode> {
     if text.is_empty() {
         return None;
     }
     Some(XmlNode::Element { name: name.into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: text.into() }] })
 }
 
-async fn parse_f64(s: &str) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_f64(s: &str) -> f64 {
     s.parse::<f64>().unwrap_or(0.0)
 }
 
-async fn xml_bytes(root: XmlNode) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_bytes(root: XmlNode) -> Vec<u8> {
     let doc = XmlDocument { root: Some(root), doctype: None, declaration: None, prolog: Vec::new() };
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     out.push_str(&xml_document_to_text(&doc));
@@ -119,23 +127,25 @@ async fn xml_bytes(root: XmlNode) -> Vec<u8> {
 
 //#region 🔖️VersionXml
 /// 🧩️ Parses `bcf.version`'s `<Version VersionId="...">` root attribute.
-async fn parse_bcf_version(data: &[u8]) -> Option<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_bcf_version(data: &[u8]) -> Option<String> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).await.ok()?;
+    let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
-    let (name, attrs, _) = as_element(root).await?;
+    let (name, attrs, _) = as_element(root)?;
     if name != "Version" {
         return None;
     }
-    Some(attr(attrs, "VersionId").await.unwrap_or_default().to_string())
+    Some(attr(attrs, "VersionId").unwrap_or_default().to_string())
 }
 
-async fn bcf_version_bytes(version: &str) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bcf_version_bytes(version: &str) -> Vec<u8> {
     let mut children = Vec::new();
-    if let Some(n) = text_element("DetailedVersion", version).await {
+    if let Some(n) = text_element("DetailedVersion", version) {
         children.push(n);
     }
-    xml_bytes(XmlNode::Element { name: "Version".into(), attrs: vec![XmlAttr { name: "VersionId".into(), value: version.to_string() }], children }).await
+    xml_bytes(XmlNode::Element { name: "Version".into(), attrs: vec![XmlAttr { name: "VersionId".into(), value: version.to_string() }], children })
 }
 //#endregion 🔖️VersionXml
 
@@ -162,35 +172,36 @@ struct RawTopicMarkup {
 /// elements -- not attributes, a defect this rewrite fixes -- zero-or-more sibling `<Comment
 /// Guid="...">` elements each with `<Date>`/`<Author>`/`<Comment>`/optional `<Viewpoint Guid=
 /// "...">`, and zero-or-more `<Viewpoints Guid="...">` reference entries).
-async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).await.ok()?;
+    let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
-    let (root_name, _, root_children) = as_element(root).await?;
+    let (root_name, _, root_children) = as_element(root)?;
     if root_name != "Markup" {
         return None;
     }
-    let topic_node = find_child(root_children, "Topic").await?;
-    let (_, topic_attrs, topic_children) = as_element(topic_node).await?;
-    let guid = attr(topic_attrs, "Guid").await.unwrap_or_default().to_string();
-    let status = attr(topic_attrs, "TopicStatus").await.unwrap_or_default().to_string();
-    let title = find_child(topic_children, "Title").await.map(text_content).unwrap_or_default();
-    let priority = find_child(topic_children, "Priority").await.map(text_content).unwrap_or_default();
-    let description = find_child(topic_children, "Description").await.map(text_content).unwrap_or_default();
-    let creation_date = find_child(topic_children, "CreationDate").await.map(text_content).unwrap_or_default();
-    let creation_author = find_child(topic_children, "CreationAuthor").await.map(text_content).unwrap_or_default();
+    let topic_node = find_child(root_children, "Topic")?;
+    let (_, topic_attrs, topic_children) = as_element(topic_node)?;
+    let guid = attr(topic_attrs, "Guid").unwrap_or_default().to_string();
+    let status = attr(topic_attrs, "TopicStatus").unwrap_or_default().to_string();
+    let title = find_child(topic_children, "Title").map(text_content).unwrap_or_default();
+    let priority = find_child(topic_children, "Priority").map(text_content).unwrap_or_default();
+    let description = find_child(topic_children, "Description").map(text_content).unwrap_or_default();
+    let creation_date = find_child(topic_children, "CreationDate").map(text_content).unwrap_or_default();
+    let creation_author = find_child(topic_children, "CreationAuthor").map(text_content).unwrap_or_default();
     let labels: Vec<String> = find_children(topic_children, "Labels").into_iter().map(text_content).collect();
 
     let comments = find_children(root_children, "Comment")
         .into_iter()
         .map(|c| {
-            let (_, c_attrs, c_children) = semio_framework_plugin::resolve_ready(as_element(c)).unwrap_or(("Comment", &[], &[]));
-            let viewpoint_ref = semio_framework_plugin::resolve_ready(find_child(c_children, "Viewpoint")).and_then(as_element).and_then(|(_, vattrs, _)| attr(vattrs, "Guid")).map(|s| s.to_string());
+            let (_, c_attrs, c_children) = as_element(c).unwrap_or(("Comment", &[], &[]));
+            let viewpoint_ref = find_child(c_children, "Viewpoint").and_then(as_element).and_then(|(_, vattrs, _)| attr(vattrs, "Guid")).map(|s| s.to_string());
             BcfComment {
-                guid: semio_framework_plugin::resolve_ready(attr(c_attrs, "Guid")).unwrap_or_default().to_string(),
-                date: semio_framework_plugin::resolve_ready(find_child(c_children, "Date")).map(text_content).unwrap_or_default(),
-                author: semio_framework_plugin::resolve_ready(find_child(c_children, "Author")).map(text_content).unwrap_or_default(),
-                text: semio_framework_plugin::resolve_ready(find_child(c_children, "Comment")).map(text_content).unwrap_or_default(),
+                guid: attr(c_attrs, "Guid").unwrap_or_default().to_string(),
+                date: find_child(c_children, "Date").map(text_content).unwrap_or_default(),
+                author: find_child(c_children, "Author").map(text_content).unwrap_or_default(),
+                text: find_child(c_children, "Comment").map(text_content).unwrap_or_default(),
                 viewpoint_ref,
             }
         })
@@ -199,11 +210,11 @@ async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let viewpoint_refs = find_children(root_children, "Viewpoints")
         .into_iter()
         .map(|v| {
-            let (_, v_attrs, v_children) = semio_framework_plugin::resolve_ready(as_element(v)).unwrap_or(("Viewpoints", &[], &[]));
+            let (_, v_attrs, v_children) = as_element(v).unwrap_or(("Viewpoints", &[], &[]));
             ViewpointRef {
-                guid: semio_framework_plugin::resolve_ready(attr(v_attrs, "Guid")).unwrap_or_default().to_string(),
-                viewpoint_file: semio_framework_plugin::resolve_ready(find_child(v_children, "Viewpoint")).map(text_content).filter(|s| !s.is_empty()),
-                snapshot_file: semio_framework_plugin::resolve_ready(find_child(v_children, "Snapshot")).map(text_content).filter(|s| !s.is_empty()),
+                guid: attr(v_attrs, "Guid").unwrap_or_default().to_string(),
+                viewpoint_file: find_child(v_children, "Viewpoint").map(text_content).filter(|s| !s.is_empty()),
+                snapshot_file: find_child(v_children, "Snapshot").map(text_content).filter(|s| !s.is_empty()),
             }
         })
         .collect();
@@ -214,26 +225,27 @@ async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
 /// 🧩️ Re-emits a `BcfTopic` as a full `markup.bcf` XML document (the inverse of
 /// `parse_markup_bcf`), via the real `stdio.xml` text codec. Viewpoint references always point at
 /// this artifact's canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form).
-async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
     let mut topic_children = Vec::new();
-    if let Some(n) = text_element("Title", &topic.title).await {
+    if let Some(n) = text_element("Title", &topic.title) {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("Priority", &topic.priority).await {
+    if let Some(n) = text_element("Priority", &topic.priority) {
         topic_children.push(n);
     }
     for label in &topic.labels {
-        if let Some(n) = text_element("Labels", label).await {
+        if let Some(n) = text_element("Labels", label) {
             topic_children.push(n);
         }
     }
-    if let Some(n) = text_element("CreationDate", &topic.creation_date).await {
+    if let Some(n) = text_element("CreationDate", &topic.creation_date) {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("CreationAuthor", &topic.creation_author).await {
+    if let Some(n) = text_element("CreationAuthor", &topic.creation_author) {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("Description", &topic.description).await {
+    if let Some(n) = text_element("Description", &topic.description) {
         topic_children.push(n);
     }
 
@@ -241,13 +253,13 @@ async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
 
     for comment in &topic.comments {
         let mut children = Vec::new();
-        if let Some(n) = text_element("Date", &comment.date).await {
+        if let Some(n) = text_element("Date", &comment.date) {
             children.push(n);
         }
-        if let Some(n) = text_element("Author", &comment.author).await {
+        if let Some(n) = text_element("Author", &comment.author) {
             children.push(n);
         }
-        if let Some(n) = text_element("Comment", &comment.text).await {
+        if let Some(n) = text_element("Comment", &comment.text) {
             children.push(n);
         }
         if let Some(vref) = &comment.viewpoint_ref {
@@ -265,49 +277,53 @@ async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
         markup_children.push(XmlNode::Element { name: "Viewpoints".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children });
     }
 
-    xml_bytes(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children }).await
+    xml_bytes(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children })
 }
 //#endregion 🔖️MarkupXml
 
 //#region 🔖️VisualizationInfoXml
-async fn parse_point(node: &XmlNode) -> BcfPoint3 {
-    let attrs = as_element(node).await.map(|(_, a, _)| a).unwrap_or(&[]);
-    BcfPoint3 { x: attr(attrs, "X").await.map(parse_f64).unwrap_or(0.0).await, y: attr(attrs, "Y").await.map(parse_f64).unwrap_or(0.0).await, z: attr(attrs, "Z").await.map(parse_f64).unwrap_or(0.0).await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_point(node: &XmlNode) -> BcfPoint3 {
+    let attrs = as_element(node).map(|(_, a, _)| a).unwrap_or(&[]);
+    BcfPoint3 { x: attr(attrs, "X").map(parse_f64).unwrap_or(0.0), y: attr(attrs, "Y").map(parse_f64).unwrap_or(0.0), z: attr(attrs, "Z").map(parse_f64).unwrap_or(0.0) }
 }
 
-async fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
     XmlNode::Element { name: name.into(), attrs: vec![XmlAttr { name: "X".into(), value: p.x.to_string() }, XmlAttr { name: "Y".into(), value: p.y.to_string() }, XmlAttr { name: "Z".into(), value: p.z.to_string() }], children: Vec::new() }
 }
 
-async fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
-    if let Some(persp) = find_child(children, "PerspectiveCamera").await {
-        let (_, _, pc) = as_element(persp).await?;
-        let view_point = find_child(pc, "CameraViewPoint").await.map(parse_point).unwrap_or_default();
-        let direction = find_child(pc, "CameraDirection").await.map(parse_point).unwrap_or_default();
-        let up_vector = find_child(pc, "CameraUpVector").await.map(parse_point).unwrap_or_default();
-        let field_of_view = find_child(pc, "FieldOfView").await.map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
+    if let Some(persp) = find_child(children, "PerspectiveCamera") {
+        let (_, _, pc) = as_element(persp)?;
+        let view_point = find_child(pc, "CameraViewPoint").map(parse_point).unwrap_or_default();
+        let direction = find_child(pc, "CameraDirection").map(parse_point).unwrap_or_default();
+        let up_vector = find_child(pc, "CameraUpVector").map(parse_point).unwrap_or_default();
+        let field_of_view = find_child(pc, "FieldOfView").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
         return Some(BcfCamera::Perspective { view_point, direction, up_vector, field_of_view });
     }
-    if let Some(ortho) = find_child(children, "OrthogonalCamera").await {
-        let (_, _, oc) = as_element(ortho).await?;
-        let view_point = find_child(oc, "CameraViewPoint").await.map(parse_point).unwrap_or_default();
-        let direction = find_child(oc, "CameraDirection").await.map(parse_point).unwrap_or_default();
-        let up_vector = find_child(oc, "CameraUpVector").await.map(parse_point).unwrap_or_default();
-        let view_to_world_scale = find_child(oc, "ViewToWorldScale").await.map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+    if let Some(ortho) = find_child(children, "OrthogonalCamera") {
+        let (_, _, oc) = as_element(ortho)?;
+        let view_point = find_child(oc, "CameraViewPoint").map(parse_point).unwrap_or_default();
+        let direction = find_child(oc, "CameraDirection").map(parse_point).unwrap_or_default();
+        let up_vector = find_child(oc, "CameraUpVector").map(parse_point).unwrap_or_default();
+        let view_to_world_scale = find_child(oc, "ViewToWorldScale").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
         return Some(BcfCamera::Orthogonal { view_point, direction, up_vector, view_to_world_scale });
     }
     None
 }
 
-async fn camera_element(camera: &BcfCamera) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn camera_element(camera: &BcfCamera) -> XmlNode {
     match camera {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => XmlNode::Element {
             name: "PerspectiveCamera".into(),
             attrs: Vec::new(),
             children: vec![
-                point_element("CameraViewPoint", view_point).await,
-                point_element("CameraDirection", direction).await,
-                point_element("CameraUpVector", up_vector).await,
+                point_element("CameraViewPoint", view_point),
+                point_element("CameraDirection", direction),
+                point_element("CameraUpVector", up_vector),
                 XmlNode::Element { name: "FieldOfView".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: field_of_view.to_string() }] },
             ],
         },
@@ -315,44 +331,47 @@ async fn camera_element(camera: &BcfCamera) -> XmlNode {
             name: "OrthogonalCamera".into(),
             attrs: Vec::new(),
             children: vec![
-                point_element("CameraViewPoint", view_point).await,
-                point_element("CameraDirection", direction).await,
-                point_element("CameraUpVector", up_vector).await,
+                point_element("CameraViewPoint", view_point),
+                point_element("CameraDirection", direction),
+                point_element("CameraUpVector", up_vector),
                 XmlNode::Element { name: "ViewToWorldScale".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: view_to_world_scale.to_string() }] },
             ],
         },
     }
 }
 
-async fn parse_component_list(container: &XmlNode) -> Vec<String> {
-    let Some((_, _, children)) = as_element(container).await else { return Vec::new() };
-    find_children(children, "Component").into_iter().filter_map(|c| semio_framework_plugin::resolve_ready(as_element(c)).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string())).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_component_list(container: &XmlNode) -> Vec<String> {
+    let Some((_, _, children)) = as_element(container) else { return Vec::new() };
+    find_children(children, "Component").into_iter().filter_map(|c| as_element(c).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string())).collect()
 }
 
-async fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
     guids.iter().map(|g| XmlNode::Element { name: "Component".into(), attrs: vec![XmlAttr { name: "IfcGuid".into(), value: g.clone() }], children: Vec::new() }).collect()
 }
 
-async fn parse_components(components_node: &XmlNode) -> BcfComponents {
-    let (_, _, children) = as_element(components_node).await.unwrap_or(("Components", &[], &[]));
-    let selection = find_child(children, "Selection").await.map(parse_component_list).unwrap_or_default();
-    let visibility = match find_child(children, "Visibility").await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_components(components_node: &XmlNode) -> BcfComponents {
+    let (_, _, children) = as_element(components_node).unwrap_or(("Components", &[], &[]));
+    let selection = find_child(children, "Selection").map(parse_component_list).unwrap_or_default();
+    let visibility = match find_child(children, "Visibility") {
         Some(v) => {
-            let (_, vattrs, vchildren) = as_element(v).await.unwrap_or(("Visibility", &[], &[]));
-            let default_visibility = attr(vattrs, "DefaultVisibility").await.map(|s| s != "false").unwrap_or(true);
-            let exceptions = find_child(vchildren, "Exceptions").await.map(parse_component_list).unwrap_or_default();
+            let (_, vattrs, vchildren) = as_element(v).unwrap_or(("Visibility", &[], &[]));
+            let default_visibility = attr(vattrs, "DefaultVisibility").map(|s| s != "false").unwrap_or(true);
+            let exceptions = find_child(vchildren, "Exceptions").map(parse_component_list).unwrap_or_default();
             BcfVisibility { default_visibility, exceptions }
         }
         None => BcfVisibility { default_visibility: true, exceptions: Vec::new() },
     };
-    let coloring = match find_child(children, "Coloring").await {
+    let coloring = match find_child(children, "Coloring") {
         Some(c) => {
-            let (_, _, cchildren) = as_element(c).await.unwrap_or(("Coloring", &[], &[]));
+            let (_, _, cchildren) = as_element(c).unwrap_or(("Coloring", &[], &[]));
             find_children(cchildren, "Color")
                 .into_iter()
                 .map(|color_node| {
-                    let (_, cattrs, _) = semio_framework_plugin::resolve_ready(as_element(color_node)).unwrap_or(("Color", &[], &[]));
-                    BcfColoring { color: semio_framework_plugin::resolve_ready(attr(cattrs, "Color")).unwrap_or_default().to_string(), components: parse_component_list(color_node) }
+                    let (_, cattrs, _) = as_element(color_node).unwrap_or(("Color", &[], &[]));
+                    BcfColoring { color: attr(cattrs, "Color").unwrap_or_default().to_string(), components: parse_component_list(color_node) }
                 })
                 .collect()
         }
@@ -361,14 +380,15 @@ async fn parse_components(components_node: &XmlNode) -> BcfComponents {
     BcfComponents { selection, visibility, coloring }
 }
 
-async fn components_element(components: &BcfComponents) -> XmlNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn components_element(components: &BcfComponents) -> XmlNode {
     let mut children = Vec::new();
     if !components.selection.is_empty() {
-        children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection).await });
+        children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection) });
     }
     let mut visibility_children = Vec::new();
     if !components.visibility.exceptions.is_empty() {
-        visibility_children.push(XmlNode::Element { name: "Exceptions".into(), attrs: Vec::new(), children: component_list_elements(&components.visibility.exceptions).await });
+        visibility_children.push(XmlNode::Element { name: "Exceptions".into(), attrs: Vec::new(), children: component_list_elements(&components.visibility.exceptions) });
     }
     children.push(XmlNode::Element { name: "Visibility".into(), attrs: vec![XmlAttr { name: "DefaultVisibility".into(), value: components.visibility.default_visibility.to_string() }], children: visibility_children });
     if !components.coloring.is_empty() {
@@ -381,20 +401,22 @@ async fn components_element(components: &BcfComponents) -> XmlNode {
 /// 🧩️ Parses one `.bcfv` `<VisualizationInfo Guid="...">` document (BCF-XML 2.1 `visinfo.xsd`)
 /// into `(camera, components)` — the guid itself is already known from the `markup.bcf`
 /// `<Viewpoints>` reference entry, so it isn't re-extracted here.
-async fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).await.ok()?;
+    let doc = xml_document_from_text(text).ok()?;
     let root = doc.root.as_ref()?;
-    let (name, _, children) = as_element(root).await?;
+    let (name, _, children) = as_element(root)?;
     if name != "VisualizationInfo" {
         return None;
     }
-    let components = find_child(children, "Components").await.map(parse_components);
+    let components = find_child(children, "Components").map(parse_components);
     let camera = parse_camera(children);
-    Some((camera.await, components))
+    Some((camera, components))
 }
 
-async fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
     let mut children = Vec::new();
     if let Some(components) = &vp.components {
         children.push(components_element(components));
@@ -402,18 +424,19 @@ async fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
     if let Some(camera) = &vp.camera {
         children.push(camera_element(camera));
     }
-    xml_bytes(XmlNode::Element { name: "VisualizationInfo".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children }).await
+    xml_bytes(XmlNode::Element { name: "VisualizationInfo".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children })
 }
 //#endregion 🔖️VisualizationInfoXml
 
 //#region 🔖️Codec
-pub async fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
-    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version).await, ..Default::default() });
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
     for topic in &snap.topics {
-        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic).await, ..Default::default() });
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
         for vp in &topic.viewpoints {
-            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp).await, ..Default::default() });
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
             if let Some(bytes) = &vp.snapshot {
                 entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
             }
@@ -423,16 +446,17 @@ pub async fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
         entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
     }
     let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).await.map_err(|e| e.to_string())
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
-pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| e.to_string())?;
 
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
     if let Some(e) = zip.entries.iter().find(|e| e.name.eq_ignore_ascii_case("bcf.version")) {
-        version = parse_bcf_version(&e.data).await.unwrap_or_default();
+        version = parse_bcf_version(&e.data).unwrap_or_default();
         consumed.insert(e.name.clone());
     }
 
@@ -447,7 +471,7 @@ pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
     for (folder, folder_entries) in &folders {
         let markup_name = format!("{folder}/markup.bcf");
         let Some(markup_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&markup_name)) else { continue };
-        let Some(raw) = parse_markup_bcf(&markup_entry.data).await else { continue };
+        let Some(raw) = parse_markup_bcf(&markup_entry.data) else { continue };
         consumed.insert(markup_entry.name.clone());
 
         let mut viewpoints = Vec::new();
@@ -457,7 +481,7 @@ pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
             if let Some(vp_file) = &vref.viewpoint_file {
                 let full = format!("{folder}/{vp_file}");
                 if let Some(vp_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
-                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data).await {
+                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data) {
                         camera = c;
                         components = comp;
                     }
@@ -497,15 +521,18 @@ mod tests {
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
 
     //#region Fixtures
-    async fn perspective_camera() -> BcfCamera {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn perspective_camera() -> BcfCamera {
         BcfCamera::Perspective { view_point: BcfPoint3 { x: 1.0, y: 2.0, z: 3.0 }, direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 }, up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 }, field_of_view: 60.0 }
     }
 
-    async fn orthogonal_camera() -> BcfCamera {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn orthogonal_camera() -> BcfCamera {
         BcfCamera::Orthogonal { view_point: BcfPoint3 { x: 4.0, y: 5.0, z: 6.0 }, direction: BcfPoint3 { x: 1.0, y: 0.0, z: 0.0 }, up_vector: BcfPoint3 { x: 0.0, y: 0.0, z: 1.0 }, view_to_world_scale: 2.5 }
     }
 
-    async fn sample_components() -> BcfComponents {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_components() -> BcfComponents {
         BcfComponents {
             selection: vec!["2O2Fr$t4X7Zf8NOew3FLOH".into()],
             visibility: BcfVisibility { default_visibility: false, exceptions: vec!["1yQBoo7d5EEBLiyMxGgTLc".into()] },
@@ -513,15 +540,18 @@ mod tests {
         }
     }
 
-    async fn sample_viewpoint(guid: &str) -> BcfViewpoint {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_viewpoint(guid: &str) -> BcfViewpoint {
         BcfViewpoint { guid: guid.into(), camera: Some(perspective_camera()), components: Some(sample_components()), snapshot: Some(vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]) }
     }
 
-    async fn sample_comment(guid: &str, viewpoint_ref: Option<&str>) -> BcfComment {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_comment(guid: &str, viewpoint_ref: Option<&str>) -> BcfComment {
         BcfComment { guid: guid.into(), date: "2024-01-01T00:00:00+00:00".into(), author: "ueli@example.com".into(), text: "Please review this clash.".into(), viewpoint_ref: viewpoint_ref.map(|s| s.to_string()) }
     }
 
-    async fn sample_topic(guid: &str) -> BcfTopic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_topic(guid: &str) -> BcfTopic {
         BcfTopic {
             guid: guid.into(),
             title: "Clash on Level 2".into(),
@@ -536,7 +566,8 @@ mod tests {
         }
     }
 
-    async fn sample_snapshot() -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> BcfSnapshot {
         BcfSnapshot { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version: "2.1".into(), topics: vec![sample_topic("t1")], parts: vec![BcfRawPart { name: "project.bcfp".into(), data: b"<ProjectExtension/>".to_vec() }] }
     }
     //#endregion Fixtures
@@ -751,7 +782,8 @@ mod tests {
         assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must be associative");
     }
 
-    async fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
         let mid = d1.diff().apply(base).expect("d1 must apply to base");
         let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
         let mut absorbed = d1.diff().clone();
@@ -798,7 +830,8 @@ mod tests {
     /// ⚖️ Law 6 — `field_sweep` (the acceptance criterion): `sweep_a`/`sweep_b` differ in EVERY
     /// mutable field, incl. per guid-keyed collection one removed/one modified-in-every-field/one
     /// added, and every tri-state field exercising `Some(None)`.
-    async fn sweep_a() -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> BcfSnapshot {
         BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.1".into(),
@@ -847,7 +880,8 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> BcfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> BcfSnapshot {
         BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
             version: "2.2".into(),

@@ -21,7 +21,8 @@ pub struct SemioAudioDuration {
 /// (not the sum, which would overcount a multi-channel file); `duration_seconds` is
 /// `sample_count / sample_rate`, `0.0` when `sample_rate` is `0` (an honest degenerate case, not
 /// a division panic — `sample_rate: u32` cannot be negative).
-pub async fn compute_semio_audio_duration(snapshot: &SemioAudioSnapshot) -> SemioAudioDuration {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_audio_duration(snapshot: &SemioAudioSnapshot) -> SemioAudioDuration {
     let sample_count = snapshot.channels.iter().map(|channel| channel.samples.len() as u64).max().unwrap_or(0);
     let duration_seconds = if snapshot.sample_rate > 0 { sample_count as f64 / snapshot.sample_rate as f64 } else { 0.0 };
     SemioAudioDuration { duration_seconds, sample_count, channel_count: snapshot.channels.len() as u32 }
@@ -34,7 +35,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
-    async fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {
         SemioAudioSnapshot { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate, format: Default::default(), channels: channel_lengths.iter().map(|&len| SemioAudioChannel { samples: vec![0.0; len] }).collect(), tags: Vec::new() }
     }
 

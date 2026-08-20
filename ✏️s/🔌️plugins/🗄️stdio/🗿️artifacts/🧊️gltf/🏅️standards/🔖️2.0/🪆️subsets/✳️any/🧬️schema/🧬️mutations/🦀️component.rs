@@ -46,7 +46,8 @@ pub struct GltfMutationLeafDescriptor {
 //#region 🔖️Assembly
 pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR, CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR, CREATE_SCENE_DESCRIPTOR];
 
-pub async fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
     GLTF_MUTATION_LEAF_DESCRIPTORS
 }
 //#endregion 🔖️Assembly

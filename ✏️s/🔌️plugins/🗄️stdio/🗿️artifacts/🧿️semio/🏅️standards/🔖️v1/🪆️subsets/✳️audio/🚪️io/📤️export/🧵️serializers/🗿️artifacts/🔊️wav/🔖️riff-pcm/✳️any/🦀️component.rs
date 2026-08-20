@@ -50,7 +50,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn real_world_audio_no_tags() -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_audio_no_tags() -> SemioAudioSnapshot {
         SemioAudioSnapshot {
             schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
             sample_rate: 44_100,

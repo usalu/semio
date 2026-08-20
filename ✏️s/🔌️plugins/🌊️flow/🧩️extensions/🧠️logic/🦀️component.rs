@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Op
 pub struct Greater;
 
 impl Operator for Greater {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(read_channel_number(input, "a")? > read_channel_number(input, "b")?)))
     }
 }
@@ -18,46 +18,46 @@ impl Operator for Greater {
 pub struct Not;
 
 impl Operator for Not {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output("boolean", boolean_dictionary(!read_channel_bool(input, "boolean")?)))
     }
 }
 // #endregion 🔖️Not
 
 // #region 🔖️Helpers
-async fn boolean_dictionary(value: bool) -> Dictionary {
+fn boolean_dictionary(value: bool) -> Dictionary {
     Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(value)))
 }
 
-async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
+fn read_channel_bool(input: &Dictionary, key: &str) -> Result<bool, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 #[cfg(test)]
-async fn number_dictionary(value: f64) -> Dictionary {
+fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-async fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::number_default(id, 0.0, &[operator_id])
 }
 
-async fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
+fn boolean_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::boolean_default(id, false, &[operator_id])
 }
 
-async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
+fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "logic".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🔀️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all logic operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     registry.register_operator(
         info("logic.greater", "Greater", "True when a > b", vec![number_channel("a", "logic.greater"), number_channel("b", "logic.greater")], ChannelSpec::named("B", "Boo", "boolean", "Greater")),
         vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Greater) }],
@@ -74,13 +74,13 @@ pub async fn register(registry: &mut Registry) {
 
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
-pub async fn extension_manifest_json() -> String {
+pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
     build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub async fn module_registry() -> Registry {
+pub fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -143,7 +143,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let icon_id = "logic";
         let topic_payload = serde_json::json!({
             "appId": app_id,
@@ -155,21 +155,25 @@ mod extension_guest {
         topic_payload
     }
 
-    async fn bundle() -> ExtensionBundle {
+    // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
+    // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+    // path_scope); bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request.
+    // See R9.
+    fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.1.0")
-            .extends("flow")
-            .mode(ExecutionMode::Linked)
-            .contributes_topic("flow.extension", flow_topic_payload)
-            .contributes_topic("flow.extension", procedural3d_topic_payload)
-            .handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-                })?;
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            })
+        let bundle = ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.1.0").extends("flow");
+        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
+                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
+            })?;
+            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+        }))
     }
 
     semio_framework_plugin::extension_exports!(bundle);

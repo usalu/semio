@@ -63,16 +63,18 @@ impl protocol::OpBinary for PptxEditorCommand {
 //#region 🔖️Helpers
 /// 🧮️ The FIRST `TextBox`/`Placeholder` shape on a slide — the only shape `set-page` can ever
 /// address (see `handle`'s own doc comment for the honest multi-shape scope note).
-async fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
     slide.shapes.iter().position(|shape| matches!(shape, PptxShape::TextBox { .. } | PptxShape::Placeholder { .. }))
 }
 
 /// 🧮️ Pure `set-page` -> `PptxMutation` mapping, standalone so it is directly unit-testable
 /// without constructing a full `ArtifactView`. `None` covers "slide index out of range" and "no
 /// text-bearing shape on that slide" — both documented no-ops.
-async fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
     let slide = snapshot.presentation.slides.get(slide_index)?;
-    let shape_index = first_text_shape_index(slide).await?;
+    let shape_index = first_text_shape_index(slide)?;
     let text_frame: Vec<PptxParagraph> = text.split('\n').map(PptxParagraph::text).collect();
     Some(PptxMutation::SetShapeText { slide_index, shape_index, text_frame })
 }
@@ -119,7 +121,7 @@ impl ArtifactEditor for PptxEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let PptxEditorCommand::SetPage { index, text } = command;
         let slide_index = *index as usize;
-        match build_set_page_mutation(doc.snapshot, slide_index, text).await {
+        match build_set_page_mutation(doc.snapshot, slide_index, text) {
             Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {slide_index}")), ..Default::default() }),
             None => Ok(Emit::default()),
         }
@@ -127,7 +129,7 @@ impl ArtifactEditor for PptxEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).await,
+            main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
@@ -135,14 +137,15 @@ impl ArtifactEditor for PptxEditor {
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_pptx_editor() -> semio_framework_plugin::AppDefinition {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn create_pptx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PPTX_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "pptx"])
-        .await.icon_id("presentation")
-        .await.mode_def(edit::definition().await)
-        .await.default_mode_id(edit::PPTX_EDIT_MODE_ID)
-        .await.window_kind_def(main::definition().await)
-        .await.default_layout(edit::layout())
+        .document(["semio", "stdio", "pptx"])
+        .icon_id("presentation")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::PPTX_EDIT_MODE_ID)
+        .window_kind_def(main::definition())
+        .default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -24,7 +24,8 @@ pub struct GltfThicknessIndicators {
 
 pub struct GltfThicknessInference;
 
-pub(crate) async fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
     if context.topology.watertight && context.topology.manifold {
         thickness_samples(&context.points, &context.faces, context.policy.sampling_budget as usize, context.policy.absolute_length_tolerance)
     } else {
@@ -32,7 +33,8 @@ pub(crate) async fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
     }
 }
 
-pub(crate) async fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
     statistics(&samples(context), &context.policy.histogram_edges)
 }
 
@@ -41,19 +43,19 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
-            mean_thickness: mean_thickness::infer(context).await,
-            minimum_thickness: minimum_thickness::infer(context).await,
-            thickness_variability: thickness_variability::infer(context).await,
-            thickness_distribution: thickness_distribution::infer(context).await,
+            mean_thickness: mean_thickness::infer(context),
+            minimum_thickness: minimum_thickness::infer(context),
+            thickness_variability: thickness_variability::infer(context),
+            thickness_distribution: thickness_distribution::infer(context),
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            mean_thickness: mean_thickness::unavailable_measure(diagnostic_ids).await,
-            minimum_thickness: minimum_thickness::unavailable_measure(diagnostic_ids).await,
-            thickness_variability: thickness_variability::unavailable_measure(diagnostic_ids).await,
-            thickness_distribution: thickness_distribution::unavailable_measure(diagnostic_ids).await,
+            mean_thickness: mean_thickness::unavailable_measure(diagnostic_ids),
+            minimum_thickness: minimum_thickness::unavailable_measure(diagnostic_ids),
+            thickness_variability: thickness_variability::unavailable_measure(diagnostic_ids),
+            thickness_distribution: thickness_distribution::unavailable_measure(diagnostic_ids),
         }
     }
 }

@@ -5,16 +5,19 @@ use crate::artifacts::docx::DocxSnapshot;
 
 //#region Codec
 /// Register serializer hooks.
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 
 /// 🎒️ Encode DocxSnapshot as ZIP container bytes.
-pub async fn serialize(from: &DocxSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::docx::engine::encode_docx(from).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn serialize(from: &DocxSnapshot) -> Result<BinarySnapshot, store::PackError> {
+    let bytes = crate::artifacts::docx::engine::encode_docx(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode ZIP then wrap as binary pack bytes.
-pub async fn serialize_bytes(from: &DocxSnapshot) -> Result<Vec<u8>, store::PackError> {
-    store::ArtifactPack::encode_pack_with(&serialize(from).await?, &store::PackEncodeOptions::default()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn serialize_bytes(from: &DocxSnapshot) -> Result<Vec<u8>, store::PackError> {
+    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

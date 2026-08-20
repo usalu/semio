@@ -7,7 +7,8 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &AddNodeProperty, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &AddNodeProperty, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
     match base.nodes.iter().find(|n| n.id == payload.node_id) {
         Some(node) => {
             let at = payload.index.min(node.properties.len());

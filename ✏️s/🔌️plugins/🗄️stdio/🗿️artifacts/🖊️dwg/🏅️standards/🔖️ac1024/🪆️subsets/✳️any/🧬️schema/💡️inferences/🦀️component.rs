@@ -32,7 +32,7 @@ pub struct DwgInference {
 
 impl protocol::Inference<DwgSnapshot> for DwgInference {
     async fn infer(snapshot: &DwgSnapshot) -> Self {
-        Self { structure: compute_dwg_structure(snapshot).await }
+        Self { structure: compute_dwg_structure(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::dwg::standards::v_ac1024::subsets::a
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `dwg_artifact_schema_descriptor`'s registration.
-pub async fn dwg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dwg_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.dwg.inference",
         inference: schema::FacetLeaves {

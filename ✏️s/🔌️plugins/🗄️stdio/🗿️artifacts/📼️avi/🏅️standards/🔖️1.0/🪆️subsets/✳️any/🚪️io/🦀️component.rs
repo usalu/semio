@@ -43,19 +43,21 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
             crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
-        ).await);
+        ));
     }
 
     /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -70,7 +72,8 @@ struct RiffEntry<'a> {
     payload: &'a [u8],
 }
 
-async fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, String>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, String>> {
     struct It<'a> {
         data: &'a [u8],
         pos: usize,
@@ -93,11 +96,13 @@ async fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, St
     It { data, pos: 0 }
 }
 
-async fn fourcc_str(f: &[u8; 4]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fourcc_str(f: &[u8; 4]) -> String {
     String::from_utf8_lossy(f).into_owned()
 }
 
-async fn write_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(8 + payload.len() + 1);
     out.extend_from_slice(fourcc);
     out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
@@ -108,13 +113,15 @@ async fn write_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
     out
 }
 
-async fn write_list(list_type: &[u8; 4], children: &[u8]) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_list(list_type: &[u8; 4], children: &[u8]) -> Vec<u8> {
     let mut payload = list_type.to_vec();
     payload.extend_from_slice(children);
-    write_chunk(b"LIST", &payload).await
+    write_chunk(b"LIST", &payload)
 }
 
-async fn fourcc4(s: &str) -> [u8; 4] {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fourcc4(s: &str) -> [u8; 4] {
     let mut out = [b' '; 4];
     for (i, b) in s.as_bytes().iter().take(4).enumerate() {
         out[i] = *b;
@@ -124,13 +131,15 @@ async fn fourcc4(s: &str) -> [u8; 4] {
 //#endregion 🔖️Riff
 
 //#region 🔖️Sniff
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
     bytes.len() >= 12 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"AVI "
 }
 //#endregion 🔖️Sniff
 
 //#region 🔖️Header
-async fn parse_avih(payload: &[u8]) -> Result<AviMainHeader, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_avih(payload: &[u8]) -> Result<AviMainHeader, String> {
     if payload.len() < 56 {
         return Err("avi: avih shorter than 56 bytes".into());
     }
@@ -150,7 +159,8 @@ async fn parse_avih(payload: &[u8]) -> Result<AviMainHeader, String> {
     })
 }
 
-async fn write_avih(h: &AviMainHeader) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_avih(h: &AviMainHeader) -> Vec<u8> {
     let mut out = Vec::with_capacity(56);
     for v in [h.micro_sec_per_frame, h.max_bytes_per_sec, h.padding_granularity, h.flags, h.total_frames, h.initial_frames, h.streams, h.suggested_buffer_size, h.width, h.height] {
         out.extend_from_slice(&v.to_le_bytes());
@@ -163,7 +173,8 @@ async fn write_avih(h: &AviMainHeader) -> Vec<u8> {
     out
 }
 
-async fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
     if payload.len() < 64 {
         return Err("avi: strh shorter than 64 bytes".into());
     }
@@ -171,8 +182,8 @@ async fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
     let i32le = |o: usize| i32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let u16le = |o: usize| u16::from_le_bytes(payload[o..o + 2].try_into().unwrap());
     Ok(AviStreamHeader {
-        fcc_type: fourcc_str(&payload[0..4].try_into().unwrap()).await,
-        fcc_handler: fourcc_str(&payload[4..8].try_into().unwrap()).await,
+        fcc_type: fourcc_str(&payload[0..4].try_into().unwrap()),
+        fcc_handler: fourcc_str(&payload[4..8].try_into().unwrap()),
         flags: u32le(8),
         priority: u16le(12),
         language: u16le(14),
@@ -191,7 +202,8 @@ async fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
     })
 }
 
-async fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
     let mut out = Vec::with_capacity(64);
     out.extend_from_slice(&fourcc4(&h.fcc_type));
     out.extend_from_slice(&fourcc4(&h.fcc_handler));
@@ -212,7 +224,8 @@ async fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
     out
 }
 
-async fn parse_strf(fcc_type: &str, payload: &[u8]) -> AviStreamFormat {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_strf(fcc_type: &str, payload: &[u8]) -> AviStreamFormat {
     if fcc_type == "vids" && payload.len() >= 40 {
         let u32le = |o: usize| u32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
         let i32le = |o: usize| i32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
@@ -223,7 +236,7 @@ async fn parse_strf(fcc_type: &str, payload: &[u8]) -> AviStreamFormat {
             height: i32le(8),
             planes: u16le(12),
             bit_count: u16le(14),
-            compression: fourcc_str(&payload[16..20].try_into().unwrap()).await,
+            compression: fourcc_str(&payload[16..20].try_into().unwrap()),
             size_image: u32le(20),
             x_pels_per_meter: i32le(24),
             y_pels_per_meter: i32le(28),
@@ -247,7 +260,8 @@ async fn parse_strf(fcc_type: &str, payload: &[u8]) -> AviStreamFormat {
     AviStreamFormat::Raw { data: payload.to_vec() }
 }
 
-async fn write_strf(f: &AviStreamFormat) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_strf(f: &AviStreamFormat) -> Vec<u8> {
     match f {
         AviStreamFormat::BitmapInfo { size, width, height, planes, bit_count, compression, size_image, x_pels_per_meter, y_pels_per_meter, colors_used, colors_important } => {
             let mut out = Vec::with_capacity(40);
@@ -284,7 +298,8 @@ async fn write_strf(f: &AviStreamFormat) -> Vec<u8> {
 /// 📥️ Real RIFF/AVI decode: `hdrl` (`avih` + every `strl`'s `strh`/`strf`), `movi` (every chunk,
 /// assigned to its owning stream by the leading 2-digit stream number in its fourcc), `idx1`
 /// (positionally matched to `movi` chunks for the keyframe flag — see module doc comment).
-pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
     if !sniff_real_bytes(bytes) {
         return Err("avi: missing RIFF/AVI magic".into());
     }
@@ -307,7 +322,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                     for hitem in iter_riff(list_body) {
                         let h = hitem?;
                         if &h.fourcc == b"avih" {
-                            main_header = Some(parse_avih(h.payload).await?);
+                            main_header = Some(parse_avih(h.payload)?);
                         } else if &h.fourcc == b"LIST" && &h.payload[0..4] == b"strl" {
                             let strl_body = &h.payload[4..];
                             let mut strh = None;
@@ -315,7 +330,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             for sitem in iter_riff(strl_body) {
                                 let s = sitem?;
                                 if &s.fourcc == b"strh" {
-                                    strh = Some(parse_strh(s.payload).await?);
+                                    strh = Some(parse_strh(s.payload)?);
                                 }
                                 if &s.fourcc == b"strf" {
                                     strf_bytes = Some(s.payload);
@@ -323,14 +338,14 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             }
                             let strh = strh.ok_or("avi: strl missing strh")?;
                             let strf = parse_strf(&strh.fcc_type, strf_bytes.ok_or("avi: strl missing strf")?);
-                            stream_headers.push((strh, strf.await));
+                            stream_headers.push((strh, strf));
                         }
                     }
                 }
                 b"movi" => {
                     for mitem in iter_riff(list_body) {
                         let m = mitem?;
-                        movi_chunks.push((fourcc_str(&m.fourcc).await, m.payload.to_vec()));
+                        movi_chunks.push((fourcc_str(&m.fourcc), m.payload.to_vec()));
                     }
                 }
                 other => unknown_chunks.push(RiffChunk { fourcc: format!("LIST:{}", String::from_utf8_lossy(other)), data: list_body.to_vec() }),
@@ -343,7 +358,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                 r = &r[16..];
             }
         } else {
-            unknown_chunks.push(RiffChunk { fourcc: fourcc_str(&entry.fourcc).await, data: entry.payload.to_vec() });
+            unknown_chunks.push(RiffChunk { fourcc: fourcc_str(&entry.fourcc), data: entry.payload.to_vec() });
         }
     }
 
@@ -368,7 +383,8 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
 /// exactly (`hdrl(avih + strl(strh,strf)*)`, `movi(chunk*)`, `idx1` with offsets relative to the
 /// `movi` LIST's payload start INCLUDING its own `movi` tag, per the OpenDML convention that
 /// generator documents) — byte-identical for the untouched round trip on a single-stream fixture.
-pub async fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
     let avih = write_chunk(b"avih", &write_avih(&snapshot.main_header));
     let strls: Vec<u8> = snapshot
         .streams
@@ -428,7 +444,8 @@ pub async fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
 mod codec_tests {
     use super::*;
 
-    async fn synthetic_snapshot() -> AviSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn synthetic_snapshot() -> AviSnapshot {
         AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader {

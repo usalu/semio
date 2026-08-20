@@ -1,0 +1,2280 @@
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: `semio-framework-replication` (lib) generated 20 warnings
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13096:6
+      |
+13096 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+13096 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+13096 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:48
+      |
+13097 |     async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13097 -     async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13097 +     async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:103
+      |
+13097 |     async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13097 -     async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13097 +     async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13098:64
+      |
+13098 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13098 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+13098 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13099:9
+      |
+13099 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options).await
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13099 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options).await
+13099 +         ArtifactPack::encode_pack_with(&value, options).await
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:55
+      |
+13101 |     async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackEr...
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13101 -     async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13101 +     async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:107
+      |
+13101 | ...ate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13101 -     async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13101 +     async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13102:21
+      |
+13102 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options).await?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13102 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options).await?;
+13102 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options).await?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13103:55
+      |
+13103 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13103 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+13103 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:39:5
+   |
+39 |     async fn to_value(&self) -> FieldValue;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+   = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+39 -     async fn to_value(&self) -> FieldValue;
+39 +     fn to_value(&self) -> impl std::future::Future<Output = FieldValue> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:40:5
+   |
+40 |     async fn from_value(value: &FieldValue) -> Result<Self, String>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+40 -     async fn from_value(value: &FieldValue) -> Result<Self, String>;
+40 +     fn from_value(value: &FieldValue) -> impl std::future::Future<Output = Result<Self, String>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:285:5
+    |
+285 |     async fn to_named_record(&self) -> (String, RecordValue);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+285 -     async fn to_named_record(&self) -> (String, RecordValue);
+285 +     fn to_named_record(&self) -> impl std::future::Future<Output = (String, RecordValue)> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:290:5
+    |
+290 |     async fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+290 -     async fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
+290 +     fn from_named_record(keyword: &str, record: &RecordValue) -> impl std::future::Future<Output = Result<Self, TextError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:80:5
+   |
+80 |     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+80 -     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+80 +     fn resolve(&self, schema: &str) -> impl std::future::Future<Output = Option<crate::os_dsl::schema::RecordSpec>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5
+   |
+83 |     async fn names(&self) -> Vec<String> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 ~     fn names(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+84 |         Vec::new()
+85 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:92:5
+   |
+92 |     async fn reads() -> &'static [&'static str];
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+92 -     async fn reads() -> &'static [&'static str];
+92 +     fn reads() -> impl std::future::Future<Output = &'static [&'static str]> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:96:5
+   |
+96 |     async fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+96 -     async fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
+96 +     fn plan(snapshot: &P) -> impl std::future::Future<Output = Vec<InferenceStep<Self::Key>>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:107:5
+    |
+107 |     async fn dep_input(snapshot: &P, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+107 -     async fn dep_input(snapshot: &P, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8>;
+107 +     fn dep_input(snapshot: &P, key: &Self::Key, parents: &[Self::Key]) -> impl std::future::Future<Output = Vec<u8>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:110:5
+    |
+110 |     async fn compute(snapshot: &P, key: &Self::Key, parents: &[Self::Value]) -> Self::Value;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+110 -     async fn compute(snapshot: &P, key: &Self::Key, parents: &[Self::Value]) -> Self::Value;
+110 +     fn compute(snapshot: &P, key: &Self::Key, parents: &[Self::Value]) -> impl std::future::Future<Output = Self::Value> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:29:5
+   |
+29 |     async fn infer(snapshot: &P) -> Self;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+29 -     async fn infer(snapshot: &P) -> Self;
+29 +     fn infer(snapshot: &P) -> impl std::future::Future<Output = Self> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:80:5
+   |
+80 |     async fn touches(&self) -> TouchedPaths;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+80 -     async fn touches(&self) -> TouchedPaths;
+80 +     fn touches(&self) -> impl std::future::Future<Output = TouchedPaths> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:95:5
+   |
+95 |     async fn inference_schema_id() -> &'static str;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+95 -     async fn inference_schema_id() -> &'static str;
+95 +     fn inference_schema_id() -> impl std::future::Future<Output = &'static str> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:98:5
+   |
+98 |     async fn schema_version() -> u32;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+98 -     async fn schema_version() -> u32;
+98 +     fn schema_version() -> impl std::future::Future<Output = u32> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:99:5
+   |
+99 |     async fn fields() -> &'static [InferenceFieldSpec];
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+99 -     async fn fields() -> &'static [InferenceFieldSpec];
+99 +     fn fields() -> impl std::future::Future<Output = &'static [InferenceFieldSpec]> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:208:5
+    |
+208 |     async fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+208 -     async fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
+208 +     fn diff(&self, base: &P) -> impl std::future::Future<Output = MutationOutcome<<Op as Mutation<P>>::Diff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:212:5
+    |
+212 |     async fn inverse(&self, base: &P) -> Vec<Op>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+212 -     async fn inverse(&self, base: &P) -> Vec<Op>;
+212 +     fn inverse(&self, base: &P) -> impl std::future::Future<Output = Vec<Op>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:214:5
+    |
+214 |     async fn label(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+214 -     async fn label(&self) -> String;
+214 +     fn label(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:217:5
+    |
+217 |     async fn target(&self) -> Vec<String> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+217 ~     fn target(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+218 |         Vec::new()
+219 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:223:5
+    |
+223 |     async fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+223 ~     fn foreign_steps(&self, _base: &P) -> impl std::future::Future<Output = Vec<ForeignStep>> + Send {async {
+224 |         Vec::new()
+225 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:235:5
+    |
+235 |     async fn kinds() -> &'static [SemanticDescriptor];
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+235 -     async fn kinds() -> &'static [SemanticDescriptor];
+235 +     fn kinds() -> impl std::future::Future<Output = &'static [SemanticDescriptor]> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:236:5
+    |
+236 |     async fn semantics(&self) -> &'static SemanticDescriptor;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+236 -     async fn semantics(&self) -> &'static SemanticDescriptor;
+236 +     fn semantics(&self) -> impl std::future::Future<Output = &'static SemanticDescriptor> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:237:5
+    |
+237 |     async fn label(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+237 -     async fn label(&self) -> String;
+237 +     fn label(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:238:5
+    |
+238 |     async fn target(&self) -> Vec<String>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+238 -     async fn target(&self) -> Vec<String>;
+238 +     fn target(&self) -> impl std::future::Future<Output = Vec<String>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:508:5
+    |
+508 |     async fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+508 -     async fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
+508 +     fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> impl std::future::Future<Output = Op> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:680:5
+    |
+680 |     async fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+680 -     async fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
+680 +     fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> impl std::future::Future<Output = Result<(), PlanError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:681:5
+    |
+681 |     async fn label(&self) -> String;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+681 -     async fn label(&self) -> String;
+681 +     fn label(&self) -> impl std::future::Future<Output = String> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:682:5
+    |
+682 |     async fn target(&self) -> Vec<String> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+682 ~     fn target(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+683 |         Vec::new()
+684 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:284:5
+    |
+284 |     async fn apply_patch(&mut self, patch: &TPatch);
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+284 -     async fn apply_patch(&mut self, patch: &TPatch);
+284 +     fn apply_patch(&mut self, patch: &TPatch) -> impl std::future::Future<Output = ()> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:285:5
+    |
+285 |     async fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+285 -     async fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+285 +     fn diff_patch(&self, other: &Self) -> impl std::future::Future<Output = Option<TPatch>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1215:5
+     |
+1215 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1215 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1215 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2403:9
+     |
+2403 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2403 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2403 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2419 |             Confidence::None
+2420 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2421:9
+     |
+2421 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2421 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2421 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+warning: `semio-framework-os-kernel` (lib) generated 57 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:107:5
+    |
+107 |     async fn artifact_schema_id() -> &'static str;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+107 -     async fn artifact_schema_id() -> &'static str;
+107 +     fn artifact_schema_id() -> impl std::future::Future<Output = &'static str> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:108:5
+    |
+108 |     async fn field_states() -> &'static [(&'static str, StateClass)];
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+108 -     async fn field_states() -> &'static [(&'static str, StateClass)];
+108 +     fn field_states() -> impl std::future::Future<Output = &'static [(&'static str, StateClass)]> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:109:5
+    |
+109 |     async fn derived_fields() -> &'static [&'static str] {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+109 ~     fn derived_fields() -> impl std::future::Future<Output = &'static [&'static str]> + Send {async {
+110 |         &[]
+111 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:149:5
+    |
+149 |     async fn child_slots() -> &'static [ChildSlotSpec] {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+149 ~     fn child_slots() -> impl std::future::Future<Output = &'static [ChildSlotSpec]> + Send {async {
+150 |         &[]
+151 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:152:5
+    |
+152 |     async fn link_slots() -> &'static [LinkSlotSpec] {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+152 ~     fn link_slots() -> impl std::future::Future<Output = &'static [LinkSlotSpec]> + Send {async {
+153 |         &[]
+154 ~     } }
+    |
+
+warning: `semio-framework-schema` (lib) generated 5 warnings
+error[E0255]: the name `TextEditorScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3189:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, T...
+     |                                                                                                                                      --------------- previous import of the type `TextEditorScene` here
+...
+3189 |     pub struct TextEditorScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^ `TextEditorScene` redefined here
+     |
+     = note: `TextEditorScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene as OtherTextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                                                                      +++++++++++++++++++++++
+
+error[E0255]: the name `TableScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3225:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, T...
+     |                                                                                                                          ---------- previous import of the type `TableScene` here
+...
+3225 |     pub struct TableScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^ `TableScene` redefined here
+     |
+     = note: `TableScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene as OtherTableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                                                     ++++++++++++++++++
+
+error[E0255]: the name `Paint2dScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3280:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScen...
+     |                                                                                                  ------------ previous import of the type `Paint2dScene` here
+...
+3280 |     pub struct Paint2dScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^ `Paint2dScene` redefined here
+     |
+     = note: `Paint2dScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene as OtherPaint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                               ++++++++++++++++++++
+
+error[E0255]: the name `IconRenderScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3298:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |                                                                                         --------------- previous import of the type `IconRenderScene` here
+...
+3298 |     pub struct IconRenderScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^ `IconRenderScene` redefined here
+     |
+     = note: `IconRenderScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene as OtherIconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                                                                                                         +++++++++++++++++++++++
+
+error[E0255]: the name `VirtualFileSystemScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3308:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, W...
+     |                                                                                                                                                                      ---------------------- previous import of the type `VirtualFileSystemScene` here
+...
+3308 |     pub struct VirtualFileSystemScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `VirtualFileSystemScene` redefined here
+     |
+     = note: `VirtualFileSystemScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene as OtherVirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                                                                                                             ++++++++++++++++++++++++++++++
+
+error[E0255]: the name `TiledMapScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3323:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, V...
+     |                                                                                                                                                       ------------- previous import of the type `TiledMapScene` here
+...
+3323 |     pub struct TiledMapScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^ `TiledMapScene` redefined here
+     |
+     = note: `TiledMapScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene as OtherTiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                                                                                     +++++++++++++++++++++
+
+error[E0255]: the name `Board2dScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3431:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |         ------------ previous import of the type `Board2dScene` here
+...
+3431 |     pub struct Board2dScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^ `Board2dScene` redefined here
+     |
+     = note: `Board2dScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene as OtherBoard2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                      ++++++++++++++++++++
+
+error[E0255]: the name `InkCanvasScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3519:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |                                                                                                          -------------- previous import of the type `InkCanvasScene` here
+...
+3519 |     pub struct InkCanvasScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^ `InkCanvasScene` redefined here
+     |
+     = note: `InkCanvasScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene as OtherInkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                                                                                                                         ++++++++++++++++++++++
+
+error[E0255]: the name `GraphTimelineScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3547:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |                                                                     ------------------ previous import of the type `GraphTimelineScene` here
+...
+3547 |     pub struct GraphTimelineScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `GraphTimelineScene` redefined here
+     |
+     = note: `GraphTimelineScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene as OtherGraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                                                                                        ++++++++++++++++++++++++++
+
+error[E0255]: the name `DiffViewScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3555:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |                                      ------------- previous import of the type `DiffViewScene` here
+...
+3555 |     pub struct DiffViewScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^ `DiffViewScene` redefined here
+     |
+     = note: `DiffViewScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene as OtherDiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                                                    +++++++++++++++++++++
+
+error[E0255]: the name `EventFeedScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3573:5
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraph...
+     |                                                     -------------- previous import of the type `EventFeedScene` here
+...
+3573 |     pub struct EventFeedScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^ `EventFeedScene` redefined here
+     |
+     = note: `EventFeedScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3087 |         Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene as OtherEventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+     |                                                                    ++++++++++++++++++++++
+
+error[E0255]: the name `BlockListScene` is defined multiple times
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3600:5
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+     |                                                                                                                                                                                                            -------------- previous import of the type `BlockListScene` here
+...
+3600 |     pub struct BlockListScene {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^ `BlockListScene` redefined here
+     |
+     = note: `BlockListScene` must be defined only once in the type namespace of this module
+help: you can use `as` to change the binding name of the import
+     |
+3088 |         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene as OtherBlockListScene,
+     |                                                                                                                                                                                                                           ++++++++++++++++++++++
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:21
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:21
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:21
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:21
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:21
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:21
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:21
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:21
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:21
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:21
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:21
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:21
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                     ^^^^^
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:28
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:28
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::TableScene` is not defined in the current crate
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:28
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:28
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:28
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:28
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:28
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:28
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:28
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:28
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:28
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:28
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^ `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:28
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:28
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:28
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:28
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:28
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:28
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:28
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:28
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:28
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:28
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:28
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:14
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:14
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:14
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:14
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:14
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:14
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:14
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:14
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:14
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:14
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:14
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:14
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |              ^^^^^
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:39
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:28
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                            ^^^^^^^^^
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:39
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:39
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:39
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:39
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:39
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:39
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:39
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:39
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:39
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:39
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:39
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                       ^^^^^^^^^
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3187:50
+     |
+3187 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3188 |     #[serde(rename_all = "camelCase")]
+3189 |     pub struct TextEditorScene {
+     |                --------------- `semio_framework_ui_scene::TextEditorScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3223:50
+     |
+3223 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3224 |     #[serde(rename_all = "camelCase")]
+3225 |     pub struct TableScene {
+     |                ---------- `semio_framework_ui_scene::TableScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3278:50
+     |
+3278 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3279 |     #[serde(rename_all = "camelCase")]
+3280 |     pub struct Paint2dScene {
+     |                ------------ `semio_framework_ui_scene::Paint2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3296:50
+     |
+3296 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3297 |     #[serde(rename_all = "camelCase")]
+3298 |     pub struct IconRenderScene {
+     |                --------------- `semio_framework_ui_scene::IconRenderScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3306:50
+     |
+3306 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3307 |     #[serde(rename_all = "camelCase")]
+3308 |     pub struct VirtualFileSystemScene {
+     |                ---------------------- `semio_framework_ui_scene::VirtualFileSystemScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3321:50
+     |
+3321 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3322 |     #[serde(rename_all = "camelCase")]
+3323 |     pub struct TiledMapScene {
+     |                ------------- `semio_framework_ui_scene::TiledMapScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3429:50
+     |
+3429 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3430 |     #[serde(rename_all = "camelCase")]
+3431 |     pub struct Board2dScene {
+     |                ------------ `semio_framework_ui_scene::Board2dScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3517:50
+     |
+3517 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3518 |     #[serde(rename_all = "camelCase")]
+3519 |     pub struct InkCanvasScene {
+     |                -------------- `semio_framework_ui_scene::InkCanvasScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3545:50
+     |
+3545 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3546 |     #[serde(rename_all = "camelCase")]
+3547 |     pub struct GraphTimelineScene {
+     |                ------------------ `semio_framework_ui_scene::GraphTimelineScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3553:50
+     |
+3553 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3554 |     #[serde(rename_all = "camelCase")]
+3555 |     pub struct DiffViewScene {
+     |                ------------- `semio_framework_ui_scene::DiffViewScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3571:50
+     |
+3571 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3572 |     #[serde(rename_all = "camelCase")]
+3573 |     pub struct EventFeedScene {
+     |                -------------- `semio_framework_ui_scene::EventFeedScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3598:50
+     |
+3598 |     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+     |                                                  ^^^^^^^^^^^
+3599 |     #[serde(rename_all = "camelCase")]
+3600 |     pub struct BlockListScene {
+     |                -------------- `semio_framework_ui_scene::BlockListScene` is not defined in the current crate
+     |
+     = note: impl doesn't have any local type before any uncovered type parameters
+     = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+     = note: define and implement a trait or new type instead
+     = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3244:5
+     |
+3244 |     impl TableScene {
+     |     ^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3408:5
+     |
+3408 |     impl TiledMapScene {
+     |     ^^^^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3495:5
+     |
+3495 |     impl Board2dScene {
+     |     ^^^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3536:5
+     |
+3536 |     impl InkCanvasScene {
+     |     ^^^^^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3808:5
+     |
+3808 |     impl NodeGraphScene {
+     |     ^^^^^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0116]: cannot define inherent `impl` for a type outside of the crate where the type is defined
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3835:5
+     |
+3835 |     impl TextEditorScene {
+     |     ^^^^^^^^^^^^^^^^^^^^ impl for type defined outside of crate
+     |
+     = help: consider defining a trait and implementing it for the type or using a newtype wrapper like `struct MyType(ExternalType);` and implement it
+     = note: for more details about the orphan rules, see <https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules>
+
+error[E0560]: struct `semio_framework_ui_scene::TableScene` has no field named `drop_action`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3247:127
+     |
+3247 | ...one, row_drag_mime: None, drop_action: None, sort_json: None, domain_id: None }
+     |                              ^^^^^^^^^^^ `semio_framework_ui_scene::TableScene` does not have this field
+     |
+     = note: available fields are: `drop_action_json`
+
+error[E0599]: no associated function or constant named `base` found for struct `semio_framework_ui_scene::TextEditorScene` in the current scope
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3861:35
+     |
+3861 |             let mut scene = Self::base(json_pretty, Some("json".into()), None).await;
+     |                                   ^^^^ associated function or constant not found in `semio_framework_ui_scene::TextEditorScene`
+
+error[E0599]: no associated function or constant named `base` found for struct `semio_framework_ui_scene::TextEditorScene` in the current scope
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3870:35
+     |
+3870 |             let mut scene = Self::base(buffer, Some(language.into()), None).await;
+     |                                   ^^^^ associated function or constant not found in `semio_framework_ui_scene::TextEditorScene`
+
+error[E0560]: struct `semio_framework_ui_scene::TableScene` has no field named `drop_action`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3233:13
+     |
+3233 |         pub drop_action: Option<ActionDescriptor>,
+     |             ^^^^^^^^^^^ `semio_framework_ui_scene::TableScene` does not have this field
+     |
+     = note: all struct fields are already assigned
+
+error[E0560]: struct `semio_framework_ui_scene::TableScene` has no field named `drop_action`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3233:9
+     |
+3233 |         pub drop_action: Option<ActionDescriptor>,
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `semio_framework_ui_scene::TableScene` does not have this field
+     |
+     = note: all struct fields are already assigned
+
+error[E0609]: no field `drop_action` on type `&semio_framework_ui_scene::TableScene`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3233:13
+     |
+3233 |         pub drop_action: Option<ActionDescriptor>,
+     |             ^^^^^^^^^^^ unknown field
+     |
+     = note: available fields are: `columns_json`, `rows_json`, `selection_json`, `row_drag_mime`, `drop_action_json` ... and 2 others
+
+Some errors have detailed explanations: E0116, E0117, E0255, E0560, E0599, E0609.
+For more information about an error, try `rustc --explain E0116`.
+error: could not compile `semio-framework-ui` (lib) due to 100 previous errors

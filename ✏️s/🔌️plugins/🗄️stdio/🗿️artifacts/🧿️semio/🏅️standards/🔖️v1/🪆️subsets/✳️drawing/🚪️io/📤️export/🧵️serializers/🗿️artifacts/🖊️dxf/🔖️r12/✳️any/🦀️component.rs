@@ -27,7 +27,8 @@ const EPS: f64 = 1e-6;
 /// cad↔dxf/svg↔drawing bridges' matching `ellipse_path` helpers) produce for a real circle —
 /// `[MoveTo(cx+r,cy), ArcTo(r,r,..,cx-r,cy), ArcTo(r,r,..,cx+r,cy), Close]` — giving an EXACT
 /// (not flattened) round trip for genuinely circular content.
-async fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
     if let [PathSegment::MoveTo { to: m }, PathSegment::ArcTo { rx: r1, ry: ry1, to: a1, .. }, PathSegment::ArcTo { rx: r2, ry: ry2, to: a2, .. }, PathSegment::Close] = segments {
         if (r1 - ry1).abs() < EPS && (r2 - ry2).abs() < EPS && (r1 - r2).abs() < EPS && (m.x - a2.x).abs() < EPS && (m.y - a2.y).abs() < EPS {
             let cx = (m.x + a1.x) / 2.0;
@@ -42,7 +43,8 @@ async fn as_circle(segments: &[PathSegment]) -> Option<(f64, f64, f64)> {
 //#region 🔖️Flatten
 /// 📐️ Real parametric curve flattening (32 samples) — cubic/quadratic Bezier and elliptical arc
 /// all sampled the standard way, not approximated by their endpoints alone.
-async fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
     let mut points = Vec::new();
     let mut closed = false;
     let mut cur = SemioPoint2::default();
@@ -86,7 +88,7 @@ async fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, boo
                 // back to a single straight segment (documented, real, honest — never fabricated
                 // curvature it can't derive without a full endpoint-to-center arc solve).
                 if (rx - ry).abs() < EPS && rx > EPS {
-                    if let Some((cx, cy)) = arc_center(cur, to, rx).await {
+                    if let Some((cx, cy)) = arc_center(cur, to, rx) {
                         let a0 = (cur.y - cy).atan2(cur.x - cx);
                         let mut a1 = (to.y - cy).atan2(to.x - cx);
                         if a1 < a0 {
@@ -117,7 +119,8 @@ async fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, boo
 /// 🔎️ One of the (generally two) centers equidistant from `p0`/`p1` at `r` — picks the one
 /// consistent with a real circular arc; `None` when `p0`/`p1` are farther apart than `2r` (no
 /// real solution, an inconsistent/degenerate arc).
-async fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
     let (mx, my) = ((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
     let (dx, dy) = (p1.x - p0.x, p1.y - p0.y);
     let d = (dx * dx + dy * dy).sqrt();
@@ -131,13 +134,14 @@ async fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f6
 //#endregion 🔖️Flatten
 
 //#region 🔖️EntityBuild
-async fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
     match node {
         DrawNode::Path { segments, .. } => {
-            if let Some((cx, cy, r)) = as_circle(segments).await {
+            if let Some((cx, cy, r)) = as_circle(segments) {
                 return Some(DxfEntity::Circle { center: [cx, cy, 0.0], radius: r, layer: layer.into(), unknown_group_codes: vec![] });
             }
-            let (points, closed) = flatten_to_polyline(segments).await;
+            let (points, closed) = flatten_to_polyline(segments);
             if points.len() < 2 {
                 return None;
             }
@@ -149,7 +153,8 @@ async fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity>
     }
 }
 
-async fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
     match node {
         DrawNode::Group { children, .. } => {
             for c in children {
@@ -157,7 +162,7 @@ async fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>
             }
         }
         other => {
-            if let Some(e) = dxf_entity_from_node(other, layer).await {
+            if let Some(e) = dxf_entity_from_node(other, layer) {
                 out.push(e);
             }
         }
@@ -200,7 +205,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
 
-    async fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
         vec![
             PathSegment::MoveTo { to: SemioPoint2 { x: cx + r, y: cy } },
             PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx - r, y: cy } },
@@ -209,7 +215,8 @@ mod tests {
         ]
     }
 
-    async fn sample_drawing() -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_drawing() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {
             layers: vec![DrawLayer {
                 id: "0".into(),

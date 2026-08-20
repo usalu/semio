@@ -198,10 +198,10 @@ impl store::ArtifactDsl for BcfSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::bcf::io::decode_bcf(&bytes).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::bcf::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::bcf::io::encode_bcf(self).await.unwrap_or_default();
+        let bytes = crate::artifacts::bcf::io::encode_bcf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -211,7 +211,7 @@ impl store::ArtifactDsl for BcfSnapshot {
 impl store::ArtifactPack for BcfSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::bcf::io::encode_bcf(self).await.map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::bcf::io::encode_bcf(self).map_err(|e| store::PackError::Schema(e))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -221,7 +221,7 @@ impl store::ArtifactPack for BcfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::bcf::io::decode_bcf(&inner).await.map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::bcf::io::decode_bcf(&inner).map_err(|e| store::PackError::Schema(e))
     }
 }
 //#endregion 🔖️Snapshot
@@ -229,7 +229,8 @@ impl store::ArtifactPack for BcfSnapshot {
 //#region 🔖️SnapshotFixtures
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
-pub async fn empty_bcf_snapshot() -> BcfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_bcf_snapshot() -> BcfSnapshot {
     BcfSnapshot::default()
 }
 
@@ -240,7 +241,8 @@ pub async fn empty_bcf_snapshot() -> BcfSnapshot {
 /// `conformance_laws::grammar_conformance_law`/`protocol_walk_law`/`fixture_honesty_law` AND by
 /// the shipped `📚️examples/🎬️demo` fixtures, same shape `📜️docx/…/⚙️engine/🦀️component.rs`'s own
 /// `demo_docx_snapshot()` establishes.
-pub async fn demo_bcf_snapshot() -> BcfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_bcf_snapshot() -> BcfSnapshot {
     BcfSnapshot {
         schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),

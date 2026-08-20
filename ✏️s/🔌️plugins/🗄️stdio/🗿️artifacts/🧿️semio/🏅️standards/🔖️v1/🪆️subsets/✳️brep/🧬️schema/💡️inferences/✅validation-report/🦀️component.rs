@@ -101,9 +101,10 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 
 // #region 🔖️Topology
 
-async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (loop_id, lp) in body.loops.iter() {
-        let coedges = body.loop_coedges(loop_id).await;
+        let coedges = body.loop_coedges(loop_id);
         if coedges.is_empty() {
             issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "empty-loop", message: "loop has no coedges".to_string() });
             continue;
@@ -114,13 +115,13 @@ async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
         }
         let n = coedges.len();
         for i in 0..n {
-            let Some((_, end_a)) = body.coedge_endpoints(coedges[i]).await else { continue };
-            let Some((start_b, _)) = body.coedge_endpoints(coedges[(i + 1) % n]).await else { continue };
+            let Some((_, end_a)) = body.coedge_endpoints(coedges[i]) else { continue };
+            let Some((start_b, _)) = body.coedge_endpoints(coedges[(i + 1) % n]) else { continue };
             if end_a != start_b {
                 issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {i} ends at a different vertex than coedge {} starts at", (i + 1) % n) });
             }
-            let coedge_a = body.coedges.get(coedges[i]).await.unwrap();
-            let coedge_b = body.coedges.get(coedges[(i + 1) % n]).await.unwrap();
+            let coedge_a = body.coedges.get(coedges[i]).unwrap();
+            let coedge_b = body.coedges.get(coedges[(i + 1) % n]).unwrap();
             if coedge_a.next != coedges[(i + 1) % n] || coedge_b.prev != coedges[i] {
                 issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {i}'s next/prev pointers are not symmetric with its ring neighbor") });
             }
@@ -131,9 +132,10 @@ async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// 🩺️ Flags edges used by more than 2 coedges — valid for future non-manifold support but worth
 /// surfacing explicitly (the boolean/sewing pipeline in later phases assumes 2-manifold input
 /// unless a caller has opted into non-manifold handling).
-async fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, _) in body.edges.iter() {
-        let valence = body.edge_coedges(edge_id).await.len();
+        let valence = body.edge_coedges(edge_id).len();
         if valence > 2 {
             issues.push(ValidationIssue { entity: format!("edge-{}", edge_id.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") });
         }
@@ -146,21 +148,22 @@ async fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
 
 /// 🩺️ Every vertex's tolerance must fit inside every incident edge's tolerance, and every edge's
 /// inside every face whose loop uses it — the containment hierarchy from the plan's tolerance model.
-async fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
         for v in [edge.v0, edge.v1] {
-            let Some(vertex) = body.vertices.get(v).await else { continue };
-            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol).await {
+            let Some(vertex) = body.vertices.get(v) else { continue };
+            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
     }
     for (face_id, face) in body.faces.iter() {
         for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id).await else { continue };
-            let Some(edge) = body.edges.get(coedge.edge).await else { continue };
+            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+            let Some(edge) = body.edges.get(coedge.edge) else { continue };
             if let Some((finer, coarser)) =
-                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol).await
+                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
             {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
@@ -173,28 +176,29 @@ async fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIss
 /// the face's surface, evaluated at the pcurve point, agrees with the 3D curve within the edge's
 /// tolerance. Skips coedges with no pcurve (only an issue on non-planar faces, which nothing
 /// before Phase 4 produces yet, so this check is dormant until surfaces with pcurves exist).
-async fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
     const SAMPLES: usize = 5;
     for (face_id, face) in body.faces.iter() {
-        let Some(surface) = body.surfaces.get(face.surface).await else { continue };
+        let Some(surface) = body.surfaces.get(face.surface) else { continue };
         for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id).await else { continue };
+            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
             let Some(pcurve_id) = coedge.pcurve else { continue };
-            let Some(pcurve) = body.curves2.get(pcurve_id).await else { continue };
-            let Some(edge) = body.edges.get(coedge.edge).await else { continue };
-            let Some(curve3) = body.curves3.get(edge.curve).await else { continue };
+            let Some(pcurve) = body.curves2.get(pcurve_id) else { continue };
+            let Some(edge) = body.edges.get(coedge.edge) else { continue };
+            let Some(curve3) = body.curves3.get(edge.curve) else { continue };
             for i in 0..=SAMPLES {
                 let s = i as f64 / SAMPLES as f64;
                 let p = coedge.prange.0 + (coedge.prange.1 - coedge.prange.0) * s;
                 let t = edge.range.0 + (edge.range.1 - edge.range.0) * s;
                 let uv = pcurve.eval(p);
-                let via_surface = surface.eval(uv.await.x, uv.await.y);
+                let via_surface = surface.eval(uv.x, uv.y);
                 let via_curve = curve3.eval(t);
-                if via_surface.await.distance(via_curve.await) > edge.tol.value() {
+                if via_surface.distance(via_curve) > edge.tol.value() {
                     issues.push(ValidationIssue {
                         entity: format!("coedge-{}", coedge_id.raw_index()),
                         code: "same-parameter-violated",
-                        message: format!("pcurve and 3D curve disagree by {} at s={s} (tol {})", via_surface.await.distance(via_curve.await), edge.tol.value()),
+                        message: format!("pcurve and 3D curve disagree by {} at s={s} (tol {})", via_surface.distance(via_curve), edge.tol.value()),
                     });
                 }
             }
@@ -207,7 +211,8 @@ async fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
 // #region 🔖️Report
 
 /// 🩺️ Runs every structural and geometric check and returns every finding.
-pub async fn validate_body(body: &Body) -> Vec<ValidationIssue> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     check_loop_rings(body, &mut issues);
     check_edge_valence(body, &mut issues);
@@ -228,7 +233,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     use store::{InferenceCache, InferenceCacheConfig};
 
-    async fn valid_snapshot() -> SemioBrepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn valid_snapshot() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
         s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }];
         s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } }];
@@ -302,7 +308,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
-    async fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId {
         let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
         let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
         let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];

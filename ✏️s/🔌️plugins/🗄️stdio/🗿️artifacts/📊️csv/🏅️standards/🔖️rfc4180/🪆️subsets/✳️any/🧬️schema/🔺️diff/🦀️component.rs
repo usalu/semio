@@ -29,19 +29,23 @@ pub struct CsvFieldDiff {
 
 impl CsvFieldDiff {
     /// 🕳️ Whether this patch changes nothing.
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.value.is_none() && self.quoted.is_none()
     }
     /// ▶️ Applies this patch to a field.
-    pub async fn apply(&self, base: &CsvField) -> CsvField {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &CsvField) -> CsvField {
         CsvField { value: self.value.clone().unwrap_or_else(|| base.value.clone()), quoted: self.quoted.unwrap_or(base.quoted) }
     }
     /// 🧭️ State delta between two fields.
-    pub async fn between(base: &CsvField, other: &CsvField) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &CsvField, other: &CsvField) -> Self {
         Self { value: (base.value != other.value).then(|| other.value.clone()), quoted: (base.quoted != other.quoted).then_some(other.quoted) }
     }
     /// ➕️ LWW field-level absorb: `other`'s populated sub-fields win.
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.value.is_some() {
             self.value = other.value;
         }
@@ -77,14 +81,16 @@ pub struct CsvRecordDiff {
 
 impl CsvRecordDiff {
     /// 🕳️ Whether this patch changes nothing.
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         match &self.fields {
             None => true,
             Some(v) => v.iter().all(|f| f.is_none()),
         }
     }
     /// ▶️ Applies this patch to a record.
-    pub async fn apply(&self, base: &CsvRecord) -> CsvRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &CsvRecord) -> CsvRecord {
         match &self.fields {
             None => base.clone(),
             Some(patches) => {
@@ -92,7 +98,7 @@ impl CsvRecordDiff {
                 for (i, patch) in patches.iter().enumerate() {
                     if let Some(p) = patch {
                         if let Some(f) = fields.get_mut(i) {
-                            *f = p.apply(f).await;
+                            *f = p.apply(f);
                         }
                     }
                 }
@@ -103,7 +109,8 @@ impl CsvRecordDiff {
     /// 🧭️ State delta between two records with the SAME field count (positional patch).
     /// Callers with differing field counts must instead express the change as a
     /// remove-then-add pair at the `records` collection level (see `CsvDiff::between`).
-    pub async fn between(base: &CsvRecord, other: &CsvRecord) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &CsvRecord, other: &CsvRecord) -> Self {
         debug_assert_eq!(base.fields.len(), other.fields.len());
         let mut any = false;
         let patches: Vec<Option<CsvFieldDiff>> = base
@@ -111,8 +118,8 @@ impl CsvRecordDiff {
             .iter()
             .zip(other.fields.iter())
             .map(|(b, o)| {
-                let d = semio_framework_plugin::resolve_ready(CsvFieldDiff::between(b, o));
-                if semio_framework_plugin::resolve_ready(d.is_empty()) {
+                let d = CsvFieldDiff::between(b, o);
+                if d.is_empty() {
                     None
                 } else {
                     any = true;
@@ -124,7 +131,8 @@ impl CsvRecordDiff {
     }
     /// ➕️ Structural per-position absorb: `other`'s populated positions win; the patch
     /// vector grows to cover whichever side patches further out.
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         match (&mut self.fields, other.fields) {
             (_, None) => {}
             (slot @ None, Some(f2)) => *slot = Some(f2),
@@ -135,7 +143,7 @@ impl CsvRecordDiff {
                 for (i, patch2) in f2.into_iter().enumerate() {
                     if let Some(p2) = patch2 {
                         match &mut f1[i] {
-                            Some(p1) => p1.absorb(p2).await,
+                            Some(p1) => p1.absorb(p2),
                             slot @ None => *slot = Some(p2),
                         }
                     }
@@ -177,7 +185,8 @@ pub struct CsvRecordsDiff {
 }
 
 impl CsvRecordsDiff {
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -200,7 +209,8 @@ enum Slot {
 
 /// 🧪 Simulates `removed`(descending)/`added`(ascending, clamped) against a virtual array of
 /// `[0, len)` `Slot::Base(i)` markers, mirroring `CsvDiff::apply`'s own ordering exactly.
-async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -225,7 +235,8 @@ async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) 
 /// that at least `k` survivor positions exist before it — without this, a diff with ONLY
 /// an `added` entry (no removed/modified at all, e.g. a lone `InsertRecord`) would simulate
 /// against a zero-length virtual base and lose every earlier survivor entirely.
-async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 //#endregion 🔖️IndexTransport
@@ -247,8 +258,8 @@ pub struct CsvDiff {
 
 impl MutationDiff<CsvSnapshot> for CsvDiff {
     async fn apply(&self, base: &CsvSnapshot) -> MutationApplyResult<CsvSnapshot> {
-        validate_csv_diff(self, base).await?;
-        Ok(apply_csv_diff_unchecked(self, base).await)
+        validate_csv_diff(self, base)?;
+        Ok(apply_csv_diff_unchecked(self, base))
     }
 
     async fn absorb(&mut self, other: Self) {
@@ -266,35 +277,36 @@ impl MutationDiff<CsvSnapshot> for CsvDiff {
             }
             Some(d1) => d1,
         };
-        self.records = Some(absorb_records(d1, d2).await);
+        self.records = Some(absorb_records(d1, d2));
     }
 }
 
-async fn validate_csv_diff(diff: &CsvDiff, base: &CsvSnapshot) -> MutationApplyResult<()> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_csv_diff(diff: &CsvDiff, base: &CsvSnapshot) -> MutationApplyResult<()> {
     let Some(records) = &diff.records else { return Ok(()) };
     let mut removed = std::collections::HashSet::new();
     for &index in &records.removed {
         if index >= base.records.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "record removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record removal target does not exist"));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record removal target is repeated"));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &records.modified {
         if entry.index >= base.records.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "record modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record modification target does not exist"));
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "record modification targets a removed item").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "record modification targets a removed item"));
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record modification target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record modification target is repeated"));
         }
         if let Some(fields) = &entry.diff.fields {
             if fields.len() > base.records[entry.index].fields.len() {
-                return Err(MutationApplyError::new("mutation.apply.invalid-index", "record field patch exceeds the base record").await);
+                return Err(MutationApplyError::new("mutation.apply.invalid-index", "record field patch exceeds the base record"));
             }
         }
     }
@@ -302,16 +314,17 @@ async fn validate_csv_diff(diff: &CsvDiff, base: &CsvSnapshot) -> MutationApplyR
     let mut added = std::collections::HashSet::new();
     for entry in &records.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "record addition is outside the final collection").await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "record addition is outside the final collection"));
         }
         if !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record addition occupies a repeated final position").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record addition occupies a repeated final position"));
         }
     }
     Ok(())
 }
 
-async fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
     let mut next = base.clone();
     if let Some(has_header) = diff.has_header {
         next.has_header = has_header;
@@ -320,7 +333,7 @@ async fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnap
         // 🥇 modified refers to BASE indices — apply before any removal shifts them.
         for m in &rdiff.modified {
             if let Some(rec) = next.records.get_mut(m.index) {
-                *rec = m.diff.apply(rec).await;
+                *rec = m.diff.apply(rec);
             }
         }
         // 🥈 removed refers to BASE indices — process descending so earlier removals
@@ -346,7 +359,8 @@ async fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnap
 
 /// ➕️ Structural, total, base-free absorb of two `records` triples
 /// (`.claude/plans/the-current-schemas-are-scalable-journal.md` `## Absorb`).
-async fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     //#region 🔖️PhiBaseToMid
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     // 📏 The tight bound from d1's OWN references isn't always enough: d2's removed/modified
@@ -361,7 +375,7 @@ async fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDif
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
 
     //#region 🔖️Seed
@@ -392,7 +406,7 @@ async fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDif
             }
             Some(Slot::Added(ai)) => {
                 if let Some(added) = added_alive[*ai].as_mut() {
-                    added.record = m2.diff.apply(&added.record).await;
+                    added.record = m2.diff.apply(&added.record);
                 }
             }
             None => {} // 🕳️ out-of-range: graceful no-op
@@ -423,7 +437,7 @@ async fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDif
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -473,8 +487,8 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
                 continue;
             }
             if b.fields.len() == o.fields.len() {
-                let d = CsvRecordDiff::between(b, o).await;
-                if !d.is_empty().await {
+                let d = CsvRecordDiff::between(b, o);
+                if !d.is_empty() {
                     modified.push(CsvRecordModified { index: i, diff: d });
                 }
             } else {
@@ -501,8 +515,9 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub async fn diff_set_snapshot(base: &CsvSnapshot, next: &CsvSnapshot) -> CsvDiff {
-    CsvDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &CsvSnapshot, next: &CsvSnapshot) -> CsvDiff {
+    CsvDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
@@ -524,22 +539,26 @@ pub async fn diff_set_snapshot(base: &CsvSnapshot, next: &CsvSnapshot) -> CsvDif
 /// `encode_option`-tagged `CsvFieldDiff` entries (`[[0],[1,[V:...,Q:1]]]`); `CsvFieldDiff` itself
 /// uses single-letter `tag:value` pairs (`V`/`Q`), same convention as gif89a's `GifFrameDiff`.
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -560,18 +579,21 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -580,31 +602,38 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_field(f: &CsvField) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_field(f: &CsvField) -> String {
     format!("[{},{}]", enc_str(&f.value), if f.quoted { 1 } else { 0 })
 }
-pub(crate) async fn dec_field(s: &str) -> Result<CsvField, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_field(s: &str) -> Result<CsvField, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [value, quoted] = parts.as_slice() else { return Err(format!("field: expected 2 fields, got {}", parts.len())) };
-    Ok(CsvField { value: dec_str(value).await?, quoted: *quoted == "1" })
+    Ok(CsvField { value: dec_str(value)?, quoted: *quoted == "1" })
 }
-pub(crate) async fn enc_record(r: &CsvRecord) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_record(r: &CsvRecord) -> String {
     format!("[{}]", r.fields.iter().map(enc_field).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_record(s: &str) -> Result<CsvRecord, String> {
-    let fields = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_field).collect::<Result<Vec<_>, String>>()?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_record(s: &str) -> Result<CsvRecord, String> {
+    let fields = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_field).collect::<Result<Vec<_>, String>>()?;
     Ok(CsvRecord { fields })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_field_diff(d: &CsvFieldDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_field_diff(d: &CsvFieldDiff) -> String {
     let mut parts = Vec::new();
     if let Some(v) = &d.value {
         parts.push(format!("V:{}", enc_str(v)));
@@ -614,8 +643,9 @@ async fn enc_field_diff(d: &CsvFieldDiff) -> String {
     }
     format!("[{}]", parts.join(","))
 }
-async fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
+    let inner = strip_brackets(s)?;
     let mut d = CsvFieldDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -623,35 +653,39 @@ async fn dec_field_diff(s: &str) -> Result<CsvFieldDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("field diff: bad entry {entry:?}"))?;
         match tag {
-            "V" => d.value = Some(dec_str(val).await?),
+            "V" => d.value = Some(dec_str(val)?),
             "Q" => d.quoted = Some(val == "1"),
             other => return Err(format!("field diff: unknown tag {other:?}")),
         }
     }
     Ok(d)
 }
-async fn enc_record_diff(d: &CsvRecordDiff) -> String {
-    encode_option(&d.fields, |fields| format!("[{}]", fields.iter().map(|f| encode_option(f, enc_field_diff)).collect::<Vec<_>>().join(","))).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_record_diff(d: &CsvRecordDiff) -> String {
+    encode_option(&d.fields, |fields| format!("[{}]", fields.iter().map(|f| encode_option(f, enc_field_diff)).collect::<Vec<_>>().join(",")))
 }
-async fn dec_record_diff(s: &str) -> Result<CsvRecordDiff, String> {
-    let fields = decode_option(s, |inner| split_top_level(strip_brackets(inner)?, ',').into_iter().filter(|s| !s.is_empty()).map(|p| decode_option(p, dec_field_diff)).collect::<Result<Vec<_>, String>>()).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_record_diff(s: &str) -> Result<CsvRecordDiff, String> {
+    let fields = decode_option(s, |inner| split_top_level(strip_brackets(inner)?, ',').into_iter().filter(|s| !s.is_empty()).map(|p| decode_option(p, dec_field_diff)).collect::<Result<Vec<_>, String>>())?;
     Ok(CsvRecordDiff { fields })
 }
 
 /// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser
 /// (mirrors gif89a's `enc_collection_triple`/`dec_collection_triple`, hand-instantiated here for
 /// `records` since only one collection needs it in this artifact).
-async fn enc_records_diff(d: &CsvRecordsDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_records_diff(d: &CsvRecordsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_record_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_record(&a.record))).collect::<Vec<_>>().join(",");
     format!("records{{[{removed}];[{modified}];[{added}]}}")
 }
-async fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("records: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -659,7 +693,7 @@ async fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
             Ok(CsvRecordModified { index: parse_usize(idx)?, diff: dec_record_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s).await?, ',')
+    let added = split_top_level(strip_brackets(added_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -672,17 +706,19 @@ async fn dec_records_diff(body: &str) -> Result<CsvRecordsDiff, String> {
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-async fn print_csv_diff(d: &CsvDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_csv_diff(d: &CsvDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.has_header {
         tokens.push(format!("has-header={}", if v { 1 } else { 0 }));
     }
     if let Some(v) = &d.records {
-        tokens.push(enc_records_diff(v).await);
+        tokens.push(enc_records_diff(v));
     }
     tokens.join(" ")
 }
-async fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
     let mut d = CsvDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -691,7 +727,7 @@ async fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
         if let Some(rest) = token.strip_prefix("has-header=") {
             d.has_header = Some(rest == "1");
         } else if let Some(rest) = token.strip_prefix("records{") {
-            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?).await?);
+            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?);
         } else {
             return Err(format!("csv diff: unknown token {token:?}"));
         }
@@ -710,9 +746,10 @@ async fn parse_csv_diff(line: &str) -> Result<CsvDiff, String> {
 /// `dsl::ByteWriter`/`dsl::ByteReader` and placed LAST so they can honestly consume "rest of
 /// buffer" with no length prefix — see the protocol file's own doc comment for why (no
 /// `Ref`-to-struct / no heterogeneous `Array` in this dialect yet).
-async fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
     match &d.value {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(v) => {
             w.write_u8(1);
             let bytes = v.as_bytes();
@@ -721,34 +758,36 @@ async fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
         }
     }
     match d.quoted {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(v) => {
             w.write_u8(1);
             w.write_u8(if v { 1 } else { 0 });
         }
     }
 }
-async fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackError> {
     let mut d = CsvFieldDiff::default();
-    if r.read_u8().await? == 1 {
-        let len = r.read_varint_u64().await? as usize;
-        let bytes = r.read_bytes(len).await?;
+    if r.read_u8()? == 1 {
+        let len = r.read_varint_u64()? as usize;
+        let bytes = r.read_bytes(len)?;
         d.value = Some(String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv diff field value utf8", offset: 0, detail: e.to_string() })?);
     }
-    if r.read_u8().await? == 1 {
-        d.quoted = Some(r.read_u8().await? != 0);
+    if r.read_u8()? == 1 {
+        d.quoted = Some(r.read_u8()? != 0);
     }
     Ok(d)
 }
-async fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
     match &d.fields {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(v) => {
             w.write_u8(1);
             w.write_varint_u64(v.len() as u64);
             for item in v {
                 match item {
-                    None => w.write_u8(0).await,
+                    None => w.write_u8(0),
                     Some(fd) => {
                         w.write_u8(1);
                         write_bin_field_diff(w, fd);
@@ -758,12 +797,13 @@ async fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
         }
     }
 }
-async fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackError> {
-    let fields = if r.read_u8().await? == 1 {
-        let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackError> {
+    let fields = if r.read_u8()? == 1 {
+        let n = r.read_varint_u64()? as usize;
         let mut items = Vec::with_capacity(n);
         for _ in 0..n {
-            items.push(if r.read_u8().await? == 1 { Some(read_bin_field_diff(r).await?) } else { None });
+            items.push(if r.read_u8()? == 1 { Some(read_bin_field_diff(r)?) } else { None });
         }
         Some(items)
     } else {
@@ -771,7 +811,8 @@ async fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDi
     };
     Ok(CsvRecordDiff { fields })
 }
-async fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
     w.write_varint_u64(d.removed.len() as u64);
     for idx in &d.removed {
         w.write_varint_u64(*idx as u64);
@@ -787,38 +828,40 @@ async fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
         crate::artifacts::csv::schema::mutations::write_bin_record(w, &a.record);
     }
 }
-async fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackError> {
-    let removed_n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackError> {
+    let removed_n = r.read_varint_u64()? as usize;
     let mut removed = Vec::with_capacity(removed_n);
     for _ in 0..removed_n {
-        removed.push(r.read_varint_u64().await? as usize);
+        removed.push(r.read_varint_u64()? as usize);
     }
-    let modified_n = r.read_varint_u64().await? as usize;
+    let modified_n = r.read_varint_u64()? as usize;
     let mut modified = Vec::with_capacity(modified_n);
     for _ in 0..modified_n {
-        let index = r.read_varint_u64().await? as usize;
-        let diff = read_bin_record_diff(r).await?;
+        let index = r.read_varint_u64()? as usize;
+        let diff = read_bin_record_diff(r)?;
         modified.push(CsvRecordModified { index, diff });
     }
-    let added_n = r.read_varint_u64().await? as usize;
+    let added_n = r.read_varint_u64()? as usize;
     let mut added = Vec::with_capacity(added_n);
     for _ in 0..added_n {
-        let index = r.read_varint_u64().await? as usize;
-        let record = crate::artifacts::csv::schema::mutations::read_bin_record(r).await?;
+        let index = r.read_varint_u64()? as usize;
+        let record = crate::artifacts::csv::schema::mutations::read_bin_record(r)?;
         added.push(CsvRecordAdded { index, record });
     }
     Ok(CsvRecordsDiff { removed, modified, added })
 }
-async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv diff binary", offset: 0, detail: e.to_string() }
 }
 
 impl DiffCodec for CsvDiff {
     async fn print_diff(&self) -> String {
-        print_csv_diff(self).await
+        print_csv_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_csv_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_csv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new().await;
@@ -843,7 +886,7 @@ impl DiffCodec for CsvDiff {
         let hh_flag = r.read_u8().await.map_err(diff_pack_err)?;
         let has_header = if hh_flag == 1 { Some(r.read_u8().await.map_err(diff_pack_err)? != 0) } else { None };
         let rec_flag = r.read_u8().await.map_err(diff_pack_err)?;
-        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).await.map_err(diff_pack_err)?) } else { None };
+        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(diff_pack_err)?) } else { None };
         Ok(CsvDiff { has_header, records })
     }
 }
@@ -857,10 +900,12 @@ mod handcrafted_diff_codec_tests {
     use super::*;
     use crate::artifacts::csv::schema::snapshot::CsvField;
 
-    async fn field(value: &str, quoted: bool) -> CsvField {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn field(value: &str, quoted: bool) -> CsvField {
         CsvField { value: value.into(), quoted }
     }
-    async fn record(fields: &[(&str, bool)]) -> CsvRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn record(fields: &[(&str, bool)]) -> CsvRecord {
         CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
     }
 

@@ -3,6 +3,7 @@ use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapsh
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
-pub async fn inverse(base: &Mp3Snapshot, mutation: &Mp3Mutation) -> Vec<Mp3Mutation> {
-    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(base: &Mp3Snapshot, mutation: &Mp3Mutation) -> Vec<Mp3Mutation> {
+    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base)
 }

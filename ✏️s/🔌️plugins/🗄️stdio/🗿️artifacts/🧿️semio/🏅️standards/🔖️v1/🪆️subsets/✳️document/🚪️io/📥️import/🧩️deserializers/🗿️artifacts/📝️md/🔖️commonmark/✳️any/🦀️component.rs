@@ -28,7 +28,8 @@ use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId
 /// ✍️ Flattens one inline node into zero or more runs, threading `style` down through
 /// `Emphasis`/`Strong` nesting (so `**_x_**` becomes one run with both `bold` and `italic` set).
 /// `Link`'s inner inlines are flattened too, carrying `style.link = Some(url)`.
-async fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>, images: &mut Vec<DocBlock>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>, images: &mut Vec<DocBlock>) {
     match inline {
         MdInline::Text { text } => runs.push(DocRun { text: text.clone(), style }),
         MdInline::Emphasis { inlines } => {
@@ -51,14 +52,15 @@ async fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>,
             }
         }
         MdInline::Image { alt, url, .. } => images.push(DocBlock::Image { image_id: url.clone(), alt: alt.clone(), width: None, height: None }),
-        MdInline::SoftBreak => runs.push(DocRun::plain(" ").await),
-        MdInline::HardBreak => runs.push(DocRun::plain("\n").await),
-        MdInline::HtmlInline { raw } => runs.push(DocRun::plain(raw.clone()).await),
+        MdInline::SoftBreak => runs.push(DocRun::plain(" ")),
+        MdInline::HardBreak => runs.push(DocRun::plain("\n")),
+        MdInline::HtmlInline { raw } => runs.push(DocRun::plain(raw.clone())),
     }
 }
 
 /// 🧱 One inline sequence -> (runs, any image blocks pulled out of it, in trailing order).
-async fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
     let mut runs = Vec::new();
     let mut images = Vec::new();
     for i in inlines {
@@ -69,16 +71,17 @@ async fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
 
 /// 🧩 One `MdBlock` -> zero or more `DocBlock`s (an image-bearing paragraph expands to its text
 /// block plus one `Image` block per embedded image, in order).
-async fn map_block(block: &MdBlock) -> Vec<DocBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn map_block(block: &MdBlock) -> Vec<DocBlock> {
     match block {
         MdBlock::Heading { level, inlines } => {
-            let (runs, images) = map_inlines(inlines).await;
+            let (runs, images) = map_inlines(inlines);
             let mut out = vec![DocBlock::Heading { level: *level, style_id: None, runs }];
             out.extend(images);
             out
         }
         MdBlock::Paragraph { inlines } => {
-            let (runs, images) = map_inlines(inlines).await;
+            let (runs, images) = map_inlines(inlines);
             let mut out = vec![DocBlock::Paragraph { style_id: None, runs }];
             out.extend(images);
             out
@@ -114,7 +117,8 @@ impl ArtifactDeserializer for SemioDocumentFromMd {
 mod tests {
     use super::*;
 
-    pub(crate) async fn sample_md() -> MdSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn sample_md() -> MdSnapshot {
         MdSnapshot {
             schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),
             blocks: vec![

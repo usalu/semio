@@ -20,16 +20,17 @@ pub mod derived_construction {
 
     //#region 🔖️Stamp
     /// 🖋️ Real-rewrites `snapshot.opc`'s `xl/workbook.xml` root attrs to explicit Transitional shape.
-    pub async fn stamp_transitional_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
-        if let Some(bytes) = snapshot.opc.part_bytes(WORKBOOK_PART).await {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn stamp_transitional_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
+        if let Some(bytes) = snapshot.opc.part_bytes(WORKBOOK_PART) {
             if let Ok(text) = std::str::from_utf8(bytes) {
-                if let Ok(mut doc) = xml_document_from_text(text).await {
+                if let Ok(mut doc) = xml_document_from_text(text) {
                     if let Some(XmlNode::Element { attrs, .. }) = &mut doc.root {
                         set_attr(attrs, "xmlns", TRANSITIONAL_SML_NS);
                         set_attr(attrs, "xmlns:r", TRANSITIONAL_R_NS);
                         set_attr(attrs, "conformance", "transitional");
                     }
-                    let bytes = xml_document_to_text(&doc).await.into_bytes();
+                    let bytes = xml_document_to_text(&doc).into_bytes();
                     snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, bytes);
                 }
             }
@@ -37,7 +38,8 @@ pub mod derived_construction {
         snapshot
     }
 
-    async fn set_attr(attrs: &mut Vec<XmlAttr>, name: &str, value: &str) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn set_attr(attrs: &mut Vec<XmlAttr>, name: &str, value: &str) {
         if let Some(existing) = attrs.iter_mut().find(|a| a.name == name) {
             existing.value = value.into();
         } else {
@@ -55,8 +57,9 @@ pub mod derived_construction {
     impl XlsxTransitionalBuilderConstruction {
         /// ➕️ The recommended entry point: builds a minimal package from `workbook` via the shared
         /// ecma-376 engine, then stamps it explicitly Transitional.
-        pub async fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_transitional_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook).await).await }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(workbook: XlsxWorkbook) -> Self {
+            Self { snapshot: stamp_transitional_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook)) }
         }
     }
 
@@ -66,7 +69,7 @@ pub mod derived_construction {
         type Diff = XlsxDiff;
 
         async fn empty() -> Self {
-            Self::new(XlsxWorkbook::default()).await
+            Self::new(XlsxWorkbook::default())
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -83,7 +86,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -157,10 +160,11 @@ pub mod derived_analysis {
 
     /// 🔎️ Real scan of `xl/workbook.xml`'s root element attrs -- `(xmlns, xmlns:r, conformance)`,
     /// each `None` when absent. `None` overall only when the part is missing or unparsable as XML.
-    async fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
-        let bytes = snapshot.opc.part_bytes(WORKBOOK_PART).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
+        let bytes = snapshot.opc.part_bytes(WORKBOOK_PART)?;
         let text = std::str::from_utf8(bytes).ok()?;
-        let doc = xml_document_from_text(text).await.ok()?;
+        let doc = xml_document_from_text(text).ok()?;
         let XmlNode::Element { name, attrs, .. } = doc.root? else { return None };
         if name != "workbook" {
             return None;
@@ -169,17 +173,20 @@ pub mod derived_analysis {
         Some((get("xmlns"), get("xmlns:r"), get("conformance")))
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🩺️ Real worksheet content-type scan -- same check as ✳️strict's own copy, duplicated (small
     /// enough, CODE_* consts stay subset-namespaced) rather than a cross-subset dependency.
-    async fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
         snapshot
             .opc
             .parts
@@ -193,9 +200,10 @@ pub mod derived_analysis {
     /// `XlsxSnapshot`. Same single-source-of-truth role as ✳️strict's `check_strict_conformance`:
     /// `XlsxTransitionalComposer::compose` and `XlsxTransitionalBuilder::build` hard-gate on this, and
     /// the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    pub async fn check_transitional_conformance(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_transitional_conformance(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
-        let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot).await else {
+        let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot) else {
             out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} is missing or unparsable as XML -- cannot verify ISO/IEC 29500-4 Transitional conformance")));
             return out;
         };
@@ -232,7 +240,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_transitional_conformance(snapshot).await;
+                let checks = check_transitional_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -249,11 +257,13 @@ pub mod derived_analysis {
         use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument};
         use crate::artifacts::zip::opc::OpcPackage;
 
-        async fn attr(name: &str, value: &str) -> XmlAttr {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn attr(name: &str, value: &str) -> XmlAttr {
             XmlAttr { name: name.into(), value: value.into() }
         }
 
-        async fn workbook_xml(xmlns: &str, xmlns_r: &str, conformance: Option<&str>) -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn workbook_xml(xmlns: &str, xmlns_r: &str, conformance: Option<&str>) -> Vec<u8> {
             let mut attrs = vec![attr("xmlns", xmlns), attr("xmlns:r", xmlns_r)];
             if let Some(c) = conformance {
                 attrs.push(attr("conformance", c));
@@ -262,7 +272,8 @@ pub mod derived_analysis {
             xml_document_to_text(&doc).into_bytes()
         }
 
-        async fn snapshot_with_workbook(xmlns: &str, xmlns_r: &str, conformance: Option<&str>) -> XlsxSnapshot {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn snapshot_with_workbook(xmlns: &str, xmlns_r: &str, conformance: Option<&str>) -> XlsxSnapshot {
             let mut opc = OpcPackage::empty();
             opc.set_part(WORKBOOK_PART, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", workbook_xml(xmlns, xmlns_r, conformance));
             XlsxSnapshot::from_parts(opc, Default::default())

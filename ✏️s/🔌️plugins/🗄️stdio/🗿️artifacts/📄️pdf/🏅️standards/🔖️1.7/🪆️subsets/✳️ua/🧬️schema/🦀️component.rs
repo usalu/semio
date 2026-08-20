@@ -18,7 +18,8 @@ pub mod derived_construction {
     //#region 🔖️Seed
     /// 🌱️ Seeds a fresh snapshot with a real tagged-PDF Catalog: `/MarkInfo/Marked true`, a
     /// (minimal) `/StructTreeRoot`, `/Lang`, and `/ViewerPreferences/DisplayDocTitle true`.
-    async fn seeded_snapshot(lang: String) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn seeded_snapshot(lang: String) -> PdfSnapshot {
         let objects = vec![
             PdfIndirectObject {
                 id: ObjRef { num: 1, gen: 0 },
@@ -46,17 +47,20 @@ pub mod derived_construction {
 
     impl PdfUaBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES a language tag (e.g. `"en-US"`) up front.
-        pub async fn new(lang: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(lang.into()).await }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(lang: impl Into<String>) -> Self {
+            Self { snapshot: seeded_snapshot(lang.into()) }
         }
 
-        pub async fn add_page(mut self, page: PdfPage) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
             self
         }
 
-        pub async fn set_info(mut self, info: PdfInfo) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
             self
         }
@@ -68,7 +72,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new("en").await
+            Self::new("en")
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -85,7 +89,7 @@ pub mod derived_construction {
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -152,58 +156,69 @@ pub mod derived_analysis {
     pub const CODE_INFO_TITLE: &str = "stdio.pdf.ua.missing-info-title";
     pub const CODE_FONT_NOT_EMBEDDED: &str = "stdio.pdf.ua.font-not-embedded";
 
-    async fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dict_name<'a>(dict: &'a [PdfDictEntry], key: &str) -> Option<&'a str> {
         dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_name())
     }
 
-    async fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
-    async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
+            PdfObject::Ref(r) => resolve_ref(objects, *r),
             other => Some(other),
         }
     }
 
-    async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
+        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
-    async fn resolved_dict_entry<'a>(objects: &'a [PdfIndirectObject], catalog: &'a PdfObject, key: &str) -> Option<&'a PdfObject> {
-        catalog.dict_get(key).await.and_then(|v| resolve_item(objects, v))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolved_dict_entry<'a>(objects: &'a [PdfIndirectObject], catalog: &'a PdfObject, key: &str) -> Option<&'a PdfObject> {
+        catalog.dict_get(key).and_then(|v| resolve_item(objects, v))
     }
 
     /// ✅ Real check: `/Root/MarkInfo` resolves to a dict carrying `/Marked true`.
-    async fn has_marked_true(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
-        resolved_dict_entry(objects, catalog, "MarkInfo").await.and_then(|v| v.dict_get("Marked")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_marked_true(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
+        resolved_dict_entry(objects, catalog, "MarkInfo").and_then(|v| v.dict_get("Marked")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
     /// 🌳️ Real check: `/Root` carries a `/StructTreeRoot` key at all (any value -- presence is what
     /// PDF/UA requires; deep structure-tree content validation is out of this schema's reach).
-    async fn has_struct_tree_root(catalog: &PdfObject) -> bool {
-        catalog.dict_get("StructTreeRoot").await.is_some()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_struct_tree_root(catalog: &PdfObject) -> bool {
+        catalog.dict_get("StructTreeRoot").is_some()
     }
 
     /// 🗣️ Real check: `/Root/Lang` is a non-empty text string.
-    async fn has_nonempty_lang(catalog: &PdfObject) -> bool {
-        catalog.dict_get("Lang").await.map(|v| matches!(v, PdfObject::Str(s) if !s.is_empty())).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_nonempty_lang(catalog: &PdfObject) -> bool {
+        catalog.dict_get("Lang").map(|v| matches!(v, PdfObject::Str(s) if !s.is_empty())).unwrap_or(false)
     }
 
     /// 🏷️ Real check: `/Root/ViewerPreferences` resolves to a dict carrying `/DisplayDocTitle true`.
-    async fn has_display_doc_title(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
-        resolved_dict_entry(objects, catalog, "ViewerPreferences").await.and_then(|v| v.dict_get("DisplayDocTitle")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn has_display_doc_title(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
+        resolved_dict_entry(objects, catalog, "ViewerPreferences").and_then(|v| v.dict_get("DisplayDocTitle")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
-    async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).await.and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
-    async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
-            let Some(d) = o.value.as_dict().await else { continue };
+            let Some(d) = o.value.as_dict() else { continue };
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
@@ -214,7 +229,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -225,22 +240,25 @@ pub mod derived_analysis {
         out
     }
 
-    async fn hard(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    async fn soft(code: &'static str, message: String) -> Diagnostic {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Real ISO 14289-1:2014 (PDF/UA-1) conformance checks against one already-decoded
     /// `PdfSnapshot`. Shared single source of truth used by `PdfUaComposer`, `PdfUaBuilder`, and
     /// `PdfUaValidator`.
-    pub async fn check_ua_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn check_ua_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         let catalog = find_catalog(objects);
-        match catalog.await {
+        match catalog {
             Some(catalog) => {
                 if !has_marked_true(objects, catalog) {
                     out.push(hard(CODE_MARKINFO, "/Root/MarkInfo is absent or lacks /Marked true -- ISO 14289-1 requires the document be marked as tagged".into()));
@@ -288,7 +306,7 @@ pub mod derived_analysis {
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_ua_conformance(snapshot).await;
+                let checks = check_ua_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
@@ -304,7 +322,8 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo;
 
-        async fn tagged_catalog_objects() -> Vec<PdfIndirectObject> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn tagged_catalog_objects() -> Vec<PdfIndirectObject> {
             vec![
                 PdfIndirectObject {
                     id: ObjRef { num: 1, gen: 0 },

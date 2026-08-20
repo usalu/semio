@@ -30,7 +30,8 @@ impl Default for SemioKind {
 
 /// 🏷️ Computes [`SemioKind`] via the envelope's own `subset_tag`/`subset_ordinal` dispatch —
 /// pure, total, O(1).
-pub async fn compute_semio_kind(snapshot: &SemioSnapshot) -> SemioKind {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_kind(snapshot: &SemioSnapshot) -> SemioKind {
     SemioKind { tag: subset_tag(&snapshot.subset).to_string(), ordinal: subset_ordinal(&snapshot.subset) as u32 }
 }
 //#endregion 🔖️Kind
@@ -42,7 +43,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
     use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
-    async fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {
         SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
     }
 

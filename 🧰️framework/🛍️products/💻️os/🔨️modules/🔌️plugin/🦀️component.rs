@@ -196,8 +196,15 @@ pub mod app {
     /// own types with the old ones, quietly undoing the migration.
     use ui_wgpu::wgpu::{
         ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget,
-        Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowMeasure,
+        Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot,
+        WindowLayout, WindowMeasure, WindowOptions, collect_window_kind_ids_from_layout,
+        FRAMEWORK_HISTORY_BODY_KEY,
     };
+    /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
+    /// as `ui_wgpu::wgpu::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
+    /// consumer" reasoning as `KeybindingActionDescriptor` below, so this stays bare (no name collision
+    /// with the contract's differently-named `MenuRef` to guard against, unlike that one).
+    use ui_wgpu::wgpu::UiMenuRef;
     /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`)
     /// is still declared as `ui_wgpu::wgpu::ActionDescriptor` and was not part of this migration's scope
     /// — it is a separate, un-migrated manifest domain (declarative keybinding data), not one of the
@@ -236,6 +243,26 @@ pub mod app {
         ComponentTree::new(built_to_tree(node))
     }
     //#endregion 🔖️TreeConvert
+
+    /// 🔀️ Bridges the two SurfaceKind enums that currently coexist: the contract owns the semantic
+    /// one, while the ui crate still carries the original for the window-kit and descriptor paths
+    /// this program has not migrated yet. Both carry the same 15 variants with the same serde names,
+    /// so the mapping goes through that shared wire name and is total rather than lossy. It is
+    /// deleted with the legacy enum in the deletion wave; it exists because two names for one concept
+    /// briefly overlap, not as a compatibility layer.
+    // 🚫️async: E1 pure total mapping consumed by sync struct-literal call sites — see R9.
+    fn contract_surface_kind(kind: ui_wgpu::wgpu::SurfaceKind) -> SurfaceKind {
+        let name = serde_json::to_string(&kind).unwrap_or_default();
+        serde_json::from_str(&name).unwrap_or(SurfaceKind::Canvas2d)
+    }
+
+    /// 🔀️ The inverse of contract_surface_kind, for descriptor paths still speaking the old enum.
+    // 🚫️async: E1 pure total mapping — see R9.
+    fn legacy_surface_kind(kind: SurfaceKind) -> ui_wgpu::wgpu::SurfaceKind {
+        let name = serde_json::to_string(&kind).unwrap_or_default();
+        serde_json::from_str(&name).unwrap_or(ui_wgpu::wgpu::SurfaceKind::Canvas2d)
+    }
+
 
     // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
     // (`.map_err`/`.ok_or_else`) — see R9.
@@ -432,10 +459,10 @@ pub mod app {
             id: def.id,
             label: def.label,
             body_key: def.body_key,
-            surface_kind: def.surface_kind,
+            surface_kind: contract_surface_kind(def.surface_kind),
             icon_id: def.icon_id,
             measures: def.options.measures,
-            engagement: def.options.engagement.as_option().await.cloned(),
+            engagement: def.options.engagement.as_option().cloned(),
             actions: def.actions,
             action_refs: Vec::new(),
             utilities: def.utilities,
@@ -1350,7 +1377,7 @@ pub mod app {
             let mut reverse = ArtifactInferenceServiceRegistry::new().await;
             reverse.register(beta).await.unwrap();
             reverse.register(alpha).await.unwrap();
-            assert_eq!(forward.metadata(), reverse.metadata());
+            assert_eq!(forward.metadata().await, reverse.metadata().await);
             let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
             let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: "test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
             assert_eq!(forward.infer("s.test.alpha", "s.test.alpha.inference", &request).await.unwrap().canonical_payload, b"pack");
@@ -1360,8 +1387,8 @@ pub mod app {
         async fn artifact_inference_registry_rejects_any_conflicting_duplicate() {
             let identity = metadata("s.test.conflict", "s.test.conflict.inference").await;
             let first = ArtifactInferenceService::new(identity, echo);
-            assert_eq!(first.executable_identity(), ArtifactInferenceService::new(identity, echo).executable_identity());
-            assert_ne!(first.executable_identity(), ArtifactInferenceService::new(identity, reject).executable_identity());
+            assert_eq!(first.executable_identity().await, ArtifactInferenceService::new(identity, echo).executable_identity().await);
+            assert_ne!(first.executable_identity().await, ArtifactInferenceService::new(identity, reject).executable_identity().await);
             let mut changed_metadata = metadata("s.test.conflict", "s.test.conflict.inference").await;
             changed_metadata.algorithm_version = 2;
             let mut registry = ArtifactInferenceServiceRegistry::new().await;
@@ -1849,7 +1876,7 @@ pub mod app {
             let mut registry = ArtifactInferenceServiceRegistry::new().await;
             registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel)).await.unwrap();
             let request = request("s.test.inference.cancel");
-            let error = wire_artifact_infer_from(&registry, &serde_json::to_vec(&request).unwrap()).await.unwrap_err();
+            let error = wire_artifact_infer_from(&registry, &serde_json::to_vec(&request.await).unwrap()).await.unwrap_err();
             assert_eq!(error.code, "artifact-inference.cancelled");
         }
     }
@@ -2955,7 +2982,7 @@ pub mod app {
                     &self.definition,
                     &mut self.definition_error,
                     ArtifactCapabilityKind::composer().await,
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate().await).await.map(|claim| vec![claim]),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await.map(|claim| vec![claim]),
                 ).await;
                 self.composers.push(entry);
             }
@@ -3009,7 +3036,7 @@ pub mod app {
                     &self.definition,
                     &mut self.definition_error,
                     ArtifactCapabilityKind::subset_validator().await,
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate().await).await.map(|claim| vec![claim]),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await.map(|claim| vec![claim]),
                 ).await;
                 self.subset_validators.push(entry);
             }
@@ -3224,7 +3251,7 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, service.metadata().inference_schema).await?]).await);
         }
         for entry in composers {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate().await).await?]).await);
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await?]).await);
         }
         for row in formats {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
@@ -3239,7 +3266,7 @@ pub mod app {
         for entry in subset_validators {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(
                 ArtifactCapabilityKind::subset_validator().await,
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate().await).await?],
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await?],
             ).await);
         }
         for spec in languages {
@@ -4991,10 +5018,10 @@ pub mod app {
             }
             let mut layout_window_ids = Vec::new();
             if let Some(layout) = &self.default_layout {
-                layout_window_ids.extend(collect_window_kind_ids_from_layout(layout).await);
+                layout_window_ids.extend(collect_window_kind_ids_from_layout(layout));
             }
             for named in &self.named_layouts {
-                layout_window_ids.extend(collect_window_kind_ids_from_layout(&named.layout).await);
+                layout_window_ids.extend(collect_window_kind_ids_from_layout(&named.layout));
             }
             for window_kind_id in layout_window_ids {
                 if !(window_kind_ids.contains(&window_kind_id)) {
@@ -5381,7 +5408,7 @@ pub mod app {
                             id: window.id,
                             label: window.label,
                             body_key: window.body_key,
-                            surface_kind: window.surface_kind,
+                            surface_kind: legacy_surface_kind(window.surface_kind),
                             icon_id: window.icon_id,
                             options: WindowOptions { measures: window.measures, engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some) },
                             actions: window.actions,
@@ -5951,10 +5978,10 @@ pub mod app {
             let native_de = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
             let reuse_en = ViewModel { locale: Locale::En, terminology: Terminology::Reuse, ..ViewModel::default() };
             let reuse_de = ViewModel { locale: Locale::De, terminology: Terminology::Reuse, ..ViewModel::default() };
-            assert_eq!(resolve_labels::<SampleLabels>(&native_en).greeting.as_str(), "Hello");
-            assert_eq!(resolve_labels::<SampleLabels>(&native_de).greeting.as_str(), "Hallo");
-            assert_eq!(resolve_labels::<SampleLabels>(&reuse_en).greeting.as_str(), "Hi");
-            assert_eq!(resolve_labels::<SampleLabels>(&reuse_de).greeting.as_str(), "Servus");
+            assert_eq!(resolve_labels::<SampleLabels>(&native_en).await.greeting.as_str(), "Hello");
+            assert_eq!(resolve_labels::<SampleLabels>(&native_de).await.greeting.as_str(), "Hallo");
+            assert_eq!(resolve_labels::<SampleLabels>(&reuse_en).await.greeting.as_str(), "Hi");
+            assert_eq!(resolve_labels::<SampleLabels>(&reuse_de).await.greeting.as_str(), "Servus");
         }
     }
     //#endregion 🔖️Terminology
@@ -5983,6 +6010,44 @@ pub mod app {
         }
     }
 
+    /// 🔄️ M1 (ticket 26/08/17 `design-unified.md`): `ui_contract::UiValue` → `serde_json::Value` —
+    /// the mirror-image fold of `dsl_value_to_ui_value` above, placed beside it per the same "both are
+    /// structurally identical closed JSON-value shapes, conversion lives at the SDK boundary" reasoning
+    /// (the contract crate must never depend on `serde_json` — see `UiValue`'s own doc in
+    /// `🦀️action.rs`). Needed by `command_from_intent`'s default bridge: `ActionBinding.args`/the
+    /// trigger's `input` are `UiValue`, but `ArtifactApp::command_from_action` takes `Option<&Value>`.
+    // 🚫️async: E1-adjacent pure recursive structural transform — see `dsl_value_to_ui_value`'s own tag.
+    fn ui_value_to_json(value: &UiValue) -> Value {
+        match value {
+            UiValue::Null => Value::Null,
+            UiValue::Bool(value) => Value::Bool(*value),
+            UiValue::Number(value) => serde_json::Number::from_f64(*value).map(Value::Number).unwrap_or(Value::Null),
+            UiValue::Text(value) => Value::String(value.clone()),
+            UiValue::List(values) => Value::Array(values.iter().map(ui_value_to_json).collect()),
+            UiValue::Map(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), ui_value_to_json(value))).collect()),
+        }
+    }
+
+    /// 🔀️ M1: folds a firing `ActionBinding`'s echoed `args` and the trigger's own `input` into ONE
+    /// `serde_json::Value` for `ArtifactApp::command_from_action`'s `Option<&Value>` — `input` wins on
+    /// key collision when both are JSON objects (the trigger-specific payload is the more specific,
+    /// more recent datum); otherwise a present `input` replaces `args` wholesale (a scalar `input`,
+    /// e.g. `Trigger::Delta`'s signed step count, has no field to merge INTO). `None` when neither is
+    /// set, matching `command_from_action`'s existing `None` (no-args) call shape.
+    // 🚫️async: E1-adjacent pure recursive structural transform — see `dsl_value_to_ui_value`'s own tag.
+    fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Option<Value> {
+        match (args.map(ui_value_to_json), input.map(ui_value_to_json)) {
+            (None, None) => None,
+            (Some(args), None) => Some(args),
+            (None, Some(input)) => Some(input),
+            (Some(Value::Object(mut args)), Some(Value::Object(input))) => {
+                args.extend(input);
+                Some(Value::Object(args))
+            }
+            (Some(_), Some(input)) => Some(input),
+        }
+    }
+
     /// 🎯️ Constructs [`ActionId`]s bound to one controller id (renamed `scope`, per
     /// `📓️recipe-plugin.md` §1's direct `ActionId::v1(scope, name)` mapping). ⚠️ Decision: the old
     /// `ActionDescriptor` bundled a controller-scoped id AND its optional args into one value a caller
@@ -6006,6 +6071,60 @@ pub mod app {
         }
     }
     //#endregion 🔖️ActionFactory
+
+    //#region 🧪️MergeUiValuesTests
+    /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): unit coverage for `ui_value_to_json`/
+    /// `merge_ui_values` — the fold `command_from_intent`'s default bridge depends on, kept separate
+    /// from the intent-dispatch integration tests below so a fold regression fails here directly
+    /// instead of being masked by a dispatch-level assertion.
+    #[cfg(test)]
+    mod merge_ui_values_tests {
+        use super::*;
+
+        #[test]
+        fn every_ui_value_shape_folds_to_the_matching_json_shape() {
+            assert_eq!(ui_value_to_json(&UiValue::Null), Value::Null);
+            assert_eq!(ui_value_to_json(&UiValue::Bool(true)), Value::Bool(true));
+            assert_eq!(ui_value_to_json(&UiValue::Number(-2.5)), serde_json::json!(-2.5));
+            assert_eq!(ui_value_to_json(&UiValue::Text("hi".into())), Value::String("hi".into()));
+            assert_eq!(ui_value_to_json(&UiValue::List(vec![UiValue::Number(1.0), UiValue::Bool(false)])), serde_json::json!([1.0, false]));
+            let mut map = std::collections::BTreeMap::new();
+            map.insert("id".to_string(), UiValue::Text("w1".into()));
+            assert_eq!(ui_value_to_json(&UiValue::Map(map)), serde_json::json!({ "id": "w1" }));
+        }
+
+        #[test]
+        fn merge_ui_values_returns_none_when_neither_side_is_set() {
+            assert_eq!(merge_ui_values(None, None), None);
+        }
+
+        #[test]
+        fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
+            assert_eq!(merge_ui_values(Some(&UiValue::Text("a".into())), None), Some(serde_json::json!("a")));
+            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))), Some(serde_json::json!(3.0)));
+        }
+
+        /// 🔀️ The decided merge rule: `input` wins on key collision when both are objects.
+        #[test]
+        fn merge_ui_values_prefers_input_on_key_collision_between_two_maps() {
+            let mut args_map = std::collections::BTreeMap::new();
+            args_map.insert("value".to_string(), UiValue::Number(1.0));
+            args_map.insert("scope".to_string(), UiValue::Text("keep".into()));
+            let mut input_map = std::collections::BTreeMap::new();
+            input_map.insert("value".to_string(), UiValue::Number(2.0));
+            let merged = merge_ui_values(Some(&UiValue::Map(args_map)), Some(&UiValue::Map(input_map))).expect("both sides set");
+            assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
+        }
+
+        /// 🔀️ A scalar `input` has no field to merge INTO — it replaces `args` wholesale (e.g.
+        /// `Trigger::Delta`'s signed step count next to a non-object `args`).
+        #[test]
+        fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
+            let merged = merge_ui_values(Some(&UiValue::Text("stale".into())), Some(&UiValue::Number(-2.0)));
+            assert_eq!(merged, Some(serde_json::json!(-2.0)));
+        }
+    }
+    //#endregion 🧪️MergeUiValuesTests
 
     //#region 🔖️Testkit
     pub mod testkit {
@@ -6238,7 +6357,6 @@ pub mod app {
             use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
             use super::*;
             use crate::app::{ArtifactView, Emit};
-            use crate::{ui_text, UiNode};
             use protocol::{Mutation, MutationDiff};
             use semio_framework::Fault;
             use serde::{Deserialize, Serialize};
@@ -6322,17 +6440,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -6363,17 +6481,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -6426,8 +6544,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                    ui_text(Label::data(format!("count={}", doc.snapshot.count)).await).await
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
                 }
             }
 
@@ -6474,7 +6592,6 @@ pub mod app {
             use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
             use super::*;
             use crate::app::{ArtifactView, Emit};
-            use crate::{ui_text, UiNode};
             use protocol::{Mutation, MutationDiff};
             use semio_framework::Fault;
             use serde::{Deserialize, Serialize};
@@ -6573,17 +6690,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -6616,17 +6733,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -6680,8 +6797,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                    ui_text(Label::data(format!("count={}", doc.snapshot.count)).await).await
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
                 }
             }
 
@@ -6840,7 +6957,6 @@ pub mod app {
             use super::super::{ConfigView, DraftView, EditorApp, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, REVERT_TO_COMMAND_ACTION_ID};
             use super::*;
             use crate::app::{ArtifactView, Emit, ViewEmit};
-            use crate::{ui_text, UiNode};
             use protocol::{Mutation, MutationDiff};
             use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
             use serde::{Deserialize, Serialize};
@@ -6922,17 +7038,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -6963,17 +7079,17 @@ pub mod app {
                         let probe = format!("{keyword} ");
                         if line == keyword.as_str() || line.starts_with(&probe) {
                             let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                         }
                     }
                     Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
                 }
                 async fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                     let variants = <Self as ::dsl::DslVariants>::variants();
                     let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                     if body.is_empty() {
                         keyword
                     } else {
@@ -7041,8 +7157,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                    ui_text(Label::data(format!("count={}", doc.snapshot.count)).await).await
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
                 }
             }
 
@@ -7076,8 +7192,8 @@ pub mod app {
                     Ok(ViewEmit::default())
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                    ui_text(Label::data(format!("count={}", doc.snapshot.count)).await).await
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
                 }
             }
 
@@ -7120,7 +7236,7 @@ pub mod app {
                 let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
                 let invocation = ActionInvocation {
-                    address: ActionAddress { plugin_id: "test".into(), app_id: real_id.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
+                    address: ActionAddress { plugin_id: "test".into(), app_id: real_id.await.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
                     arguments: Default::default(),
                 };
                 let error = app.handle_action_invocation(&invocation, Some("edit"), &meta("local")).await.expect_err("registry-less fixture declares no modes");
@@ -7135,10 +7251,10 @@ pub mod app {
             async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
                 let app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
-                assert_eq!(app.store.envelope().id, real_id);
-                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+                assert_eq!(app.store.envelope().await.id, real_id);
+                assert_eq!(app.config_store.envelope().await.id, format!("{real_id}.await-config"));
+                assert_eq!(app.draft_store.envelope().await.id, format!("{real_id}.await-draft"));
+                assert_eq!(app.interaction_store.envelope().await.id, format!("{real_id}.await-interaction"));
             }
 
             /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
@@ -7147,10 +7263,10 @@ pub mod app {
             async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
                 let app = new_viewer::<SurfaceViewerFixture>().await;
                 let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
-                assert_eq!(app.store.envelope().id, real_id);
-                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+                assert_eq!(app.store.envelope().await.id, real_id);
+                assert_eq!(app.config_store.envelope().await.id, format!("{real_id}.await-config"));
+                assert_eq!(app.draft_store.envelope().await.id, format!("{real_id}.await-draft"));
+                assert_eq!(app.interaction_store.envelope().await.id, format!("{real_id}.await-interaction"));
             }
 
             /// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
@@ -7189,8 +7305,8 @@ pub mod app {
             let mut expected_io_pairs: Vec<(String, String)> = Vec::new();
             for entry in declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| subset.io.entries.iter()) {
                 expected_io_pairs.push((
-                    semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate().await,
-                    semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate().await,
+                    semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate(),
+                    semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate(),
                 ));
             }
             let expected_surface_ids: Vec<String> = declaration
@@ -7209,7 +7325,7 @@ pub mod app {
             for (from, into) in &expected_io_pairs {
                 let mut found = false;
                 for entry in live_io_entries.iter() {
-                    if &entry.from.to_coordinate().await == from && &entry.into.to_coordinate().await == into {
+                    if &entry.from.to_coordinate() == from && &entry.into.to_coordinate() == into {
                         found = true;
                         break;
                     }
@@ -7278,7 +7394,7 @@ pub mod app {
                     .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
                     .await.mode_tools("edit", vec![])
                     .await.window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.default_layout(create_default_layout(&["missing".into()], "row", None, None).await)
+                    .await.default_layout(create_default_layout(&["missing".into()], "row", None, None))
                     .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
@@ -7286,13 +7402,13 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_valid_manifest() {
-            let definition = App::builder(canonical_test_app_id("good-app"), LocalizedLabel::data("Good"))
-                .await.document(["semio", "good"])
+            let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good")).await
+                .document(["semio", "good"])
                 .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .await.mode_tools("edit", vec![])
                 .await.window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .await.panel_tab("framework.panel.artifact", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None).await)
+                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .await.build_definition().await;
             assert_eq!(definition.window_kinds.len(), 1);
             assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
@@ -7310,12 +7426,12 @@ pub mod app {
             assert_eq!(IconName::from("menu").as_str(), "list");
             assert_eq!(IconName::from("square-pen").as_str(), "pencil");
             assert_eq!(IconName::from("trees").as_str(), "list-tree");
-            let definition = App::builder(canonical_test_app_id("icon-app"), LocalizedLabel::data("Icon"))
-                .await.document(["semio", "icon"])
+            let definition = App::builder(canonical_test_app_id("icon-app").await, LocalizedLabel::data("Icon")).await
+                .document(["semio", "icon"])
                 .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .await.mode_tools("edit", vec![])
                 .await.window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None).await)
+                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .await.build_definition().await;
             assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
         }
@@ -7327,7 +7443,7 @@ pub mod app {
                     .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
                     .await.mode_tools("edit", vec![])
                     .await.window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.default_layout(create_default_layout(&["main".into()], "row", None, None).await)
+                    .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
                     .await.terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
                     .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -7336,12 +7452,12 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_declared_terminology_document() {
-            let definition = App::builder(canonical_test_app_id("good-terminology-app"), LocalizedLabel::data("Good"))
-                .await.document(["semio", "good"])
+            let definition = App::builder(canonical_test_app_id("good-terminology-app").await, LocalizedLabel::data("Good")).await
+                .document(["semio", "good"])
                 .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .await.mode_tools("edit", vec![])
                 .await.window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None).await)
+                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .await.terminology("reuse")
                 .await.terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
                 .await.build_definition().await;
@@ -7349,7 +7465,7 @@ pub mod app {
         }
 
         async fn minimal_app(slug: &str) -> AppBuilder {
-            App::builder(canonical_test_app_id(slug), LocalizedLabel::data("App")).await.document(["semio", slug]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow).await
+            App::builder(canonical_test_app_id(slug).await, LocalizedLabel::data("App")).await.document(["semio", slug]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow).await
         }
 
         #[semio_framework_async_macros::async_test]
@@ -7394,7 +7510,11 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
             let definition = minimal_app("history-panel-app").await.build_definition().await;
-            assert!(definition.panel_tabs.iter().any(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
+            let mut history_panel_tab_ids: Vec<&str> = Vec::new();
+            for tab in definition.panel_tabs.iter() {
+                history_panel_tab_ids.push(tab.id().await);
+            }
+            assert!(history_panel_tab_ids.iter().any(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
             let action_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|a| a.id.as_str()).collect();
             assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
             assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
@@ -7409,15 +7529,20 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
             let definition = minimal_app("manual-history-app").await.panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition().await;
-            assert_eq!(definition.panel_tabs.iter().filter(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
-            let tab = definition.panel_tabs.iter().find(|tab| tab.id() == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
+            let mut manual_history_tab_ids: Vec<&str> = Vec::new();
+            for t in definition.panel_tabs.iter() {
+                manual_history_tab_ids.push(t.id().await);
+            }
+            assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
+            let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
+            let tab = &definition.panel_tabs[manual_history_tab_idx];
             assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn operation_view_and_shell_actions_are_declared_with_their_kind() {
             let definition =
-                minimal_app("typed-actions-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.view_action("setCamera", LocalizedLabel::data("Set Camera")).await.shell_action("exportPng", LocalizedLabel::data("Export PNG")).await.build_definition();
+                minimal_app("typed-actions-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.view_action("setCamera", LocalizedLabel::data("Set Camera")).await.shell_action("exportPng", LocalizedLabel::data("Export PNG")).await.build_definition().await;
             let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
             assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
             assert_eq!(by_id("setCamera").kind, ActionKind::View);
@@ -7600,7 +7725,7 @@ pub mod app {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-window-app").await;
-            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] })
+            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing").await)] })
                     .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
@@ -7613,7 +7738,7 @@ pub mod app {
             let __base = minimal_app("bad-panel-tab-app").await;
             let __chain = __base.introduction(IntroductionDefinition {
                         title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))],
+                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing").await)],
                     })
                     .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -7621,7 +7746,7 @@ pub mod app {
             let __base = minimal_app("bad-panel-tab-first-draggable-app").await;
             let __chain = __base.introduction(IntroductionDefinition {
                         title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing"))],
+                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing").await)],
                     })
                     .await;
             let result_first_draggable = std::panic::catch_unwind(move || __chain.build_definition());
@@ -7696,7 +7821,7 @@ pub mod app {
                     title: LocalizedLabel::data("Welcome"),
                     steps: vec![
                         IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi")),
-                        IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main")),
+                        IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main").await),
                         IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush").await]),
                         IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer").await]),
                         IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::pan("main", "Pan").await, IntroductionInteraction::zoom("main", "Zoom").await]),
@@ -8003,14 +8128,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn example_source_converts_into_example_definition_and_registers_on_app() {
             let source = ExampleSource::new("nakagin", LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), "{\"kind\":\"demo\"}", "building").await;
-            assert_eq!(source.id(), "nakagin");
-            assert_eq!(source.document(), "{\"kind\":\"demo\"}");
-            assert_eq!(source.payload(), source.document_json());
+            assert_eq!(source.id().await, "nakagin");
+            assert_eq!(source.document().await, "{\"kind\":\"demo\"}");
+            assert_eq!(source.payload().await, source.document_json().await);
             let definition = ExampleDefinition::from(&source);
             assert_eq!(definition.id, "nakagin");
             assert_eq!(definition.artifact_json, "{\"kind\":\"demo\"}");
             assert!(definition.app_id.is_empty());
-            let app = App::from_builder(App::builder(canonical_test_app_id("puzzle2d-play"), LocalizedLabel::data("Puzzle")).await.document(["semio", "puzzle"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
+            let app = App::from_builder(App::builder(canonical_test_app_id("puzzle2d-play").await, LocalizedLabel::data("Puzzle")).await.document(["semio", "puzzle"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
                 "main",
                 LocalizedLabel::data("Main"),
                 "puzzle.main",
@@ -8025,7 +8150,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn example_delegates_to_example_source() {
-            let app = App::from_builder(App::builder(canonical_test_app_id("demo-play"), LocalizedLabel::data("Demo")).await.document(["semio", "demo"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
+            let app = App::from_builder(App::builder(canonical_test_app_id("demo-play").await, LocalizedLabel::data("Demo")).await.document(["semio", "demo"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
                 "main",
                 LocalizedLabel::data("Main"),
                 "demo.main",
@@ -8302,9 +8427,13 @@ pub mod app {
         /// 👥️ Every OTHER peer currently selecting `id` within `domain`, sorted by actor
         /// (contract-freeze §C7.6) — `[]` for a peer with no adopted interaction, an interaction with
         /// no matching domain, or a domain where `id` is not in `selected`.
-        // 🚫️async: E1 pure in-memory filter, no suspension point — consumed by the sync
-        // `marks_for` closure `ui_tree_stamp_presence` takes (a plain `&dyn Fn`, language-barred
-        // from being async) — see R9.
+        // 🚫️async: E1 pure in-memory filter, no suspension point — see R9.
+        //
+        // ⚠️ Gap (SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers` — see
+        // `📓️terra-sdk-helpers-report.md`): the sync `marks_for` closure this used to feed
+        // (`stamp_and_cache_interaction_ui`'s old presence-stamping half) is gone — that destination no
+        // longer exists on a built node. This method itself is unaffected and still tested directly; a
+        // future packet publishing real `PresenceUpdate`s is the next intended caller.
         pub fn peers_selecting(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
             self.peers
                 .iter()
@@ -8394,17 +8523,17 @@ pub mod app {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
                     let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
             if body.is_empty() {
                 keyword
             } else {
@@ -8490,17 +8619,17 @@ pub mod app {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
                     let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
             if body.is_empty() {
                 keyword
             } else {
@@ -8591,17 +8720,17 @@ pub mod app {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
                     let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
             if body.is_empty() {
                 keyword
             } else {
@@ -8839,25 +8968,11 @@ pub mod app {
     /// per-command "Backwards" revert action is omitted entirely, regardless of `can_undo`/`can_redo`
     /// or `entry.revertible` — the filter control and Commands list themselves stay fully live, since
     /// browsing history is not a mutation.
-    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiNode {
-        let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
+    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> BuiltNode {
         let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
-            let label = resolve_ready(Label::data(if is_de { label_de } else { label_en }));
-            let mut item = resolve_ready(UiTreeItemNode::base(id, label.clone()));
-            item.icon_id = Some(icon_id);
-            item.control = Some(UiControlNode::Button(UiButtonNode {
-                id: Some(format!("{id}.run")),
-                icon_id,
-                label,
-                action: act(action, None),
-                style: None,
-                presence: if enabled { UiPresence::default() } else { resolve_ready(UiPresence::state(UiState::Disabled)) },
-                menu: None,
-            }));
-            if !enabled {
-                item.presence = resolve_ready(UiPresence::state(UiState::Disabled));
-            }
-            item
+            let label = if is_de { label_de } else { label_en };
+            let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+            ui::tree_item(label).id(id).icon(icon_id.as_str()).disabled(!enabled).child(button).build()
         };
 
         let filter_value = match history.command_filter {
@@ -8865,23 +8980,16 @@ pub mod app {
             HistoryCommandFilter::WithoutMutations => "withoutMutations",
             HistoryCommandFilter::OnlyMutations => "onlyMutations",
         };
-        let mut filter_item = UiTreeItemNode::base("framework.history.filter", Label::data("Filter").await).await;
-        filter_item.icon_id = Some(IconName::Filter);
-        filter_item.control = Some(UiControlNode::Select(UiSelectNode {
-            id: "framework.history.filter.control".into(),
-            value: filter_value.into(),
-            items: vec![
-                UiSelectItem { value: "all".into(), label: Label::data(if is_de { "Alle" } else { "All" }).await },
-                UiSelectItem { value: "withoutMutations".into(), label: Label::data(if is_de { "Ohne Operationen" } else { "Without Operations" }).await },
-                UiSelectItem { value: "onlyMutations".into(), label: Label::data(if is_de { "Nur Operationen" } else { "Only Operations" }).await },
-            ],
-            placeholder: None,
-            on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
-            presence: UiPresence::default(),
-            menu: None,
-        }));
+        let filter_select = ui::select(filter_value)
+            .id("framework.history.filter.control")
+            .item("all", if is_de { "Alle" } else { "All" })
+            .item("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" })
+            .item("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" })
+            .on(Trigger::Change, ActionId::v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID))
+            .build();
+        let filter_item = ui::tree_item("Filter").id("framework.history.filter").icon(IconName::Filter.as_str()).child(filter_select).build();
 
-        let mut command_items: Vec<UiTreeItemNode> = Vec::new();
+        let mut command_items: Vec<BuiltNode> = Vec::new();
         for entry in history
             .commands
             .iter()
@@ -8894,43 +9002,43 @@ pub mod app {
         {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
             let label = if entry.count > 1 { format!("{} x{}", entry.label, entry.count) } else { entry.label.clone() };
-            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), Label::data(label).await).await;
-            item.description = if entry.op_lines.is_empty() { None } else { Some(entry.op_lines.join(" · ")) };
-            item.icon_id = Some(history_panel_icon_id(entry.kind).await);
-            item.dimmed = (entry.edit_id.is_some() && !entry.applied).then_some(true);
-            if entry.revertible && !read_only {
-                item.actions = Some(vec![UiTreeItemAction {
-                    icon_id: IconName::RotateCcw,
-                    label: Some(Label::data(if is_de { "Zurück bis hier" } else { "Backwards" }).await),
-                    action: act(REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
-                    placement: Some(UiTreeActionPlacement::Menu),
-                }]);
+            let mut builder = ui::tree_item(label).id(format!("framework.history.entry.{}", entry.seq)).icon(history_panel_icon_id(entry.kind).await.as_str());
+            if !entry.op_lines.is_empty() {
+                builder = builder.description(entry.op_lines.join(" · "));
             }
-            command_items.push(item);
+            if entry.edit_id.is_some() && !entry.applied {
+                builder = builder.dimmed(true);
+            }
+            if entry.revertible && !read_only {
+                builder = builder.row_action(RowAction {
+                    icon: IconName::RotateCcw.as_str().to_string(),
+                    label: Some(Label::from(if is_de { "Zurück bis hier" } else { "Backwards" })),
+                    action: ActionBinding {
+                        trigger: Trigger::Activate,
+                        action: ActionId::v1(controller_id, REVERT_TO_COMMAND_ACTION_ID),
+                        args: Some(dsl_value_to_ui_value(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
+                        capability: None,
+                    },
+                    placement: RowActionPlacement::Menu,
+                });
+            }
+            command_items.push(builder.build());
         }
 
-        UiNode::Tree(UiTreeNode {
-            sections: vec![
-                UiTreeSectionNode {
-                    id: "framework.history.actions".into(),
-                    label: Some(Label::data(if is_de { "Aktionen" } else { "Actions" }).await),
-                    default_open: Some(true),
-                    presence: UiPresence::default(),
-                    items: vec![
-                        action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only),
-                        action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only),
-                        action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only),
-                        action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only),
-                        filter_item,
-                    ],
-                },
-                UiTreeSectionNode { id: "framework.history.commands".into(), label: Some(Label::data(if is_de { "Befehle" } else { "Commands" }).await), default_open: Some(true), presence: UiPresence::default(), items: command_items },
-            ],
-            presence: UiPresence::default(),
-            interaction_domain: None,
-            drop_action: None,
-            menu: None,
-        })
+        let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+            .id("framework.history.actions")
+            .default_open(true)
+            .children(vec![
+                action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only),
+                action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only),
+                action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only),
+                action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only),
+                filter_item,
+            ])
+            .build();
+        let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+
+        ui::tree().children(vec![actions_section, commands_section]).build()
     }
     //#endregion 🔖️HistoryPanel
 
@@ -9389,17 +9497,17 @@ pub mod app {
                             body,
                             &spec_fn(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
-                        ).await?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
             async fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -9522,17 +9630,17 @@ pub mod app {
                             body,
                             &spec_fn(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
-                        ).await?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                        )?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
             async fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -9596,8 +9704,8 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn command_id_matches_declared_row() {
-            assert_eq!(TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).command_id(), "addWidget");
-            assert_eq!(TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).command_id(), "deleteSelection");
+            assert_eq!(TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).command_id().await, "addWidget");
+            assert_eq!(TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).command_id().await, "deleteSelection");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -9654,8 +9762,8 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn keyed_rows_separate_the_command_id_from_the_wire_keyword() {
             let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
-            assert_eq!(command.command_id(), "addWidget");
-            assert!(protocol::OpText::print_op(&command).await.starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
+            assert_eq!(command.command_id().await, "addWidget");
+            assert!(protocol::OpText::print_op(&command).await.starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command).await);
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
 
@@ -9664,7 +9772,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn fieldless_payload_matches_a_unit_variants_wire_form() {
             let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
-            assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
+            assert_eq!(protocol::OpText::print_op(&command).await, "delete-selection");
             assert_eq!(protocol::OpBinary::encode_op(&command).await.expect("encode"), vec![1u8, 1, 0, 0]);
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -9815,6 +9923,25 @@ pub mod app {
                 FaultCode::new("app.command.unsupported"),
                 format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
             ))
+        }
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): resolves this app's typed `Command` from a
+        /// `ui_contract::UiIntent` — the one entry point `plugin_runtime::plugin_dispatch_intents`
+        /// calls per surviving intent. Default is a COMPATIBLE bridge (no existing plugin breaks):
+        /// rejects a non-v1 `ActionId` with a `Fault` (never silently dispatches a stale contract —
+        /// `ActionFactory` only ever mints v1 ids, so this bridge cannot resolve anything else), then
+        /// folds `intent.args`/`intent.input` (`merge_ui_values`) and calls `Self::command_from_action`
+        /// — the SAME bridge every app already implements for the React/wgpu string-action shells. An
+        /// app wanting intent-specific resolution (reading `intent.node`/`intent.trigger` directly)
+        /// overrides this instead.
+        async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
+            if intent.action.version != 1 {
+                return Err(Fault::new(
+                    FaultOrigin::App,
+                    FaultCode::new("app.intent.version-mismatch"),
+                    format!("intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactApp::command_from_intent`'s own doc) — override it for a versioned contract", intent.action.name, intent.action.version),
+                ));
+            }
+            Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
         }
         /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
         async fn config_spec() -> ConfigSpec {
@@ -10097,6 +10224,13 @@ pub mod app {
         /// `command_bytes` directly as the app's typed `ArtifactApp::Command` via `OpBinary::decode_op`
         /// and calls the pure `ArtifactApp::handle`.
         async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): the single dispatch point
+        /// `plugin_runtime::plugin_dispatch_intents` calls for every `UiIntent` that survived the
+        /// reactor's revision guard — resolves this app's typed `Command` via
+        /// `ArtifactApp::command_from_intent` and dispatches it through the SAME internal path
+        /// `handle_command_frame` uses (view/shell kind discipline, the command log, undo grouping,
+        /// `AsyncTask` spawning all apply automatically; no parallel dispatch path to keep in sync).
+        async fn handle_intent_frame(&mut self, intent: &UiIntent, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
         /// whose future resolved with `TaskResolution::Emit` — `artifact_ops`/`config_ops`/
         /// `draft_ops` are the SAME `protocol::encode_ops_vec`/`OpBinary::encode_op`-wire triple
@@ -10108,6 +10242,12 @@ pub mod app {
         async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
         async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
+        /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains the render-plane presence outbox
+        /// `stamp_and_cache_interaction_ui` fills every render (`VcsArtifactApp::pending_presence`) —
+        /// `plugin_runtime::plugin_take_presence`'s object-safe entry point (mirrors
+        /// `take_last_emit_wire`'s own shape: an owned drain, never a borrow, since `PluginApp` is the
+        /// dyn-enum-closed boundary and `pending_presence` is a private field on the concrete app).
+        async fn take_pending_presence(&mut self) -> Vec<PresenceUpdate>;
         /// 🔀️ Drains the pending `TransactionProposalDraft` `dispatch_emit` stashed instead of
         /// applying, if any (contract §5.1) — consumed once by `plugin_exchange` to frame
         /// `AppFrame::TransactionProposal` instead of the ordinary `Invocation`/`Done` frame.
@@ -10735,6 +10875,13 @@ pub mod app {
         /// steps — drained once by `plugin_exchange` (`take_pending_transaction_proposal`) to frame
         /// `AppFrame::TransactionProposal` (contract §5.1).
         pending_transaction_proposal: Option<TransactionProposalDraft>,
+        /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the render-plane presence outbox —
+        /// `stamp_and_cache_interaction_ui` pushes one `PresenceUpdate` per `(surface, node_key)` whose
+        /// own/peer selection or hover it derived off `protocol::InteractionState`/`peer_presence` this
+        /// render; `plugin_runtime::plugin_take_presence` drains it once per poll. NEVER a document
+        /// revision — this lane has no op log, no undo group, no command-log row, mirroring
+        /// `presence_store`/`transient_store`'s own ephemeral treatment above.
+        pub(crate) pending_presence: Vec<PresenceUpdate>,
     }
 
     /// 🆔️ Deterministic session-local `ArtifactHandle` for a CHILD's real (string) artifact id.
@@ -10765,6 +10912,13 @@ pub mod app {
     /// 🕹️ The six framework-owned interaction actions `dispatch_action` intercepts before any of the
     /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
     const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
+
+    /// ⏱️ M2 (ticket 26/08/17 `design-unified.md`): default TTL for every `PresenceUpdate`
+    /// `stamp_and_cache_interaction_ui` derives — a peer mark not refreshed within this window ages
+    /// out on the reactor's `PresenceHub` with no goodbye message (matches the design's decided
+    /// default; own presence never expires by this or any other TTL — see `ui_runtime::PresenceHub`'s
+    /// own doc).
+    const PRESENCE_TTL_MS: u32 = 4_000;
 
     //#region 🔖️ViewerGuard
     /// 🔒️ Contract §2.3: the string-action verbs a `Viewer`-role instance must reject at
@@ -10840,6 +10994,7 @@ pub mod app {
                 interaction_ui_topology: HashMap::new(),
                 pending_transaction: None,
                 pending_transaction_proposal: None,
+                pending_presence: Vec::new(),
             }
         }
 
@@ -12086,62 +12241,87 @@ pub mod app {
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
             Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::Full).await)
         }
-        /// 🕹️ Task 5: recursively walks a just-rendered `UiNode`, and for every `UiNode::Tree` carrying
-        /// an `interaction_domain` (1) caches a `DomainTopology` derived from its (possibly nested)
-        /// `sections`/`items` shape into `interaction_ui_topology` (the `HierarchyProvider::UiTree` half
-        /// of `resolve_domain_topology`) and (2) OVERWRITES that tree's item `presence.selected`/hover
-        /// via `ui_tree_stamp_presence` from the combined `state` — REPLACING whatever the app itself
-        /// stamped through `PanelTreeBuilder::selected()`/`.highlighted()`, since a domain-bound tree's
-        /// selection is now framework-owned. Recurses through every `UiNode` variant that can nest
-        /// another (`Stack`/`Section`/`Group`/`Field`); every other variant is a leaf.
-        pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, node: &mut UiNode, state: &protocol::InteractionState) {
-            match node {
-                UiNode::Tree(tree) => {
-                    if let Some(domain_id) = tree.interaction_domain.clone() {
-                        let granularity = self.registry.interaction(&domain_id).await.and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
-                        self.interaction_ui_topology.insert(domain_id.clone(), ui_tree_domain_topology(&tree.sections, &granularity).await);
-                        let selected: HashSet<String> = state.selection.get(&domain_id).map(|selection| selection.ids.iter().cloned().collect()).unwrap_or_default();
-                        let hovered: HashSet<String> = state.hover.get(&domain_id).map(|hover| hover.ids.iter().cloned().collect()).unwrap_or_default();
-                        // 👥️ Peer marks (contract-freeze §C7.6): merge `peers_selecting`/`peers_hovering`
-                        // by actor into one `UiPeerMark` per peer, `label` falling back to the raw actor
-                        // id (no display name travels this far down the stack — see `PeerPresence`'s own
-                        // doc comment). `own_color` is stamped onto every item unconditionally — it names
-                        // the color THIS session's own hover/selection ring renders as.
-                        let interaction = InteractionView { state, hover: &self.interaction_hover, peers: &self.peer_presence };
-                        let own_color = self.own_color;
-                        let marks_for = |id: &str| -> Vec<UiPeerMark> {
-                            let mut merged: BTreeMap<String, UiPeerMark> = BTreeMap::new();
-                            for mark in interaction.peers_selecting(&domain_id, id) {
-                                merged.entry(mark.actor.to_string()).or_insert_with(|| UiPeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).selected = true;
-                            }
-                            for mark in interaction.peers_hovering(&domain_id, id) {
-                                merged.entry(mark.actor.to_string()).or_insert_with(|| UiPeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).hovered = true;
-                            }
-                            merged.into_values().collect()
-                        };
-                        ui_tree_stamp_presence(&mut tree.sections, &selected, &hovered, own_color, &marks_for).await;
-                    }
+        /// 🕹️ Task 5: recursively walks a just-presented `ComponentTree`, and for every `Component::Tree`
+        /// carrying an `interaction_domain` caches a `DomainTopology` derived from its children (the
+        /// `HierarchyProvider::UiTree` half of `resolve_domain_topology`) into `interaction_ui_topology`.
+        /// Recursion is uniform over `TreeNode::children` now — every component nests the same way (no
+        /// more per-variant `Stack`/`Section`/`Group`/`Field` match arms; a leaf is just a node with no
+        /// children).
+        ///
+        /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): ALSO derives one `PresenceUpdate` per node
+        /// whose id is selected/hovered — own state off `state`/`self.interaction_hover`, peers off
+        /// `InteractionView::peers_selecting`/`peers_hovering` — pushed onto `self.pending_presence`
+        /// for `plugin_runtime::plugin_take_presence` to drain. This closes the gap the prior packet's
+        /// own report named ("nothing in this function currently reads `state`" — see git history):
+        /// selection/hover is `ui_contract::PresenceUpdate` now, never written back onto the tree
+        /// itself (`TreeNode`/`Component::TreeItem` carry no presence field — the render-plane
+        /// derivation lives entirely in this outbox, never in a document mutation).
+        pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &mut ComponentTree, state: &protocol::InteractionState, body_key: &str) {
+            // 🕹️ Materialized owned BEFORE the mutable walk — same "clone owned before the field-wise
+            // destructure" reasoning `dispatch_typed_command_inner` already uses: `pending_presence` is
+            // WRITTEN inside the walk while `interaction_hover`/`peer_presence` are only ever READ by
+            // it, so a snapshot avoids an aliasing conflict against `&mut self`.
+            let hover = self.interaction_hover.clone();
+            let peers = self.peer_presence.clone();
+            let own_color = self.own_color;
+            let interaction = InteractionView { state, hover: &hover, peers: &peers };
+            Box::pin(self.stamp_and_cache_interaction_ui_node(&mut tree.root, state, &interaction, None, body_key, own_color)).await;
+        }
+
+        /// 🕹️ One node of `stamp_and_cache_interaction_ui`'s walk — see that method's own doc for what
+        /// this does. `domain` is the nearest ANCESTOR `Component::Tree`'s `interaction_domain` (a
+        /// domain applies to every descendant item, not just the `Tree` node itself); `None` outside
+        /// any domain-bound subtree, where no presence is derived (matches this wave's scope: only
+        /// framework-owned interaction-domain trees, not every app-owned selection — see this packet's
+        /// own report for the `PanelTreeBuilder` non-domain gap this leaves open).
+        async fn stamp_and_cache_interaction_ui_node(&mut self, node: &mut TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain: Option<&str>, body_key: &str, own_color: Option<u8>) {
+            let mut current_domain = domain.map(str::to_string);
+            if let Component::Tree(props) = &node.component {
+                if let Some(domain_id) = props.interaction_domain.clone() {
+                    let granularity = self.registry.interaction(&domain_id).await.and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
+                    self.interaction_ui_topology.insert(domain_id.clone(), ui_tree_domain_topology(&node.children, &granularity).await);
+                    current_domain = Some(domain_id);
                 }
-                UiNode::Stack(stack) => {
-                    for child in &mut stack.children {
-                        Box::pin(self.stamp_and_cache_interaction_ui(child, state)).await;
-                    }
-                }
-                UiNode::Section(section) => {
-                    for child in &mut section.children {
-                        Box::pin(self.stamp_and_cache_interaction_ui(child, state)).await;
-                    }
-                }
-                UiNode::Group(group) => {
-                    for child in &mut group.children {
-                        Box::pin(self.stamp_and_cache_interaction_ui(child, state)).await;
-                    }
-                }
-                UiNode::Field(field) => {
-                    Box::pin(self.stamp_and_cache_interaction_ui(&mut field.child, state)).await;
-                }
-                _ => {}
             }
+            if let Some(domain_id) = current_domain.clone() {
+                self.derive_node_presence(node, state, interaction, &domain_id, body_key, own_color).await;
+            }
+            for child in &mut node.children {
+                Box::pin(self.stamp_and_cache_interaction_ui_node(child, state, interaction, current_domain.as_deref(), body_key, own_color)).await;
+            }
+        }
+
+        /// 👥️ M2: derives `node`'s `PresenceUpdate` (if it has any own/peer selection or hover on
+        /// `domain_id`) and pushes it onto `self.pending_presence`. A node with nothing to report is
+        /// skipped entirely — an idle node costs no outbox entry, matching `PresenceHub::flush`'s own
+        /// "only dirty keys" contract downstream.
+        async fn derive_node_presence(&mut self, node: &TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain_id: &str, body_key: &str, own_color: Option<u8>) {
+            let key = node.key.as_str();
+            let own_selected = state.selection.get(domain_id).is_some_and(|selection| selection.ids.iter().any(|id| id == key));
+            let own_hovered = self.interaction_hover.get(domain_id).is_some_and(|hover| hover.ids.iter().any(|id| id == key));
+            let selecting = interaction.peers_selecting(domain_id, key);
+            let hovering = interaction.peers_hovering(domain_id, key);
+            if !own_selected && !own_hovered && selecting.is_empty() && hovering.is_empty() {
+                return;
+            }
+            let mut marks: BTreeMap<&str, ui::PeerMark> = BTreeMap::new();
+            for mark in &selecting {
+                marks.entry(mark.actor).or_insert_with(|| ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).selected = true;
+            }
+            for mark in &hovering {
+                marks.entry(mark.actor).or_insert_with(|| ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).hovered = true;
+            }
+            self.pending_presence.push(PresenceUpdate {
+                // 🪪️ Bare `body_key` — `VcsArtifactApp` never knows its own instance id (see
+                // `render`'s own signature); `plugin_runtime::plugin_take_presence` prefixes it to the
+                // reactor's `"<instance>:<body-key>"` surface convention on drain (the SAME split
+                // `parse_surface_instance`/`wit_event_to_kernel` already use for every other surface).
+                surface: SurfaceId::from(body_key),
+                node_key: node.key.clone(),
+                own: OwnPresence { hovered: own_hovered, selected: own_selected, previewed: false, color: own_color },
+                peers: marks.into_values().collect(),
+                ttl_ms: PRESENCE_TTL_MS,
+            });
         }
         //#endregion 🔖️InteractionDispatch
 
@@ -12598,6 +12778,16 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, "typed-command", result).await)
         }
 
+        /// 🎯️ M1: resolves `A::command_from_intent(intent)` then dispatches through the SAME
+        /// `dispatch_typed_command_inner` `dispatch_typed_command`/`dispatch_typed` use — kind
+        /// discipline, the command log, undo grouping and `AsyncTask` spawning apply unchanged.
+        async fn handle_intent_frame(&mut self, intent: &UiIntent, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let log_generation_before = self.log_generation;
+            let command = A::command_from_intent(intent).await?;
+            let result = self.dispatch_typed_command_inner(command, meta).await?;
+            Ok(self.finish_recorded(log_generation_before, "ui-intent", result).await)
+        }
+
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
         /// app's concrete `A::Mutation`/`A::ConfigMutation`/`A::DraftMutation` via `OpBinary::
         /// decode_op` (the SAME decode idiom `dispatch_typed_command` uses for `A::Command`) and
@@ -12621,6 +12811,10 @@ pub mod app {
 
         async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)> {
             self.last_emit_wire.take()
+        }
+
+        async fn take_pending_presence(&mut self) -> Vec<PresenceUpdate> {
+            std::mem::take(&mut self.pending_presence)
         }
 
         async fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
@@ -12850,7 +13044,7 @@ pub mod app {
             let mut entries: Vec<protocol::ChildPackEntry> = Vec::with_capacity(self.children.len());
             for ((slot, child_id), (dialect, member)) in self.children.iter() {
                 let envelope_pack = member.envelope_pack_bytes().await.map_err(|error| error.into_fault())?;
-                entries.push(protocol::ChildPackEntry { slot: slot.clone(), child_id: child_id.clone(), dialect: dialect.to_coordinate().await, envelope_pack });
+                entries.push(protocol::ChildPackEntry { slot: slot.clone(), child_id: child_id.clone(), dialect: dialect.to_coordinate(), envelope_pack });
             }
             entries.sort_by(|left, right| (&left.slot, &left.child_id).cmp(&(&right.slot, &right.child_id)));
             Ok(entries)
@@ -12937,12 +13131,12 @@ pub mod app {
             self.cache = None;
         }
 
-        async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<UiNode, Fault> {
+        async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<ComponentTree, Fault> {
             self.refresh_cache().await?;
             if body_key == FRAMEWORK_HISTORY_BODY_KEY {
                 // 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
                 let (_, _, _, history) = self.cache.as_ref().expect("cache refreshed above");
-                return Ok(ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await);
+                return Ok(built_to_component_tree(ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await));
             }
             let effective_body_key = if let Some(ref wid) = view_state.window_id {
                 if !body_key.contains(':') {
@@ -12963,7 +13157,7 @@ pub mod app {
                 let config = self.config_store.snapshot().await.unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { snapshot: &config };
                 let mut node = A::render(&effective_body_key, &doc, &cfg).await;
-                self.stamp_and_cache_interaction_ui(&mut node, &interaction_state).await;
+                self.stamp_and_cache_interaction_ui(&mut node, &interaction_state, &effective_body_key).await;
                 return Ok(node);
             }
             let mut node = {
@@ -12973,7 +13167,7 @@ pub mod app {
                 let cfg = ConfigView { snapshot: config };
                 A::render(&effective_body_key, &doc, &cfg).await
             };
-            self.stamp_and_cache_interaction_ui(&mut node, &interaction_state).await;
+            self.stamp_and_cache_interaction_ui(&mut node, &interaction_state, &effective_body_key).await;
             Ok(node)
         }
 
@@ -13031,7 +13225,7 @@ pub mod app {
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children).await).await;
             let cfg = ConfigView { snapshot: config };
             let items = A::context_menu(request, &doc, &cfg, registry).await;
-            ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id)).await
+            ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
         async fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
@@ -13263,7 +13457,7 @@ pub mod app {
     //#region 🔖️WindowKits
     // 🪟️ The seven framework window kits (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
     // §2.6) — each pairs a `WindowKindDefinition` (read-only + editable variants) with a `render`
-    // function turning a plain owned view-model into a `UiNode`. Frozen kind ids/labels/command ids,
+    // function turning a plain owned view-model into a `ui_wgpu::wgpu::UiNode`. Frozen kind ids/labels/command ids,
     // not app-declared: apps compose these kits into their own `AppDefinition.window_kinds` rather
     // than each app hand-rolling a text/table/tree/image/mesh/document/media window from scratch.
 
@@ -13273,7 +13467,7 @@ pub mod app {
             id: id.into(),
             label: LocalizedLabel::native(en, de),
             body_key: id.into(),
-            surface_kind,
+            surface_kind: legacy_surface_kind(surface_kind),
             icon_id: icon_id.into(),
             options: WindowOptions::default(),
             actions,
@@ -13288,14 +13482,29 @@ pub mod app {
     }
 
     /// 🪟️ A framework window kit: declares its read-only/editable `WindowKindDefinition` pair and
-    /// renders its plain owned `ViewModel` into a `UiNode`. See `render` implementations for the
-    /// per-kit `UiNode` shape each one picks.
+    /// renders its plain owned `ViewModel` into a node. See `render` implementations for the per-kit
+    /// shape each one picks.
+    ///
+    /// ⚠️ Gap (SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers` — see
+    /// `📓️terra-sdk-helpers-report.md`): deliberately left on `ui_wgpu::wgpu::UiNode` this wave, fully
+    /// qualified rather than converted. Three of the seven kits (`TextWindowKit`, `TableWindowKit`,
+    /// `MeshWindowKit`) build a `ComponentScene`-shaped payload with no tractable `ui::*` translation —
+    /// the contract's own `Component::Surface(SurfaceProps)` needs a pack-encoded `SurfaceDoc.bytes`
+    /// payload whose product-specific scene structs (`TextEditorScene`/`TableScene`/`World3dScene`, …)
+    /// "move to `🖱️ui/🎬️scene/🦀️component.rs` in a later packet" per `🦦️contract/🦀️surface.rs`'s own
+    /// header — that crate doesn't exist yet, and `🦀️surface.rs` itself is still an unfinished
+    /// SCAFFOLD. `📓️recipe-plugin.md` §2 names exactly this case as out of its depth. Since `render`
+    /// is ONE trait method shared by all seven impls, it needs ONE return type — the four kits that
+    /// individually COULD convert today (`TreeWindowKit`, `ImageWindowKit`, `DocumentWindowKit`,
+    /// `MediaWindowKit`) are held back by the other three rather than half-migrating the trait. Flagged
+    /// to the coordinator: worth its own follow-up packet once `contract-layout`'s `SurfaceProps` and
+    /// the scene crate exist.
     pub trait WindowKit {
         type ViewModel;
         const KIND_ID: &'static str;
         async fn window_kind() -> WindowKindDefinition;
         async fn editable_window_kind() -> WindowKindDefinition;
-        async fn render(view: &Self::ViewModel) -> UiNode;
+        async fn render(view: &Self::ViewModel) -> ui_wgpu::wgpu::UiNode;
     }
 
     //#region 🔖️TextWindowKit
@@ -13322,7 +13531,7 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &TextView) -> UiNode {
+        async fn render(view: &TextView) -> ui_wgpu::wgpu::UiNode {
             ui_wgpu::wgpu::build_text_editor_scene(
                 Self::KIND_ID,
                 Self::KIND_ID,
@@ -13344,7 +13553,7 @@ pub mod app {
                     newline_gates_json: None,
                     rename_json: None,
                 },
-            ).await
+            )
         }
     }
     //#endregion 🔖️TextWindowKit
@@ -13372,23 +13581,26 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &TableView) -> UiNode {
+        async fn render(view: &TableView) -> ui_wgpu::wgpu::UiNode {
             let columns_json = serde_json::to_string(&view.columns).unwrap_or_else(|_| "[]".into());
             let rows_json = serde_json::to_string(&view.rows).unwrap_or_else(|_| "[]".into());
-            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, ui_wgpu::wgpu::TableScene::base(columns_json, rows_json).await).await
+            // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
+            // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
+            // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
+            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, semio_framework_ui_scene::TableScene::base(columns_json, rows_json))
         }
     }
 
     /// 🆔️ One row-scoped action button for `TableWindowKit::render_rows` — dispatches `action` (a
-    /// normal `ActionDescriptor`, already carrying whatever args its handler needs, e.g. the row's own
-    /// id) on click; rendered via the same `TableCell::Buttons`/`UiTreeItemAction` primitive every
+    /// normal `ui_wgpu::wgpu::ActionDescriptor`, already carrying whatever args its handler needs, e.g. the row's own
+    /// id) on click; rendered via the same `TableCell::Buttons`/`ui_wgpu::wgpu::UiTreeItemAction` primitive every
     /// hand-built `TableScene` table already uses (`sourcing::curate`'s pool/curated windows, `remodel`'s
     /// report, …), see `🖱️ui/…/🎯️targets/🧊️wgpu/🦀️component.rs`.
     #[derive(Clone, Debug, PartialEq)]
     pub struct TableRowAction {
         pub icon_id: IconName,
-        pub label: Option<Label>,
-        pub action: ActionDescriptor,
+        pub label: Option<ui_wgpu::wgpu::Label>,
+        pub action: ui_wgpu::wgpu::ActionDescriptor,
     }
 
     /// 🆔️ One identified, actionable row for `TableWindowKit::render_rows` — `id` reaches the React DOM
@@ -13426,7 +13638,7 @@ pub mod app {
         /// `render`'s flat positional-string grid, which carries neither. The actions column is only
         /// appended when at least one row has an action, so plain identified tables (no row buttons yet)
         /// don't grow a dead column.
-        pub async fn render_rows(view: &TableRowsView) -> UiNode {
+        pub async fn render_rows(view: &TableRowsView) -> ui_wgpu::wgpu::UiNode {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
             let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
             if has_actions {
@@ -13440,13 +13652,16 @@ pub mod app {
                 let cell_ids: Vec<String> = (0..row.cells.len()).map(|index| format!("col{index}")).collect();
                 let mut cells: Vec<(&str, ui_wgpu::wgpu::TableCell)> = cell_ids.iter().zip(row.cells.iter()).map(|(id, value)| (id.as_str(), ui_wgpu::wgpu::TableCell::Text { value: value.clone() })).collect();
                 if has_actions {
-                    let buttons = row.actions.iter().map(|action| UiTreeItemAction { icon_id: action.icon_id, label: action.label.clone(), action: action.action.clone(), placement: Some(UiTreeActionPlacement::Row) }).collect();
+                    let buttons = row.actions.iter().map(|action| ui_wgpu::wgpu::UiTreeItemAction { icon_id: action.icon_id, label: action.label.clone(), action: action.action.clone(), placement: Some(ui_wgpu::wgpu::UiTreeActionPlacement::Row) }).collect();
                     cells.push(("actions", ui_wgpu::wgpu::TableCell::Buttons { buttons }));
                 }
-                rows.push(ui_wgpu::wgpu::table_row_json(row.id.clone(), None, &cells).await);
+                rows.push(ui_wgpu::wgpu::table_row_json(row.id.clone(), None, &cells));
             }
             let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
-            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, ui_wgpu::wgpu::TableScene::base(columns_json, rows_json).await).await
+            // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
+            // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
+            // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
+            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, semio_framework_ui_scene::TableScene::base(columns_json, rows_json))
         }
     }
     //#endregion 🔖️TableWindowKit
@@ -13479,13 +13694,13 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &TreeView) -> UiNode {
+        async fn render(view: &TreeView) -> ui_wgpu::wgpu::UiNode {
             // 🌉️ Recursive async fn — boxed at the recursive call (residue shape 3), and rewritten from
             // a `.map(to_item).collect()` into an explicit loop (sync — `Iterator::map` cannot take an
             // async closure) at both this fn's own recursion and `render`'s own roots below.
-            fn to_item(node: &TreeNodeView) -> std::pin::Pin<Box<dyn std::future::Future<Output = UiTreeItemNode> + '_>> {
+            fn to_item(node: &TreeNodeView) -> std::pin::Pin<Box<dyn std::future::Future<Output = ui_wgpu::wgpu::UiTreeItemNode> + '_>> {
                 Box::pin(async move {
-                    let mut item = UiTreeItemNode::base(node.id.clone(), Label::data(node.label.clone()).await).await;
+                    let mut item = ui_wgpu::wgpu::UiTreeItemNode::base(node.id.clone(), ui_wgpu::wgpu::Label::data(node.label.clone()));
                     if !node.children.is_empty() {
                         let mut children = Vec::with_capacity(node.children.len());
                         for child in node.children.iter() {
@@ -13500,9 +13715,9 @@ pub mod app {
             for node in view.roots.iter() {
                 roots.push(to_item(node).await);
             }
-            UiNode::Tree(UiTreeNode {
-                sections: vec![UiTreeSectionNode { id: format!("{}-root", Self::KIND_ID), label: None, default_open: Some(true), presence: UiPresence::default(), items: roots }],
-                presence: UiPresence::default(),
+            ui_wgpu::wgpu::UiNode::Tree(ui_wgpu::wgpu::UiTreeNode {
+                sections: vec![ui_wgpu::wgpu::UiTreeSectionNode { id: format!("{}-root", Self::KIND_ID), label: None, default_open: Some(true), presence: ui_wgpu::wgpu::UiPresence::default(), items: roots }],
+                presence: ui_wgpu::wgpu::UiPresence::default(),
                 drop_action: None,
                 menu: None,
                 interaction_domain: None,
@@ -13536,9 +13751,9 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &ImageView) -> UiNode {
+        async fn render(view: &ImageView) -> ui_wgpu::wgpu::UiNode {
             let src = format!("data:{};base64,{}", view.mime, view.base64);
-            ui_wgpu::wgpu::ui_image(Self::KIND_ID, src, Some(Label::data(format!("{}x{}", view.width, view.height)).await)).await
+            ui_wgpu::wgpu::ui_image(Self::KIND_ID, src, Some(ui_wgpu::wgpu::Label::data(format!("{}x{}", view.width, view.height))))
         }
     }
     //#endregion 🔖️ImageWindowKit
@@ -13568,16 +13783,16 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &MeshView) -> UiNode {
+        async fn render(view: &MeshView) -> ui_wgpu::wgpu::UiNode {
             let sun_config = crate::world3d_host::WorldSunConfig::default();
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-            ui_wgpu::wgpu::build_world_3d_scene(Self::KIND_ID, Self::KIND_ID, scene.await).await
+            ui_wgpu::wgpu::build_world_3d_scene(Self::KIND_ID, Self::KIND_ID, scene.await)
         }
     }
     //#endregion 🔖️MeshWindowKit
 
     //#region 🔖️DocumentWindowKit
-    /// 📄️ A paginated text document — one `ui_text` child per page inside an unlabeled vertical stack.
+    /// 📄️ A paginated text document — one `ui_wgpu::wgpu::ui_text` child per page inside an unlabeled vertical stack.
     #[derive(Clone, Debug, PartialEq)]
     pub struct DocumentPage {
         pub text: String,
@@ -13602,12 +13817,12 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &DocumentView) -> UiNode {
+        async fn render(view: &DocumentView) -> ui_wgpu::wgpu::UiNode {
             let mut children = Vec::with_capacity(view.pages.len());
             for page in view.pages.iter() {
-                children.push(ui_text(Label::data(page.text.clone()).await).await);
+                children.push(ui_wgpu::wgpu::ui_text(ui_wgpu::wgpu::Label::data(page.text.clone())));
             }
-            ui_stack_vertical(children).await
+            ui_wgpu::wgpu::ui_stack_vertical(children)
         }
     }
     //#endregion 🔖️DocumentWindowKit
@@ -13641,18 +13856,18 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation).await]).await
         }
 
-        async fn render(view: &MediaView) -> UiNode {
+        async fn render(view: &MediaView) -> ui_wgpu::wgpu::UiNode {
             let kind_label = match view.kind {
                 MediaKind::Audio => "audio",
                 MediaKind::Video => "video",
             };
-            UiNode::KeyValue(UiKeyValueNode {
+            ui_wgpu::wgpu::UiNode::KeyValue(ui_wgpu::wgpu::UiKeyValueNode {
                 entries: vec![
-                    UiKeyValueEntry { label: Label::data("Duration").await, value: view.duration_ms.to_string() },
-                    UiKeyValueEntry { label: Label::data("Position").await, value: view.position_ms.to_string() },
-                    UiKeyValueEntry { label: Label::data("Kind").await, value: kind_label.to_string() },
+                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Duration"), value: view.duration_ms.to_string() },
+                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Position"), value: view.position_ms.to_string() },
+                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Kind"), value: kind_label.to_string() },
                 ],
-                presence: UiPresence::default(),
+                presence: ui_wgpu::wgpu::UiPresence::default(),
                 menu: None,
             })
         }
@@ -13755,7 +13970,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn text_kit_renders_buffer_into_component_scene() {
             let view = TextView { text: "hello world".into(), language: Some("en".into()), read_only: false };
-            let UiNode::ComponentScene(node) = TextWindowKit::render(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = TextWindowKit::render(&view).await else { panic!("expected ComponentScene") };
             let scene = node.text_editor.expect("text_editor scene");
             assert_eq!(scene.buffer, "hello world");
             assert_eq!(scene.language.as_deref(), Some("en"));
@@ -13765,7 +13980,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn text_kit_read_only_stamps_settings_json() {
             let view = TextView { text: "x".into(), language: None, read_only: true };
-            let UiNode::ComponentScene(node) = TextWindowKit::render(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = TextWindowKit::render(&view).await else { panic!("expected ComponentScene") };
             let scene = node.text_editor.expect("text_editor scene");
             assert!(scene.settings_json.unwrap().contains("readOnly"));
         }
@@ -13773,7 +13988,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn table_kit_renders_columns_and_rows_json() {
             let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
-            let UiNode::ComponentScene(node) = TableWindowKit::render(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = TableWindowKit::render(&view).await else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
             assert_eq!(scene.columns_json, "[\"a\",\"b\"]");
             assert_eq!(scene.rows_json, "[[\"1\",\"2\"]]");
@@ -13782,7 +13997,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
             let view = TableRowsView { columns: vec!["Name".into()], rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: Vec::new() }], actions_label: "Actions".into() };
-            let UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view).await else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
             let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
             assert_eq!(rows[0]["id"], serde_json::json!("space:abc"));
@@ -13793,13 +14008,13 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
-            let action = ActionDescriptor { controller_id: "s.space.home".into(), action: "delete-space".into(), args: None };
+            let action = ui_wgpu::wgpu::ActionDescriptor { controller_id: "s.space.home".into(), action: "delete-space".into(), args: None };
             let view = TableRowsView {
                 columns: vec!["Name".into()],
                 rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: vec![TableRowAction { icon_id: IconName::Trash2, label: None, action: action.clone() }] }],
                 actions_label: "Actions".into(),
             };
-            let UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view).await else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
             let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
             assert!(columns.iter().any(|column| column["id"] == "actions" && column["label"] == "Actions"));
@@ -13814,7 +14029,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn tree_kit_renders_nested_items() {
             let view = TreeView { roots: vec![TreeNodeView { id: "root".into(), label: "Root".into(), children: vec![TreeNodeView { id: "child".into(), label: "Child".into(), children: Vec::new() }] }] };
-            let UiNode::Tree(tree) = TreeWindowKit::render(&view).await else { panic!("expected Tree") };
+            let ui_wgpu::wgpu::UiNode::Tree(tree) = TreeWindowKit::render(&view).await else { panic!("expected Tree") };
             assert_eq!(tree.sections.len(), 1);
             let root_item = &tree.sections[0].items[0];
             assert_eq!(root_item.id, "root");
@@ -13825,14 +14040,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn image_kit_renders_data_uri_from_base64() {
             let view = ImageView { width: 4, height: 2, mime: "image/png".into(), base64: "QUJD".into() };
-            let UiNode::Image(image) = ImageWindowKit::render(&view).await else { panic!("expected Image") };
+            let ui_wgpu::wgpu::UiNode::Image(image) = ImageWindowKit::render(&view).await else { panic!("expected Image") };
             assert_eq!(image.src, "data:image/png;base64,QUJD");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn mesh_kit_renders_world3d_component_scene() {
             let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };
-            let UiNode::ComponentScene(node) = MeshWindowKit::render(&view).await else { panic!("expected ComponentScene") };
+            let ui_wgpu::wgpu::UiNode::ComponentScene(node) = MeshWindowKit::render(&view).await else { panic!("expected ComponentScene") };
             let scene = node.world_3d.expect("world_3d scene");
             assert_eq!(scene.camera_json, "{}");
         }
@@ -13840,14 +14055,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn document_kit_renders_one_child_per_page() {
             let view = DocumentView { pages: vec![DocumentPage { text: "p1".into() }, DocumentPage { text: "p2".into() }] };
-            let UiNode::Stack(stack) = DocumentWindowKit::render(&view).await else { panic!("expected Stack") };
+            let ui_wgpu::wgpu::UiNode::Stack(stack) = DocumentWindowKit::render(&view).await else { panic!("expected Stack") };
             assert_eq!(stack.children.len(), 2);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn media_kit_renders_duration_and_position() {
             let view = MediaView { duration_ms: 60_000, position_ms: 1_500, kind: MediaKind::Video };
-            let UiNode::KeyValue(key_value) = MediaWindowKit::render(&view).await else { panic!("expected KeyValue") };
+            let ui_wgpu::wgpu::UiNode::KeyValue(key_value) = MediaWindowKit::render(&view).await else { panic!("expected KeyValue") };
             assert_eq!(key_value.entries.len(), 3);
             assert_eq!(key_value.entries[0].value, "60000");
             assert_eq!(key_value.entries[1].value, "1500");
@@ -13931,6 +14146,20 @@ pub mod app {
                 format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
             ))
         }
+        /// 🎯️ M1: `ArtifactApp::command_from_intent`'s sibling default for a hand-authored
+        /// `ArtifactEditor` — same version-mismatch Fault, same `merge_ui_values` bridge to
+        /// `Self::command_from_action`. `EditorApp<E>`'s `ArtifactApp` impl delegates its own
+        /// `command_from_intent` here, so overriding it on `E` actually takes effect.
+        async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
+            if intent.action.version != 1 {
+                return Err(Fault::new(
+                    FaultOrigin::App,
+                    FaultCode::new("app.intent.version-mismatch"),
+                    format!("intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactEditor::command_from_intent`'s own doc) — override it for a versioned contract", intent.action.name, intent.action.version),
+                ));
+            }
+            Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
+        }
         async fn config_spec() -> ConfigSpec {
             ConfigSpec::empty().await
         }
@@ -13955,7 +14184,7 @@ pub mod app {
         async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree;
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -14078,7 +14307,7 @@ pub mod app {
         async fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree;
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -14238,6 +14467,9 @@ pub mod app {
         async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
             E::command_from_action(action, args).await
         }
+        async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
+            E::command_from_intent(intent).await
+        }
         async fn config_spec() -> ConfigSpec {
             E::config_spec().await
         }
@@ -14262,7 +14494,7 @@ pub mod app {
         async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             E::pending_effects(doc, cfg).await
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
             E::render(body_key, doc, cfg).await
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
@@ -14388,7 +14620,7 @@ pub mod app {
         async fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             V::interaction_topology(doc, cfg).await
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
             V::render(body_key, doc, cfg).await
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
@@ -14859,7 +15091,7 @@ pub mod app {
             ::semio_framework_schema::preflight_artifact_schema_descriptors(&schemas).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema::preflight_artifact_inference_descriptors(&inferences).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             preflight_artifact_inference_services(&inference_services).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
-            dsl::preflight_languages(&languages).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
+            dsl::preflight_languages(&languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
                 let assembly = store::begin_artifact_assembly().await.map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
                 store::preflight_document_codecs_in_assembly(&assembly, &codecs).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
@@ -14874,7 +15106,7 @@ pub mod app {
                 for standard in &artifact.standards {
                     for subset in &standard.subsets {
                         for entry in subset.io.entries {
-                            let key = (ArtifactDialect::from(entry.from).to_coordinate().await, ArtifactDialect::from(entry.into).to_coordinate().await);
+                            let key = (ArtifactDialect::from(entry.from).to_coordinate(), ArtifactDialect::from(entry.into).to_coordinate());
                             match proposed.get(&key) {
                                 Some(fidelity) if *fidelity == entry.fidelity => {}
                                 Some(_) => return Err(PluginAssemblyError::new("plugin-assembly.declaration-io", format!("conflicting io entries declared for {} -> {}", key.0, key.1))),
@@ -14890,7 +15122,7 @@ pub mod app {
             for ((from, into), fidelity) in &proposed {
                 let mut current_fidelity = None;
                 for descriptor in existing.iter() {
-                    if &descriptor.from.to_coordinate().await == from && &descriptor.into.to_coordinate().await == into {
+                    if &descriptor.from.to_coordinate() == from && &descriptor.into.to_coordinate() == into {
                         current_fidelity = Some(descriptor.fidelity);
                         break;
                     }
@@ -14952,7 +15184,7 @@ pub mod app {
             ::semio_framework_schema::register_artifact_schema_descriptors(schemas).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema::register_artifact_inference_descriptors(inferences).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             register_artifact_inference_services(inference_services).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
-            dsl::register_languages(languages).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
+            dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
                 let assembly = store::begin_artifact_assembly().await.map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
                 store::register_document_codecs_in_assembly(&assembly, codecs).await.map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
@@ -14980,13 +15212,12 @@ pub mod app {
             // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
             // imports instead, for exactly what this fixture needs from `app`.
             use super::super::{
-                testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, Label, LocalizedLabel,
-                Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiNode, ViewEmit, Viewer,
+                testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, Component, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, Label, LocalizedLabel,
+                Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, TextProps, TreeNode, ViewEmit, Viewer,
             };
             use super::*;
             use serde::de::DeserializeOwned;
             use serde::{Deserialize, Serialize};
-            use ui_wgpu::wgpu::ui_text;
 
             //#region 🔖️Dialects
             pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -15113,8 +15344,8 @@ pub mod app {
                         async fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<$mutation>, Fault> {
                             Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
                         }
-                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                            ui_text(Label::data(format!("value={}", doc.snapshot.value)).await).await
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
+                            ComponentTree::new(TreeNode::new("text", Component::Text(TextProps { value: Label::from(format!("value={}", doc.snapshot.value)), emphasize: None, data_attributes: None })))
                         }
                     }
 
@@ -15138,8 +15369,8 @@ pub mod app {
                         async fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
                             Ok(ViewEmit::default())
                         }
-                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
-                            ui_text(Label::data(format!("value={}", doc.snapshot.value)).await).await
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
+                            ComponentTree::new(TreeNode::new("text", Component::Text(TextProps { value: Label::from(format!("value={}", doc.snapshot.value)), emphasize: None, data_attributes: None })))
                         }
                     }
                 };
@@ -15458,7 +15689,15 @@ pub mod plugin_runtime {
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU32, Ordering};
-    use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode};
+    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-helpers`): `sdk-flip` flipped `plugin_render`/
+    /// `plugin_render_with_document` below to return `ComponentTree` but this module (a sibling of
+    /// `pub mod app`, not nested inside it) never gained an import for the name — added here.
+    use semio_framework_ui_runtime::ComponentTree;
+    /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
+    /// `plugin_dispatch_intents`/`plugin_take_presence` — this module (a sibling of `pub mod app`, not
+    /// nested inside it) has no glob import of the contract crate the way `mod app` does.
+    use semio_framework_ui_contract as ui_contract;
+    use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
     thread_local! {
         static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
@@ -16434,7 +16673,7 @@ pub mod plugin_runtime {
             }
         }
         let dialect = semio_framework::ArtifactDialect { artifact_kind, standard, subset };
-        semio_framework::ArtifactDialect::parse_coordinate(&dialect.to_coordinate().await).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), error))?;
+        semio_framework::ArtifactDialect::parse_coordinate(&dialect.to_coordinate()).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-dialect"), error))?;
         Ok(dialect)
     }
 
@@ -16453,7 +16692,7 @@ pub mod plugin_runtime {
             (false, false) => {
                 let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
                 if app_dialect != dialect || app_role != role {
-                    return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("explicit app {app_id} does not serve {}#{}", dialect.to_coordinate().await, role.as_str().await)));
+                    return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("explicit app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str().await)));
                 }
             }
             _ => return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.partial-app-ref"), "plugin_id and app_id must either both be empty or both be set")),
@@ -16469,7 +16708,7 @@ pub mod plugin_runtime {
         }
         let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
         if app_dialect != dialect || app_role != role {
-            return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("default app {app_id} does not serve {}#{}", dialect.to_coordinate().await, role.as_str().await)));
+            return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("default app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str().await)));
         }
         relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id })).await
     }
@@ -16623,6 +16862,88 @@ pub mod plugin_runtime {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
         PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes }
+    }
+
+    /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
+    /// `instance_id` against the app's live `dyn PluginApp` via `PluginApp::handle_intent_frame` —
+    /// the ONLY dispatch path this takes, which resolves a typed `Command` through
+    /// `ArtifactApp::command_from_intent` and routes it through the SAME internal
+    /// `dispatch_typed_command_inner` every other command path uses (kind discipline, command log,
+    /// undo grouping, `AsyncTask` spawning all apply automatically). `intents` is ALREADY
+    /// revision-guarded by the caller (`⚛️reactor::poll`'s `PatchTracker::revision` +
+    /// `ui_runtime::is_stale_intent`, at the reactor because it owns the reconciler that owns the
+    /// revision) — this function never re-checks staleness, matching `plugin_exchange`'s own division
+    /// of labor (host-level routing vs. app-level dispatch).
+    ///
+    /// Frames the result EXACTLY like `plugin_resume_task` (`AppFrame::Emit`/`Error`, `in_reply_to:
+    /// 0`): an intent is guest-applied, not a live client's `Command`-frame reply awaiting a specific
+    /// `seq` — the reply IS the next `UiPatch` revision bump the caller's own `dirty_render` pass
+    /// produces this same turn, already acknowledged by the existing `PatchAck` event; `intent.seq`
+    /// is the dedupe/log key a caller may record, not an `in_reply_to`. A per-intent `Fault` (e.g. an
+    /// `ActionId.version` mismatch, or a `View`/`Shell`-kind action returning operations) rides
+    /// `AppFrame::Error` — never silently dropped, never a hard stop for the remaining intents in the
+    /// same batch.
+    pub async fn plugin_dispatch_intents(instance_id: u32, intents: &[ui_contract::UiIntent]) -> Result<PluginExchangeOutput, Fault> {
+        let mut frames: Vec<protocol::AppFrame> = Vec::new();
+        let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
+        let mut event_bytes: Vec<Vec<u8>> = Vec::new();
+        let meta = ActionMeta { actor: instance_actor(instance_id).await, instance_id };
+
+        for intent in intents {
+            let dispatched = with_instances_mut(|list| {
+                let instance = find_instance(list, instance_id)?;
+                resolve_ready(instance.app.handle_intent_frame(intent, &meta))
+            }).await;
+
+            match dispatched {
+                Ok(result) => {
+                    let emit_wire = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        Ok(resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())
+                    })
+                    .await.unwrap_or_default();
+                    let (document_ops, config_ops, draft_ops) = emit_wire;
+                    frames.push(protocol::AppFrame::Emit {
+                        in_reply_to: 0,
+                        document_ops,
+                        config_ops,
+                        draft_ops,
+                        output: encode_wire_serialized(&result.output).await,
+                        diagnostics: encode_wire_serialized(&result.diagnostics).await,
+                    });
+                    push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
+                }
+                Err(fault) => push_app_fault(&mut frames, None, fault).await,
+            }
+        }
+
+        let mut frame_bytes = Vec::with_capacity(frames.len());
+        for frame in frames.iter() {
+            frame_bytes.push(protocol::encode_app_frame(frame).await);
+        }
+        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes })
+    }
+
+    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains `instance_id`'s render-plane presence
+    /// outbox (`VcsArtifactApp::pending_presence`, filled by `stamp_and_cache_interaction_ui` every
+    /// render) — called once per dirty render in the reactor's `poll`, right after `plugin_render`,
+    /// so the SAME turn that presented the tree also derives its presence. Stamps each drained
+    /// update's bare `body_key` surface (see `stamp_and_cache_interaction_ui`'s own doc for why
+    /// `VcsArtifactApp` cannot know its own instance id) into the reactor's `"<instance>:<body-key>"`
+    /// surface convention — the SAME split `parse_surface_instance`/`wit_event_to_kernel` already use
+    /// for every other surface — so the caller's `PresenceHub` keys it identically to `PatchTracker`.
+    pub async fn plugin_take_presence(instance_id: u32) -> Vec<ui_contract::PresenceUpdate> {
+        let drained = with_instances_mut(|list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(resolve_ready(instance.app.take_pending_presence()))
+        }).await.unwrap_or_default();
+        drained
+            .into_iter()
+            .map(|mut update| {
+                update.surface = ui_contract::SurfaceId::from(format!("{instance_id}:{}", update.surface.0));
+                update
+            })
+            .collect()
     }
 
     /// 🔀️ The single bidirectional entry point behind WIT `exchange` (see `📜️wit/📜️world.wit`'s
@@ -16883,7 +17204,7 @@ pub mod plugin_runtime {
                             // 🌉️ `with_instances_mut`'s callback is deliberately sync (single-threaded
                             // `RefCell::borrow_mut` reentrancy guard, see its own doc comment) —
                             // bridged via `resolve_ready` exactly like `media_fingerprint` above.
-                            let dialect = resolve_ready(store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect)).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
+                            let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
                             resolve_ready(instance.app.load_child_pack(&entry.slot, &entry.child_id, dialect, &entry.envelope_pack))?;
                         }
                         Ok(())
@@ -17604,7 +17925,7 @@ pub mod plugin_runtime {
             ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView,
             Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp,
         };
-        use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
+        use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::ArtifactHandle;
         use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
@@ -17616,7 +17937,11 @@ pub mod plugin_runtime {
         use store::{ArtifactPack, EngineHandles};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
         use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
-        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef, UiPeerMark, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
+        /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
+        /// import too, rather than relying on `mod app`'s outer glob.
+        use semio_framework_ui_contract::{ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision};
 
         /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs
         /// (`TestApp::APP_ID`, the `App::builder` ids below, every `CommandAddress`/`ActionAddress`/
@@ -17774,17 +18099,17 @@ pub mod plugin_runtime {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
             async fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -17814,8 +18139,8 @@ pub mod plugin_runtime {
             }
             async fn semantics(&self) -> &'static protocol::SemanticDescriptor {
                 match self {
-                    TestMutation::SetCount { .. } => &Self::kinds()[0],
-                    TestMutation::SetLabel { .. } => &Self::kinds()[1],
+                    TestMutation::SetCount { .. } => &Self::kinds().await[0],
+                    TestMutation::SetLabel { .. } => &Self::kinds().await[1],
                 }
             }
             async fn label(&self) -> String {
@@ -17907,17 +18232,17 @@ pub mod plugin_runtime {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
             async fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -17990,17 +18315,17 @@ pub mod plugin_runtime {
                     let probe = format!("{keyword} ");
                     if line == keyword.as_str() || line.starts_with(&probe) {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record).await;
+                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
                 Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
             }
             async fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self).await;
+                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline).await;
+                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -18092,6 +18417,11 @@ pub mod plugin_runtime {
                     "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
                     "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
                     "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+                    // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): reachable ONLY through the
+                    // `command_from_intent` bridge (this string is never dispatched by any other
+                    // existing test) — the `🕹️IntentDispatchTests` fixture proves kind discipline
+                    // survives the new intent path exactly like it already does for `dispatch_typed`.
+                    "badView" => Ok(TestCommand::BadView),
                     _ => Err(Fault::from(format!("unknown test command: {action}"))),
                 }
             }
@@ -18139,8 +18469,11 @@ pub mod plugin_runtime {
                 }
             }
 
-            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
-                ui_text(Label::data(format!("count={}", doc.snapshot.count)).await).await
+            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> semio_framework_ui_runtime::ComponentTree {
+                semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                    "text",
+                    semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+                ))
             }
 
             async fn clipboard_media_type() -> Option<MediaType> {
@@ -18331,7 +18664,7 @@ pub mod plugin_runtime {
         async fn plugin_builder_wires_app_factory_for_create_app() {
             let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
             let app = bundle.create_app(TestApp::APP_ID).await.expect("registered app");
-            assert_eq!(app.app_id(), TestApp::APP_ID);
+            assert_eq!(app.app_id().await, TestApp::APP_ID);
             assert!(bundle.create_app("unknown-app").await.is_none());
         }
 
@@ -18343,18 +18676,18 @@ pub mod plugin_runtime {
 
             let set = crate::plugin_runtime::set_merge_policy_frames(&mut app, 7, protocol::MergePolicy::Vigilant.as_u8().await).await.expect("known policy accepts");
             assert_eq!(set, vec![protocol::AppFrame::Done { in_reply_to: 7 }]);
-            assert_eq!(app.dispatch_report().policy, protocol::MergePolicy::Vigilant);
-            assert_eq!(app.test_snapshot(), before_snapshot, "local policy changes no document state");
+            assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant);
+            assert_eq!(app.test_snapshot().await, before_snapshot.await, "local policy changes no document state");
             assert_eq!(app.test_store().await.applied_edit_ids().await.len(), before_edits, "local policy changes no shared history");
 
             let invalid_policy = crate::plugin_runtime::set_merge_policy_frames(&mut app, 8, 3).await.expect_err("unknown policy ordinal rejects");
             assert_eq!(invalid_policy.code.0, "merge.invalid-policy");
-            assert_eq!(app.dispatch_report().policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
+            assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
 
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("seed one durable edit");
             let (mut envelope, applied_edit_ids) = {
                 let store = app.test_store().await;
-                (store.envelope().clone(), store.applied_edit_ids().await.to_vec())
+                (store.envelope().await.clone(), store.applied_edit_ids().await.to_vec())
             };
             let conflict_id = "test-degraded-conflict".to_string();
             envelope.conflicts.push(protocol::Conflict {
@@ -18376,7 +18709,7 @@ pub mod plugin_runtime {
 
             let invalid_resolution = crate::plugin_runtime::resolve_conflict_frames(&mut app, 10, conflict_id.clone(), 2).await.expect_err("unknown resolution ordinal rejects");
             assert_eq!(invalid_resolution.code.0, "merge.invalid-resolution");
-            assert_eq!(app.open_conflicts().len(), 1, "invalid resolution never changes conflict state");
+            assert_eq!(app.open_conflicts().await.len(), 1, "invalid resolution never changes conflict state");
 
             let resolved = crate::plugin_runtime::resolve_conflict_frames(&mut app, 11, conflict_id.clone(), 0).await.expect("accept resolves the open degraded conflict");
             let [protocol::AppFrame::MergeReport { in_reply_to: Some(11), report }, protocol::AppFrame::Conflicts { in_reply_to: Some(11), conflicts }] = resolved.as_slice() else {
@@ -18387,7 +18720,7 @@ pub mod plugin_runtime {
             assert_eq!(report.conflict.as_ref().map(|id| id.0.as_str()), Some(conflict_id.as_str()));
             let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).await.expect("post-resolution conflict payload decodes canonically");
             assert!(open.is_empty(), "accepted conflict leaves the open projection");
-            assert!(app.open_conflicts().is_empty());
+            assert!(app.open_conflicts().await.is_empty());
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18398,44 +18731,44 @@ pub mod plugin_runtime {
             assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).await.unwrap());
             assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).await.unwrap()]));
             assert_eq!(result.inverse_group.mutations.len(), 1);
-            assert_eq!(app.test_snapshot().count, 1);
+            assert_eq!(app.test_snapshot().await.count, 1);
         }
 
         //#region 🔖️EphemeralLaneTests
         #[semio_framework_async_macros::async_test]
         async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
-            assert_eq!(app.presence_store.generation(), 0);
-            assert_eq!(app.transient_store.generation(), 0);
+            assert_eq!(app.presence_store.generation().await, 0);
+            assert_eq!(app.transient_store.generation().await, 0);
 
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
 
-            assert_eq!(app.presence_store.generation(), 1, "presence lane never received the command's emission");
-            assert_eq!(app.transient_store.generation(), 1, "transient lane never received the command's emission");
+            assert_eq!(app.presence_store.generation().await, 1, "presence lane never received the command's emission");
+            assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
             assert_eq!(
-                app.ephemeral_snapshot(),
+                app.ephemeral_snapshot().await,
                 EphemeralSnapshot { presence: NoPresence::default().encode_pack().await, presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
                 "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
             );
 
             // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
             // command-log rows of their own — the document's single edit is the only thing recorded.
-            assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
+            assert_eq!(app.test_store().await.envelope().await.vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
 
             // ↩️ Undo rolls back the DOCUMENT; the ephemeral lanes are not restored, because they
             // were never part of the undoable gesture in the first place.
             app.dispatch_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().count, 0);
-            assert_eq!(app.presence_store.generation(), 1, "undo must not rewind presence");
-            assert_eq!(app.transient_store.generation(), 1, "undo must not rewind transient");
+            assert_eq!(app.test_snapshot().await.count, 0);
+            assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
+            assert_eq!(app.transient_store.generation().await, 1, "undo must not rewind transient");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta()).await.expect("set label");
-            assert_eq!(app.presence_store.generation(), 0);
-            assert_eq!(app.transient_store.generation(), 0);
+            assert_eq!(app.presence_store.generation().await, 0);
+            assert_eq!(app.transient_store.generation().await, 0);
         }
 
         /// 👥️ Contract-freeze §C7.6, "zero app-side code": an app that merely DECLARES an interaction
@@ -18452,9 +18785,9 @@ pub mod plugin_runtime {
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
 
             let snapshot = app.ephemeral_snapshot();
-            assert!(!snapshot.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
+            assert!(!snapshot.await.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
             let mut pos = 0usize;
-            let decoded = protocol::decode_presence_interaction(&snapshot.interaction, &mut pos).await.expect("interaction bytes decode");
+            let decoded = protocol::decode_presence_interaction(&snapshot.await.interaction, &mut pos).await.expect("interaction bytes decode");
             assert_eq!(decoded.app_id, app.app_id());
             assert_eq!(decoded.domains.len(), 1);
             assert_eq!(decoded.domains[0].domain, "items");
@@ -18490,16 +18823,16 @@ pub mod plugin_runtime {
             let alice = sample_presence_peer("user:alice#s1", Some(3), true);
             let bob = sample_presence_peer("user:bob#s1", Some(5), false);
 
-            app.adopt_presence(Some(9), &[alice.clone(), bob], 1000).expect("adopt roster");
+            app.adopt_presence(Some(9), &[alice.await.clone(), bob], 1000).await.expect("adopt roster");
             assert_eq!(app.own_color, Some(9));
             assert_eq!(app.presence_store.peers().await.len(), 1, "only the peer carrying a presence_pack adopts into presence_store");
-            assert_eq!(app.presence_store.peers()[0].0, "user:alice#s1");
+            assert_eq!(app.presence_store.peers().await[0].0, "user:alice#s1");
             assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
             assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
             assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
 
             // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
-            app.adopt_presence(Some(9), &[alice], 2000).expect("adopt roster after bob leaves");
+            app.adopt_presence(Some(9), &[alice.await], 2000).await.expect("adopt roster after bob leaves");
             assert_eq!(app.presence_store.peers().await.len(), 1);
             assert_eq!(app.peer_presence.len(), 1);
             assert!(app.peer_presence.contains_key("user:alice#s1"));
@@ -18615,7 +18948,7 @@ pub mod plugin_runtime {
 
             // 📤️ Persist exactly what the host would: the parent's document pack plus one
             // `ChildPackEntry` per live child.
-            let entries = PluginApp::child_packs(&app).expect("child packs");
+            let entries = PluginApp::child_packs(&app).await.expect("child packs");
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].slot, "slot");
             assert_eq!(entries[0].child_id, "child-1");
@@ -18626,7 +18959,7 @@ pub mod plugin_runtime {
             // inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
             let mut reloaded: VcsArtifactApp<TestApp, TestMembers> = VcsArtifactApp::new(TestApp::default()).await;
             for entry in &entries {
-                let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).await.expect("dialect round trips");
+                let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
                 PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).await.expect("load child pack");
             }
 
@@ -18647,19 +18980,19 @@ pub mod plugin_runtime {
             // child checkpoint that commit produced.
             app.dispatch_action("commitCheckpoint", Some(&serde_json::json!({ "message": "v1" })), &meta()).await.expect("checkpoint");
             let pinned_checkpoint = app.test_store().await.current_checkpoint_id().await.map(str::to_string).expect("parent checkpoint exists");
-            let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
+            let pins = app.test_store().await.envelope().await.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
             assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
             assert_eq!(pins[0].child_ref.artifact_id, "child-1");
 
             // ⏭️ Move both forward, past the pin.
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta()).await.expect("second composite edit");
             let live = reads_child_count(&app);
-            assert_eq!(live, 42);
+            assert_eq!(live.await, 42);
 
             // ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
             // otherwise a restored composition silently mixes an old parent with a new child.
             app.dispatch_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": pinned_checkpoint })), &meta()).await.expect("checkout");
-            assert_eq!(reads_child_count(&app), 7, "checkout did not cascade to the pinned child");
+            assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
         }
 
         /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
@@ -18673,14 +19006,14 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
-            assert_eq!(reads_child_count(&app), 7);
+            assert_eq!(reads_child_count(&app).await, 7);
 
             // ↩️ Store-level undo bypasses `ArtifactApp::handle` entirely — this is exactly where the
             // `thread_local!` child caches this view replaces used to go stale.
             app.dispatch_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(reads_child_count(&app), 0, "the view must reflect the child's undone state");
+            assert_eq!(reads_child_count(&app).await, 0, "the view must reflect the child's undone state");
             app.dispatch_action("redo", None, &meta()).await.expect("redo");
-            assert_eq!(reads_child_count(&app), 7, "the view must reflect the child's redone state");
+            assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18692,14 +19025,14 @@ pub mod plugin_runtime {
             // skip rather than abort the whole group over.
             app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child")).await.expect("register child seeds ownership");
 
-            let before = app.test_snapshot();
+            let before = app.test_snapshot().await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).await.expect("composite edit");
-            assert_eq!(app.test_snapshot().label, "composite");
+            assert_eq!(app.test_snapshot().await.label, "composite");
 
             let result = app.dispatch_action("undo", None, &meta()).await.expect("group undo");
 
             // The parent reverted...
-            assert_eq!(app.test_snapshot(), before);
+            assert_eq!(app.test_snapshot().await, before);
             // ...child-a (the real group member) reverted too...
             let (_, child_a) = app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a");
             let TestMembers::Child(child_a_store) = child_a;
@@ -18717,7 +19050,7 @@ pub mod plugin_runtime {
             // freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
             // doc comment, skipping this step would make `ChildGenesis` pointless.
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
-            let parent_id = app.store.envelope().id.clone();
+            let parent_id = app.store.envelope().await.id.clone();
             app.composition.graph_mut().await.insert_owns(&parent_id, "genesisSlot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
             let target = store::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect().await };
             let created: Vec<(store::os_io::ArtifactRef, TestMembers)> = vec![(target, new_test_child("genesis-child").await.expect("construct genesis child"))];
@@ -18737,7 +19070,7 @@ pub mod plugin_runtime {
             assert!(result.mutations.is_empty());
             assert!(result.requested_effects.is_empty());
             // A view command never advances the document.
-            assert_eq!(app.test_snapshot(), TestSnapshot::default());
+            assert_eq!(app.test_snapshot().await, TestSnapshot::default());
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18747,7 +19080,7 @@ pub mod plugin_runtime {
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
             app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-            assert_eq!(app.test_config().selected, Some("b".to_string()));
+            assert_eq!(app.test_config().await.selected, Some("b".to_string()));
 
             let history = app.test_history().await;
             // 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
@@ -18760,7 +19093,7 @@ pub mod plugin_runtime {
 
             app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &meta()).await.expect("revertToCommand on a config-edit row");
 
-            assert_eq!(app.test_config().selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
+            assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
             let after = app.test_history().await;
             // 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
             // config-store undo-to-position is pure cursor motion on the config store — it appends its own
@@ -18771,7 +19104,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })), &meta()).await
                 .expect("noteShellCommand with inverse");
 
@@ -18791,7 +19124,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn shell_action_emits_host_effect_without_operations() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.dispatch_typed(TestCommand::Navigate, &meta()).await.expect("navigate");
             assert!(result.mutations.is_empty());
             assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }]);
@@ -18799,7 +19132,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn copy_emits_clipboard_write_effect_with_no_operations() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
             let result = app.handle_action("copy", None, &meta()).await.expect("copy");
             assert!(result.mutations.is_empty(), "copy must not record an undo entry");
@@ -18812,7 +19145,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn copy_on_empty_selection_is_a_benign_no_operation() {
             let mut app = VcsArtifactApp::new(TestApp::default());
-            let result = app.handle_action("copy", None, &meta()).await.expect("copy");
+            let result = app.await.handle_action("copy", None, &meta()).await.expect("copy");
             assert!(result.mutations.is_empty());
             assert!(result.requested_effects.is_empty());
         }
@@ -18822,12 +19155,12 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
             let result = app.handle_action("cut", None, &meta()).await.expect("cut");
-            assert_eq!(app.test_snapshot().label, "");
+            assert_eq!(app.test_snapshot().await.label, "");
             assert_eq!(result.requested_effects.len(), 1);
             assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
             // One undo restores the cut label — cut is a single coalesced edit, not two.
             app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().label, "hello");
+            assert_eq!(app.test_snapshot().await.label, "hello");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18837,7 +19170,7 @@ pub mod plugin_runtime {
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::APP_ID.into(), label: "pasted".into() };
             let args = json!({ "fragment": fragment, "anchor": "original" });
             app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
-            assert_eq!(app.test_snapshot().label, "pasted");
+            assert_eq!(app.test_snapshot().await.label, "pasted");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18847,7 +19180,7 @@ pub mod plugin_runtime {
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::APP_ID.into(), label: "pasted".into() };
             let args = json!({ "fragment": fragment, "anchor": "centroid" });
             app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
-            assert_eq!(app.test_snapshot().label, format!("pasted-{:?}", PasteAnchor::Centroid));
+            assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18855,7 +19188,7 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.handle_action("paste", None, &meta()).await.expect("paste");
             assert!(result.mutations.is_empty());
-            assert_eq!(app.test_snapshot().label, "");
+            assert_eq!(app.test_snapshot().await.label, "");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18873,10 +19206,10 @@ pub mod plugin_runtime {
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
             }
-            assert_eq!(app.test_snapshot().label, "abc");
+            assert_eq!(app.test_snapshot().await.label, "abc");
             // One undo reverts the whole coalesced gesture back to the empty label.
             app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().label, "");
+            assert_eq!(app.test_snapshot().await.label, "");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -18884,15 +19217,15 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
-            assert_eq!(app.test_snapshot().count, 2);
+            assert_eq!(app.test_snapshot().await.count, 2);
 
             let undo = app.handle_action("undo", None, &meta()).await.expect("undo");
             assert!(undo.mutations.is_empty());
             assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_snapshot().count, 1);
+            assert_eq!(app.test_snapshot().await.count, 1);
 
             app.handle_action("redo", None, &meta()).await.expect("redo");
-            assert_eq!(app.test_snapshot().count, 2);
+            assert_eq!(app.test_snapshot().await.count, 2);
 
             let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).await.expect("checkpoint");
             assert!(checkpoint.mutations.is_empty());
@@ -18902,7 +19235,7 @@ pub mod plugin_runtime {
         //#region 🔖️CommandLogTests
         #[semio_framework_async_macros::async_test]
         async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
             let history = app.test_history().await;
             assert_eq!(history.commands.len(), 1);
@@ -18917,7 +19250,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
             }
@@ -18928,7 +19261,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
             assert_eq!(app.test_history().await.commands.len(), 1);
             app.handle_action("undo", None, &meta()).await.expect("undo");
@@ -18946,14 +19279,14 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
-            assert_eq!(app.test_snapshot().count, 2);
+            assert_eq!(app.test_snapshot().await.count, 2);
             // 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
             let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
             let before_len = app.test_history().await.commands.len();
 
             let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &meta()).await.expect("revertToCommand");
             assert!(result.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_snapshot().count, 1, "revert leaves the target edit applied, undoing only what came after it");
+            assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
             let history = app.test_history().await;
             assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
             // 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
@@ -18977,7 +19310,7 @@ pub mod plugin_runtime {
 
             // 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
             let mut receiver = VcsArtifactApp::new(TestApp::default()).await;
-            receiver.ingest_operations(&operations).expect("ingest");
+            receiver.ingest_operations(&operations).await.expect("ingest");
             let history = receiver.test_history().await;
             assert_eq!(history.commands.len(), 1);
             assert!(history.commands[0].edit_id.is_some());
@@ -18986,7 +19319,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).await.expect("setHistoryCommandFilter");
             assert!(result.mutations.is_empty());
             assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
@@ -19034,30 +19367,34 @@ pub mod plugin_runtime {
                 ],
                 command_filter: HistoryCommandFilter::All,
             };
-            let UiNode::Tree(all_tree) = ui_history_panel(&history, "ctrl", false, false).await else { panic!("expected a Tree root like Document/Catalogue") };
-            assert_eq!(all_tree.sections.len(), 2, "Actions + Commands sections");
-            assert_eq!(all_tree.sections[0].label.as_ref().map(|l| l.as_str()), Some("Actions"));
-            assert_eq!(all_tree.sections[0].items.len(), 5, "undo/redo/commit/alternative/filter");
-            assert!(all_tree.sections[0].items.iter().all(|item| item.control.is_some()), "Actions rows use label+control like Settings/Theme");
-            assert_eq!(all_tree.sections[1].label.as_ref().map(|l| l.as_str()), Some("Commands"));
-            assert_eq!(all_tree.sections[1].items.len(), 2);
-            assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer inverse");
-            assert!(all_tree.sections[1].items[1].actions.is_none(), "the non-revertible entry must not offer inverse");
+            let all_panel = ui_history_panel(&history, "ctrl", false, false).await;
+            assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
+            let semio_framework_ui_contract::Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
+            assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
+            assert_eq!(all_panel.children[0].children.len(), 5, "undo/redo/commit/alternative/filter");
+            assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
+            let semio_framework_ui_contract::Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
+            assert_eq!(commands_props.label.as_ref().map(|label| label.0.as_str()), Some("Commands"));
+            assert_eq!(all_panel.children[1].children.len(), 2);
+            let semio_framework_ui_contract::Component::TreeItem(revertible_props) = &all_panel.children[1].children[0].component else { panic!("expected a TreeItem") };
+            assert!(!revertible_props.row_actions.is_empty(), "the revertible entry must offer inverse");
+            let semio_framework_ui_contract::Component::TreeItem(non_revertible_props) = &all_panel.children[1].children[1].component else { panic!("expected a TreeItem") };
+            assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
             let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-            let UiNode::Tree(ops_tree) = ui_history_panel(&only_ops, "ctrl", false, false).await else { panic!("expected a Tree root") };
-            assert_eq!(ops_tree.sections[1].items.len(), 1);
-            assert_eq!(ops_tree.sections[1].items[0].id, "framework.history.entry.1");
+            let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false).await;
+            assert_eq!(ops_panel.children[1].children.len(), 1);
+            assert_eq!(ops_panel.children[1].children[0].key, "framework.history.entry.1");
 
             let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-            let UiNode::Tree(no_ops_tree) = ui_history_panel(&without_ops, "ctrl", false, false).await else { panic!("expected a Tree root") };
-            assert_eq!(no_ops_tree.sections[1].items.len(), 1);
-            assert_eq!(no_ops_tree.sections[1].items[0].id, "framework.history.entry.2");
+            let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false).await;
+            assert_eq!(no_ops_panel.children[1].children.len(), 1);
+            assert_eq!(no_ops_panel.children[1].children[0].key, "framework.history.entry.2");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
             let history = app.test_history().await;
             assert_eq!(history.commands.len(), 1);
@@ -19071,7 +19408,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             for id in ["node-1", "node-2", "node-3"] {
                 app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).await.expect("select");
             }
@@ -19082,7 +19419,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn view_dispatches_remain_distinct_across_interleaved_entries() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
             app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
@@ -19098,7 +19435,7 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand");
-            assert!(app.test_app().received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
+            assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
             let history = app.test_history().await;
             assert_eq!(history.commands.len(), 1);
             let entry = &history.commands[0];
@@ -19107,7 +19444,7 @@ pub mod plugin_runtime {
             assert!(entry.label.contains("dark"));
 
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand again");
-            assert!(app.test_app().received_actions.borrow().is_empty());
+            assert!(app.test_app().await.received_actions.borrow().is_empty());
             let history = app.test_history().await;
             assert_eq!(history.commands.len(), 2);
             assert!(history.commands.iter().all(|entry| entry.count == 1));
@@ -19115,14 +19452,14 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn history_delivery_does_not_widen_a_none_ui_scope() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
             assert_eq!(result.ui_scope, UiDirtyScope::None);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn history_delivery_preserves_partial_ui_scope() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).await.expect("viewPartialScope");
             let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
             assert_eq!(window_bodies, vec!["some.window".to_string()]);
@@ -19131,14 +19468,14 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn scope_upgrade_full_stays_full() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
             assert_eq!(result.ui_scope, UiDirtyScope::Full);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let before_len = app.test_history().await.commands.len();
             let result = app.handle_action("undo", None, &meta()).await.expect("undo");
             assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
@@ -19147,7 +19484,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn set_history_command_filter_is_never_logged() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             let before_len = app.test_history().await.commands.len();
             app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).await.expect("setHistoryCommandFilter");
             assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
@@ -19155,13 +19492,12 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
-            app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).expect("render before");
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
+            app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render before");
             app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
-            let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).expect("render after");
-            let UiNode::Tree(tree) = rendered else { panic!("expected a Tree root like Document/Catalogue") };
-            assert_eq!(tree.sections.len(), 2, "Actions + Commands");
-            assert_eq!(tree.sections[1].items.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
+            let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render after");
+            assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
+            assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19181,7 +19517,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn undo_on_empty_history_is_a_benign_no_operation() {
             let mut app = VcsArtifactApp::new(TestApp::default());
-            let result = app.handle_action("undo", None, &meta()).await.expect("undo");
+            let result = app.await.handle_action("undo", None, &meta()).await.expect("undo");
             assert!(result.mutations.is_empty());
             assert!(result.events.is_empty());
         }
@@ -19191,11 +19527,11 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc");
             app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("label");
-            let files = app.document_pack().expect("document pack");
+            let files = app.document_pack().await.expect("document pack");
 
             let mut restored = VcsArtifactApp::new(TestApp::default()).await;
-            restored.load_document_pack(&files).expect("load document pack");
-            assert_eq!(restored.test_snapshot(), TestSnapshot { count: 1, label: "hi".into() });
+            restored.load_document_pack(&files).await.expect("load document pack");
+            assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into() });
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19215,14 +19551,14 @@ pub mod plugin_runtime {
             let operations = protocol::encode_envelopes(&envelopes);
 
             let mut receiver = VcsArtifactApp::new(TestApp::default()).await;
-            receiver.ingest_operations(&operations).expect("ingest once");
-            receiver.ingest_operations(&operations).expect("ingest twice");
-            assert_eq!(receiver.test_snapshot().count, 1, "feeding the same operation twice must not double-apply");
+            receiver.ingest_operations(&operations).await.expect("ingest once");
+            receiver.ingest_operations(&operations).await.expect("ingest twice");
+            assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn attach_detach_reattach_resumes_backbone_convergence() {
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             assert!(app.backbone_ref().await.is_none(), "default is unattached");
 
             let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach").await;
@@ -19246,9 +19582,9 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn selection_count_phrase_formats_mixed_selection() {
-            assert_eq!(selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]), "8 nodes and 13 edges");
-            assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]), "1 node");
-            assert_eq!(selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]), "8 Knoten und 13 Kanten");
+            assert_eq!(selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]).await, "8 nodes and 13 edges");
+            assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]).await, "1 node");
+            assert_eq!(selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]).await, "8 Knoten und 13 Kanten");
         }
 
         /// 🖱️ `PluginApp::context_menu` end-to-end through `VcsArtifactApp`: with an empty label the
@@ -19264,12 +19600,12 @@ pub mod plugin_runtime {
             let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Mutation).await.as_str().to_string();
             let increment_icon = catalog_command_icon_id("incrementViaCommand").await.as_str().to_string();
 
-            let empty_label = app.context_menu(&request);
+            let empty_label = app.context_menu(&request).await;
             assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
             assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), icon: Some(set_label_icon), action: Some("setLabelRequired".into()), ..Default::default() });
 
             app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("set label");
-            let with_label = app.context_menu(&request);
+            let with_label = app.context_menu(&request).await;
             assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
             assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
         }
@@ -19322,11 +19658,11 @@ pub mod plugin_runtime {
         /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
         #[semio_framework_async_macros::async_test]
         async fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
-            let mut app = VcsArtifactApp::with_registry(TestApp::default(), flat_menu_registry().await).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::with_registry(TestApp::default(), flat_menu_registry().await).await;
             app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).await.expect("set label");
             let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
-            let organized = app.context_menu(&request);
+            let organized = app.context_menu(&request).await;
             let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
             assert_eq!(
                 ids,
@@ -19354,8 +19690,77 @@ pub mod plugin_runtime {
             let mut app = contract_app_under_test().await;
             let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("a View command emitting operations must be rejected");
             assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
-            assert_eq!(app.test_snapshot(), TestSnapshot::default());
+            assert_eq!(app.test_snapshot().await, TestSnapshot::default());
         }
+
+        //#region 🧪️IntentDispatchTests
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`) acceptance: an Activate intent on a test app
+        /// produces the mutation's document change AND a command-log entry within the SAME
+        /// `handle_intent_frame` call — the reactor's own `poll` never needs a second turn to see it,
+        /// since `plugin_dispatch_intents` (which calls this) runs before the SAME turn's
+        /// `dirty_render` pass.
+        #[semio_framework_async_macros::async_test]
+        async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
+            let mut app = contract_app_under_test().await;
+            let intent = UiIntent {
+                surface: SurfaceId::from("s"),
+                revision: UiRevision(0),
+                node: UiNodeId::default(),
+                node_key: "counter".into(),
+                trigger: Trigger::Activate,
+                action: ActionId::v1("app", "incrementViaCommand"),
+                args: None,
+                input: None,
+                seq: 1,
+            };
+            let result = app.handle_intent_frame(&intent, &meta()).await.expect("an Activate intent on a Mutation-kind action must dispatch");
+            assert_eq!(app.test_snapshot().await.count, 1, "the mutation must have applied");
+            assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
+            assert!(result.history_patch.is_some(), "a command-log entry must have been recorded for the intent");
+        }
+
+        /// 🎯️ M1 acceptance: a `View`-kind action arriving as an intent and returning artifact ops
+        /// still hard-faults — kind discipline survives the new intent path unchanged, because
+        /// `handle_intent_frame` routes through the SAME `dispatch_typed_command_inner` every other
+        /// command path uses.
+        #[semio_framework_async_macros::async_test]
+        async fn view_kind_intent_returning_operations_hard_faults() {
+            let mut app = contract_app_under_test().await;
+            let intent = UiIntent {
+                surface: SurfaceId::from("s"),
+                revision: UiRevision(0),
+                node: UiNodeId::default(),
+                node_key: "bad".into(),
+                trigger: Trigger::Activate,
+                action: ActionId::v1("app", "badView"),
+                args: None,
+                input: None,
+                seq: 2,
+            };
+            let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
+            assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
+            assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
+        }
+
+        /// 🎯️ M1 decision: `ActionId.version` mismatch returns a `Fault`, never silently dispatches a
+        /// stale contract — the default `command_from_intent` bridge only resolves version 1.
+        #[semio_framework_async_macros::async_test]
+        async fn command_from_intent_rejects_a_non_v1_action_version() {
+            let intent = UiIntent {
+                surface: SurfaceId::from("s"),
+                revision: UiRevision(0),
+                node: UiNodeId::default(),
+                node_key: "counter".into(),
+                trigger: Trigger::Activate,
+                action: ActionId::new("app".into(), "incrementViaCommand".into(), 2),
+                args: None,
+                input: None,
+                seq: 3,
+            };
+            let error = TestApp::command_from_intent(&intent).await.expect_err("a non-v1 action must be rejected, never silently dispatched");
+            assert!(error.message.contains("version"), "unexpected error: {}", error.message);
+        }
+        //#endregion 🧪️IntentDispatchTests
 
         #[semio_framework_async_macros::async_test]
         async fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
@@ -19372,18 +19777,18 @@ pub mod plugin_runtime {
             for value in ["a", "ab", "abc"] {
                 app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).await.expect("amendLabel");
             }
-            assert_eq!(app.test_snapshot().label, "abc");
+            assert_eq!(app.test_snapshot().await.label, "abc");
             // One undo reverts the whole coalesced amend gesture.
             app.handle_action("undo", None, &meta()).await.expect("undo amend");
-            assert_eq!(app.test_snapshot().label, "");
+            assert_eq!(app.test_snapshot().await.label, "");
 
             for value in ["x", "xy"] {
                 app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta()).await.expect("commitLabel");
             }
-            assert_eq!(app.test_snapshot().label, "xy");
+            assert_eq!(app.test_snapshot().await.label, "xy");
             // Each commit is its own edit: one undo only reverts the last commit.
             app.handle_action("undo", None, &meta()).await.expect("undo commit");
-            assert_eq!(app.test_snapshot().label, "x");
+            assert_eq!(app.test_snapshot().await.label, "x");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19405,10 +19810,10 @@ pub mod plugin_runtime {
             );
             assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
-            assert_eq!(app.test_snapshot().label, "abc");
+            assert_eq!(app.test_snapshot().await.label, "abc");
             // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
             app.handle_action("undo", None, &meta()).await.expect("undo amend");
-            assert_eq!(app.test_snapshot().label, "");
+            assert_eq!(app.test_snapshot().await.label, "");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19418,7 +19823,7 @@ pub mod plugin_runtime {
             assert_eq!(result.mutations.len(), 1);
             assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).await.unwrap());
             assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).await.unwrap()]));
-            assert_eq!(app.test_snapshot().count, 1);
+            assert_eq!(app.test_snapshot().await.count, 1);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19426,10 +19831,10 @@ pub mod plugin_runtime {
             use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
             let mut app = contract_app_under_test().await;
             let valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
-            app.handle_command(&valid, Some("edit"), &meta()).expect("app-owned command");
-            assert_eq!(app.test_snapshot().count, 1);
+            app.handle_command(&valid, Some("edit"), &meta()).await.expect("app-owned command");
+            assert_eq!(app.test_snapshot().await.count, 1);
             let unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
-            let error = app.handle_command(&unknown, Some("edit"), &meta()).expect_err("undeclared app command");
+            let error = app.handle_command(&unknown, Some("edit"), &meta()).await.expect_err("undeclared app command");
             assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
         }
 
@@ -19441,9 +19846,9 @@ pub mod plugin_runtime {
                 arguments: Default::default(),
             };
             let mut app = contract_app_under_test().await;
-            app.handle_command(&invocation, Some("edit"), &meta()).expect("active mode-owned command");
-            assert_eq!(app.test_snapshot().count, 1);
-            let error = app.handle_command(&invocation, None, &meta()).expect_err("inactive mode command");
+            app.handle_command(&invocation, Some("edit"), &meta()).await.expect("active mode-owned command");
+            assert_eq!(app.test_snapshot().await.count, 1);
+            let error = app.handle_command(&invocation, None, &meta()).await.expect_err("inactive mode command");
             assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
         }
 
@@ -19455,8 +19860,8 @@ pub mod plugin_runtime {
                 arguments: Default::default(),
             };
             let mut app = contract_app_under_test().await;
-            app.handle_action_invocation(&invocation, Some("edit"), &meta()).expect("addressed window action");
-            assert_eq!(app.test_snapshot().label, "main-instance-2");
+            app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("addressed window action");
+            assert_eq!(app.test_snapshot().await.label, "main-instance-2");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -19469,7 +19874,7 @@ pub mod plugin_runtime {
             };
             let calls = Arc::new(AtomicUsize::new(0));
             let handler_calls = calls.clone();
-            let plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").await.plugin_command(
+            let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").await.plugin_command(
                 CommandDefinition::new_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell).await,
                 Box::new(move |_, meta| {
                     handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
@@ -19496,15 +19901,15 @@ pub mod plugin_runtime {
             let mut app = contract_app_under_test().await;
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
-            assert_eq!(app.test_snapshot().count, 2);
+            assert_eq!(app.test_snapshot().await.count, 2);
             app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().count, 1);
+            assert_eq!(app.test_snapshot().await.count, 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn registry_less_construction_skips_enforcement() {
             // The empty-registry path (VcsArtifactApp::new) passes commands through unchecked.
-            let mut app = VcsArtifactApp::new(TestApp::default()).await;
+            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
             app.dispatch_typed(TestCommand::BadView, &meta()).await.expect("no registry ⇒ kind discipline skipped");
         }
 
@@ -19525,11 +19930,11 @@ pub mod plugin_runtime {
             let mut app = interaction_app_under_test().await;
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
+            let edits_after_select = app.interaction_store.envelope().await.vcs.edits.len();
 
             app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).await.expect("interactionHover");
 
-            assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
+            assert_eq!(app.interaction_store.envelope().await.vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
             assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
             // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
@@ -19547,7 +19952,7 @@ pub mod plugin_runtime {
             // 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
             // DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
             app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().label, "", "undo must revert the document edit (seeding the label)");
+            assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
             assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
         }
 
@@ -19623,13 +20028,13 @@ pub mod plugin_runtime {
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn ui_tree_stamping_replaces_app_supplied_presence_from_interaction_state() {
+        async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
             let mut app = interaction_app_under_test().await;
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
 
-            // 👥️ Contract-freeze §C7.6: a peer also selecting "item-1" in the same domain, plus this
-            // session's own color, must land on the stamped item's `presence.color`/`presence.peers`.
+            // 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
+            // this the real presence-derivation fixture the prior packet's own gap note anticipated.
             app.own_color = Some(9);
             app.peer_presence.insert(
                 "user:alice#s1".to_string(),
@@ -19643,25 +20048,41 @@ pub mod plugin_runtime {
                 },
             );
 
-            // 🕹️ Stamp directly (unit-level, independent of any real `UiTree`-producing app render): a
-            // hand-built domain-bound tree with a row the app itself marks selected=false must come out
-            // selected=true after `stamp_and_cache_interaction_ui` — the framework wins.
-            let mut item = UiTreeItemNode::base("item-1", Label::data("Item 1").await).await;
-            item.presence.selected = false;
-            let mut node = UiNode::Tree(UiTreeNode {
-                sections: vec![UiTreeSectionNode { id: "sec".into(), label: None, default_open: None, presence: UiPresence::default(), items: vec![item.await] }],
-                presence: UiPresence::default(),
-                drop_action: None,
-                menu: None,
-                interaction_domain: Some("items".into()),
-            });
-            let state = app.interaction_state();
-            app.stamp_and_cache_interaction_ui(&mut node, &state);
-            let UiNode::Tree(tree) = &node else { panic!("still a Tree node") };
-            let stamped = &tree.sections[0].items[0].presence;
-            assert!(stamped.selected, "framework stamping must win over app-supplied presence");
-            assert_eq!(stamped.color, Some(9), "the item is stamped with THIS session's own color unconditionally");
-            assert_eq!(stamped.peers, vec![UiPeerMark { actor: "user:alice#s1".to_string(), color: Some(3), hovered: false, selected: true, label: "user:alice#s1".to_string() }]);
+            // 👥️ M2: `stamp_and_cache_interaction_ui` no longer writes selection/hover back onto the
+            // tree itself (`TreeNode`/`Component::TreeItem` still carry no presence field — see that
+            // method's own doc comment for why "the framework wins" onto the tree is gone for good);
+            // it derives `ui_contract::PresenceUpdate`s into `self.pending_presence` instead, asserted
+            // below.
+            let item = semio_framework_ui_runtime::TreeNode::new(
+                "item-1",
+                semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps { label: semio_framework_ui_contract::Label::from("Item 1"), description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, row_actions: Vec::new() }),
+            );
+            let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+            let mut tree = semio_framework_ui_runtime::ComponentTree::new(
+                semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+            );
+            let state = app.interaction_state().await;
+            app.stamp_and_cache_interaction_ui(&mut tree, &state, "window").await;
+            let topology = app.interaction_ui_topology.get("items").expect("topology cached for the items domain");
+            assert_eq!(topology.ordered.len(), 1);
+            assert_eq!(topology.ordered[0].id, "item-1");
+
+            // 👥️ M2 acceptance: selecting item-1 (own) with alice ALSO selecting it derives exactly
+            // one `PresenceUpdate` for that node — own.selected true, one peer mark, own color
+            // threaded through, surface addressed by the bare body key (the reactor prefixes the
+            // instance id on drain — see `plugin_take_presence`'s own doc).
+            assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
+            let update = &app.pending_presence[0];
+            assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::from("window"));
+            assert_eq!(update.node_key, "item-1");
+            assert!(update.own.selected, "own selection must be reported");
+            assert!(!update.own.hovered);
+            assert_eq!(update.own.color, Some(9));
+            assert_eq!(update.peers.len(), 1);
+            assert_eq!(update.peers[0].actor, "user:alice#s1");
+            assert_eq!(update.peers[0].color, Some(3));
+            assert!(update.peers[0].selected);
+            assert!(!update.peers[0].hovered);
         }
         //#endregion 🔖️InteractionDispatchTests
 
@@ -19692,22 +20113,22 @@ pub mod plugin_runtime {
             assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
             // 🪪️ `spawn_task` is keyed off `meta.instance_id` (`dispatch_emit`'s own `meta`, i.e.
             // `spawn_meta` above, which shares `instance`'s value by construction).
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1, "dispatch_typed(SpawnCountTask) must have spawned exactly one task");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1, "dispatch_typed(SpawnCountTask) must have spawned exactly one task");
 
             // ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
             // genuinely pending, not synchronously resolved.
-            let pending = crate::reactor::test_support::run_until_idle(8);
+            let pending = crate::reactor::test_support::run_until_idle(8).await;
             assert!(pending, "the task must be parked on a real RequestRegistry await, not finished synchronously");
-            assert_eq!(crate::reactor::test_support::pending_request_count(), 1, "storage_read must have allocated exactly one RequestRegistry slot");
+            assert_eq!(crate::reactor::test_support::pending_request_count().await, 1, "storage_read must have allocated exactly one RequestRegistry slot");
             assert!(crate::reactor::test_support::pop_task_resume().await.is_none(), "nothing can have resolved yet — the task is still parked");
 
             // ✅️ Inject the "completion" (`⚛️reactor::poll`'s `Event::Completed` arm calls the exact
             // same `RequestRegistry::resolve`) — request id 1 is `storage_read`'s, the first (and
             // only) request this test has allocated.
             crate::reactor::test_support::resolve_request(1, Ok(42i32.to_le_bytes().to_vec()));
-            let pending = crate::reactor::test_support::run_until_idle(8);
+            let pending = crate::reactor::test_support::run_until_idle(8).await;
             assert!(!pending, "the task must run to completion once its await resolves");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(spawn_meta.instance_id), 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(spawn_meta.instance_id).await, 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
 
             let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().await.expect("the completed task must have queued exactly one resume");
             assert_eq!(resumed_instance, spawn_meta.instance_id);
@@ -19745,12 +20166,12 @@ pub mod plugin_runtime {
                 let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new(label, |_ctx| async move { Ok(TaskResolution::Done) });
                 crate::reactor::spawn_task(instance, &meta, task.await).await.unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
             }
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 2);
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 2);
 
             let third = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("third", |_ctx| async move { Ok(TaskResolution::Done) });
             let error = crate::reactor::spawn_task(instance, &meta, third.await).await.expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
             assert_eq!(error.code.0, "plugin.task.quota-exceeded");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 2, "a refused spawn must not have added a 3rd record");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
             // 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
             let other_instance = 503;
@@ -19774,8 +20195,8 @@ pub mod plugin_runtime {
             })
             .await.keyed("search");
             crate::reactor::spawn_task(instance, &meta, first.await).await.expect("first must be admitted");
-            assert!(crate::reactor::test_support::task_key_is_live(instance, "search"));
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1);
+            assert!(crate::reactor::test_support::task_key_is_live(instance, "search").await);
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1);
 
             let second_ran = std::rc::Rc::new(std::cell::Cell::new(false));
             let second_ran_inner = second_ran.clone();
@@ -19785,12 +20206,12 @@ pub mod plugin_runtime {
             })
             .await.keyed("search");
             crate::reactor::spawn_task(instance, &meta, second.await).await.expect("second must be admitted, cancelling the first");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 1, "the SAME key must never have two live tasks at once");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
 
             crate::reactor::test_support::run_until_idle(8);
             assert!(!first_ran.get(), "the cancelled first task must never have run its body");
             assert!(second_ran.get(), "the surviving second task must have run");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
         }
 
         /// 🚫️ `Event::InstanceClose` cancellation: every task an instance owns is dropped from the
@@ -19818,9 +20239,9 @@ pub mod plugin_runtime {
             });
             crate::reactor::spawn_task(survivor, &survivor_meta, survivor_task.await).await.expect("survivor instance's task must spawn");
 
-            let pending = crate::reactor::test_support::run_until_idle(8);
+            let pending = crate::reactor::test_support::run_until_idle(8).await;
             assert!(pending, "both tasks must have parked on their own storage_read");
-            assert_eq!(crate::reactor::test_support::pending_request_count(), 2, "one RequestRegistry slot per parked task");
+            assert_eq!(crate::reactor::test_support::pending_request_count().await, 2, "one RequestRegistry slot per parked task");
 
             crate::reactor::cancel_instance_tasks(dying);
             // 🚫️ `cancel_instance_tasks` alone drops the future (and its parked `RequestFuture`
@@ -19828,13 +20249,13 @@ pub mod plugin_runtime {
             // `Event::InstanceClose` arm runs right after — exercised here to prove BOTH steps
             // together leave no slot behind, matching that call site exactly.
             let removed = crate::reactor::test_support::cancel_instance_registry_requests(dying);
-            assert_eq!(removed, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
+            assert_eq!(removed.await, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
 
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(dying), 0, "the dying instance's task record must be gone");
-            assert_eq!(crate::reactor::test_support::pending_request_count(), 1, "only the SURVIVOR's request may remain pending");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(survivor), 1, "the survivor's task must be untouched");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(dying).await, 0, "the dying instance's task record must be gone");
+            assert_eq!(crate::reactor::test_support::pending_request_count().await, 1, "only the SURVIVOR's request may remain pending");
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(survivor).await, 1, "the survivor's task must be untouched");
 
-            let still_pending = crate::reactor::test_support::run_until_idle(8);
+            let still_pending = crate::reactor::test_support::run_until_idle(8).await;
             assert!(still_pending, "the survivor's task is still legitimately parked");
             assert!(!dying_ran.get(), "the cancelled task must never observe its await resolving, because it never runs again");
         }
@@ -19867,7 +20288,7 @@ pub mod plugin_runtime {
             // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
             crate::reactor::cancel_instance_tasks(instance);
             crate::reactor::test_support::cancel_instance_registry_requests(instance);
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance), 0);
+            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 0);
 
             crate::reactor::restore_now(&packed).await.expect("restore must succeed");
             let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
@@ -19898,7 +20319,11 @@ pub mod world3d_host {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::f64::consts::PI;
-    use ui_wgpu::wgpu::{world3d_camera_json, world3d_default_selection_json, ActionDescriptor, MeasureSelectItem, WindowMeasure, World3dScene};
+    // 🧬️ M2 fallout (terra-sdk-wire): `scene-surface` relocated `World3dScene`/
+    // `world3d_default_selection_json` into `semio-framework-ui-scene`; `world3d_camera_json`/
+    // `ActionDescriptor`/`MeasureSelectItem`/`WindowMeasure` were not part of that move and stay here.
+    use semio_framework_ui_scene::{world3d_default_selection_json, World3dScene};
+    use ui_wgpu::wgpu::{world3d_camera_json, ActionDescriptor, MeasureSelectItem, WindowMeasure};
 
     //#region 🌞️ WorldSunConfig
     /** 🌞️ Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
@@ -20455,7 +20880,7 @@ pub mod world3d_host {
     }
 
     pub async fn world3d_default_camera() -> String {
-        world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0).await
+        world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0)
     }
 
     /** @emoji ✅️ Ordered selection ids with O(1) membership — serializes as a plain JSON string array. */
@@ -20656,14 +21081,14 @@ pub mod world3d_host {
         async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
             let mut p = WorldProjectionConfig::default();
             p.axonometric_angle_a = 22.0;
-            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
+            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))).await);
             assert_eq!(p.kind, "oblique");
             assert_eq!(p.oblique_variant, "military");
             assert_eq!(p.axonometric_angle_a, 22.0);
-            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))));
+            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))).await);
             assert_eq!(p.oblique_angle, 30.0);
-            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))));
-            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))));
+            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))).await);
+            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))).await);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -20740,31 +21165,31 @@ pub mod engagement {
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
-            assert_eq!(strip_engagement_prefix("Fill20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("fill 20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("fill  20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("Fill", "fill"), Some(""));
-            assert_eq!(strip_engagement_prefix("FILL20", "fill"), Some("20"));
+            assert_eq!(strip_engagement_prefix("Fill20", "fill").await, Some("20"));
+            assert_eq!(strip_engagement_prefix("fill 20", "fill").await, Some("20"));
+            assert_eq!(strip_engagement_prefix("fill  20", "fill").await, Some("20"));
+            assert_eq!(strip_engagement_prefix("Fill", "fill").await, Some(""));
+            assert_eq!(strip_engagement_prefix("FILL20", "fill").await, Some("20"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_preserves_decimal_points() {
-            assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height"), Some("3.5"));
-            assert_eq!(strip_engagement_prefix("set height 3.5", "set height"), Some("3.5"));
+            assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height").await, Some("3.5"));
+            assert_eq!(strip_engagement_prefix("set height 3.5", "set height").await, Some("3.5"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_rejects_non_matching_commands() {
-            assert_eq!(strip_engagement_prefix("Brush", "fill"), None);
-            assert_eq!(strip_engagement_prefix("Filled", "fill"), Some("ed"));
+            assert_eq!(strip_engagement_prefix("Brush", "fill").await, None);
+            assert_eq!(strip_engagement_prefix("Filled", "fill").await, Some("ed"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn engagement_token_matches_full_token_only() {
-            assert!(engagement_token_matches("LineNumbers", "line numbers"));
-            assert!(engagement_token_matches("linenumbers", "line numbers"));
-            assert!(!engagement_token_matches("LineNumbers2", "line numbers"));
-            assert!(!engagement_token_matches("Line", "line numbers"));
+            assert!(engagement_token_matches("LineNumbers", "line numbers").await);
+            assert!(engagement_token_matches("linenumbers", "line numbers").await);
+            assert!(!engagement_token_matches("LineNumbers2", "line numbers").await);
+            assert!(!engagement_token_matches("Line", "line numbers").await);
         }
     }
     // #endregion engagement

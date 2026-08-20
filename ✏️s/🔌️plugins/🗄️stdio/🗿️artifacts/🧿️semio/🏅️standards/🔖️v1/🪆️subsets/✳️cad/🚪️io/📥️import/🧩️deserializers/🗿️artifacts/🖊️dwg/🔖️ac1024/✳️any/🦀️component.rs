@@ -41,7 +41,8 @@ impl ArtifactDeserializer for SemioCadFromDwg {
 mod tests {
     use super::*;
 
-    async fn sample_dwg() -> DwgSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_dwg() -> DwgSnapshot {
         let bytes = crate::artifacts::dwg::dwg_to_bytes(&crate::artifacts::dwg::DwgDrawing::default()).expect("encode sample");
         crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }

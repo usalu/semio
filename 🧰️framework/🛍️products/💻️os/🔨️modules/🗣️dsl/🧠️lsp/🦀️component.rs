@@ -12,19 +12,19 @@ pub struct LanguageSession {
 }
 
 impl LanguageSession {
-    pub async fn open(spec: LanguageSpec, text: impl Into<String>) -> Self {
+    pub fn open(spec: LanguageSpec, text: impl Into<String>) -> Self {
         Self { spec, text: text.into() }
     }
 
-    pub async fn set_text(&mut self, text: impl Into<String>) {
+    pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
 
-    pub async fn language_id(&self) -> &'static str {
+    pub fn language_id(&self) -> &'static str {
         self.spec.id
     }
 
-    pub async fn semantic_tokens_lsp(&self) -> Value {
+    pub fn semantic_tokens_lsp(&self) -> Value {
         let classified = (self.spec.hooks.classify)(&self.text);
         let mut data: Vec<u32> = Vec::new();
         let mut prev_line = 0u32;
@@ -52,22 +52,22 @@ impl LanguageSession {
         json!({ "data": data })
     }
 
-    pub async fn completions_at(&self, offset: usize) -> Vec<CompletionItem> {
+    pub fn completions_at(&self, offset: usize) -> Vec<CompletionItem> {
         (self.spec.hooks.complete)(&self.text, offset)
     }
 
-    pub async fn canonicalize(&self) -> Result<String, TextError> {
+    pub fn canonicalize(&self) -> Result<String, TextError> {
         (self.spec.hooks.canonicalize)(&self.text)
     }
 
     /// @emoji 🩺 Text diagnostics from hooks + grammar dialect checks when `grammar` is present.
-    pub async fn diagnostics(&self) -> Vec<TextError> {
+    pub fn diagnostics(&self) -> Vec<TextError> {
         let mut out = Vec::new();
         if self.spec.is_text_role() {
-            if let Err(error) = self.canonicalize().await {
+            if let Err(error) = self.canonicalize() {
                 out.push(error);
             }
-            if let Err(error) = self.spec.parsed_grammar().await {
+            if let Err(error) = self.spec.parsed_grammar() {
                 out.push(error);
             }
         }
@@ -75,18 +75,18 @@ impl LanguageSession {
     }
 
     /// @emoji 📡️ Byte-level protocol verification when `protocol` text is present on the spec.
-    pub async fn verify_protocol_bytes(&self, bytes: &[u8]) -> Result<(), String> {
-        self.spec.verify_protocol(bytes).await
+    pub fn verify_protocol_bytes(&self, bytes: &[u8]) -> Result<(), String> {
+        self.spec.verify_protocol(bytes)
     }
 
     /// @emoji 📖️ Parsed grammar file for text roles (`None` when unset).
-    pub async fn grammar_file(&self) -> Result<Option<GrammarFile>, TextError> {
-        self.spec.parsed_grammar().await
+    pub fn grammar_file(&self) -> Result<Option<GrammarFile>, TextError> {
+        self.spec.parsed_grammar()
     }
 
     /// @emoji 📡️ Parsed protocol file for binary verification (`None` when unset).
-    pub async fn protocol_file(&self) -> Result<Option<ProtocolFile>, TextError> {
-        self.spec.parsed_protocol().await
+    pub fn protocol_file(&self) -> Result<Option<ProtocolFile>, TextError> {
+        self.spec.parsed_protocol()
     }
 
 }
@@ -94,13 +94,13 @@ impl LanguageSession {
 
 //#region 🔖️JsonRpc
 /// @emoji 📨 Handles one LSP JSON-RPC request string; returns optional response JSON text.
-pub async fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> {
+pub fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> {
     let msg: Value = serde_json::from_str(line).ok()?;
     let id = msg.get("id").cloned();
     let method = msg.get("method")?.as_str()?;
     let result = match method {
         "initialize" => json!({ "capabilities": { "semanticTokensProvider": { "full": true } } }),
-        "semanticTokens/full" => session.semantic_tokens_lsp().await,
+        "semanticTokens/full" => session.semantic_tokens_lsp(),
         "shutdown" => json!(null),
         _ => json!({}),
     };

@@ -77,14 +77,15 @@ pub enum EpwMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub async fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
-    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
+    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -96,7 +97,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
     async fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             EpwMutation::NoMutation => EpwDiff::default(),
-            EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             EpwMutation::SetLocation { location } => EpwDiff { location: Some(location.clone()), ..EpwDiff::default() },
             EpwMutation::SetDesignConditions { value } => EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() },
             EpwMutation::SetTypicalExtremePeriods { value } => EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() },
@@ -145,7 +146,8 @@ impl Mutation<EpwSnapshot> for EpwMutation {
 /// 🧪️ F6: hand-rolled `OpText`/`OpBinary` for `EpwMutation` — reuses `EpwDiff`'s `pub(crate)`
 /// grammar primitives. Grammar: `keyword arg=value ...` (space-separated), same convention csv's/
 /// gif89a's/svg's own hand-rolled `OpText` impls use.
-async fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},[{}]]",
         enc_str(&s.schema),
@@ -160,27 +162,29 @@ async fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
         s.records.iter().map(enc_record).collect::<Vec<_>>().join(","),
     )
 }
-async fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records] = parts.as_slice() else {
         return Err(format!("epw snapshot: expected 10 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
+    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
     Ok(EpwSnapshot {
-        schema: dec_str(schema).await?,
-        location: dec_location(location).await?,
-        design_conditions: dec_str(design_conditions).await?,
-        typical_extreme_periods: dec_str(typical_extreme_periods).await?,
-        ground_temperatures: dec_str(ground_temperatures).await?,
-        holidays_dst: dec_str(holidays_dst).await?,
-        comments_1: dec_str(comments_1).await?,
-        comments_2: dec_str(comments_2).await?,
-        data_periods: dec_data_periods(data_periods).await?,
+        schema: dec_str(schema)?,
+        location: dec_location(location)?,
+        design_conditions: dec_str(design_conditions)?,
+        typical_extreme_periods: dec_str(typical_extreme_periods)?,
+        ground_temperatures: dec_str(ground_temperatures)?,
+        holidays_dst: dec_str(holidays_dst)?,
+        comments_1: dec_str(comments_1)?,
+        comments_2: dec_str(comments_2)?,
+        data_periods: dec_data_periods(data_periods)?,
         records,
     })
 }
 
-async fn print_epw_mutation(m: &EpwMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_epw_mutation(m: &EpwMutation) -> String {
     match m {
         EpwMutation::NoMutation => "no-mutation".to_string(),
         EpwMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_epw_snapshot(snapshot)),
@@ -197,7 +201,8 @@ async fn print_epw_mutation(m: &EpwMutation) -> String {
         EpwMutation::SetRecordField { record_index, field_index, value } => format!("set-record-field record-index={record_index} field-index={field_index} value={}", enc_str(value),),
     }
 }
-async fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     if line == "no-mutation" {
         return Ok(EpwMutation::NoMutation);
     }
@@ -206,28 +211,28 @@ async fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("epw mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(EpwMutation::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?).await? }),
-        "set-location" => Ok(EpwMutation::SetLocation { location: dec_location(arg("location")?).await? }),
-        "set-design-conditions" => Ok(EpwMutation::SetDesignConditions { value: dec_str(arg("value")?).await? }),
-        "set-typical-extreme-periods" => Ok(EpwMutation::SetTypicalExtremePeriods { value: dec_str(arg("value")?).await? }),
-        "set-ground-temperatures" => Ok(EpwMutation::SetGroundTemperatures { value: dec_str(arg("value")?).await? }),
-        "set-holidays-dst" => Ok(EpwMutation::SetHolidaysDst { value: dec_str(arg("value")?).await? }),
-        "set-comments-1" => Ok(EpwMutation::SetComments1 { value: dec_str(arg("value")?).await? }),
-        "set-comments-2" => Ok(EpwMutation::SetComments2 { value: dec_str(arg("value")?).await? }),
-        "set-data-periods" => Ok(EpwMutation::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?).await? }),
-        "insert-record" => Ok(EpwMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?).await? }),
+        "set-snapshot" => Ok(EpwMutation::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?)? }),
+        "set-location" => Ok(EpwMutation::SetLocation { location: dec_location(arg("location")?)? }),
+        "set-design-conditions" => Ok(EpwMutation::SetDesignConditions { value: dec_str(arg("value")?)? }),
+        "set-typical-extreme-periods" => Ok(EpwMutation::SetTypicalExtremePeriods { value: dec_str(arg("value")?)? }),
+        "set-ground-temperatures" => Ok(EpwMutation::SetGroundTemperatures { value: dec_str(arg("value")?)? }),
+        "set-holidays-dst" => Ok(EpwMutation::SetHolidaysDst { value: dec_str(arg("value")?)? }),
+        "set-comments-1" => Ok(EpwMutation::SetComments1 { value: dec_str(arg("value")?)? }),
+        "set-comments-2" => Ok(EpwMutation::SetComments2 { value: dec_str(arg("value")?)? }),
+        "set-data-periods" => Ok(EpwMutation::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?)? }),
+        "insert-record" => Ok(EpwMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
         "remove-record" => Ok(EpwMutation::RemoveRecord { index: usize_arg("index")? }),
-        "set-record-field" => Ok(EpwMutation::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?).await? }),
+        "set-record-field" => Ok(EpwMutation::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? }),
         other => Err(format!("epw mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for EpwMutation {
     async fn print_op(&self) -> String {
-        print_epw_mutation(self).await
+        print_epw_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_epw_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_epw_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -251,10 +256,12 @@ mod tests {
     use protocol::MutationDiff;
 
     //#region 🔖️Fixtures
-    async fn location(city: &str) -> EpwLocation {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn location(city: &str) -> EpwLocation {
         EpwLocation { city: city.into(), state_province: "NI".into(), country: "DEU".into(), source: "SRC".into(), wmo: "10238".into(), latitude: "52.37".into(), longitude: "9.74".into(), time_zone: "1.0".into(), elevation: "55.0".into() }
     }
-    async fn record(hour: &str, temp: &str) -> EpwRecord {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn record(hour: &str, temp: &str) -> EpwRecord {
         let mut r = EpwRecord::default();
         r.year = "2026".into();
         r.month = "1".into();
@@ -265,13 +272,15 @@ mod tests {
         r.visibility = "20.0".into();
         r
     }
-    async fn data_periods() -> EpwDataPeriods {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn data_periods() -> EpwDataPeriods {
         EpwDataPeriods {
             records_per_hour: 1,
             periods: vec![crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwDataPeriod { name: "Data".into(), start_day_of_week: "Sunday".into(), start_date: " 1/ 1".into(), end_date: " 1/ 1".into() }],
         }
     }
-    async fn base_snapshot() -> EpwSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> EpwSnapshot {
         EpwSnapshot {
             location: location("Hannover"),
             design_conditions: "DESIGN CONDITIONS,0".into(),
@@ -290,7 +299,8 @@ mod tests {
     //#region 🔖️FieldSweepFixtures
     /// 🧬️ Canonical "differs in every mutable field" snapshot A: 3 records — one removed, one
     /// modified in every one of its 35 columns, one untouched (anchor for the added record's index).
-    async fn sweep_a() -> EpwSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> EpwSnapshot {
         let mut a = base_snapshot();
         a.records = vec![record("1", "-7.8"), record("2", "-7.2"), record("3", "-6.2")];
         a
@@ -298,7 +308,8 @@ mod tests {
     /// 🧬️ Sweep B: every top-level scalar field changes, record 0 is removed, record 1 (now
     /// index 0) is modified in every one of its 35 columns, record 2 (now index 1) is untouched,
     /// and a brand-new record is added at the end.
-    async fn sweep_b() -> EpwSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> EpwSnapshot {
         let mut modified = EpwRecord::default();
         for i in 0..crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
             modified.set_field_at(i, format!("swept-{i}"));

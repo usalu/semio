@@ -66,7 +66,7 @@ pub async fn placeholder_media_contract(kind_id: &str) -> MediaContract {
 /// `Shape::Record` splice these eight fields inline wherever `MediaContract` is used as a
 /// `#[dsl(block)]` field (see `WorkflowEdge.contract`), with no keyword of its own repeated inside
 /// the braces. Ported verbatim from `framework/product/os/core`'s `workflow` module.
-async fn media_class_ordinal(class: MediaClass) -> u32 {
+fn media_class_ordinal(class: MediaClass) -> u32 {
     match class {
         MediaClass::TwoD => 0,
         MediaClass::ThreeD => 1,
@@ -79,7 +79,7 @@ async fn media_class_ordinal(class: MediaClass) -> u32 {
     }
 }
 
-async fn media_class_from_ordinal(ordinal: u32) -> Result<MediaClass, String> {
+fn media_class_from_ordinal(ordinal: u32) -> Result<MediaClass, String> {
     Ok(match ordinal {
         0 => MediaClass::TwoD,
         1 => MediaClass::ThreeD,
@@ -99,7 +99,7 @@ fn media_class_variants() -> Vec<(String, u32)> {
     vec![("twoD".to_string(), 0), ("threeD".to_string(), 1), ("text".to_string(), 2), ("data".to_string(), 3), ("graph".to_string(), 4), ("kit".to_string(), 5), ("computation".to_string(), 6), ("presentation".to_string(), 7)]
 }
 
-async fn media_form_ordinal(form: MediaForm) -> u32 {
+fn media_form_ordinal(form: MediaForm) -> u32 {
     match form {
         MediaForm::Any => 0,
         MediaForm::Vector => 1,
@@ -120,7 +120,7 @@ async fn media_form_ordinal(form: MediaForm) -> u32 {
     }
 }
 
-async fn media_form_from_ordinal(ordinal: u32) -> Result<MediaForm, String> {
+fn media_form_from_ordinal(ordinal: u32) -> Result<MediaForm, String> {
     Ok(match ordinal {
         0 => MediaForm::Any,
         1 => MediaForm::Vector,
@@ -183,11 +183,11 @@ fn media_contract_spec() -> dsl::RecordSpec {
     )
 }
 
-async fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue {
+fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue {
     let mut record = dsl::RecordValue::default();
     record.fields.insert(0, dsl::FieldValue::Text(contract.kind_id.clone()));
-    record.fields.insert(1, dsl::FieldValue::Enum(media_class_ordinal(contract.media_type.class).await));
-    record.fields.insert(2, dsl::FieldValue::Enum(media_form_ordinal(contract.media_type.form).await));
+    record.fields.insert(1, dsl::FieldValue::Enum(media_class_ordinal(contract.media_type.class)));
+    record.fields.insert(2, dsl::FieldValue::Enum(media_form_ordinal(contract.media_type.form)));
     match &contract.wire {
         MediaWireFormat::Binary { format_kind } => {
             record.fields.insert(3, dsl::FieldValue::Text("binary".to_string()));
@@ -202,8 +202,8 @@ async fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue 
     }
     match contract.conversion {
         Some((from, to)) => {
-            record.fields.insert(6, dsl::FieldValue::Enum(media_form_ordinal(from).await));
-            record.fields.insert(7, dsl::FieldValue::Enum(media_form_ordinal(to).await));
+            record.fields.insert(6, dsl::FieldValue::Enum(media_form_ordinal(from)));
+            record.fields.insert(7, dsl::FieldValue::Enum(media_form_ordinal(to)));
         }
         None => {
             record.fields.insert(6, dsl::FieldValue::Absent);
@@ -213,17 +213,17 @@ async fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue 
     record
 }
 
-async fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, store::TextError> {
+fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, store::TextError> {
     let kind_id = match record.get(0) {
         Some(dsl::FieldValue::Text(s)) => s.clone(),
         other => return Err(dsl::__rt::field_error(format!("expected kind_id, found {other:?}"))),
     };
     let class = match record.get(1) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected class, found {other:?}"))),
     };
     let form = match record.get(2) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected form, found {other:?}"))),
     };
     let wire_kind = match record.get(3) {
@@ -248,7 +248,7 @@ async fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaCo
         other => return Err(dsl::__rt::field_error(format!("unknown wire kind '{other}'"))),
     };
     let conversion = match (record.get(6), record.get(7)) {
-        (Some(dsl::FieldValue::Enum(from)), Some(dsl::FieldValue::Enum(to))) => Some((media_form_from_ordinal(*from).await.map_err(dsl::__rt::field_error)?, media_form_from_ordinal(*to).await.map_err(dsl::__rt::field_error)?)),
+        (Some(dsl::FieldValue::Enum(from)), Some(dsl::FieldValue::Enum(to))) => Some((media_form_from_ordinal(*from).map_err(dsl::__rt::field_error)?, media_form_from_ordinal(*to).map_err(dsl::__rt::field_error)?)),
         _ => None,
     };
     Ok(MediaContract { kind_id, media_type: MediaType { class, form }, wire, conversion })
@@ -259,12 +259,12 @@ impl dsl::DslField for MediaContract {
     fn shape() -> dsl::Shape {
         dsl::Shape::Record(media_contract_spec)
     }
-    async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(media_contract_to_record(self).await)
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Record(media_contract_to_record(self))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => media_contract_from_record(record).await.map_err(|e| e.message),
+            dsl::FieldValue::Record(record) => media_contract_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -287,14 +287,14 @@ pub struct WorkflowMediaPort {
 /// for under the orphan rule (same reasoning as `MediaContract` above). Bridges every sub-value
 /// (`MediaPortDirection`/`MediaClass`/`MediaForm`/`PortMultiplicity`) directly to/from a scalar
 /// `dsl::FieldValue`, reusing the `media_class_ordinal`/`media_form_ordinal` tables above.
-async fn media_port_direction_ordinal(direction: MediaPortDirection) -> u32 {
+fn media_port_direction_ordinal(direction: MediaPortDirection) -> u32 {
     match direction {
         MediaPortDirection::In => 0,
         MediaPortDirection::Out => 1,
     }
 }
 
-async fn media_port_direction_from_ordinal(ordinal: u32) -> Result<MediaPortDirection, String> {
+fn media_port_direction_from_ordinal(ordinal: u32) -> Result<MediaPortDirection, String> {
     Ok(match ordinal {
         0 => MediaPortDirection::In,
         1 => MediaPortDirection::Out,
@@ -308,14 +308,14 @@ fn media_port_direction_variants() -> Vec<(String, u32)> {
     vec![("in".to_string(), 0), ("out".to_string(), 1)]
 }
 
-async fn port_multiplicity_ordinal(multiplicity: PortMultiplicity) -> u32 {
+fn port_multiplicity_ordinal(multiplicity: PortMultiplicity) -> u32 {
     match multiplicity {
         PortMultiplicity::One => 0,
         PortMultiplicity::Many => 1,
     }
 }
 
-async fn port_multiplicity_from_ordinal(ordinal: u32) -> Result<PortMultiplicity, String> {
+fn port_multiplicity_from_ordinal(ordinal: u32) -> Result<PortMultiplicity, String> {
     Ok(match ordinal {
         0 => PortMultiplicity::One,
         1 => PortMultiplicity::Many,
@@ -348,24 +348,24 @@ fn workflow_media_port_spec() -> dsl::RecordSpec {
     )
 }
 
-async fn workflow_media_port_to_record(port: &WorkflowMediaPort) -> dsl::RecordValue {
+fn workflow_media_port_to_record(port: &WorkflowMediaPort) -> dsl::RecordValue {
     let mut record = dsl::RecordValue::default();
     record.fields.insert(0, dsl::FieldValue::Text(port.id.clone()));
     record.fields.insert(1, dsl::FieldValue::Text(port.spec.id.clone()));
     record.fields.insert(2, dsl::FieldValue::Text(port.spec.label.clone()));
-    record.fields.insert(3, dsl::FieldValue::Enum(media_port_direction_ordinal(port.spec.direction).await));
-    record.fields.insert(4, dsl::FieldValue::Enum(media_class_ordinal(port.spec.media_type.class).await));
-    record.fields.insert(5, dsl::FieldValue::Enum(media_form_ordinal(port.spec.media_type.form).await));
+    record.fields.insert(3, dsl::FieldValue::Enum(media_port_direction_ordinal(port.spec.direction)));
+    record.fields.insert(4, dsl::FieldValue::Enum(media_class_ordinal(port.spec.media_type.class)));
+    record.fields.insert(5, dsl::FieldValue::Enum(media_form_ordinal(port.spec.media_type.form)));
     match &port.spec.kind_id {
         Some(kind_id) => record.fields.insert(6, dsl::FieldValue::Text(kind_id.clone())),
         None => record.fields.insert(6, dsl::FieldValue::Absent),
     };
     record.fields.insert(7, dsl::FieldValue::Bool(port.spec.required));
-    record.fields.insert(8, dsl::FieldValue::Enum(port_multiplicity_ordinal(port.spec.multiplicity).await));
+    record.fields.insert(8, dsl::FieldValue::Enum(port_multiplicity_ordinal(port.spec.multiplicity)));
     record
 }
 
-async fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<WorkflowMediaPort, store::TextError> {
+fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<WorkflowMediaPort, store::TextError> {
     let id = match record.get(0) {
         Some(dsl::FieldValue::Text(s)) => s.clone(),
         other => return Err(dsl::__rt::field_error(format!("expected id, found {other:?}"))),
@@ -379,15 +379,15 @@ async fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<Wo
         other => return Err(dsl::__rt::field_error(format!("expected label, found {other:?}"))),
     };
     let direction = match record.get(3) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_port_direction_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => media_port_direction_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected direction, found {other:?}"))),
     };
     let class = match record.get(4) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected class, found {other:?}"))),
     };
     let form = match record.get(5) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected form, found {other:?}"))),
     };
     let kind_id = match record.get(6) {
@@ -399,7 +399,7 @@ async fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<Wo
         other => return Err(dsl::__rt::field_error(format!("expected required, found {other:?}"))),
     };
     let multiplicity = match record.get(8) {
-        Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal).await.map_err(dsl::__rt::field_error)?,
+        Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
         other => return Err(dsl::__rt::field_error(format!("expected multiplicity, found {other:?}"))),
     };
     Ok(WorkflowMediaPort { id, spec: MediaPortSpec { id: port_id, label, direction, media_type: MediaType { class, form }, kind_id, required, multiplicity } })
@@ -410,12 +410,12 @@ impl dsl::DslField for WorkflowMediaPort {
     fn shape() -> dsl::Shape {
         dsl::Shape::Record(workflow_media_port_spec)
     }
-    async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(workflow_media_port_to_record(self).await)
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Record(workflow_media_port_to_record(self))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => workflow_media_port_from_record(record).await.map_err(|e| e.message),
+            dsl::FieldValue::Record(record) => workflow_media_port_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -662,12 +662,12 @@ impl store::ArtifactDsl for WorkflowFixture {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document }).await?;
-        Self::__dsl_from_record(&record).await
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
 
     async fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record().await, &Self::__dsl_spec(), dsl::JoinMode::Document).await;
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -675,7 +675,7 @@ impl store::ArtifactDsl for WorkflowFixture {
 
 impl store::ArtifactPack for WorkflowFixture {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
@@ -686,7 +686,7 @@ impl store::ArtifactPack for WorkflowFixture {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-        match Self::__dsl_from_record(&record).await {
+        match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
@@ -1052,16 +1052,16 @@ impl dsl::DslField for WorkflowInput {
     fn shape() -> dsl::Shape {
         dsl::Shape::Record(workflow_input_spec)
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         record.fields.insert(0, dsl::FieldValue::Text(self.id.clone()));
         record.fields.insert(1, dsl::FieldValue::Text(self.kind_id.clone()));
         record.fields.insert(2, dsl::FieldValue::Text(self.selector.clone()));
         record.fields.insert(3, dsl::FieldValue::Bool(self.required));
-        record.fields.insert(4, dsl::FieldValue::Enum(port_multiplicity_ordinal(self.multiplicity).await));
+        record.fields.insert(4, dsl::FieldValue::Enum(port_multiplicity_ordinal(self.multiplicity)));
         dsl::FieldValue::Record(record)
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
         let id = match record.get(0) {
             Some(dsl::FieldValue::Text(s)) => s.clone(),
@@ -1080,7 +1080,7 @@ impl dsl::DslField for WorkflowInput {
             other => return Err(format!("expected required, found {other:?}")),
         };
         let multiplicity = match record.get(4) {
-            Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal).await?,
+            Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal)?,
             other => return Err(format!("expected multiplicity, found {other:?}")),
         };
         Ok(WorkflowInput { id, kind_id, selector, required, multiplicity })
@@ -1146,11 +1146,11 @@ impl store::ArtifactDsl for WorkflowSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document }).await?;
-        Self::__dsl_from_record(&record).await
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record().await, &Self::__dsl_spec(), dsl::JoinMode::Document).await;
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -1159,7 +1159,7 @@ impl store::ArtifactDsl for WorkflowSnapshot {
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for WorkflowSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
@@ -1169,7 +1169,7 @@ impl store::ArtifactPack for WorkflowSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-        match Self::__dsl_from_record(&record).await {
+        match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
@@ -1743,17 +1743,17 @@ impl protocol::OpText for WorkflowMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
@@ -1849,7 +1849,7 @@ pub enum RunStatus {
     Canceled,
 }
 
-async fn run_status_ordinal(status: RunStatus) -> u32 {
+fn run_status_ordinal(status: RunStatus) -> u32 {
     match status {
         RunStatus::Pending => 0,
         RunStatus::Running => 1,
@@ -1859,7 +1859,7 @@ async fn run_status_ordinal(status: RunStatus) -> u32 {
     }
 }
 
-async fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, String> {
+fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, String> {
     Ok(match ordinal {
         0 => RunStatus::Pending,
         1 => RunStatus::Running,
@@ -1882,12 +1882,12 @@ impl dsl::DslField for RunStatus {
     fn shape() -> dsl::Shape {
         dsl::Shape::Enum(run_status_variants())
     }
-    async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Enum(run_status_ordinal(*self).await)
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Enum(run_status_ordinal(*self))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Enum(ordinal) => run_status_from_ordinal(*ordinal).await,
+            dsl::FieldValue::Enum(ordinal) => run_status_from_ordinal(*ordinal),
             other => Err(format!("expected Enum, found {other:?}")),
         }
     }
@@ -1903,7 +1903,7 @@ pub enum RunNodeStatus {
     Failed,
 }
 
-async fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
+fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
     match status {
         RunNodeStatus::Computed => 0,
         RunNodeStatus::CacheHit => 1,
@@ -1911,7 +1911,7 @@ async fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
     }
 }
 
-async fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, String> {
+fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, String> {
     Ok(match ordinal {
         0 => RunNodeStatus::Computed,
         1 => RunNodeStatus::CacheHit,
@@ -1932,12 +1932,12 @@ impl dsl::DslField for RunNodeStatus {
     fn shape() -> dsl::Shape {
         dsl::Shape::Enum(run_node_status_variants())
     }
-    async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Enum(run_node_status_ordinal(*self).await)
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Enum(run_node_status_ordinal(*self))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Enum(ordinal) => run_node_status_from_ordinal(*ordinal).await,
+            dsl::FieldValue::Enum(ordinal) => run_node_status_from_ordinal(*ordinal),
             other => Err(format!("expected Enum, found {other:?}")),
         }
     }
@@ -1970,7 +1970,7 @@ fn run_trigger_spec() -> dsl::RecordSpec {
     )
 }
 
-async fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
+fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
     let mut record = dsl::RecordValue::default();
     match trigger {
         RunTrigger::Manual { actor } => {
@@ -1989,7 +1989,7 @@ async fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
     record
 }
 
-async fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
+fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
     let kind = match record.get(0) {
         Some(dsl::FieldValue::Text(s)) => s.clone(),
         other => return Err(dsl::__rt::field_error(format!("expected kind, found {other:?}"))),
@@ -2022,12 +2022,12 @@ impl dsl::DslField for RunTrigger {
     fn shape() -> dsl::Shape {
         dsl::Shape::Record(run_trigger_spec)
     }
-    async fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(run_trigger_to_record(self).await)
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Record(run_trigger_to_record(self))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => run_trigger_from_record(record).await.map_err(|e| e.message),
+            dsl::FieldValue::Record(record) => run_trigger_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -2165,11 +2165,11 @@ impl store::ArtifactDsl for RunArtifact {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document }).await?;
-        Self::__dsl_from_record(&record).await
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record().await, &Self::__dsl_spec(), dsl::JoinMode::Document).await;
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -2178,7 +2178,7 @@ impl store::ArtifactDsl for RunArtifact {
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for RunArtifact {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
@@ -2188,7 +2188,7 @@ impl store::ArtifactPack for RunArtifact {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-        match Self::__dsl_from_record(&record).await {
+        match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
@@ -2450,17 +2450,17 @@ impl protocol::OpText for RunMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 

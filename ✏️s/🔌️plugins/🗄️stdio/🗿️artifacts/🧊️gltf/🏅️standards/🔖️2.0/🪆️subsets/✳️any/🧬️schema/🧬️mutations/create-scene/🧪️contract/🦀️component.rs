@@ -81,7 +81,8 @@ mod tests {
         stale_distant_inverse: Option<Rejection>,
     }
 
-    async fn snapshot(state: &SceneState) -> GltfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snapshot(state: &SceneState) -> GltfSnapshot {
         let mut snapshot = GltfSnapshot::default();
         snapshot.schema = "gltf/2.0".into();
         snapshot.document.scene = state.scene;
@@ -89,7 +90,8 @@ mod tests {
         snapshot
     }
 
-    async fn state(snapshot: &GltfSnapshot) -> SceneState {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn state(snapshot: &GltfSnapshot) -> SceneState {
         SceneState { scene: snapshot.document.scene, scenes: snapshot.document.scenes.clone() }
     }
 

@@ -13,27 +13,31 @@ impl GltfInferenceLeaf for GltfFaceNormalDistributionInference {
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.face-normal-distribution.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.face-normal-distribution.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub async fn descriptor() -> GltfInferenceLeafDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfFaceNormalDistributionInference::DESCRIPTOR
 }
 
-pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     let face_angles = context
         .faces
         .iter()
         .map(|face| {
             let normal = normalize(cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]])));
-            semio_framework_plugin::resolve_ready(dot(normal, context.principal_frame.axes[0].array())).clamp(-1.0, 1.0).acos()
+            dot(normal, context.principal_frame.axes[0].array()).clamp(-1.0, 1.0).acos()
         })
         .collect::<Vec<_>>();
-    exact(super::super::geometry_core::statistics(&face_angles, &context.policy.histogram_edges), GltfUnit::Radian, context.faces.len(), Some(context.topology)).await
+    exact(super::super::geometry_core::statistics(&face_angles, &context.policy.histogram_edges), GltfUnit::Radian, context.faces.len(), Some(context.topology))
 }
 
-pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
+    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.orientation.face_normal_distribution)
 }
 

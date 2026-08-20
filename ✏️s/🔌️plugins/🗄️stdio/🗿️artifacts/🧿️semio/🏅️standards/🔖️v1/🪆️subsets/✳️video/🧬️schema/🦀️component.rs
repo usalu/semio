@@ -23,19 +23,23 @@ impl Default for SemioVideoArtifact {
 }
 
 impl SemioVideoArtifact {
-    pub async fn to_snapshot(&self) -> SemioVideoSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioVideoSnapshot {
         SemioVideoSnapshot { schema: self.schema.clone(), streams: self.streams.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioVideoSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioVideoSnapshot) -> Self {
         Self { schema: snapshot.schema, streams: snapshot.streams }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioVideoSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioVideoSnapshot) {
         self.schema = snapshot.schema;
         self.streams = snapshot.streams;
     }
 }
 
-pub async fn semio_video_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_video_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.video",
         artifact: schema::FacetLeaves {
@@ -98,7 +102,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_video_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioVideoDiff as protocol::MutationDiff<SemioVideoSnapshot>>::apply(&diff, &self.snapshot).await?;

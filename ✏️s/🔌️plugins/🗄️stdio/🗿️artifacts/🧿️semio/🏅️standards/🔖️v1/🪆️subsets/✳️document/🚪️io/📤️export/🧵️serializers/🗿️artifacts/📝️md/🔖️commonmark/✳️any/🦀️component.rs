@@ -23,7 +23,8 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 /// ✍️ One run -> its inline sequence, wrapping in `Strong`/`Emphasis`/`Link` per the run's own
 /// `RunStyle` flags (innermost-first: bold wraps italic wraps link wraps the literal text, an
 /// arbitrary but stable nesting order — commonmark renders any wrap order identically).
-async fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
     let mut node = MdInline::Text { text: run.text.clone() };
     if let Some(url) = &run.style.link {
         node = MdInline::Link { text: vec![node], url: url.clone(), title: None };
@@ -37,17 +38,19 @@ async fn run_to_inlines(run: &DocRun) -> Vec<MdInline> {
     vec![node]
 }
 
-async fn runs_to_inlines(runs: &[DocRun]) -> Vec<MdInline> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn runs_to_inlines(runs: &[DocRun]) -> Vec<MdInline> {
     runs.iter().flat_map(run_to_inlines).collect()
 }
 
 /// 🧱 One `DocBlock` -> zero or more `MdBlock`s (`Table` cells and `List` items each flatten their
 /// own nested `DocBlock`s recursively; a `DocBlock::Image` becomes its own paragraph containing an
 /// inline image, since CommonMark has no block-level image construct).
-pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
     match block {
-        DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs).await }],
-        DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs).await }],
+        DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs) }],
+        DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs) }],
         DocBlock::List { ordered, items } => vec![MdBlock::List { ordered: *ordered, start: None, tight: true, items: items.iter().map(|item| item.blocks.iter().flat_map(map_semio_block).collect()).collect() }],
         DocBlock::Table { rows } => rows.iter().flat_map(|row| row.cells.iter().flat_map(|cell| cell.blocks.iter().flat_map(map_semio_block))).collect(),
         DocBlock::Code { language, text } => vec![MdBlock::CodeBlock { info: language.clone(), literal: text.clone() }],
@@ -79,7 +82,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    async fn sample_semio() -> SemioDocumentSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: Vec::new(),

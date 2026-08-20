@@ -1,0 +1,9 @@
+[pass 1] errors=9258 bad-await=157 out-of-scope=0
+  removed 155
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 518936 is b'data.read_bl()', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 518898 is b'semio_framework_plugin::resolve_ready(data.read_bl())', not b'await'
+[pass 2] errors=9106 bad-await=5 out-of-scope=0
+  removed 3
+[pass 3] errors=9103 bad-await=2 out-of-scope=0
+  removed 0
+  no progress — stopping

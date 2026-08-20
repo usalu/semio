@@ -47,6 +47,11 @@ semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio_framework_ui_contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio_framework_ui_runtime = { path = "../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
+# 🧬️ M2 fallout (ticket 26/08/17 `design-unified.md`, terra-sdk-wire): the `scene-surface` packet
+# relocated the 15 product scene structs (`TableScene`, `World3dScene`, …) plus their helpers
+# (`world3d_default_selection_json`) out of `ui_wgpu::wgpu` into this new crate — `ui_wgpu` no
+# longer re-exports them, so this SDK needs the dependency directly to keep compiling.
+semio_framework_ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

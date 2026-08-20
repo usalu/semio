@@ -110,26 +110,32 @@ impl Default for SemioAudioSnapshot {
 /// facets (rather than a derive-based codec that would print/parse a structurally different wire
 /// shape) is the honest, single-source-of-truth choice — same boundary `✳️flow`'s/`✳️mesh`'s/
 /// `✳️image`'s own pilots each independently reached for their own shape.
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-async fn enc_format(f: SemioAudioFormat) -> &'static str {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_format(f: SemioAudioFormat) -> &'static str {
     match f {
         SemioAudioFormat::Pcm8 => "pcm8",
         SemioAudioFormat::Pcm16 => "pcm16",
@@ -139,7 +145,8 @@ async fn enc_format(f: SemioAudioFormat) -> &'static str {
         SemioAudioFormat::Float64 => "f64",
     }
 }
-async fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
     match s {
         "pcm8" => Ok(SemioAudioFormat::Pcm8),
         "pcm16" => Ok(SemioAudioFormat::Pcm16),
@@ -155,35 +162,43 @@ async fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
 /// text (sidesteps float-formatting precision loss and NaN/-0.0 print-ambiguity entirely). Same
 /// convention this subset's own `🔺️diff` facet's `enc_f32_list` uses (duplicated, not imported —
 /// see this region's own doc comment for why).
-async fn enc_f32_list(v: &[f32]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_f32_list(v: &[f32]) -> String {
     format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
 }
-async fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
-    let inner = strip_brackets(s).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
+    let inner = strip_brackets(s)?;
     if inner.is_empty() {
         return Ok(Vec::new());
     }
     split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
 }
-async fn enc_channel(c: &SemioAudioChannel) -> String {
-    enc_f32_list(&c.samples).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_channel(c: &SemioAudioChannel) -> String {
+    enc_f32_list(&c.samples)
 }
-async fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
-    Ok(SemioAudioChannel { samples: dec_f32_list(s).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
 }
-async fn enc_tag(t: &SemioAudioTag) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", enc_str(&t.key), enc_str(&t.value))
 }
-async fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAudioTag { key: dec_str(key).await?, value: dec_str(value).await? })
+    Ok(SemioAudioTag { key: dec_str(key)?, value: dec_str(value)? })
 }
-async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 /// 📄️ The real structured text body: five lines — `schema=<hex>`, `sampleRate=<N>`,
@@ -191,10 +206,12 @@ async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result
 /// `document = artifact-mark schema-line sample-rate-line format-line channels-line tags-line`.
 /// Newlines are pure lexer trivia in the shared dialect, so this is genuinely recognizable by
 /// `dsl::Recognizer`, not merely readable.
-async fn print_audio_snapshot_body(s: &SemioAudioSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_audio_snapshot_body(s: &SemioAudioSnapshot) -> String {
     format!("schema={}\nsampleRate={}\nformat={}\nchannels={}\ntags={}", enc_str(&s.schema), s.sample_rate, enc_format(s.format), enc_list(&s.channels, enc_channel), enc_list(&s.tags, enc_tag),)
 }
-async fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, String> {
     let mut schema = None;
     let mut sample_rate = None;
     let mut format = None;
@@ -206,15 +223,15 @@ async fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, Str
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest).await?);
+            schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("sampleRate=") {
-            sample_rate = Some(parse_u32(rest).await?);
+            sample_rate = Some(parse_u32(rest)?);
         } else if let Some(rest) = line.strip_prefix("format=") {
-            format = Some(dec_format(rest).await?);
+            format = Some(dec_format(rest)?);
         } else if let Some(rest) = line.strip_prefix("channels=") {
-            channels = dec_list(rest, dec_channel).await?;
+            channels = dec_list(rest, dec_channel)?;
         } else if let Some(rest) = line.strip_prefix("tags=") {
-            tags = dec_list(rest, dec_tag).await?;
+            tags = dec_list(rest, dec_tag)?;
         } else {
             return Err(format!("semio audio snapshot: unknown line {line:?}"));
         }
@@ -234,27 +251,33 @@ async fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot, Str
 /// `store::ByteReader`, same helpers `✳️flow`'s/`✳️mesh`'s/`✳️image`'s own upgraded
 /// `ArtifactPack` uses) backing the real `ArtifactPack` below — replaces the old
 /// `serde_json::to_vec`-in-envelope shortcut.
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
+    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
 
-async fn format_tag(f: SemioAudioFormat) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn format_tag(f: SemioAudioFormat) -> u8 {
     match f {
         SemioAudioFormat::Pcm8 => 0,
         SemioAudioFormat::Pcm16 => 1,
@@ -264,7 +287,8 @@ async fn format_tag(f: SemioAudioFormat) -> u8 {
         SemioAudioFormat::Float64 => 5,
     }
 }
-async fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
     match tag {
         0 => Ok(SemioAudioFormat::Pcm8),
         1 => Ok(SemioAudioFormat::Pcm16),
@@ -283,13 +307,14 @@ async fn format_from_tag(tag: u8) -> Result<SemioAudioFormat, String> {
 /// (varint count + per-entry varint-length-prefixed `key`/`value` UTF-8) as the honest opaque
 /// `payload` tail (`protocol-array-of-records` gap — `channels`/`tags` are homogeneous
 /// variable-length repeated records).
-async fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
     write_str_lp(&mut out, &s.schema);
     out.extend_from_slice(&s.sample_rate.to_le_bytes());
-    out.push(format_tag(s.format).await);
+    out.push(format_tag(s.format));
     store::pack_rt::write_varint_u64(&mut out, s.channels.len() as u64);
     for c in &s.channels {
         store::pack_rt::write_varint_u64(&mut out, c.samples.len() as u64);
@@ -304,31 +329,32 @@ async fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
     }
     out
 }
-async fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes).await;
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader).await?;
-    let sample_rate = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-    let audio_format = format_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?).await?;
-    let channel_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader)?;
+    let sample_rate = reader.read_u32_le().map_err(|e| e.to_string())?;
+    let audio_format = format_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+    let channel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut channels = Vec::with_capacity(channel_count as usize);
     for _ in 0..channel_count {
-        let sample_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let sample_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut samples = Vec::with_capacity(sample_count as usize);
         for _ in 0..sample_count {
-            samples.push(read_f32_le(&mut reader).await?);
+            samples.push(read_f32_le(&mut reader)?);
         }
         channels.push(SemioAudioChannel { samples });
     }
-    let tag_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let tag_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut tags = Vec::with_capacity(tag_count as usize);
     for _ in 0..tag_count {
-        let key = read_str_lp(&mut reader).await?;
-        let value = read_str_lp(&mut reader).await?;
+        let key = read_str_lp(&mut reader)?;
+        let value = read_str_lp(&mut reader)?;
         tags.push(SemioAudioTag { key, value });
     }
     Ok(SemioAudioSnapshot { schema, sample_rate, format: audio_format, channels, tags })
@@ -349,7 +375,7 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_audio_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_audio_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -373,7 +399,7 @@ impl store::ArtifactPack for SemioAudioSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_audio_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
+        decode_audio_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -384,7 +410,8 @@ impl store::ArtifactPack for SemioAudioSnapshot {
 /// Single source of truth for `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_audio_snapshot() -> SemioAudioSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_audio_snapshot() -> SemioAudioSnapshot {
     SemioAudioSnapshot {
         schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
         sample_rate: 44_100,
@@ -402,7 +429,8 @@ mod tests {
 
     /// 🌱 Reuses `demo_audio_snapshot()` (single source of truth, also feeds the shipped fixtures
     /// and `🎹️composer/🦀️component.rs`'s conformance-law tests) rather than an independent copy.
-    async fn sample_snapshot() -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_snapshot() -> SemioAudioSnapshot {
         demo_audio_snapshot()
     }
 

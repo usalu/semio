@@ -66,7 +66,8 @@ pub enum GifDisposal {
 impl GifDisposal {
     /// 📐️ Decodes the GCE packed byte's 3-bit disposal field (values 4-7 are spec-reserved and
     /// fold back to `Unspecified` rather than erroring).
-    pub async fn from_bits(bits: u8) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_bits(bits: u8) -> Self {
         match bits {
             1 => GifDisposal::DoNotDispose,
             2 => GifDisposal::RestoreToBackground,
@@ -74,7 +75,8 @@ impl GifDisposal {
             _ => GifDisposal::Unspecified,
         }
     }
-    pub async fn to_bits(self) -> u8 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_bits(self) -> u8 {
         match self {
             GifDisposal::Unspecified => 0,
             GifDisposal::DoNotDispose => 1,
@@ -169,7 +171,8 @@ pub struct GifFrame {
 impl GifFrame {
     /// 🖌️ Derived RGBA accessor — decodes `indices` through `lct` (falling back to `gct`).
     /// `transparent_index`-matching pixels normalize to `[0,0,0,0]`. NOT a stored field.
-    pub async fn rgba(&self, gct: Option<&GifColorTable>) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn rgba(&self, gct: Option<&GifColorTable>) -> Vec<u8> {
         let table = self.lct.as_ref().or(gct);
         let mut out = Vec::with_capacity(self.indices.len() * 4);
         for &idx in &self.indices {
@@ -255,11 +258,11 @@ impl store::ArtifactDsl for GifSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::gif::standards::v89a::engine::decode_gif(&bytes).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::gif::standards::v89a::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).await.unwrap_or_default();
+        let bytes = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -269,7 +272,7 @@ impl store::ArtifactDsl for GifSnapshot {
 impl store::ArtifactPack for GifSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).await.map_err(store::PackError::Schema)?;
+        let raw = crate::artifacts::gif::standards::v89a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -280,7 +283,7 @@ impl store::ArtifactPack for GifSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::gif::standards::v89a::engine::decode_gif(&inner).await.map_err(store::PackError::Schema)
+        crate::artifacts::gif::standards::v89a::engine::decode_gif(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion HandcraftedArtifactCodecs

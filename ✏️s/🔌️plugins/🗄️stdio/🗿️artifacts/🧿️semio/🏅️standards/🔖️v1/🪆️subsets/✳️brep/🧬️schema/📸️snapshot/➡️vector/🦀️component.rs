@@ -22,7 +22,8 @@ pub mod predicates;
 
 /// 📐️ True when `a` and `b` are within `ulps` representable steps of each other (handles the
 /// `0.1+0.2 != 0.3` class of rounding noise without hiding genuinely different values).
-pub async fn nearly_equal_ulps(a: f64, b: f64, ulps: i64) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn nearly_equal_ulps(a: f64, b: f64, ulps: i64) -> bool {
     if a == b {
         return true;
     }
@@ -35,7 +36,8 @@ pub async fn nearly_equal_ulps(a: f64, b: f64, ulps: i64) -> bool {
 }
 
 /// 📐️ Normalizes an angle into `[0, 2π)`.
-pub async fn normalize_angle(theta: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn normalize_angle(theta: f64) -> f64 {
     let two_pi = std::f64::consts::TAU;
     let wrapped = theta % two_pi;
     if wrapped < 0.0 {
@@ -46,7 +48,8 @@ pub async fn normalize_angle(theta: f64) -> f64 {
 }
 
 /// 📐️ Signed angular difference `b - a`, wrapped into `(-π, π]`.
-pub async fn angle_diff(a: f64, b: f64) -> f64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn angle_diff(a: f64, b: f64) -> f64 {
     let pi = std::f64::consts::PI;
     let d = (b - a) % std::f64::consts::TAU;
     if d > pi {
@@ -79,26 +82,32 @@ pub struct Pnt2 {
 impl Vec2 {
     pub const ZERO: Vec2 = Vec2 { x: 0.0, y: 0.0 };
 
-    pub async fn new(x: f64, y: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(x: f64, y: f64) -> Self {
         Vec2 { x, y }
     }
-    pub async fn dot(self, o: Vec2) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dot(self, o: Vec2) -> f64 {
         self.x * o.x + self.y * o.y
     }
     /// 📐️ The z-component of the 3D cross product `(x,y,0) × (o.x,o.y,0)`; its sign is the
     /// orientation of the turn from `self` to `o`.
-    pub async fn cross(self, o: Vec2) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cross(self, o: Vec2) -> f64 {
         self.x * o.y - self.y * o.x
     }
-    pub async fn norm(self) -> f64 {
-        self.dot(self).await.sqrt()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn norm(self) -> f64 {
+        self.dot(self).sqrt()
     }
-    pub async fn norm_sq(self) -> f64 {
-        self.dot(self).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn norm_sq(self) -> f64 {
+        self.dot(self)
     }
     /// 📐️ Returns `None` when the vector is (numerically) zero-length rather than dividing by
     /// zero into a `NaN`/`inf` direction.
-    pub async fn normalized(self) -> Option<Vec2> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normalized(self) -> Option<Vec2> {
         let n = self.norm();
         if n <= f64::EPSILON {
             None
@@ -106,13 +115,16 @@ impl Vec2 {
             Some(self * (1.0 / n))
         }
     }
-    pub async fn perp(self) -> Vec2 {
-        Vec2::new(-self.y, self.x).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn perp(self) -> Vec2 {
+        Vec2::new(-self.y, self.x)
     }
-    pub async fn lerp(self, o: Vec2, t: f64) -> Vec2 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn lerp(self, o: Vec2, t: f64) -> Vec2 {
         self * (1.0 - t) + o * t
     }
-    pub async fn angle(self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn angle(self) -> f64 {
         self.y.atan2(self.x)
     }
 }
@@ -143,20 +155,25 @@ impl std::ops::Neg for Vec2 {
 }
 
 impl Pnt2 {
-    pub async fn new(x: f64, y: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(x: f64, y: f64) -> Self {
         Pnt2 { x, y }
     }
-    pub async fn to_vec(self) -> Vec2 {
-        Vec2::new(self.x, self.y).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_vec(self) -> Vec2 {
+        Vec2::new(self.x, self.y)
     }
-    pub async fn lerp(self, o: Pnt2, t: f64) -> Pnt2 {
-        Pnt2::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn lerp(self, o: Pnt2, t: f64) -> Pnt2 {
+        Pnt2::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t)
     }
-    pub async fn distance(self, o: Pnt2) -> f64 {
-        (self - o).norm().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn distance(self, o: Pnt2) -> f64 {
+        (self - o).norm()
     }
-    pub async fn distance_sq(self, o: Pnt2) -> f64 {
-        (self - o).norm_sq().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn distance_sq(self, o: Pnt2) -> f64 {
+        (self - o).norm_sq()
     }
 }
 impl std::ops::Sub for Pnt2 {
@@ -198,28 +215,36 @@ impl Vec3 {
     pub const Y: Vec3 = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
     pub const Z: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 1.0 };
 
-    pub async fn new(x: f64, y: f64, z: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3 { x, y, z }
     }
-    pub async fn from_array(a: [f64; 3]) -> Self {
-        Vec3::new(a[0], a[1], a[2]).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_array(a: [f64; 3]) -> Self {
+        Vec3::new(a[0], a[1], a[2])
     }
-    pub async fn to_array(self) -> [f64; 3] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }
-    pub async fn dot(self, o: Vec3) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dot(self, o: Vec3) -> f64 {
         self.x * o.x + self.y * o.y + self.z * o.z
     }
-    pub async fn cross(self, o: Vec3) -> Vec3 {
-        Vec3::new(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cross(self, o: Vec3) -> Vec3 {
+        Vec3::new(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x)
     }
-    pub async fn norm(self) -> f64 {
-        self.dot(self).await.sqrt()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn norm(self) -> f64 {
+        self.dot(self).sqrt()
     }
-    pub async fn norm_sq(self) -> f64 {
-        self.dot(self).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn norm_sq(self) -> f64 {
+        self.dot(self)
     }
-    pub async fn normalized(self) -> Option<Vec3> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normalized(self) -> Option<Vec3> {
         let n = self.norm();
         if n <= f64::EPSILON {
             None
@@ -227,13 +252,15 @@ impl Vec3 {
             Some(self * (1.0 / n))
         }
     }
-    pub async fn lerp(self, o: Vec3, t: f64) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn lerp(self, o: Vec3, t: f64) -> Vec3 {
         self * (1.0 - t) + o * t
     }
     /// 📐️ Any unit vector orthogonal to `self` — used to seed orthonormal frames. Picks the
     /// world axis least aligned with `self` before cross-producting, so the result stays
     /// well-conditioned even when `self` is nearly axis-aligned.
-    pub async fn any_orthogonal(self) -> Vec3 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn any_orthogonal(self) -> Vec3 {
         let ax = self.x.abs();
         let ay = self.y.abs();
         let az = self.z.abs();
@@ -244,12 +271,13 @@ impl Vec3 {
         } else {
             Vec3::Z
         };
-        self.cross(seed).await.normalized().await.unwrap_or(Vec3::X)
+        self.cross(seed).normalized().unwrap_or(Vec3::X)
     }
-    pub async fn angle_to(self, o: Vec3) -> f64 {
-        let cross = self.cross(o).await.norm();
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn angle_to(self, o: Vec3) -> f64 {
+        let cross = self.cross(o).norm();
         let dot = self.dot(o);
-        cross.await.atan2(dot.await)
+        cross.atan2(dot)
     }
 }
 
@@ -279,26 +307,33 @@ impl std::ops::Neg for Vec3 {
 }
 
 impl Pnt3 {
-    pub async fn new(x: f64, y: f64, z: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Pnt3 { x, y, z }
     }
-    pub async fn from_array(a: [f64; 3]) -> Self {
-        Pnt3::new(a[0], a[1], a[2]).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_array(a: [f64; 3]) -> Self {
+        Pnt3::new(a[0], a[1], a[2])
     }
-    pub async fn to_array(self) -> [f64; 3] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }
-    pub async fn to_vec(self) -> Vec3 {
-        Vec3::new(self.x, self.y, self.z).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_vec(self) -> Vec3 {
+        Vec3::new(self.x, self.y, self.z)
     }
-    pub async fn lerp(self, o: Pnt3, t: f64) -> Pnt3 {
-        Pnt3::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t, self.z + (o.z - self.z) * t).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn lerp(self, o: Pnt3, t: f64) -> Pnt3 {
+        Pnt3::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t, self.z + (o.z - self.z) * t)
     }
-    pub async fn distance(self, o: Pnt3) -> f64 {
-        (self - o).norm().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn distance(self, o: Pnt3) -> f64 {
+        (self - o).norm()
     }
-    pub async fn distance_sq(self, o: Pnt3) -> f64 {
-        (self - o).norm_sq().await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn distance_sq(self, o: Pnt3) -> f64 {
+        (self - o).norm_sq()
     }
 }
 impl std::ops::Sub for Pnt3 {

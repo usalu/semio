@@ -58,9 +58,10 @@ pub enum SemioAudioMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range channel/tag indices are no-ops rather than
 /// panics — a stale index (e.g. from a concurrent edit) degrades gracefully.
-pub async fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
-    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
+    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -71,7 +72,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
     async fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioAudioMutation::NoMutation => SemioAudioDiff::default(),
-            SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             SemioAudioMutation::SetSampleRate { sample_rate } => SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() },
             SemioAudioMutation::SetFormat { format } => SemioAudioDiff { format: (*format != base.format).then_some(*format), ..Default::default() },
             SemioAudioMutation::InsertChannel { index, channel } => {
@@ -129,7 +130,8 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
 /// (e.g. `SetSnapshot`'s whole snapshot, `InsertChannel`'s channel) prints identically to how the
 /// same value would print inside a diff's `added` triple. Binary = the text bytes verbatim, same
 /// simplification `SemioAudioDiff::encode_diff`/gif 89a's `GifDiff::encode_diff` both use.
-async fn print_audio_mutation(m: &SemioAudioMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_audio_mutation(m: &SemioAudioMutation) -> String {
     match m {
         SemioAudioMutation::NoMutation => "no-mutation".to_string(),
         SemioAudioMutation::SetSnapshot { snapshot } => format!("set-snapshot {}", enc_snapshot(snapshot)),
@@ -144,32 +146,33 @@ async fn print_audio_mutation(m: &SemioAudioMutation) -> String {
     }
 }
 
-async fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioAudioMutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').ok_or_else(|| format!("audio mutation: missing payload in {line:?}"))?;
     match keyword {
-        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: dec_snapshot(rest).await? }),
-        "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate { sample_rate: parse_u32(rest).await? }),
-        "set-format" => Ok(SemioAudioMutation::SetFormat { format: dec_format(rest).await? }),
+        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
+        "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate { sample_rate: parse_u32(rest)? }),
+        "set-format" => Ok(SemioAudioMutation::SetFormat { format: dec_format(rest)? }),
         "insert-channel" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-channel: missing channel payload".to_string())?;
-            Ok(SemioAudioMutation::InsertChannel { index: parse_usize(idx).await?, channel: dec_channel(enc).await? })
+            Ok(SemioAudioMutation::InsertChannel { index: parse_usize(idx)?, channel: dec_channel(enc)? })
         }
-        "remove-channel" => Ok(SemioAudioMutation::RemoveChannel { index: parse_usize(rest).await? }),
+        "remove-channel" => Ok(SemioAudioMutation::RemoveChannel { index: parse_usize(rest)? }),
         "set-channel-samples" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-channel-samples: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetChannelSamples { index: parse_usize(idx).await?, samples: dec_f32_list(enc).await? })
+            Ok(SemioAudioMutation::SetChannelSamples { index: parse_usize(idx)?, samples: dec_f32_list(enc)? })
         }
         "insert-tag" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-tag: missing payload".to_string())?;
-            Ok(SemioAudioMutation::InsertTag { index: parse_usize(idx).await?, tag: dec_tag(enc).await? })
+            Ok(SemioAudioMutation::InsertTag { index: parse_usize(idx)?, tag: dec_tag(enc)? })
         }
-        "remove-tag" => Ok(SemioAudioMutation::RemoveTag { index: parse_usize(rest).await? }),
+        "remove-tag" => Ok(SemioAudioMutation::RemoveTag { index: parse_usize(rest)? }),
         "set-tag-value" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-tag-value: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetTagValue { index: parse_usize(idx).await?, value: hex_decode_string(enc).await? })
+            Ok(SemioAudioMutation::SetTagValue { index: parse_usize(idx)?, value: hex_decode_string(enc)? })
         }
         other => Err(format!("audio mutation: unknown keyword {other:?}")),
     }
@@ -177,10 +180,10 @@ async fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> 
 
 impl OpText for SemioAudioMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_audio_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_audio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_audio_mutation(self).await
+        print_audio_mutation(self)
     }
 }
 
@@ -189,7 +192,8 @@ impl OpText for SemioAudioMutation {
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
 /// `🎹️composer/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 10] = ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
-async fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
     match m {
         SemioAudioMutation::NoMutation => 0,
         SemioAudioMutation::SetSnapshot { .. } => 1,
@@ -206,8 +210,9 @@ async fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
 /// ✂️ Just the argument tail of `print_audio_mutation` (empty for `no-mutation`) — the binary
 /// frame's `tag` byte already carries the keyword, so the text keyword itself (and its separating
 /// space) is redundant in the binary payload.
-async fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
-    match print_audio_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
+    match print_audio_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -221,8 +226,8 @@ async fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
 impl OpBinary for SemioAudioMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_audio_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -247,11 +252,14 @@ impl OpBinary for SemioAudioMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
-    async fn channel(seed: f32) -> SemioAudioChannel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
-    async fn fixture() -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> SemioAudioSnapshot {
         SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(1.0), channel(2.0), channel(3.0)], tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }], ..SemioAudioSnapshot::default() }
     }
     vec![
@@ -274,11 +282,13 @@ pub(crate) async fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
 mod tests {
     use super::*;
 
-    async fn sample_channel(seed: f32) -> SemioAudioChannel {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
 
-    async fn base_snapshot() -> SemioAudioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn base_snapshot() -> SemioAudioSnapshot {
         SemioAudioSnapshot {
             sample_rate: 44_100,
             format: SemioAudioFormat::Pcm16,
@@ -288,7 +298,8 @@ mod tests {
         }
     }
 
-    async fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
         let diff = mutation.diff(base);
         let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
         let inverses = mutation.inverse(base);
@@ -300,7 +311,8 @@ mod tests {
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
 
-    async fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         vec![
             SemioAudioMutation::NoMutation,
             SemioAudioMutation::SetSnapshot { snapshot: SemioAudioSnapshot { sample_rate: 9_000, ..base.clone() } },

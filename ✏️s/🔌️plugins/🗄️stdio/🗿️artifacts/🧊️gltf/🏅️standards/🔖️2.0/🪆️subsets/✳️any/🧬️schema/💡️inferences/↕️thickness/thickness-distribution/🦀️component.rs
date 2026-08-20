@@ -12,24 +12,28 @@ impl GltfInferenceLeaf for GltfThicknessDistributionInference {
         GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.thickness-distribution.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.thickness-distribution.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
 
-pub async fn descriptor() -> GltfInferenceLeafDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfThicknessDistributionInference::DESCRIPTOR
 }
 
-pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    let samples = super::samples(context).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+    let samples = super::samples(context);
     if samples.is_empty() {
-        unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)).await
+        unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))
     } else {
-        estimate(super::statistics(&samples, &context.policy.histogram_edges), GltfUnit::Metre, samples.len(), Some(context.topology)).await
+        estimate(super::statistics(&samples, &context.policy.histogram_edges), GltfUnit::Metre, samples.len(), Some(context.topology))
     }
 }
 
-pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
 
-pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.thickness.thickness_distribution)
 }
 

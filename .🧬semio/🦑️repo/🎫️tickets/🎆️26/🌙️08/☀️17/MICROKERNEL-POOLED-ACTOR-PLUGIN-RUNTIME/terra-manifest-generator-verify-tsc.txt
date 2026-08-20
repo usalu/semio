@@ -1,0 +1,31 @@
+Resolving dependencies
+Resolved, downloaded and extracted [42]
+Saved lockfile
+🟦️manifest.ts(191,9): error TS2304: Cannot find name 'ConfigSpec'.
+🟦️manifest.ts(196,17): error TS2304: Cannot find name 'CommandGrammar'.
+🟦️manifest.ts(215,100): error TS2552: Cannot find name 'ArtifactPresentation'. Did you mean 'ArgPresentation'?
+🟦️manifest.ts(417,117): error TS2304: Cannot find name 'FileTypeContribution'.
+🟦️manifest.ts(417,233): error TS2304: Cannot find name 'TopicContribution'.
+🟦️manifest.ts(417,442): error TS2304: Cannot find name 'IoEntryDescriptor'.
+🟦️manifest.ts(417,485): error TS2552: Cannot find name 'ComposerEntryDescriptor'. Did you mean 'PropertyDescriptor'?
+🟦️manifest.ts(803,27): error TS2304: Cannot find name 'TopicContribution'.
+🟦️manifest.ts(836,79): error TS2304: Cannot find name 'TopicContribution'.
+🟦️manifest.ts(1144,150): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1153,136): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1155,161): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1157,97): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1159,231): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1163,95): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1165,183): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1205,124): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1209,164): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1211,63): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1213,170): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1228,140): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1230,132): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1232,105): error TS2552: Cannot find name 'UiTreeActionPlacement'. Did you mean 'IntroductionPlacement'?
+🟦️manifest.ts(1244,8): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1246,125): error TS2304: Cannot find name 'UiMenuRef'.
+🟦️manifest.ts(1319,9): error TS2304: Cannot find name 'Locale'.
+🟦️manifest.ts(1323,14): error TS2304: Cannot find name 'Terminology'.
+EXIT:1

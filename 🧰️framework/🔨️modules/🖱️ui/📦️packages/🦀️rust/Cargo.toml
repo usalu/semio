@@ -49,9 +49,14 @@ typegen = ["wgpu", "dep:ts-rs"]
 
 [dependencies]
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-# ⛓️ Consumed by `🖱️ui/🎬️scene/🦀️component.rs` (relocated here from `🧊️3d/🎬️scene/` — ticket
-# 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH), which the wgpu
-# target `#[path]`-mounts as `kernel_3d_scene` and which re-exports `geometry::{Mat4, Vec3}`.
+# 🎬️ The 15 product scene structs (`World3dScene`/`TableScene`/...) and the generic 3D scene math
+# both relocated out of this crate into `semio-framework-ui-scene` — ticket
+# 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`. `component::ui` re-exports
+# the former; `kernel_3d_scene` is now a re-export of the latter's `math` module. Non-optional: both
+# are re-exported unconditionally from `component::ui`, which itself has no feature gate.
+ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+# ⛓️ Consumed directly for the `wgpu-engine` widgets that still take `Camera3d` by value (see
+# `widgets.rs`); `semio-framework-ui-scene`'s `math` module re-exports `Mat4`/`Vec3` from here too.
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
 unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }

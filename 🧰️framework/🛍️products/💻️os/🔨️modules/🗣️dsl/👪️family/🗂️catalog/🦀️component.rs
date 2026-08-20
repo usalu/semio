@@ -15,7 +15,7 @@ use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 /// round-trip to a different-looking value.
 pub async fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
         return Err(TextError::new("expected a single slash-path ident", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
     };
@@ -43,7 +43,7 @@ pub async fn print_slash_path(segments: &[String]) -> String {
 /// ASCII digits and nothing else.
 pub async fn parse_count_text(text: &str) -> Result<u64, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
         return Err(TextError::new("expected a single count literal", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
     };
@@ -113,9 +113,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn compat_pair_reuses_the_edge_grammar_directly() {
-        let value = crate::os_dsl::notation::parse_edge_text("b-l--b-s").await.expect("parse_edge_text");
+        let value = crate::os_dsl::notation::parse_edge_text("b-l--b-s").expect("parse_edge_text");
         assert_eq!(value.from, EdgeNode { id: "b-l".to_string(), kind: None, port: None });
-        let printed = print_edge(&value).await;
+        let printed = print_edge(&value);
         let link = value.link.expect("link");
         assert_eq!(link.directed, false);
         assert_eq!(link.to, EdgeNode { id: "b-s".to_string(), kind: None, port: None });
@@ -126,7 +126,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-catalog.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-catalog.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-catalog.grammar must parse");
         assert_eq!(grammar.id, "family-catalog");
         assert!(grammar.productions.len() > 5, "family-catalog should cover stock, slash-path, compat");
     }

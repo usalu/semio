@@ -45,8 +45,8 @@ pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>
 }
 
 async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {
-    let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).await.map_err(|message| super::fault("job.migrate", message))?;
-    let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).await.map_err(|message| super::fault("job.migrate", message))?;
+    let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
+    let to = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
     Ok((from, to))
 }
 
@@ -55,7 +55,7 @@ async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_sch
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
-    Ok(format!("{}->{}", from.to_coordinate().await, to.to_coordinate().await).into_bytes())
+    Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
 }
 
 async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
@@ -83,7 +83,7 @@ mod tests {
         // `📓️terra-jobs-runtime-report.md`'s own "last-writer overwrites, identical is not a conflict"
         // convention one layer up in `register_job_kind`.
         let _ = store::register_dialect_migration(migration).await;
-        (from.to_coordinate().await, to.to_coordinate().await)
+        (from.to_coordinate(), to.to_coordinate())
     }
 
     async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
@@ -152,8 +152,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
-        let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate().await;
-        let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate().await;
+        let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
+        let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
         let input = input_bytes(&from, &to, vec![1]).await;
         start_job(403, JOB_KIND_MIGRATE, &input).await;
         step_job(403, JobBudget::default()).await;

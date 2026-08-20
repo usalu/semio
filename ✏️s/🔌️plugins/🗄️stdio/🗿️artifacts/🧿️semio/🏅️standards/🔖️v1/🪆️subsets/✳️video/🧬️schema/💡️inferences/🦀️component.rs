@@ -27,7 +27,7 @@ pub struct SemioVideoInference {
 
 impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
     async fn infer(snapshot: &SemioVideoSnapshot) -> Self {
-        Self { duration: compute_semio_video_duration(snapshot).await }
+        Self { duration: compute_semio_video_duration(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::video
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_video_artifact_schema_descriptor`'s registration.
-pub async fn semio_video_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_video_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.video.inference",
         inference: schema::FacetLeaves {

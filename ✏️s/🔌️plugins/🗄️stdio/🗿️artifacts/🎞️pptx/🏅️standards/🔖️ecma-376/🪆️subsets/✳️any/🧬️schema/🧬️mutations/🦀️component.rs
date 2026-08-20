@@ -75,24 +75,27 @@ pub enum PptxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub async fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-async fn slide_at<'a>(base: &'a PptxSnapshot, index: usize) -> Option<&'a PptxSlide> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn slide_at<'a>(base: &'a PptxSnapshot, index: usize) -> Option<&'a PptxSlide> {
     base.presentation.slides.get(index)
 }
 
-async fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a PptxShape> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a PptxShape> {
     base.presentation.slides.get(slide_index)?.shapes.get(shape_index)
 }
 //#endregion 🔖️Helpers
@@ -104,12 +107,12 @@ impl Mutation<PptxSnapshot> for PptxMutation {
     async fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PptxMutation::NoMutation => PptxDiff::default(),
-            PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            PptxMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()).await,
-            PptxMutation::RemoveSlide { index } => diff_remove_slide(*index).await,
-            PptxMutation::MoveSlide { from, to } => diff_move_slide(&base.presentation, *from, *to).await,
-            PptxMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()).await,
-            PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index).await,
+            PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            PptxMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
+            PptxMutation::RemoveSlide { index } => diff_remove_slide(*index),
+            PptxMutation::MoveSlide { from, to } => diff_move_slide(&base.presentation, *from, *to),
+            PptxMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
+            PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
             PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone()),
             PptxMutation::SetShapePosition { slide_index, shape_index, position } => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
         })
@@ -120,7 +123,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
             PptxMutation::NoMutation => vec![PptxMutation::NoMutation],
             PptxMutation::SetSnapshot { .. } => vec![PptxMutation::SetSnapshot { snapshot: base.clone() }],
             PptxMutation::InsertSlide { index, .. } => vec![PptxMutation::RemoveSlide { index: *index }],
-            PptxMutation::RemoveSlide { index } => match slide_at(base, *index).await {
+            PptxMutation::RemoveSlide { index } => match slide_at(base, *index) {
                 Some(slide) => vec![PptxMutation::InsertSlide { index: *index, slide: slide.clone() }],
                 None => vec![PptxMutation::NoMutation],
             },
@@ -134,12 +137,12 @@ impl Mutation<PptxSnapshot> for PptxMutation {
                 vec![PptxMutation::MoveSlide { from: final_pos, to: *from }]
             }
             PptxMutation::InsertShape { slide_index, shape_index, .. } => vec![PptxMutation::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }],
-            PptxMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index).await {
+            PptxMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index) {
                 Some(shape) => vec![PptxMutation::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }],
                 None => vec![PptxMutation::NoMutation],
             },
             PptxMutation::SetShapeText { slide_index, shape_index, .. } => {
-                let old = shape_at(base, *slide_index, *shape_index).await.and_then(|s| match s {
+                let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
                     PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.clone()),
                     _ => None,
                 });
@@ -149,7 +152,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
                 }
             }
             PptxMutation::SetShapePosition { slide_index, shape_index, .. } => {
-                let old = shape_at(base, *slide_index, *shape_index).await.and_then(|s| match s {
+                let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
                     PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => Some(*position),
                     PptxShape::Other { .. } => None,
                 });
@@ -190,7 +193,7 @@ struct PptxMutationRecord {
 impl OpText for PptxMutation {
     async fn print_op(&self) -> String {
         let record = match self {
-            PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).await.expect("serializable logical pptx snapshot")) },
+            PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
             mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
         };
         dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline).await
@@ -199,7 +202,7 @@ impl OpText for PptxMutation {
         let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
         let model = PptxMutationRecord::__dsl_from_record(&record).await?;
         match (model.kind.as_str(), model.snapshot) {
-            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().await.map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
+            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
             ("mutation", None) => dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
             _ => Err(store::TextError::new("PPTX mutation record kind/payload mismatch", dsl::TextSpan::at(1, 1))),
         }
@@ -246,7 +249,8 @@ impl OpBinary for PptxMutation {
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
-pub(crate) async fn demo_fixture() -> PptxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_fixture() -> PptxSnapshot {
     crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(crate::artifacts::pptx::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
@@ -256,7 +260,8 @@ pub(crate) async fn demo_fixture() -> PptxSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<PptxMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
     vec![
         PptxMutation::NoMutation,
         PptxMutation::SetSnapshot { snapshot: demo_fixture() },
@@ -282,11 +287,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    async fn other(name: &str) -> PptxShape {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn other(name: &str) -> PptxShape {
         PptxShape::Other { node: XmlNode::Element { name: name.into(), attrs: Vec::new(), children: Vec::new() } }
     }
 
-    async fn fixture() -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fixture() -> PptxSnapshot {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
@@ -417,7 +424,8 @@ mod tests {
     ///
     /// `opc` content_types/parts/relationships each get one removed, one modified, one added,
     /// same convention as docx's own sweep fixtures (name-keyed collections have no such trap).
-    async fn sweep_a() -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -448,7 +456,8 @@ mod tests {
         )
     }
 
-    async fn sweep_b() -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> PptxSnapshot {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
@@ -493,7 +502,8 @@ mod tests {
     /// guaranteed to survive a round trip THROUGH an intermediate state whose key set differs
     /// again on the way back -- a structural property of the append-new-at-end convention this
     /// engine shares with docx's, not a regression.
-    async fn mutated_fixture() -> PptxSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn mutated_fixture() -> PptxSnapshot {
         crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![
                 PptxSlide { shapes: vec![PptxShape::Placeholder { kind: "title".into(), text_frame: vec![PptxParagraph::text("changed first")], position: PptxTransform { x: 9, y: 9, cx: 9, cy: 9 } }] },
@@ -502,7 +512,8 @@ mod tests {
         })
     }
 
-    async fn sample_mutations() -> Vec<PptxMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_mutations() -> Vec<PptxMutation> {
         vec![
             PptxMutation::NoMutation,
             PptxMutation::SetSnapshot { snapshot: mutated_fixture() },
@@ -555,7 +566,8 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn assert_absorb_matches_sequential(base: &PptxSnapshot, d1: &PptxDiff, d2: &PptxDiff) -> PptxDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &PptxSnapshot, d1: &PptxDiff, d2: &PptxDiff) -> PptxDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -563,7 +575,8 @@ mod tests {
         absorbed
     }
 
-    async fn slides_diff(diff: &PptxDiff) -> &crate::artifacts::pptx::schema::diff::PptxSlidesDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn slides_diff(diff: &PptxDiff) -> &crate::artifacts::pptx::schema::diff::PptxSlidesDiff {
         diff.presentation.as_ref().expect("presentation diff present").slides.as_ref().expect("slides diff present")
     }
 

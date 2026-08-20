@@ -10,7 +10,8 @@ use crate::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 /// carry a degenerate `facet normal 0 0 0` and rely on downstream tooling to recompute it — this
 /// codec doesn't silently rewrite that on decode, matching the recipe's "nothing fabricated"
 /// rule; `<StlTriangle as PartialEq>` sees whatever the file actually said).
-pub async fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
     if !text.trim_start().starts_with("solid") {
         return Err("stl ascii: missing 'solid' header".into());
     }
@@ -59,7 +60,8 @@ pub async fn decode_stl_ascii(text: &str) -> Result<StlSnapshot, String> {
 
 /// 📤 Writes real ASCII STL, round-tripping each facet's persisted normal exactly (never
 /// recomputed from vertex winding — see `decode_stl_ascii`'s doc comment).
-pub async fn encode_stl_ascii(snap: &StlSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_stl_ascii(snap: &StlSnapshot) -> String {
     let mut out = format!("solid {}\n", snap.solid_name);
     for f in &snap.triangles {
         let [nx, ny, nz] = f.normal;
@@ -82,7 +84,8 @@ pub async fn encode_stl_ascii(snap: &StlSnapshot) -> String {
 /// vertices [f32×3] + 2-byte attribute-byte-count [dropped: no attribute-byte-count usage is
 /// specified by the base format]). Normals/vertices widen `f32` -> `f64` (see `StlTriangle`'s
 /// doc comment on the ASCII/binary precision-normalization tradeoff).
-pub async fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() < 84 {
         return Err("stl binary: header too short".into());
     }
@@ -114,7 +117,8 @@ pub async fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
 /// appended after it — an 80-byte header vec here, not 84, is what makes the count land at the
 /// right offset). Each facet's persisted `f64` normal/vertices narrow to `f32` (binary STL's
 /// spec-mandated precision — a documented, lossy normalization, not fabrication).
-pub async fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
     let mut out = vec![0u8; 80];
     let name_bytes = snap.solid_name.as_bytes();
     let n = name_bytes.len().min(80);
@@ -137,7 +141,8 @@ pub async fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
 
 //#region 🔖️AutoDetect
 /// 🔍 Dispatches on the `solid` ASCII magic; anything else is treated as binary STL.
-pub async fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() >= 5 && &bytes[0..5] == b"solid" {
         // A binary STL's 80-byte header can coincidentally start with "solid" too;
         // disambiguate by checking whether the binary triangle-count framing actually
@@ -146,12 +151,12 @@ pub async fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
             let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
             let expected_binary_len = 84 + count * 50;
             if expected_binary_len == bytes.len() {
-                return decode_stl_binary(bytes).await;
+                return decode_stl_binary(bytes);
             }
         }
-        decode_stl_ascii(std::str::from_utf8(bytes).map_err(|e| e.to_string())?).await
+        decode_stl_ascii(std::str::from_utf8(bytes).map_err(|e| e.to_string())?)
     } else {
-        decode_stl_binary(bytes).await
+        decode_stl_binary(bytes)
     }
 }
 //#endregion 🔖️AutoDetect
@@ -227,7 +232,8 @@ mod tests {
     /// 🔺 A real (non-degenerate) 4-triangle tetrahedron — enough structure to catch an
     /// off-by-one in facet/vertex slot tracking that a single-triangle fixture would miss. Each
     /// facet gets a distinct, non-zero normal to exercise the persisted-normal round trip.
-    async fn tetrahedron() -> StlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn tetrahedron() -> StlSnapshot {
         let corners = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let faces: [(usize, usize, usize, [f64; 3]); 4] = [(0, 1, 2, [0.0, 0.0, -1.0]), (0, 1, 3, [0.0, -1.0, 0.0]), (1, 2, 3, [1.0, 1.0, 1.0]), (0, 2, 3, [-1.0, 0.0, 0.0])];
         let triangles = faces.iter().map(|&(a, b, c, normal)| StlTriangle { normal, vertices: [corners[a], corners[b], corners[c]] }).collect();

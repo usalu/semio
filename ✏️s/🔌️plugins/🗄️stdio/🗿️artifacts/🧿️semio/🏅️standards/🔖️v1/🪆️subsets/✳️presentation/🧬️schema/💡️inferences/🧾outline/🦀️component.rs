@@ -33,14 +33,16 @@ pub struct SemioPresentationOutline {
 
 /// 🔤️ Concatenates a run of `DocRun`s' literal text (formatting is ignored — a plain-text
 /// flattening, not a re-render).
-async fn run_text(runs: &[DocRun]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn run_text(runs: &[DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join(" ")
 }
 
 /// 🌳️ Recursively walks `block`, appending every `Heading` encountered to `headings`, adding to
 /// `block_count`, and appending flattened text to `word_source` — same shape `document`'s own
 /// `walk_block` establishes.
-async fn walk_block(block: &DocBlock, headings: &mut Vec<SemioPresentationHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk_block(block: &DocBlock, headings: &mut Vec<SemioPresentationHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     *block_count += 1;
     match block {
         DocBlock::Heading { level, runs, .. } => {
@@ -84,7 +86,8 @@ async fn walk_block(block: &DocBlock, headings: &mut Vec<SemioPresentationHeadin
 
 /// 🧩️ Walks every shape's own text-bearing content (`TextBox.blocks`, `Table` cell blocks) —
 /// `Picture`/`Placeholder` carry no block content, only a `frame` + non-textual payload.
-async fn walk_shape(shape: &SlideShape, headings: &mut Vec<SemioPresentationHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn walk_shape(shape: &SlideShape, headings: &mut Vec<SemioPresentationHeadingEntry>, block_count: &mut u32, word_source: &mut String) {
     match shape {
         SlideShape::TextBox { blocks, .. } => {
             for block in blocks {
@@ -106,7 +109,8 @@ async fn walk_shape(shape: &SlideShape, headings: &mut Vec<SemioPresentationHead
 
 /// 🧾️ Computes [`SemioPresentationOutline`] via a recursive walk across `masters`, `layouts`,
 /// `slides` (incl. each slide's own `notes`) — see module doc comment.
-pub async fn compute_semio_presentation_outline(snapshot: &SemioPresentationSnapshot) -> SemioPresentationOutline {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_presentation_outline(snapshot: &SemioPresentationSnapshot) -> SemioPresentationOutline {
     let mut section_outline = Vec::new();
     let mut block_count = 0u32;
     let mut shape_count = 0u32;
@@ -146,7 +150,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlideTableCell, SlideTableRow, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 
-    async fn frame() -> SlideFrame {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn frame() -> SlideFrame {
         SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }
     }
 

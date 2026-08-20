@@ -59,7 +59,7 @@ pub struct Process3dDispatchCtx {
 /// 🕹️ The `"geometry"` domain declaration: object granularity (stock/step/machine ids, the domain
 /// default) plus face granularity (u32 mesh face ids, stringified at the `InteractionTarget`
 /// boundary). Flat hierarchy — no cross-object parent/child structure.
-async fn process3d_interaction_definition() -> InteractionDefinition {
+fn process3d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PROCESS3D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
@@ -82,13 +82,13 @@ pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`, `🎮️commands/*`) builds its `on_change`/item actions with.
-pub async fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(PROCESS_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
-async fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
+fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
@@ -96,13 +96,13 @@ async fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: Actio
 /// utility is also mirrored into `Process3dConfig::active_utility_id` (via `SetActiveUtility`) for
 /// rendering, but the window chrome itself is still driven by this host effect. Shared by
 /// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
-pub async fn set_active_utility_effect(utility: &str) -> Effect {
+pub fn set_active_utility_effect(utility: &str) -> Effect {
     Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
 
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-wide wrapper layers `icon_id` on
 /// top via struct-update syntax — shared by the `🛍️catalogue` and `🛠️workshop` panels.
-pub async fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..semio_framework_plugin::tree_item_with_action(id, label, None, action) }
 }
 
@@ -111,7 +111,7 @@ pub async fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Int
 /// command (`🎮️commands/📄️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
 /// op-log — a genesis envelope with no history to encode.
-pub async fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
+pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
@@ -119,7 +119,7 @@ pub async fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Ef
 }
 
 /// 🚨 Typed host-action decoding fault with one stable app-specific code.
-async fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault {
+fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("process3d.action.invalid"), format!("action '{action}': {}", detail.into()))
 }
 
@@ -211,15 +211,15 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Process3dSnapshot {
+    fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(process3d_io())
     }
 
@@ -227,7 +227,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
                 .map_err(|error| MediaError::Payload("brep:out".into(), error))?
@@ -260,7 +260,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
     /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
     /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
-    async fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -286,13 +286,13 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &Process3dCommand) -> &'static str {
+    fn command_id(command: &Process3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
     /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let field = |key: &str| args.and_then(|value| value.get(key));
         let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
         let number_field = |key: &str| field(key).and_then(Value::as_f64);
@@ -388,7 +388,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
     /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
     /// there; every other command ignores it (mirrors `📐️cad`'s own `handle`).
-    async fn handle(
+    fn handle(
         command: &Process3dCommand,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -403,11 +403,11 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
     /// is session-only view state, so this stays at the trait default.
-    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
         sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
@@ -422,11 +422,11 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    async fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 
@@ -435,7 +435,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
-    async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
     }
 }
@@ -446,7 +446,7 @@ impl ArtifactEditor for Process3dPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline. `WindowKindDefinition.options.measures` stays empty: measures are config-derived per
 /// frame by `ArtifactEditor::window_measures`, never frozen into the manifest.
-pub async fn create_process3d_app() -> AppDefinition {
+pub fn create_process3d_app() -> AppDefinition {
     Editor::builder(crate::artifacts::process3d::PROCESS3D_DIALECT)
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "process", "3d"])
@@ -579,7 +579,7 @@ pub async fn create_process3d_app() -> AppDefinition {
 /// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
 /// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
 /// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
-pub async fn process3d_io() -> semio_framework_plugin::AppIo {
+pub fn process3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: crate::artifacts::process3d::PROCESS_3D_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
@@ -615,7 +615,7 @@ pub async fn process3d_io() -> semio_framework_plugin::AppIo {
 /// primitive's local Z axis (its `height` dimension) ends up flush with a picked face's normal. Pure
 /// math with no snapshot/io coupling — only `🎮️commands/🌍️world`'s face-drag placement calls it, so
 /// it lives here rather than `🧬️schema/💡️inferences`.
-pub async fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
+pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     const UP: [f64; 3] = [0.0, 0.0, 1.0];
     let dot = (UP[0] * normal[0] + UP[1] * normal[1] + UP[2] * normal[2]).clamp(-1.0, 1.0);
     if dot > 1.0 - 1e-9 {
@@ -630,7 +630,7 @@ pub async fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     (axis, dot.acos())
 }
 
-async fn leak_str(value: String) -> &'static str {
+fn leak_str(value: String) -> &'static str {
     Box::leak(value.into_boxed_str())
 }
 
@@ -647,19 +647,19 @@ pub struct ContributedMachineCatalog {
 }
 
 impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
-    async fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &'static str {
         self.catalog_id
     }
 
-    async fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         self.label
     }
 
-    async fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &'static str {
         self.icon_id
     }
 
-    async fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
+    fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
         self.machines.clone()
     }
 }
@@ -683,14 +683,20 @@ struct ProcessMachinesTopicPayload {
 }
 //#endregion 🔖️ProcessMachinesTopicPayload
 
-pub async fn sync_process_machine_contributions(contributions_json: &str) {
+// 🚫️async: E1 pure — JSON decode + mutex-guarded merge, zero suspension points; both call sites
+// (`config` snapshot apply, topic-contribution sync) already consume this unawaited — see R9.
+// `TopicContribution::decode` itself is still `fn` in
+// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (out of this packet's path_scope); bridged via
+// `semio_framework::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
+// packet's lease-request for the SDK owner to revert `decode` to sync directly).
+pub fn sync_process_machine_contributions(contributions_json: &str) {
     let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
     if *last == contributions_json {
         return;
     }
     let mut catalogs = Vec::new();
     for entry in semio_framework::parse_contributions(contributions_json) {
-        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "process.machines").and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok()) else {
+        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "process.machines").and_then(|topic| semio_framework::io::resolve_ready(topic.decode::<ProcessMachinesTopicPayload>()).ok()) else {
             continue;
         };
         let (app_id, module_id, label, icon_id, machines_json) = (payload.app_id, payload.module_id, payload.label, payload.icon_id, payload.machines_json);
@@ -704,7 +710,7 @@ pub async fn sync_process_machine_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 
-async fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
+fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
     vec![
         crate::artifacts::process3d::schema::GenericCatalog.into(),
         crate::artifacts::process3d::schema::wood_catalog().into(),
@@ -718,7 +724,7 @@ async fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
 /// merged via `sync_process_machine_contributions` from runtime-installable extensions under
 /// `🏭️process/🧩️extensions/`.
-pub async fn installed_catalogs() -> Vec<MachineCatalogs> {
+pub fn installed_catalogs() -> Vec<MachineCatalogs> {
     let mut catalogs = builtin_installed_catalogs();
     let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
     catalogs.extend(contributed.iter().map(|catalog| catalog.clone().into()));
@@ -727,7 +733,7 @@ pub async fn installed_catalogs() -> Vec<MachineCatalogs> {
 
 /// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
 /// "install into workshop" lookup for the workshop configurator's add-machine action.
-pub async fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
+pub fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
     let catalog = installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
     let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
     machine.catalog_id = Some(catalog_id.to_string());
@@ -754,17 +760,17 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn process3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn process3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
     /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
-    async fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
+    fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
         use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
         use semio_framework::{ProgramContributionEntry, TopicContribution};
-        async fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
+        fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
             CapabilityParameter { id: id.into(), label: label.into(), value }
         }
         let wood_machines = vec![
@@ -844,32 +850,32 @@ pub(crate) mod testkit {
         let _ = app;
     }
 
-    pub async fn app() -> Process3dApp {
+    pub fn app() -> Process3dApp {
         let mut app = new_app::<EditorApp<Process3dPlayApp>>();
         seed_domain_catalog_contributions(&mut app);
         app
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn app_with_registry() -> Process3dApp {
+    pub fn app_with_registry() -> Process3dApp {
         let mut app = new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
         seed_domain_catalog_contributions(&mut app);
         app
     }
 
-    pub async fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
+    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
         app.handle_action(action, args, &meta("local")).expect("action dispatch")
     }
 
-    pub async fn render(app: &mut Process3dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub async fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
+    pub fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
         app.window_measures().get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 }
@@ -956,7 +962,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<Process3dCommand> {
+    pub(super) fn every_command() -> Vec<Process3dCommand> {
         vec![
             Process3dCommand::SetDocument(set_snapshot::SetDocument { json: serde_json::to_string(&crate::artifacts::process3d::empty_process3d_snapshot()).expect("json") }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
@@ -1186,7 +1192,7 @@ mod tests {
         assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
     }
 
-    async fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dApp, utility: &str) {
+    fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dApp, utility: &str) {
         dispatch(app, Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }));
     }
 

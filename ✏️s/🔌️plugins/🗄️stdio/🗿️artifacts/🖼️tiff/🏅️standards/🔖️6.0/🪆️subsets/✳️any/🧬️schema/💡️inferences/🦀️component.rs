@@ -23,7 +23,7 @@ pub struct TiffInference {
 
 impl protocol::Inference<TiffSnapshot> for TiffInference {
     async fn infer(snapshot: &TiffSnapshot) -> Self {
-        Self { dimensions: compute_tiff_dimensions(snapshot).await }
+        Self { dimensions: compute_tiff_dimensions(snapshot) }
     }
 }
 
@@ -63,7 +63,8 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::tiff::standa
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tiff.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `tiff_artifact_schema_descriptor`'s registration.
-pub async fn tiff_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn tiff_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.tiff.inference",
         inference: schema::FacetLeaves {

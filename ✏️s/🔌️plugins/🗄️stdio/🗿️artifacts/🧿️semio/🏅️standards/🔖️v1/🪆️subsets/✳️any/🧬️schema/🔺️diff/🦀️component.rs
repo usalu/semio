@@ -284,8 +284,9 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-pub async fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
-    <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(base, snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
+    <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 
@@ -297,12 +298,14 @@ pub async fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -
 /// — real delegation to THIS envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️component.rs,
 /// itself a real delegating codec over the same 13 subsets), hex-flattened to keep `print_diff`'s
 /// mandatory one-physical-line contract despite `print_dsl`'s own embedded newlines.
-async fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
-    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
+    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
     text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
 
-async fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     if hex.len() % 2 != 0 {
         return Err("replace: odd hex length".to_string());
     }
@@ -314,10 +317,11 @@ async fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
         i += 2;
     }
     let text = String::from_utf8(bytes).map_err(|e| format!("replace: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.map_err(|e| format!("replace: dsl decode: {e}"))
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
 }
 
-async fn enc_rejection(error: &MutationApplyError) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_rejection(error: &MutationApplyError) -> String {
     std::iter::once(error.code.as_str())
         .chain(std::iter::once(error.message.as_str()))
         .chain(error.target.iter().map(String::as_str))
@@ -326,7 +330,8 @@ async fn enc_rejection(error: &MutationApplyError) -> String {
         .join(",")
 }
 
-async fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
     let fields = payload
         .split(',')
         .map(|hex| {
@@ -346,7 +351,8 @@ async fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
 /// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=18` = the 18 wrapped subset
 /// kinds (same enum declaration order as [`crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_ordinal`],
 /// offset by one to make room for `NoChange`), `19` = `Replace`.
-async fn diff_tag(d: &SemioDiff) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_tag(d: &SemioDiff) -> u8 {
     match d {
         SemioDiff::NoChange => 0,
         SemioDiff::Rejected(_) => 20,
@@ -372,7 +378,8 @@ async fn diff_tag(d: &SemioDiff) -> u8 {
     }
 }
 
-async fn print_semio_diff(d: &SemioDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_diff(d: &SemioDiff) -> String {
     match d {
         SemioDiff::NoChange => "noChange".to_string(),
         SemioDiff::Rejected(error) => format!("rejected:{}", enc_rejection(error)),
@@ -398,42 +405,43 @@ async fn print_semio_diff(d: &SemioDiff) -> String {
     }
 }
 
-async fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     if line == "noChange" {
         return Ok(SemioDiff::NoChange);
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio diff: missing ':' in {line:?}"))?;
     match tag {
-        "replace" => Ok(SemioDiff::Replace(Box::new(dec_replace_snapshot(rest).await?))),
-        "rejected" => Ok(SemioDiff::Rejected(dec_rejection(rest).await?)),
-        "brep" => Ok(SemioDiff::Brep(SemioBrepDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "mesh" => Ok(SemioDiff::Mesh(SemioMeshDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "model" => Ok(SemioDiff::Model(SemioModelDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "value" => Ok(SemioDiff::Value(SemioValueTreeDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "document" => Ok(SemioDiff::Document(SemioDocumentDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "cad" => Ok(SemioDiff::Cad(SemioCadDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "drawing" => Ok(SemioDiff::Drawing(SemioDrawingDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "image" => Ok(SemioDiff::Image(SemioImageDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "video" => Ok(SemioDiff::Video(SemioVideoDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "audio" => Ok(SemioDiff::Audio(SemioAudioDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "animation" => Ok(SemioDiff::Animation(SemioAnimationDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "presentation" => Ok(SemioDiff::Presentation(SemioPresentationDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "flow" => Ok(SemioDiff::Flow(SemioFlowDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "text" => Ok(SemioDiff::Text(SemioTextDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "table" => Ok(SemioDiff::Table(SemioTableDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "graph" => Ok(SemioDiff::Graph(SemioGraphDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "object" => Ok(SemioDiff::Object(SemioObjectDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
-        "kit" => Ok(SemioDiff::Kit(SemioKitDiff::parse_diff(rest).await.map_err(|e| e.to_string())?)),
+        "replace" => Ok(SemioDiff::Replace(Box::new(dec_replace_snapshot(rest)?))),
+        "rejected" => Ok(SemioDiff::Rejected(dec_rejection(rest)?)),
+        "brep" => Ok(SemioDiff::Brep(SemioBrepDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "mesh" => Ok(SemioDiff::Mesh(SemioMeshDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "model" => Ok(SemioDiff::Model(SemioModelDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "value" => Ok(SemioDiff::Value(SemioValueTreeDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "document" => Ok(SemioDiff::Document(SemioDocumentDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "cad" => Ok(SemioDiff::Cad(SemioCadDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "drawing" => Ok(SemioDiff::Drawing(SemioDrawingDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "image" => Ok(SemioDiff::Image(SemioImageDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "video" => Ok(SemioDiff::Video(SemioVideoDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "audio" => Ok(SemioDiff::Audio(SemioAudioDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "animation" => Ok(SemioDiff::Animation(SemioAnimationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "presentation" => Ok(SemioDiff::Presentation(SemioPresentationDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "flow" => Ok(SemioDiff::Flow(SemioFlowDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "text" => Ok(SemioDiff::Text(SemioTextDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "table" => Ok(SemioDiff::Table(SemioTableDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "graph" => Ok(SemioDiff::Graph(SemioGraphDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "object" => Ok(SemioDiff::Object(SemioObjectDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
+        "kit" => Ok(SemioDiff::Kit(SemioKitDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio diff: unknown tag {other:?}")),
     }
 }
 
 impl DiffCodec for SemioDiff {
     async fn print_diff(&self) -> String {
-        print_semio_diff(self).await
+        print_semio_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`diff_tag`]) as two genuine,
@@ -444,10 +452,10 @@ impl DiffCodec for SemioDiff {
     /// delegation, applied one level deeper); `NoChange` carries no payload at all.
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self).await];
+        let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
         let payload: Vec<u8> = match self {
             SemioDiff::NoChange => Vec::new(),
-            SemioDiff::Rejected(error) => enc_rejection(error).await.into_bytes(),
+            SemioDiff::Rejected(error) => enc_rejection(error).into_bytes(),
             SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s).await,
             SemioDiff::Brep(d) => d.encode_diff().await?,
             SemioDiff::Mesh(d) => d.encode_diff().await?,
@@ -505,7 +513,7 @@ impl DiffCodec for SemioDiff {
             18 => SemioDiff::Kit(SemioKitDiff::decode_diff(payload).await?),
             19 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload).await?)),
             20 => SemioDiff::Rejected(
-                dec_rejection(std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "rejected diff", offset: 2, detail: error.to_string() })?).await.map_err(|error| protocol::ProtocolError::Malformed {
+                dec_rejection(std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "rejected diff", offset: 2, detail: error.to_string() })?).map_err(|error| protocol::ProtocolError::Malformed {
                     what: "rejected diff",
                     offset: 2,
                     detail: error,
@@ -523,7 +531,8 @@ impl DiffCodec for SemioDiff {
 /// both this file's own round-trip test and `🎹️composer/🦀️component.rs`'s `diff_grammar_
 /// conformance_law`/`protocol_walk_law`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
     let subsets: Vec<SemioSubsetSnapshot> = vec![
         SemioSubsetSnapshot::Brep(Default::default()),
         SemioSubsetSnapshot::Mesh(Default::default()),
@@ -562,11 +571,13 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
-    async fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
         SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
     }
 
-    async fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
         SemioSnapshot {
             subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot {
                 nodes: node_ids.iter().map(|id| FlowNode { id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![], position: SemioPoint2 { x: 0.0, y: 0.0 } }).collect(),

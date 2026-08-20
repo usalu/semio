@@ -1,6 +1,7 @@
 //! 🔀️ Imperative control module: catalogue-only control-flow step kinds.
 
-pub async fn catalogue_json() -> String {
+// 🚫️async: E1 pure — serde_json only, zero suspension points — see R9.
+pub fn catalogue_json() -> String {
     serde_json::to_string(&serde_json::json!({
         "schema": "imperative.catalogue",
         "sections": [{
@@ -43,7 +44,8 @@ pub async fn catalogue_json() -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub async fn module_registry() -> neural_engine::Registry {
+// 🚫️async: E1 pure — in-memory registry construction, zero suspension points — see R9.
+pub fn module_registry() -> neural_engine::Registry {
     let mut registry = neural_engine::Registry::new();
     registry.finalize();
     registry
@@ -53,7 +55,9 @@ pub async fn module_registry() -> neural_engine::Registry {
 const EXTENSION_ID: &str = "imperative-extension-control";
 const MODULE_VERSION: &str = "0.1.0";
 
-pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+// 🚫️async: E1 pure — delegates to `imperative_extension_sdk::imperative_module_contribution` (sync)
+// — see R9.
+pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json();
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))
@@ -61,7 +65,9 @@ pub async fn imperative_module_contribution() -> semio_framework::ProgramContrib
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+// 🚫️async: E1 pure — delegates to `imperative_extension_sdk::imperative_module_topic_contribution`
+// (sync) — see R9.
+pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json();
     imperative_extension_sdk::imperative_module_topic_contribution("control", "Control", "git-branch", "control", "Control", MODULE_VERSION, &registry, Some(&catalogue))

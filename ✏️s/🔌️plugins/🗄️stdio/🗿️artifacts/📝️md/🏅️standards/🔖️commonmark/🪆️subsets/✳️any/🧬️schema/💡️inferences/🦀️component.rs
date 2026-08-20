@@ -24,7 +24,7 @@ pub struct MdInference {
 
 impl protocol::Inference<MdSnapshot> for MdInference {
     async fn infer(snapshot: &MdSnapshot) -> Self {
-        Self { outline: MdOutline::compute(snapshot).await }
+        Self { outline: MdOutline::compute(snapshot) }
     }
 }
 
@@ -51,7 +51,8 @@ impl ArtifactInferrer for crate::artifacts::md::standards::v_commonmark::subsets
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.md.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `md_artifact_schema_descriptor`'s registration.
-pub async fn md_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn md_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.md.inference",
         inference: schema::FacetLeaves {

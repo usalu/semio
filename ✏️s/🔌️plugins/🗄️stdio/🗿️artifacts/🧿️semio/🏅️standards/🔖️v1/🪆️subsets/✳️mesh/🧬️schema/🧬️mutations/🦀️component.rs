@@ -126,7 +126,8 @@ pub enum SemioMeshMutation {
 /// ⚡️ Real hand-rolled `OpText`, grammar `keyword arg=value ...` — reusing the sibling `🔺️diff`
 /// facet's `pub(crate)` hex/value primitives (one source of truth for entity encoding, same
 /// convention this file's pre-rewrite version and `✳️brep`/`✳️flow`'s mutations facets establish).
-async fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
     match m {
         SemioMeshMutation::CreateMesh(p) => format!("create-mesh mesh={}", enc_mesh(&p.mesh)),
         SemioMeshMutation::DeleteMesh(p) => format!("delete-mesh id={}", enc_str(&p.id)),
@@ -156,51 +157,52 @@ async fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
         SemioMeshMutation::MoveVertex(p) => format!("move-vertex mesh-id={} primitive-id={} vertex-index={} new-point={}", enc_str(&p.mesh_id), enc_str(&p.primitive_id), p.vertex_index, enc_point3(&p.new_point)),
     }
 }
-async fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio mesh mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "create-mesh" => Ok(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: dec_mesh(arg("mesh")?).await? })),
-        "delete-mesh" => Ok(SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: dec_str(arg("id")?).await? })),
-        "create-primitive" => Ok(SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: dec_str(arg("mesh-id")?).await?, primitive: dec_primitive(arg("primitive")?).await? })),
-        "delete-primitive" => Ok(SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: dec_str(arg("mesh-id")?).await?, primitive_id: dec_str(arg("primitive-id")?).await? })),
+        "create-mesh" => Ok(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: dec_mesh(arg("mesh")?)? })),
+        "delete-mesh" => Ok(SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: dec_str(arg("id")?)? })),
+        "create-primitive" => Ok(SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive: dec_primitive(arg("primitive")?)? })),
+        "delete-primitive" => Ok(SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)? })),
         "set-primitive-topology" => {
-            Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: dec_str(arg("mesh-id")?).await?, primitive_id: dec_str(arg("primitive-id")?).await?, topology: dec_topology(arg("topology")?).await? }))
+            Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)?, topology: dec_topology(arg("topology")?)? }))
         }
         "replace-primitive-geometry" => Ok(SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::mutation::ReplacePrimitiveGeometry {
-            mesh_id: dec_str(arg("mesh-id")?).await?,
-            primitive_id: dec_str(arg("primitive-id")?).await?,
-            positions: dec_list(arg("positions")?, dec_point3).await?,
-            normals: dec_list(arg("normals")?, dec_point3).await?,
-            uvs: dec_list(arg("uvs")?, dec_uv).await?,
-            colors: dec_list(arg("colors")?, dec_rgba).await?,
-            indices: dec_list(arg("indices")?, |t| t.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
+            mesh_id: dec_str(arg("mesh-id")?)?,
+            primitive_id: dec_str(arg("primitive-id")?)?,
+            positions: dec_list(arg("positions")?, dec_point3)?,
+            normals: dec_list(arg("normals")?, dec_point3)?,
+            uvs: dec_list(arg("uvs")?, dec_uv)?,
+            colors: dec_list(arg("colors")?, dec_rgba)?,
+            indices: dec_list(arg("indices")?, |t| t.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))?,
         })),
         "set-primitive-material" => Ok(SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::mutation::SetPrimitiveMaterial {
-            mesh_id: dec_str(arg("mesh-id")?).await?,
-            primitive_id: dec_str(arg("primitive-id")?).await?,
-            material_id: decode_option(arg("material-id")?, dec_str).await?,
+            mesh_id: dec_str(arg("mesh-id")?)?,
+            primitive_id: dec_str(arg("primitive-id")?)?,
+            material_id: decode_option(arg("material-id")?, dec_str)?,
         })),
-        "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: dec_material(arg("material")?).await? })),
-        "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: dec_str(arg("id")?).await? })),
-        "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: dec_str(arg("id")?).await?, new_base_color: dec_rgba(arg("new-base-color")?).await? })),
+        "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: dec_material(arg("material")?)? })),
+        "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: dec_str(arg("id")?)? })),
+        "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: dec_str(arg("id")?)?, new_base_color: dec_rgba(arg("new-base-color")?)? })),
         "change-material-metallic" => {
-            Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: dec_str(arg("id")?).await?, new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+            Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: dec_str(arg("id")?)?, new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
         }
         "change-material-roughness" => {
-            Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: dec_str(arg("id")?).await?, new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+            Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: dec_str(arg("id")?)?, new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
         }
-        "create-texture" => Ok(SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: dec_texture(arg("texture")?).await? })),
-        "delete-texture" => Ok(SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: dec_str(arg("id")?).await? })),
-        "change-texture-mime" => Ok(SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: dec_str(arg("id")?).await?, new_mime: dec_str(arg("new-mime")?).await? })),
-        "replace-texture-bytes" => Ok(SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::mutation::ReplaceTextureBytes { id: dec_str(arg("id")?).await?, new_bytes: hex_decode(arg("new-bytes")?).await? })),
+        "create-texture" => Ok(SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: dec_texture(arg("texture")?)? })),
+        "delete-texture" => Ok(SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: dec_str(arg("id")?)? })),
+        "change-texture-mime" => Ok(SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: dec_str(arg("id")?)?, new_mime: dec_str(arg("new-mime")?)? })),
+        "replace-texture-bytes" => Ok(SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::mutation::ReplaceTextureBytes { id: dec_str(arg("id")?)?, new_bytes: hex_decode(arg("new-bytes")?)? })),
         "move-vertex" => Ok(SemioMeshMutation::MoveVertex(move_vertex::mutation::MoveVertex {
-            mesh_id: dec_str(arg("mesh-id")?).await?,
-            primitive_id: dec_str(arg("primitive-id")?).await?,
+            mesh_id: dec_str(arg("mesh-id")?)?,
+            primitive_id: dec_str(arg("primitive-id")?)?,
             vertex_index: arg("vertex-index")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            new_point: dec_point3(arg("new-point")?).await?,
+            new_point: dec_point3(arg("new-point")?)?,
         })),
         other => Err(format!("semio mesh mutation: unknown keyword {other:?}")),
     }
@@ -208,10 +210,10 @@ async fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, Stri
 
 impl OpText for SemioMeshMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_mesh_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_mesh_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_semio_mesh_mutation(self).await
+        print_semio_mesh_mutation(self)
     }
 }
 //#endregion 🔖️OpText
@@ -238,7 +240,8 @@ const OP_KEYWORDS: [&str; 17] = [
     "replace-texture-bytes",
     "move-vertex",
 ];
-async fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
     match m {
         SemioMeshMutation::CreateMesh(_) => 0,
         SemioMeshMutation::DeleteMesh(_) => 1,
@@ -262,8 +265,9 @@ async fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_mesh_mutation` — the binary frame's
 /// `tag` byte already carries the keyword, so the text keyword itself is redundant in the binary
 /// payload.
-async fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
-    match print_semio_mesh_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
+    match print_semio_mesh_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -277,8 +281,8 @@ async fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
 impl OpBinary for SemioMeshMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_semio_mesh_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -303,7 +307,8 @@ impl OpBinary for SemioMeshMutation {
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️component.rs` (another session's file, read-only here).
 #[cfg(test)]
-pub(crate) async fn fixture() -> SemioMeshSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn fixture() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
         meshes: vec![SemioMesh {
             id: "mesh-a".into(),
@@ -325,7 +330,8 @@ pub(crate) async fn fixture() -> SemioMeshSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
         SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } }),
         SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: "mesh-a".into() }),
@@ -370,7 +376,8 @@ mod tests {
     /// here) restores it. Both `delete-mesh`/`delete-material`/`delete-texture`/`delete-primitive`
     /// ARE position-preserving, so plain round-trip equality (not merely set equality) is expected
     /// and asserted directly.
-    async fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
         let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

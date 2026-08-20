@@ -28,13 +28,16 @@ impl Default for SemioDrawingArtifact {
 }
 
 impl SemioDrawingArtifact {
-    pub async fn to_snapshot(&self) -> SemioDrawingSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioDrawingSnapshot {
         SemioDrawingSnapshot { schema: self.schema.clone(), canvas: self.canvas, styles: self.styles.clone(), layers: self.layers.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioDrawingSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioDrawingSnapshot) -> Self {
         Self { schema: snapshot.schema, canvas: snapshot.canvas, styles: snapshot.styles, layers: snapshot.layers }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioDrawingSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioDrawingSnapshot) {
         self.schema = snapshot.schema;
         self.canvas = snapshot.canvas;
         self.styles = snapshot.styles;
@@ -42,7 +45,8 @@ impl SemioDrawingArtifact {
     }
 }
 
-pub async fn semio_drawing_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_drawing_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.drawing",
         artifact: schema::FacetLeaves {
@@ -105,7 +109,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_drawing_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioDrawingDiff as protocol::MutationDiff<SemioDrawingSnapshot>>::apply(&diff, &self.snapshot).await?;

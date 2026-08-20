@@ -1,0 +1,24 @@
+[pass 1] candidate sites=60 skipped=0
+  applied 30
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 71126:71148 = b'd.dict_get("Producer")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 71013:71034 = b'd.dict_get("Creator")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 70900:70922 = b'd.dict_get("Keywords")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 70787:70808 = b'd.dict_get("Subject")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 70676:70696 = b'd.dict_get("Author")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 70567:70586 = b'd.dict_get("Title")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️component.rs: span 4748:4815 = b'text_property(comments_props, &format!("comment_{i}_viewpoin', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️component.rs: span 4589:4648 = b'text_property(comments_props, &format!("comment_{i}_text"))', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️component.rs: span 4437:4498 = b'text_property(comments_props, &format!("comment_{i}_author")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️component.rs: span 4285:4344 = b'text_property(comments_props, &format!("comment_{i}_date"))', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💬️bcf/🔖️2.1/✳️any/🦀️component.rs: span 4135:4194 = b'text_property(comments_props, &format!("comment_{i}_guid"))', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 21413:21434 = b'attr(cattrs, "Color")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 12263:12297 = b'find_child(v_children, "Snapshot")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 12112:12147 = b'find_child(v_children, "Viewpoint")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 11986:12007 = b'attr(v_attrs, "Guid")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 11546:11579 = b'find_child(c_children, "Comment")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 11413:11445 = b'find_child(c_children, "Author")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 11280:11310 = b'find_child(c_children, "Date")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 11164:11185 = b'attr(c_attrs, "Guid")', not a resolve_ready(...) wrapper
+  !! ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span 10949:10984 = b'find_child(c_children, "Viewpoint")', not a resolve_ready(...) wrapper
+[pass 2] candidate sites=0 skipped=0
+  fixpoint reached

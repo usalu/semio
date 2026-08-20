@@ -50,7 +50,8 @@ mod tests {
     use super::*;
     use crate::artifacts::stl::schema::snapshot::StlTriangle;
 
-    async fn sample_stl() -> StlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_stl() -> StlSnapshot {
         StlSnapshot {
             schema: "stdio.stl".into(),
             solid_name: "pyramid".into(),

@@ -3254,13 +3254,13 @@ pub struct AppRef {
 
 /// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
 pub async fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
-    format!("{}#{}", dialect.to_coordinate().await, role.as_str().await)
+    format!("{}#{}", dialect.to_coordinate(), role.as_str().await)
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
 pub async fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
     let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
-    let dialect = ArtifactDialect::parse_coordinate(coordinate).await?;
+    let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
     Ok((dialect, role))
 }
@@ -3930,7 +3930,7 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
             if !roles.contains(&app.role) || app.io.document_schema.is_empty() {
                 continue;
             }
-            by_coordinate.entry(app.dialect.to_coordinate().await).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
+            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
         }
     }
     by_coordinate.into_values().collect()
@@ -6809,30 +6809,36 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn exports_typescript_bindings() {
         use ts_rs::TS;
-        ui_wgpu::wgpu::IconName::export().unwrap();
-        ui_wgpu::wgpu::ActionDescriptor::export().unwrap();
-        ui_wgpu::wgpu::WindowLayoutWindowNode::export().unwrap();
-        ui_wgpu::wgpu::WindowLayoutStackNode::export().unwrap();
-        ui_wgpu::wgpu::WindowLayoutAxisNode::export().unwrap();
-        ui_wgpu::wgpu::WindowLayoutChild::export().unwrap();
-        ui_wgpu::wgpu::WindowLayoutRoot::export().unwrap();
-        ui_wgpu::wgpu::WindowLayout::export().unwrap();
-        ui_wgpu::wgpu::NamedLayout::export().unwrap();
-        ui_wgpu::wgpu::component::layout::MeasureSelectItem::export().unwrap();
-        ui_wgpu::wgpu::WindowMeasure::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementOption::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementInput::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementStatus::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementPossible::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementRingOption::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementToggleGroupOption::export().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementSelectItem::export().unwrap();
-        ui_wgpu::wgpu::WindowEngagementControl::export().unwrap();
-        ui_wgpu::wgpu::WindowEngagement::export().unwrap();
-        ui_wgpu::wgpu::WindowEngagementSlot::export().unwrap();
-        ui_wgpu::wgpu::WindowOptions::export().unwrap();
-        ui_wgpu::wgpu::SurfaceKind::export().unwrap();
-        ui_wgpu::wgpu::UtilityCategory::export().unwrap();
+        // 🧬️ `export_all`, not `export`: ts-rs' `export` writes ONLY the named type's own
+        // binding file, so a type reachable solely as a FIELD of an exported type silently
+        // never got one — 11 names (`ConfigSpec`, `UiMenuRef`, `TopicContribution`, …) were
+        // missing from the generated mirror for exactly that reason. `export_all` walks
+        // transitive dependencies, which is how the sibling `ui-contract` typegen test
+        // already avoids this whole class.
+        ui_wgpu::wgpu::IconName::export_all().unwrap();
+        ui_wgpu::wgpu::ActionDescriptor::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayoutWindowNode::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayoutStackNode::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayoutAxisNode::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayoutChild::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayoutRoot::export_all().unwrap();
+        ui_wgpu::wgpu::WindowLayout::export_all().unwrap();
+        ui_wgpu::wgpu::NamedLayout::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::MeasureSelectItem::export_all().unwrap();
+        ui_wgpu::wgpu::WindowMeasure::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementOption::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementInput::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementStatus::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementPossible::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementRingOption::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementToggleGroupOption::export_all().unwrap();
+        ui_wgpu::wgpu::component::layout::WindowEngagementSelectItem::export_all().unwrap();
+        ui_wgpu::wgpu::WindowEngagementControl::export_all().unwrap();
+        ui_wgpu::wgpu::WindowEngagement::export_all().unwrap();
+        ui_wgpu::wgpu::WindowEngagementSlot::export_all().unwrap();
+        ui_wgpu::wgpu::WindowOptions::export_all().unwrap();
+        ui_wgpu::wgpu::SurfaceKind::export_all().unwrap();
+        ui_wgpu::wgpu::UtilityCategory::export_all().unwrap();
         // 🧭️ The shared element-state model + every `UiNode` variant struct (closing the gap that used
         // to leave these hand-mirrored in `framework/core/js/index.ts` — see 🔖️Presence/🔖️UiNode).
         // `UiNode`/`UiComponentSceneNode` themselves are NOT yet typegen-derived: the enum's
@@ -6840,172 +6846,172 @@ mod app_label_tests {
         // that would each need their own `ts_rs::TS` derive first — a large, separate mechanical pass,
         // out of scope here. `framework/core/js/index.ts` hand-writes the `UiNode` union stitching
         // these generated variant interfaces together until that follow-up lands.
-        ui_wgpu::wgpu::UiState::export().unwrap();
-        ui_wgpu::wgpu::UiStatus::export().unwrap();
-        ui_wgpu::wgpu::UiPresence::export().unwrap();
-        ui_wgpu::wgpu::UiPeerMark::export().unwrap();
-        ui_wgpu::wgpu::UiDropOverlaySpec::export().unwrap();
-        ui_wgpu::wgpu::UiTextNode::export().unwrap();
-        ui_wgpu::wgpu::UiButtonNode::export().unwrap();
-        ui_wgpu::wgpu::UiSeparatorNode::export().unwrap();
-        ui_wgpu::wgpu::UiImageNode::export().unwrap();
-        ui_wgpu::wgpu::UiInputNode::export().unwrap();
-        ui_wgpu::wgpu::UiSelectItem::export().unwrap();
-        ui_wgpu::wgpu::UiSelectNode::export().unwrap();
-        ui_wgpu::wgpu::UiToggleNode::export().unwrap();
-        ui_wgpu::wgpu::UiKeyValueEntry::export().unwrap();
-        ui_wgpu::wgpu::UiKeyValueNode::export().unwrap();
-        ui_wgpu::wgpu::UiSliderNode::export().unwrap();
-        ui_wgpu::wgpu::UiNumberStepperNode::export().unwrap();
-        ui_wgpu::wgpu::UiRingNode::export().unwrap();
-        ui_wgpu::wgpu::UiIconSelectNode::export().unwrap();
-        ui_wgpu::wgpu::UiControlNode::export().unwrap();
-        ui_wgpu::wgpu::UiTreeItemAction::export().unwrap();
-        ui_wgpu::wgpu::UiTreeItemNode::export().unwrap();
-        ui_wgpu::wgpu::UiTreeSectionNode::export().unwrap();
-        ui_wgpu::wgpu::UiTreeNode::export().unwrap();
-        ui_wgpu::wgpu::UiExternalSlotNode::export().unwrap();
+        ui_wgpu::wgpu::UiState::export_all().unwrap();
+        ui_wgpu::wgpu::UiStatus::export_all().unwrap();
+        ui_wgpu::wgpu::UiPresence::export_all().unwrap();
+        ui_wgpu::wgpu::UiPeerMark::export_all().unwrap();
+        ui_wgpu::wgpu::UiDropOverlaySpec::export_all().unwrap();
+        ui_wgpu::wgpu::UiTextNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiButtonNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiSeparatorNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiImageNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiInputNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiSelectItem::export_all().unwrap();
+        ui_wgpu::wgpu::UiSelectNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiToggleNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiKeyValueEntry::export_all().unwrap();
+        ui_wgpu::wgpu::UiKeyValueNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiSliderNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiNumberStepperNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiRingNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiIconSelectNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiControlNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiTreeItemAction::export_all().unwrap();
+        ui_wgpu::wgpu::UiTreeItemNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiTreeSectionNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiTreeNode::export_all().unwrap();
+        ui_wgpu::wgpu::UiExternalSlotNode::export_all().unwrap();
         // NOT exported (recursive through `UiNode`, itself not yet typegen-derived — see comment
         // above): UiStackNode, UiGroupNode, UiFieldNode, UiSectionNode, UiInspectorFieldGroup.
-        crate::ui::Keybinding::export().unwrap();
-        crate::ui::Platform::export().unwrap();
-        crate::ui::PlatformKeybinding::export().unwrap();
-        crate::ui::ActionKind::export().unwrap();
-        crate::ui::ActionArgOption::export().unwrap();
-        crate::ui::ActionArgControl::export().unwrap();
+        crate::ui::Keybinding::export_all().unwrap();
+        crate::ui::Platform::export_all().unwrap();
+        crate::ui::PlatformKeybinding::export_all().unwrap();
+        crate::ui::ActionKind::export_all().unwrap();
+        crate::ui::ActionArgOption::export_all().unwrap();
+        crate::ui::ActionArgControl::export_all().unwrap();
         // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
         // `ArgSchema`/`ArgFormat`/`ArgPresentation` are the new stored-truth vocabulary behind
         // `ActionArgDef.schema`/`.presentation`; `ActionArgControl` above stays exported unchanged
         // (it is still the renderer's own vocabulary, now derived by `ActionArgDef::control()`).
-        crate::ui::ArgFormat::export().unwrap();
-        crate::ui::ArgSchema::export().unwrap();
-        crate::ui::ArgPresentation::export().unwrap();
-        crate::ui::ActionArgDef::export().unwrap();
+        crate::ui::ArgFormat::export_all().unwrap();
+        crate::ui::ArgSchema::export_all().unwrap();
+        crate::ui::ArgPresentation::export_all().unwrap();
+        crate::ui::ActionArgDef::export_all().unwrap();
         // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing now
         // carried on every `ActionDefinition`/`CommandDefinition`.
-        crate::ui::ResourceSelector::export().unwrap();
-        crate::ui::CapabilityEffects::export().unwrap();
-        crate::ui::ApprovalMode::export().unwrap();
-        crate::ui::CapabilityPolicy::export().unwrap();
-        crate::ui::PreviewMode::export().unwrap();
-        crate::ui::UndoMode::export().unwrap();
-        crate::ui::IdempotencyMode::export().unwrap();
-        crate::ui::ExecutionClass::export().unwrap();
-        crate::ui::CapabilityExecution::export().unwrap();
-        crate::ui::ActionSemantics::export().unwrap();
-        crate::ui::ActionDefinition::export().unwrap();
-        crate::ui::ActionRef::export().unwrap();
-        crate::ui::ActionAddress::export().unwrap();
-        crate::ui::ActionInvocation::export().unwrap();
+        crate::ui::ResourceSelector::export_all().unwrap();
+        crate::ui::CapabilityEffects::export_all().unwrap();
+        crate::ui::ApprovalMode::export_all().unwrap();
+        crate::ui::CapabilityPolicy::export_all().unwrap();
+        crate::ui::PreviewMode::export_all().unwrap();
+        crate::ui::UndoMode::export_all().unwrap();
+        crate::ui::IdempotencyMode::export_all().unwrap();
+        crate::ui::ExecutionClass::export_all().unwrap();
+        crate::ui::CapabilityExecution::export_all().unwrap();
+        crate::ui::ActionSemantics::export_all().unwrap();
+        crate::ui::ActionDefinition::export_all().unwrap();
+        crate::ui::ActionRef::export_all().unwrap();
+        crate::ui::ActionAddress::export_all().unwrap();
+        crate::ui::ActionInvocation::export_all().unwrap();
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
         // definition family, re-exported at the crate root (not under `crate::ui`) — see the `use
         // crate::{InteractionDefinition, InteractionRef};` import above this file's 🔖️Manifest region.
-        crate::InteractionDefinition::export().unwrap();
-        crate::GranularityDefinition::export().unwrap();
-        crate::HierarchyProvider::export().unwrap();
-        crate::HoverSpec::export().unwrap();
-        crate::SelectionSpec::export().unwrap();
-        crate::SelectionMode::export().unwrap();
-        crate::SelectionMethod::export().unwrap();
-        crate::MergeMode::export().unwrap();
-        crate::InteractionRef::export().unwrap();
+        crate::InteractionDefinition::export_all().unwrap();
+        crate::GranularityDefinition::export_all().unwrap();
+        crate::HierarchyProvider::export_all().unwrap();
+        crate::HoverSpec::export_all().unwrap();
+        crate::SelectionSpec::export_all().unwrap();
+        crate::SelectionMode::export_all().unwrap();
+        crate::SelectionMethod::export_all().unwrap();
+        crate::MergeMode::export_all().unwrap();
+        crate::InteractionRef::export_all().unwrap();
         // 🕹️ W3a: `TutorialUiSnapshot.interaction_selection` carries this directly (see
         // `TutorialUiChange::Selection`), so it needs its own top-level binding too.
-        crate::DomainSelection::export().unwrap();
-        crate::ui::UtilityDefinition::export().unwrap();
-        crate::ui::UtilityRef::export().unwrap();
-        crate::ui::ToolDefinition::export().unwrap();
-        crate::ui::ToolRef::export().unwrap();
-        crate::ui::CommandDefinition::export().unwrap();
-        crate::ui::CommandOwnerAddress::export().unwrap();
-        crate::ui::CommandAddress::export().unwrap();
-        crate::ui::CommandInvocation::export().unwrap();
-        crate::ui::OsDefinition::export().unwrap();
-        crate::ui::ModeDefinition::export().unwrap();
-        crate::ui::WindowKindDefinition::export().unwrap();
-        crate::ui::PanelGroup::export().unwrap();
-        crate::ui::PanelTabKind::export().unwrap();
-        crate::ui::PanelTabDefinition::export().unwrap();
-        crate::ui::IntroductionDefinition::export().unwrap();
-        crate::ui::IntroductionStepDefinition::export().unwrap();
-        crate::ui::IntroductionPlacement::export().unwrap();
-        crate::ui::IntroductionInteractionKind::export().unwrap();
-        crate::ui::IntroductionInteraction::export().unwrap();
-        crate::ui::IntroductionLogo::export().unwrap();
-        crate::ui::IntroductionPoint::export().unwrap();
-        crate::ui::IntroductionPointerButton::export().unwrap();
-        crate::ui::IntroductionKeyModifier::export().unwrap();
-        crate::ui::IntroductionGesture::export().unwrap();
-        crate::ui::IntroductionCursor::export().unwrap();
-        crate::ui::IntroductionDemonstration::export().unwrap();
-        crate::ui::TutorialDefinition::export().unwrap();
-        crate::ui::TutorialChapter::export().unwrap();
-        crate::ui::TutorialBase::export().unwrap();
-        crate::ui::TutorialTracks::export().unwrap();
-        crate::ui::TutorialAssetSrc::export().unwrap();
-        crate::ui::TutorialNarrationCue::export().unwrap();
-        crate::ui::TutorialCaption::export().unwrap();
-        crate::ui::TutorialOverlayRect::export().unwrap();
-        crate::ui::TutorialVideoCue::export().unwrap();
-        crate::ui::TutorialEvent::export().unwrap();
-        crate::ui::TutorialEventKind::export().unwrap();
-        crate::ui::TutorialUiKeyframe::export().unwrap();
-        crate::ui::TutorialUiSample::export().unwrap();
-        crate::ui::TutorialUiSnapshot::export().unwrap();
-        crate::ui::TutorialUiChange::export().unwrap();
-        crate::ui::TutorialArtifactEvent::export().unwrap();
-        crate::ui::TutorialArtifactEventKind::export().unwrap();
-        crate::ui::TutorialCameraKeyframe::export().unwrap();
-        crate::ui::TutorialCameraState::export().unwrap();
-        crate::ui::TutorialEasing::export().unwrap();
-        crate::ui::TutorialGestureCue::export().unwrap();
-        crate::ui::DialogDefinition::export().unwrap();
-        crate::ui::AppRole::export().unwrap();
-        crate::ArtifactDialect::export().unwrap();
-        crate::ui::AppRef::export().unwrap();
-        crate::ui::AppIo::export().unwrap();
-        crate::ui::AppDefinition::export().unwrap();
-        crate::ui::ExampleDefinition::export().unwrap();
-        crate::ui::ProgramContributionEntry::export().unwrap();
-        crate::ui::PluginManifest::export().unwrap();
-        crate::ui::PluginDependency::export().unwrap();
-        crate::ui::ContributedMutationSemantics::export().unwrap();
-        crate::ui::ContributedMutationMetadata::export().unwrap();
-        crate::ui::ContributedInferenceMetadata::export().unwrap();
-        crate::ui::ArtifactContributionDescriptor::export().unwrap();
-        crate::ui::ViewWindowInstance::export().unwrap();
-        crate::ui::ViewModel::export().unwrap();
+        crate::DomainSelection::export_all().unwrap();
+        crate::ui::UtilityDefinition::export_all().unwrap();
+        crate::ui::UtilityRef::export_all().unwrap();
+        crate::ui::ToolDefinition::export_all().unwrap();
+        crate::ui::ToolRef::export_all().unwrap();
+        crate::ui::CommandDefinition::export_all().unwrap();
+        crate::ui::CommandOwnerAddress::export_all().unwrap();
+        crate::ui::CommandAddress::export_all().unwrap();
+        crate::ui::CommandInvocation::export_all().unwrap();
+        crate::ui::OsDefinition::export_all().unwrap();
+        crate::ui::ModeDefinition::export_all().unwrap();
+        crate::ui::WindowKindDefinition::export_all().unwrap();
+        crate::ui::PanelGroup::export_all().unwrap();
+        crate::ui::PanelTabKind::export_all().unwrap();
+        crate::ui::PanelTabDefinition::export_all().unwrap();
+        crate::ui::IntroductionDefinition::export_all().unwrap();
+        crate::ui::IntroductionStepDefinition::export_all().unwrap();
+        crate::ui::IntroductionPlacement::export_all().unwrap();
+        crate::ui::IntroductionInteractionKind::export_all().unwrap();
+        crate::ui::IntroductionInteraction::export_all().unwrap();
+        crate::ui::IntroductionLogo::export_all().unwrap();
+        crate::ui::IntroductionPoint::export_all().unwrap();
+        crate::ui::IntroductionPointerButton::export_all().unwrap();
+        crate::ui::IntroductionKeyModifier::export_all().unwrap();
+        crate::ui::IntroductionGesture::export_all().unwrap();
+        crate::ui::IntroductionCursor::export_all().unwrap();
+        crate::ui::IntroductionDemonstration::export_all().unwrap();
+        crate::ui::TutorialDefinition::export_all().unwrap();
+        crate::ui::TutorialChapter::export_all().unwrap();
+        crate::ui::TutorialBase::export_all().unwrap();
+        crate::ui::TutorialTracks::export_all().unwrap();
+        crate::ui::TutorialAssetSrc::export_all().unwrap();
+        crate::ui::TutorialNarrationCue::export_all().unwrap();
+        crate::ui::TutorialCaption::export_all().unwrap();
+        crate::ui::TutorialOverlayRect::export_all().unwrap();
+        crate::ui::TutorialVideoCue::export_all().unwrap();
+        crate::ui::TutorialEvent::export_all().unwrap();
+        crate::ui::TutorialEventKind::export_all().unwrap();
+        crate::ui::TutorialUiKeyframe::export_all().unwrap();
+        crate::ui::TutorialUiSample::export_all().unwrap();
+        crate::ui::TutorialUiSnapshot::export_all().unwrap();
+        crate::ui::TutorialUiChange::export_all().unwrap();
+        crate::ui::TutorialArtifactEvent::export_all().unwrap();
+        crate::ui::TutorialArtifactEventKind::export_all().unwrap();
+        crate::ui::TutorialCameraKeyframe::export_all().unwrap();
+        crate::ui::TutorialCameraState::export_all().unwrap();
+        crate::ui::TutorialEasing::export_all().unwrap();
+        crate::ui::TutorialGestureCue::export_all().unwrap();
+        crate::ui::DialogDefinition::export_all().unwrap();
+        crate::ui::AppRole::export_all().unwrap();
+        crate::ArtifactDialect::export_all().unwrap();
+        crate::ui::AppRef::export_all().unwrap();
+        crate::ui::AppIo::export_all().unwrap();
+        crate::ui::AppDefinition::export_all().unwrap();
+        crate::ui::ExampleDefinition::export_all().unwrap();
+        crate::ui::ProgramContributionEntry::export_all().unwrap();
+        crate::ui::PluginManifest::export_all().unwrap();
+        crate::ui::PluginDependency::export_all().unwrap();
+        crate::ui::ContributedMutationSemantics::export_all().unwrap();
+        crate::ui::ContributedMutationMetadata::export_all().unwrap();
+        crate::ui::ContributedInferenceMetadata::export_all().unwrap();
+        crate::ui::ArtifactContributionDescriptor::export_all().unwrap();
+        crate::ui::ViewWindowInstance::export_all().unwrap();
+        crate::ui::ViewModel::export_all().unwrap();
         // 🎗️ `AppLabelsOverlay` deleted — see the region comment at its former definition site.
-        crate::ui::kernel::CapabilityRequirement::export().unwrap();
-        crate::ui::kernel::Rights::export().unwrap();
-        crate::ui::kernel::ArtifactKind::export().unwrap();
-        crate::ui::kernel::Scope::export().unwrap();
+        crate::ui::kernel::CapabilityRequirement::export_all().unwrap();
+        crate::ui::kernel::Rights::export_all().unwrap();
+        crate::ui::kernel::ArtifactKind::export_all().unwrap();
+        crate::ui::kernel::Scope::export_all().unwrap();
         // 🔖️Broker/🔖️PackageDescriptor (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
         // packet A3-kernel-types) — additive, nothing constructs these yet.
-        crate::ui::kernel::CapabilityId::export().unwrap();
-        crate::ui::kernel::CapabilityRequest::export().unwrap();
-        crate::ui::kernel::QuotaSchema::export().unwrap();
-        crate::ui::kernel::ActivationEvent::export().unwrap();
-        crate::ui::PackageRole::export().unwrap();
-        crate::ui::ExecutionMode::export().unwrap();
-        crate::ui::ExtensionPointDeclaration::export().unwrap();
-        crate::ui::AssetDeclaration::export().unwrap();
-        crate::ui::PackageHashes::export().unwrap();
-        crate::ui::DescriptorEntry::export().unwrap();
-        crate::ui::ContributionSet::export().unwrap();
-        crate::ui::PackageDescriptor::export().unwrap();
+        crate::ui::kernel::CapabilityId::export_all().unwrap();
+        crate::ui::kernel::CapabilityRequest::export_all().unwrap();
+        crate::ui::kernel::QuotaSchema::export_all().unwrap();
+        crate::ui::kernel::ActivationEvent::export_all().unwrap();
+        crate::ui::PackageRole::export_all().unwrap();
+        crate::ui::ExecutionMode::export_all().unwrap();
+        crate::ui::ExtensionPointDeclaration::export_all().unwrap();
+        crate::ui::AssetDeclaration::export_all().unwrap();
+        crate::ui::PackageHashes::export_all().unwrap();
+        crate::ui::DescriptorEntry::export_all().unwrap();
+        crate::ui::ContributionSet::export_all().unwrap();
+        crate::ui::PackageDescriptor::export_all().unwrap();
         // 🤖️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P8-agent-spi —
         // additive, attaches to `PackageDescriptor` via the lease bundle (see `🔖️AgentContributions`).
-        crate::ui::AgentContributions::export().unwrap();
-        crate::ui::OsMediaCapability::export().unwrap();
-        crate::ui::ArtifactKindSpec::export().unwrap();
-        crate::ui::MediaClass::export().unwrap();
-        crate::ui::MediaForm::export().unwrap();
-        crate::ui::MediaType::export().unwrap();
-        crate::ui::MediaWireFormat::export().unwrap();
-        crate::ui::MediaPortDirection::export().unwrap();
-        crate::ui::PortMultiplicity::export().unwrap();
-        crate::ui::MediaPortSpec::export().unwrap();
+        crate::ui::AgentContributions::export_all().unwrap();
+        crate::ui::OsMediaCapability::export_all().unwrap();
+        crate::ui::ArtifactKindSpec::export_all().unwrap();
+        crate::ui::MediaClass::export_all().unwrap();
+        crate::ui::MediaForm::export_all().unwrap();
+        crate::ui::MediaType::export_all().unwrap();
+        crate::ui::MediaWireFormat::export_all().unwrap();
+        crate::ui::MediaPortDirection::export_all().unwrap();
+        crate::ui::PortMultiplicity::export_all().unwrap();
+        crate::ui::MediaPortSpec::export_all().unwrap();
     }
 }
 //#endregion 🔖️Manifest

@@ -31,15 +31,18 @@ impl Default for StepArtifact {
 }
 
 impl StepArtifact {
-    pub async fn to_snapshot(&self) -> StepSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> StepSnapshot {
         StepSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    pub async fn from_snapshot(snapshot: StepSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: StepSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: StepSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: StepSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.entities = snapshot.entities;
@@ -47,14 +50,16 @@ impl StepArtifact {
 
     /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
     /// `StepSnapshot::to_part21_document`, never stored.
-    pub async fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
-        crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.to_snapshot().await.to_part21_document()).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn brep_mesh(&self) -> crate::artifacts::step::engine::brep::BrepMeshView {
+        crate::artifacts::step::engine::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn step_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn step_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.step",
         artifact: schema::FacetLeaves {
@@ -119,7 +124,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -210,7 +215,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::step::engine::empty_step_snapshot` through the `engine` barrel shim.
-pub async fn empty_step_snapshot() -> StepSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_step_snapshot() -> StepSnapshot {
     StepSnapshot::default()
 }
 
@@ -219,7 +225,8 @@ pub async fn empty_step_snapshot() -> StepSnapshot {
 /// `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`) and
 /// for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`.
-pub async fn demo_step_snapshot() -> StepSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_step_snapshot() -> StepSnapshot {
     use crate::artifacts::step::schema::snapshot::{StepEntity as _StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepHeader as _StepHeader, StepValue};
     StepSnapshot {
         schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),

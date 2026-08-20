@@ -870,7 +870,7 @@ pub enum ActivationEvent {
 /// Requires a `semio-framework-ui-contract` dependency on every crate that `#[path]`-mounts this
 /// file — see this packet's report for the exact registrar-request lines (this crate is not on the
 /// registrar-only list for `Cargo.toml`, so the dependency itself is not added here).
-pub use semio_framework_ui_contract::{UiPatch, UiPatchOp};
+pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 //#endregion 🔖️UiPatch
 
 //#region 🔖️Budget
@@ -915,6 +915,14 @@ pub struct Usage {
 pub struct TurnResult {
     pub ui_patches: Vec<UiPatch>,
     pub effects: Vec<Effect>,
+    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): render-plane presence derived this turn by the
+    /// reactor's own `PresenceHub` — `(surface, node_key)`-addressed, TTL-scoped, NEVER a document
+    /// revision (a turn where only presence changed emits `presence` and zero `ui_patches`). Distinct
+    /// from the roster's own replication channel (`protocol::PresencePeer`/`adopt_presence`), which
+    /// is unchanged and carries collaboration TRUTH, not render addressing — see this field's own
+    /// wire doc at `kernel_turn_result_to_wit` for the WIT `presence-update` repoint this pairs with.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub presence: Vec<PresenceUpdate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_wake: Option<u64>,
     pub status: TurnStatus,

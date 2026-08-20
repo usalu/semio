@@ -7,7 +7,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Op
 pub struct LogPrint;
 
 impl Operator for LogPrint {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let message = read_string(input, "message")?;
         Ok(channel_output("message", Dictionary::new().insert("text", Value::Atom(Atom::String(message)))))
     }
@@ -19,7 +19,7 @@ impl Operator for LogPrint {
 pub struct StateSet;
 
 impl Operator for StateSet {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let value = input.get("value").cloned().unwrap_or(Value::null());
         Ok(Dictionary::new().insert(key, value))
@@ -32,7 +32,7 @@ impl Operator for StateSet {
 pub struct StateIncrement;
 
 impl Operator for StateIncrement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let by = read_number(input, "by").unwrap_or(1.0);
         let current = input.get(&key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
@@ -46,7 +46,7 @@ impl Operator for StateIncrement {
 pub struct WaitDelay;
 
 impl Operator for WaitDelay {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let ms = read_number(input, "ms").unwrap_or(0.0);
         Ok(channel_output("delay", Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(ms)))))
     }
@@ -54,34 +54,34 @@ impl Operator for WaitDelay {
 // #endregion 🔖️WaitDelay
 
 // #region 🔖️Helpers
-async fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn string_channel(name: &str) -> ChannelSpec {
+fn string_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("S", "Str", name, name)
 }
 
-async fn number_channel(name: &str) -> ChannelSpec {
+fn number_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("N", "Num", name, name)
 }
 
-async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
+fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:⚡️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
 // 🗺️ Generic over the concrete operator, not `Box<dyn Operator>` — see the sibling note in
 // `🧠️logic/🦀️component.rs` and R11.
-async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
     registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
 /// 📦️ Registers all imperative action operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("log.print", "Log Print", "Log", "Writes a message to the effect log", vec![string_channel("message")], vec![ChannelSpec::named("M", "Msg", "message", "Message")]), LogPrint);
     register_simple(registry, operator_info("state.set", "State Set", "Set", "Sets a scope key to a value", vec![string_channel("key"), ChannelSpec::named("V", "Val", "value", "Value")], vec![ChannelSpec::wildcard()]), StateSet);
     register_simple(registry, operator_info("state.increment", "State Increment", "Inc", "Increments a numeric scope key", vec![string_channel("key"), number_channel("by")], vec![ChannelSpec::wildcard()]), StateIncrement);
@@ -90,7 +90,7 @@ pub async fn register(registry: &mut Registry) {
 }
 
 /// 📚️ Builds a catalogue JSON for UI palettes.
-pub async fn catalogue_json(registry: &Registry) -> String {
+pub fn catalogue_json(registry: &Registry) -> String {
     let items: Vec<serde_json::Value> = registry
         .operator_catalogue()
         .into_iter()
@@ -119,7 +119,7 @@ pub async fn catalogue_json(registry: &Registry) -> String {
     .unwrap_or_else(|_| "{}".into())
 }
 
-pub async fn module_registry() -> Registry {
+pub fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -131,7 +131,7 @@ const EXTENSION_ID: &str = "imperative-extension-core";
 const MODULE_VERSION: &str = "0.1.0";
 
 /// 🧩️ Host contribution entry for the core imperative module.
-pub async fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
+pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "core", "Actions", "zap", "core", "Core", MODULE_VERSION, &registry, Some(&catalogue))
@@ -139,14 +139,14 @@ pub async fn imperative_module_contribution() -> semio_framework::ProgramContrib
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
 /// `imperative_extension_sdk::imperative_module_topic_contribution`.
-pub async fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
+pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
     imperative_extension_sdk::imperative_module_topic_contribution("core", "Actions", "zap", "core", "Core", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn bundle() -> semio_framework_plugin::ExtensionBundle {
+fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Core", MODULE_VERSION)
         .extends("imperative")

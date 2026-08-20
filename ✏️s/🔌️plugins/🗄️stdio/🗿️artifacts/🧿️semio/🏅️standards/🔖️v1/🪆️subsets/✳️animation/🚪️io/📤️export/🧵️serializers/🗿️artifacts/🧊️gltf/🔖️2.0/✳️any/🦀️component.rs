@@ -99,7 +99,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
                     AnimInterpolation::CubicSpline => GltfInterpolation::Linear, // 📦️ downgraded, documented above
                 };
                 let sampler_index = samplers.len();
-                samplers.push(GltfAnimationSampler { input: input_acc.await, interpolation, output: output_acc.await, extensions: None, extras: None });
+                samplers.push(GltfAnimationSampler { input: input_acc, interpolation, output: output_acc, extensions: None, extras: None });
                 channels.push(GltfAnimationChannel { sampler: sampler_index, target: GltfAnimationChannelTarget { node: Some(node_index), path, extensions: None, extras: None }, extensions: None, extras: None });
             }
             animations.push(GltfAnimation { channels, samplers, name: timeline.name.clone(), extensions: None, extras: None });
@@ -136,7 +136,8 @@ impl ArtifactSerializer for SemioAnimationToGltf {
 /// 📦️ Writes `values` (already the flat, row-major component list) into its own new buffer, spans
 /// it with one bufferView, and registers one accessor over it (`count` elements of `accessor_type`
 /// each). Returns the new accessor index.
-async fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f32], count: usize) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn push_accessor(buffers: &mut Vec<Vec<u8>>, buffer_views: &mut Vec<GltfBufferView>, accessors: &mut Vec<GltfAccessor>, component_type: GltfComponentType, accessor_type: GltfAccessorType, values: &[f32], count: usize) -> usize {
     let mut bytes = Vec::with_capacity(values.len() * 4);
     for v in values {
         bytes.extend_from_slice(&v.to_le_bytes());
@@ -161,7 +162,8 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     use semio_framework_plugin::ArtifactDeserializer;
 
-    async fn real_world_animation() -> SemioAnimationSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn real_world_animation() -> SemioAnimationSnapshot {
         SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
             timelines: vec![AnimTimeline {

@@ -9,43 +9,52 @@ use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{Fl
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
-async fn str_val(s: &str) -> JsonValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn str_val(s: &str) -> JsonValue {
     JsonValue::String { value: s.to_string() }
 }
-async fn num_val(n: f64) -> JsonValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn num_val(n: f64) -> JsonValue {
     JsonValue::Number { lexeme: format!("{n}") }
 }
-async fn member(key: &str, value: JsonValue) -> JsonMember {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn member(key: &str, value: JsonValue) -> JsonMember {
     JsonMember { key: key.to_string(), value }
 }
-async fn obj(members: Vec<JsonMember>) -> JsonValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn obj(members: Vec<JsonMember>) -> JsonValue {
     JsonValue::Object { members }
 }
 
-async fn point_to_json(p: &SemioPoint2) -> JsonValue {
-    obj(vec![member("x", num_val(p.x).await).await, member("y", num_val(p.y).await).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_to_json(p: &SemioPoint2) -> JsonValue {
+    obj(vec![member("x", num_val(p.x)), member("y", num_val(p.y))])
 }
 
-async fn param_to_json(p: &FlowParam) -> JsonValue {
-    obj(vec![member("key", str_val(&p.key).await).await, member("value", str_val(&p.value).await).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn param_to_json(p: &FlowParam) -> JsonValue {
+    obj(vec![member("key", str_val(&p.key)), member("value", str_val(&p.value))])
 }
 
-async fn port_ref_to_json(p: &PortRef) -> JsonValue {
-    obj(vec![member("node", str_val(&p.node).await).await, member("port", str_val(&p.port).await).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn port_ref_to_json(p: &PortRef) -> JsonValue {
+    obj(vec![member("node", str_val(&p.node)), member("port", str_val(&p.port))])
 }
 
-async fn node_to_json(n: &FlowNode) -> JsonValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn node_to_json(n: &FlowNode) -> JsonValue {
     obj(vec![
-        member("id", str_val(&n.id).await).await,
-        member("kind", str_val(&n.kind).await).await,
-        member("label", str_val(&n.label).await).await,
-        member("params", JsonValue::Array { items: n.params.iter().map(param_to_json).collect() }).await,
-        member("position", point_to_json(&n.position).await).await,
-    ]).await
+        member("id", str_val(&n.id)),
+        member("kind", str_val(&n.kind)),
+        member("label", str_val(&n.label)),
+        member("params", JsonValue::Array { items: n.params.iter().map(param_to_json).collect() }),
+        member("position", point_to_json(&n.position)),
+    ])
 }
 
-async fn edge_to_json(e: &FlowEdge) -> JsonValue {
-    obj(vec![member("id", str_val(&e.id).await).await, member("from", port_ref_to_json(&e.from).await).await, member("to", port_ref_to_json(&e.to).await).await, member("kind", str_val(&e.kind).await).await]).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn edge_to_json(e: &FlowEdge) -> JsonValue {
+    obj(vec![member("id", str_val(&e.id)), member("from", port_ref_to_json(&e.from)), member("to", port_ref_to_json(&e.to)), member("kind", str_val(&e.kind))])
 }
 //#endregion 🔖️FieldMapping
 
@@ -59,7 +68,7 @@ impl ArtifactSerializer for SemioFlowToJson {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }).await, member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() }).await]);
+        let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }), member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() })]);
         Ok(JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }
@@ -71,7 +80,8 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA;
 
-    async fn sample_semio() -> SemioFlowSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_semio() -> SemioFlowSnapshot {
         SemioFlowSnapshot {
             schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
             nodes: vec![

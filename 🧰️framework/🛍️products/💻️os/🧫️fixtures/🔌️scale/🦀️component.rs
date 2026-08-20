@@ -50,7 +50,7 @@ pub mod guest {
     use semio::framework::effects::{RequestCapabilityEffect, RequestCapabilityParams};
     use semio::framework::events::CompletionResult;
     use semio::framework::types::PluginError;
-    use semio::framework::ui::{PatchOp, PatchReplace, SurfaceRef, UiPatch};
+    use semio::framework::ui::{PatchOp, PatchUpsert, SurfaceRef, UiPatch};
 
     pub struct FixtureGuest;
 
@@ -97,10 +97,12 @@ pub mod guest {
                 .into_iter()
                 .map(|patch| UiPatch {
                     surface: SurfaceRef { instance: patch.surface_instance, surface: patch.surface },
-                    kind: "replace".to_string(),
                     revision: patch.revision,
                     base_revision: patch.base_revision,
-                    ops: vec![PatchOp::Replace(PatchReplace { path: Vec::new(), node: patch.bytes })],
+                    // 🌱️ `wit-flip`/`sdk-flip` retired the whole-tree `replace` op: the retained-mode
+                    // contract's `upsert` carries one pack-encoded `UiNodeRecord`, which is what this
+                    // fixture's profile bookkeeping already produces.
+                    ops: vec![PatchOp::Upsert(PatchUpsert { node: patch.bytes })],
                 })
                 .collect();
 
@@ -117,6 +119,10 @@ pub mod guest {
             Ok(WitTurnResult {
                 ui_patches,
                 effects,
+                // 👥️ This fixture is pure synthetic profile bookkeeping with no interaction state,
+                // so it genuinely emits no render-plane presence — an empty list is the correct
+                // value here, not a placeholder.
+                presence: Vec::new(),
                 next_wake: outcome.next_wake_ms,
                 status: if outcome.status_more_work { WitTurnStatus::MoreWork } else { WitTurnStatus::Idle },
                 fuel_used: outcome.fuel_used,

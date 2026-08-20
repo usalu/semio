@@ -66,13 +66,15 @@ impl From<Dialect> for ArtifactDialect {
 impl ArtifactDialect {
     /// 🧵️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. The one format that
     /// crosses every boundary in the system — the only dialect-coordinate codec in the repo.
-    pub async fn to_coordinate(&self) -> String {
+    // 🚫️async: E1 pure — `format!` only. See R9.
+    pub fn to_coordinate(&self) -> String {
         format!("{}@{}/{}", self.artifact_kind, self.standard, self.subset)
     }
 
     /// 🧵️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
     /// `/` separates standard from subset.
-    pub async fn parse_coordinate(s: &str) -> Result<Self, String> {
+    // 🚫️async: E1 pure — `split_once` only. See R9.
+    pub fn parse_coordinate(s: &str) -> Result<Self, String> {
         let (kind, rest) = s.split_once('@').ok_or_else(|| format!("dialect coordinate {s:?} missing '@'"))?;
         let (standard, subset) = rest.rsplit_once('/').ok_or_else(|| format!("dialect coordinate {s:?} missing '/'"))?;
         if kind.is_empty() || standard.is_empty() || subset.is_empty() {
@@ -157,17 +159,20 @@ pub struct ArtifactRef {
 
 impl ArtifactRef {
     /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
-    pub async fn to_uri(&self) -> String {
-        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate().await)
+    // 🚫️async: E1 pure — canonical string formatting with no suspension point, consumed by sync
+    // `DslField`/`DslVariants` trait impls that are language-barred from awaiting. See R9.
+    pub fn to_uri(&self) -> String {
+        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
     }
 
     /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.
-    pub async fn parse_uri(s: &str) -> Result<Self, String> {
+    // 🚫️async: E1 pure — string parsing only; same sync consumers as `to_uri`. See R9.
+    pub fn parse_uri(s: &str) -> Result<Self, String> {
         let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
         if artifact_id.is_empty() {
             return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
         }
-        let dialect = ArtifactDialect::parse_coordinate(coordinate).await?;
+        let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
         Ok(ArtifactRef { artifact_id: artifact_id.to_string(), dialect })
     }
 }

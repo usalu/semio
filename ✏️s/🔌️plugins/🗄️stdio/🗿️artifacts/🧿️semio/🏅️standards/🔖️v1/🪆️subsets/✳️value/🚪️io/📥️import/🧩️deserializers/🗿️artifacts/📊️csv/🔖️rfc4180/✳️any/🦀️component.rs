@@ -28,15 +28,17 @@ impl ArtifactDeserializer for SemioValueFromCsv {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_csv(from).await, nodes: Vec::new() })
+        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_csv(from), nodes: Vec::new() })
     }
 }
 
-pub async fn register() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {}
 //#endregion 🔖️Deserializer
 
 //#region 🔖️Convert
-pub async fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_value_from_csv(snapshot: &CsvSnapshot) -> SemioValue {
     if snapshot.has_header {
         let mut records = snapshot.records.iter();
         let header: Vec<String> = records.next().map(|r| r.fields.iter().map(|f| f.value.clone()).collect()).unwrap_or_default();
@@ -60,7 +62,8 @@ mod tests {
     use super::*;
     use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 
-    async fn field(s: &str) -> CsvField {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn field(s: &str) -> CsvField {
         CsvField { value: s.into(), quoted: false }
     }
 

@@ -1,0 +1,46 @@
+{
+  "crate": "semio-framework-plugin",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 327,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 6
+    }
+  ],
+  "residual_errors": 327,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:959",
+      "code": "E0432",
+      "msg": "unresolved import `crate::app::__semio_dispatch_PluginApp`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15481",
+      "code": "E0432",
+      "msg": "unresolved import `crate::app::__semio_dispatch_PluginApp`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7372",
+      "code": "E0425",
+      "msg": "cannot find type `HybridLogicalTimestamp` in module `$crate::os_store`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7375",
+      "code": "E0425",
+      "msg": "cannot find type `HybridLogicalTimestamp` in module `$crate::os_store`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15483",
+      "code": "E0659",
+      "msg": "`__semio_dispatch_PluginApp` is ambiguous"
+    },
+    {
+      "at": "/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs:102",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    }
+  ]
+}

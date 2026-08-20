@@ -32,7 +32,7 @@ pub mod derived_composition {
             let mut snapshot = inner.snapshot;
             let mut doc = snapshot.to_part21_document();
             ensure_file_schema(&mut doc, "AUTOMOTIVE_DESIGN");
-            snapshot = StepSnapshot::from_part21_document(doc.await).await;
+            snapshot = StepSnapshot::from_part21_document(doc);
             let checks = check_cc4_conformance(&snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -61,7 +61,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_cc4_conformance(&snapshot).await,
+                Some(snapshot) => check_cc4_conformance(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.step.cc4.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -76,7 +76,8 @@ pub mod derived_composition {
 
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<StepCc4Validator>)
     }
 
@@ -84,8 +85,9 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the ap214 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::step::standards::v_ap214::engine::io_registry::entries()`).
-    pub async fn register() {
-        let _ = register_subset_validator(validator_entry().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        let _ = register_subset_validator(validator_entry());
     }
     //#endregion 🔖️SubsetValidator
 
@@ -95,7 +97,8 @@ pub mod derived_composition {
         use crate::artifacts::step::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance};
         use semio_framework_plugin::AnalyzeSource;
 
-        async fn clean_bytes() -> Vec<u8> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn clean_bytes() -> Vec<u8> {
             let doc = Part21Document {
                 header: Part21Header { file_schema: vec![], ..Part21Header::default() },
                 instances: vec![

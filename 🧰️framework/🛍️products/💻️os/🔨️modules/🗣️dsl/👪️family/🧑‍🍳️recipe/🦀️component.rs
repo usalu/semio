@@ -66,7 +66,7 @@ pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     // Keeps the `Eof` sentinel (only trivia is filtered) — `Cursor::advance`'s clamp-at-last-index
     // logic needs a real final token to land on and stay at once input is exhausted; dropping it
     // makes `peek()` re-return whatever the last REAL token was forever instead of signaling Eof.
-    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia()).collect();
+    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia()).collect();
     let mut cursor = Cursor { tokens, pos: 0 };
 
     let name = cursor.expect(TokenKind::Ident).await?.text.as_str().to_string();
@@ -142,7 +142,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-recipe.grammar.semio");
-        let grammar = crate::os_dsl::grammar::parse_grammar(source).await.expect("family-recipe.grammar must parse");
+        let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-recipe.grammar must parse");
         assert_eq!(grammar.id, "family-recipe");
         assert!(grammar.productions.len() > 4, "family-recipe should cover named and positional args");
     }

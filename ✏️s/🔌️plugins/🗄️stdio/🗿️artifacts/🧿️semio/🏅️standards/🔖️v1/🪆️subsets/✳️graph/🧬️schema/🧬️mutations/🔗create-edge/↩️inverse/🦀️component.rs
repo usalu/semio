@@ -5,7 +5,8 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateEdge, _base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &CreateEdge, _base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
     vec![SemioGraphMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: payload.id.clone() })]
 }
 //#endregion 🔖️Inverse

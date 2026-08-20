@@ -30,7 +30,8 @@ impl Default for ObjBounds {
 
 /// 📦️ Computes [`ObjBounds`] over every `vertices[].{x,y,z}` (ignoring the optional homogeneous
 /// `w`) plus direct `faces`/`groups` tallies.
-pub async fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_obj_bounds(snapshot: &ObjSnapshot) -> ObjBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -60,7 +61,8 @@ mod tests {
     use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjVertex};
     use crate::artifacts::obj::STDIO_OBJ_DOCUMENT_SCHEMA;
 
-    async fn vertex(x: f64, y: f64, z: f64) -> ObjVertex {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn vertex(x: f64, y: f64, z: f64) -> ObjVertex {
         ObjVertex { x, y, z, w: None }
     }
 

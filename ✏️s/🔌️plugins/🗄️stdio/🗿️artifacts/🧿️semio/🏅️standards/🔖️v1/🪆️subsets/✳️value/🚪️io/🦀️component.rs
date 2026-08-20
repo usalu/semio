@@ -48,11 +48,12 @@ pub mod derived_composition {
     /// 🕸️ Recursively collects every `Ref{id}` reachable from `value` — used against BOTH `root` and
     /// every `nodes` node's own `value` (a `Ref` can legally point from inside the graph back into
     /// itself, or into a sibling node, not only from `root`).
-    async fn collect_refs(value: &SemioValue, out: &mut Vec<ValueId>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn collect_refs(value: &SemioValue, out: &mut Vec<ValueId>) {
         match value {
             SemioValue::Ref { id } => out.push(id.clone()),
-            SemioValue::List { items } => items.iter().for_each(|v| semio_framework_plugin::resolve_ready(collect_refs(v, out))),
-            SemioValue::Map { entries } => entries.iter().for_each(|e| semio_framework_plugin::resolve_ready(collect_refs(&e.value, out))),
+            SemioValue::List { items } => items.iter().for_each(|v| collect_refs(v, out)),
+            SemioValue::Map { entries } => entries.iter().for_each(|e| collect_refs(&e.value, out)),
             _ => {}
         }
     }
@@ -105,7 +106,8 @@ pub mod derived_composition {
     }
 
     static VALIDATOR_ENTRY: std::sync::OnceLock<SubsetValidatorEntry> = std::sync::OnceLock::new();
-    async fn validator_entry() -> &'static SubsetValidatorEntry {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validator_entry() -> &'static SubsetValidatorEntry {
         VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<SemioValueValidator>)
     }
     //#endregion 🔖️SubsetValidator
@@ -113,21 +115,23 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor());
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
             crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
-        ).await);
-        let _ = register_subset_validator(validator_entry().await);
-        let _ = register_composer_entries(io_bridge_entries().await);
+        ));
+        let _ = register_subset_validator(validator_entry());
+        let _ = register_composer_entries(io_bridge_entries());
         register_artifact_inferences();
     }
 
     /// 💡️ Registers `s.stdio.semio.value.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 
@@ -257,7 +261,8 @@ pub mod derived_composition {
     //#region 🔖️IoBridges
     /// 🌉️ W4 real semio↔format bridge entries. Each `deserializer_entry_of`/`serializer_entry_of`
     /// pair registers BOTH `IoKey` directions per `register_composer_entries`'s own doc comment.
-    async fn io_bridge_entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
             .get_or_init(|| {

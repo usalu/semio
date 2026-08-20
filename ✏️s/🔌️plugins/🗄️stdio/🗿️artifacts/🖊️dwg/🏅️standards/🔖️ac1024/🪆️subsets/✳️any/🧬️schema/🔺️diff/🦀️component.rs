@@ -174,14 +174,16 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
 //#region 🔖️MutationDiffBuilders
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `DwgDiff` to short-circuit into.
-pub async fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
-    DwgDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
+    DwgDiff::between(base, next)
 }
 
-pub async fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
     let mut next = base.clone();
-    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).await.expect("SetVersionInfo requires a valid DWG version sentinel");
-    DwgDiff::between(base, &next).await
+    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
+    DwgDiff::between(base, &next)
 }
 
 //#endregion 🔖️MutationDiffBuilders
@@ -189,7 +191,8 @@ pub async fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenanc
 //#region 🔖️DemoCases
 /// 🎬️ Representative empty, full logical, and version-info diffs.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<DwgDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
     vec![
         DwgDiff::default(),
         DwgDiff {

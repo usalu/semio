@@ -83,10 +83,12 @@ pub struct PngTextChunkDiff {
 }
 
 impl PngTextChunkDiff {
-    async fn is_empty(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-    async fn apply(&self, base: &PngTextChunk) -> PngTextChunk {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apply(&self, base: &PngTextChunk) -> PngTextChunk {
         PngTextChunk {
             keyword: self.keyword.clone().unwrap_or_else(|| base.keyword.clone()),
             value: self.value.clone().unwrap_or_else(|| base.value.clone()),
@@ -96,7 +98,8 @@ impl PngTextChunkDiff {
             translated_keyword: self.translated_keyword.clone().unwrap_or_else(|| base.translated_keyword.clone()),
         }
     }
-    async fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
         Self {
             keyword: (a.keyword != b.keyword).then(|| b.keyword.clone()),
             value: (a.value != b.value).then(|| b.value.clone()),
@@ -107,7 +110,8 @@ impl PngTextChunkDiff {
         }
     }
     /// ➕️ LWW field-by-field absorb.
-    async fn absorb(&mut self, other: Self) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn absorb(&mut self, other: Self) {
         if other.keyword.is_some() {
             self.keyword = other.keyword;
         }
@@ -225,7 +229,8 @@ enum Slot {
     Added(usize),
 }
 
-async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec<Slot> {
     let mut slots: Vec<Slot> = (0..len).map(Slot::Base).collect();
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
@@ -244,7 +249,8 @@ async fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) 
     slots
 }
 
-async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
     removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
 }
 
@@ -252,7 +258,8 @@ async fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item =
 /// `modified` payload is the new value itself, not a nested diff — a doubly-modified position
 /// is plain LWW). Shared by `plte`/`unknown_chunks`/`chunk_order` (`text_chunks` needs its own
 /// field-aware variant, see `absorb_text_chunks`, since its modified payload IS a nested diff).
-async fn absorb_weak_index_triple<T: Clone>(
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_weak_index_triple<T: Clone>(
     d1_removed: Vec<usize>,
     d1_modified: Vec<(usize, T)>,
     d1_added: Vec<(usize, T)>,
@@ -269,7 +276,7 @@ async fn absorb_weak_index_triple<T: Clone>(
     };
     let needed_mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1_removed, d1_modified.iter().map(|(i, _)| *i), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1_added.len()));
-    let mid_slots = simulate_slots(base_len, &d1_removed, &d1_added_indices).await;
+    let mid_slots = simulate_slots(base_len, &d1_removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1_removed;
     let mut modified_map: BTreeMap<usize, T> = d1_modified.into_iter().collect();
@@ -318,7 +325,7 @@ async fn absorb_weak_index_triple<T: Clone>(
         .collect();
     let d2_added_indices: Vec<usize> = d2_added.iter().map(|(i, _)| *i).collect();
     let mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2_removed, &d2_added_indices).await;
+    let after_slots = simulate_slots(mid_len, &d2_removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -345,7 +352,8 @@ async fn absorb_weak_index_triple<T: Clone>(
 
 /// ➕️ Field-aware absorb for `text_chunks` (mirrors csv's `absorb_records` exactly, retargeted
 /// to `PngTextChunk`/`PngTextChunkDiff`).
-async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextChunksDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextChunksDiff {
     let d1_added_indices: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
     let removed_count = {
         let mut r = d1.removed.clone();
@@ -355,7 +363,7 @@ async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> Png
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1.removed;
     let mut modified_map: BTreeMap<usize, PngTextChunkDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -380,7 +388,7 @@ async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> Png
             }
             Some(Slot::Added(ai)) => {
                 if let Some(a) = added_alive[*ai].as_mut() {
-                    a.chunk = m2.diff.apply(&a.chunk).await;
+                    a.chunk = m2.diff.apply(&a.chunk);
                 }
             }
             None => {}
@@ -405,7 +413,7 @@ async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> Png
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -432,7 +440,8 @@ async fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> Png
 //#endregion 🔖️IndexTransport
 
 //#region 🔖️CollectionApplyBetween
-async fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec<PngRgb>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec<PngRgb>> {
     match d {
         None => None,
         Some(triple) => {
@@ -461,7 +470,8 @@ async fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Opti
     }
 }
 
-async fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
     if a == b {
         return None;
     }
@@ -483,7 +493,8 @@ async fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Optio
     }
 }
 
-async fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngPlteDiff>>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngPlteDiff>>) {
     let Some(other) = other else { return };
     match other {
         None => {
@@ -501,18 +512,19 @@ async fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Optio
                     t2.removed,
                     t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
                     t2.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
-                ).await;
+                );
                 *base = Some(Some(PngPlteDiff { removed, modified: modified.into_iter().map(|(index, rgb)| PngPlteEntryModified { index, rgb }).collect(), added: added.into_iter().map(|(index, rgb)| PngPlteEntryAdded { index, rgb }).collect() }));
             }
         },
     }
 }
 
-async fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTextChunk> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<PngTextChunk> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
-            *it = m.diff.apply(it).await;
+            *it = m.diff.apply(it);
         }
     }
     let mut removed_desc = d.removed.clone();
@@ -532,13 +544,14 @@ async fn apply_text_chunks(base: &[PngTextChunk], d: &PngTextChunksDiff) -> Vec<
     items
 }
 
-async fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngTextChunksDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<PngTextChunksDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
         if a[i] != b[i] {
-            let d = PngTextChunkDiff::between(&a[i], &b[i]).await;
-            if !d.is_empty().await {
+            let d = PngTextChunkDiff::between(&a[i], &b[i]);
+            if !d.is_empty() {
                 modified.push(PngTextChunkModified { index: i, diff: d });
             }
         }
@@ -552,7 +565,8 @@ async fn between_text_chunks(a: &[PngTextChunk], b: &[PngTextChunk]) -> Option<P
     }
 }
 
-async fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngChunk> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Vec<PngChunk> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -576,7 +590,8 @@ async fn apply_unknown_chunks(base: &[PngChunk], d: &PngUnknownChunksDiff) -> Ve
     items
 }
 
-async fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownChunksDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnknownChunksDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -593,7 +608,8 @@ async fn between_unknown_chunks(a: &[PngChunk], b: &[PngChunk]) -> Option<PngUnk
     }
 }
 
-async fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngChunkMarker> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Vec<PngChunkMarker> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
@@ -617,7 +633,8 @@ async fn apply_chunk_order(base: &[PngChunkMarker], d: &PngChunkOrderDiff) -> Ve
     items
 }
 
-async fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<PngChunkOrderDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Option<PngChunkOrderDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
@@ -634,15 +651,17 @@ async fn between_chunk_order(a: &[PngChunkMarker], b: &[PngChunkMarker]) -> Opti
     }
 }
 
-async fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<PngTextChunksDiff>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_text_chunks_opt(base: &mut Option<PngTextChunksDiff>, other: Option<PngTextChunksDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
-        (Some(b), Some(o)) => *base = Some(absorb_text_chunks(b, o).await),
+        (Some(b), Some(o)) => *base = Some(absorb_text_chunks(b, o)),
     }
 }
 
-async fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Option<PngUnknownChunksDiff>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Option<PngUnknownChunksDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -654,7 +673,7 @@ async fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, othe
                 o.removed,
                 o.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
                 o.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
-            ).await;
+            );
             *base = Some(PngUnknownChunksDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, chunk)| PngUnknownChunkModified { index, chunk }).collect(),
@@ -664,7 +683,8 @@ async fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, othe
     }
 }
 
-async fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<PngChunkOrderDiff>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<PngChunkOrderDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
@@ -676,7 +696,7 @@ async fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Opt
                 o.removed,
                 o.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
                 o.added.into_iter().map(|a| (a.index, a.marker)).collect(),
-            ).await;
+            );
             *base = Some(PngChunkOrderDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, marker)| PngChunkOrderModified { index, marker }).collect(),
@@ -697,19 +717,21 @@ async fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Opt
 /// 📍 Where a freshly created marker lands — always just before `Iend` (or at the very end if
 /// there is none). Documented normalization: only a DECODED file's `chunk_order` carries the
 /// real original position; anything created via mutation gets this deterministic default.
-pub async fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
     order.iter().position(|m| matches!(m, PngChunkMarker::Iend)).unwrap_or(order.len())
 }
 
 /// 🔀 Diff for a scalar ancillary field's marker toggling presence (`None` if presence didn't
 /// change — e.g. a value-only change to an already-present field).
-pub async fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChunkMarker) -> bool, marker: PngChunkMarker, was_present: bool, want_present: bool) -> Option<PngChunkOrderDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChunkMarker) -> bool, marker: PngChunkMarker, was_present: bool, want_present: bool) -> Option<PngChunkOrderDiff> {
     if was_present == want_present {
         return None;
     }
     if want_present {
         let pos = chunk_order_insert_pos(order);
-        Some(PngChunkOrderDiff { removed: vec![], modified: vec![], added: vec![PngChunkOrderAdded { index: pos.await, marker }] })
+        Some(PngChunkOrderDiff { removed: vec![], modified: vec![], added: vec![PngChunkOrderAdded { index: pos, marker }] })
     } else {
         order.iter().position(|m| is_marker(m)).map(|idx| PngChunkOrderDiff { removed: vec![idx], modified: vec![], added: vec![] })
     }
@@ -718,7 +740,8 @@ pub async fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&
 /// ➕️ Diff for inserting a new `Text{index: at}` marker: renumbers every existing `Text`
 /// marker whose embedded index is `>= at` (`modified`, same `chunk_order` position, bumped
 /// payload) and appends the new marker just before `Iend` (`added`).
-pub async fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let modified = order
         .iter()
         .enumerate()
@@ -727,13 +750,14 @@ pub async fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -
             _ => None,
         })
         .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order).await, marker: PngChunkMarker::Text { index: at } }];
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Text { index: at } }];
     PngChunkOrderDiff { removed: vec![], modified, added }
 }
 
 /// ➖️ Diff for removing the `Text{index: at}` marker: drops it (`removed`) and renumbers every
 /// `Text` marker with a HIGHER embedded index down by one (`modified`).
-pub async fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Text { index } if *index == at)).into_iter().collect();
     let modified = order
         .iter()
@@ -747,7 +771,8 @@ pub async fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -
 }
 
 /// ➕️ `Unknown{index}` analogue of [`chunk_order_insert_text_diff`].
-pub async fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let modified = order
         .iter()
         .enumerate()
@@ -756,12 +781,13 @@ pub async fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize
             _ => None,
         })
         .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order).await, marker: PngChunkMarker::Unknown { index: at } }];
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Unknown { index: at } }];
     PngChunkOrderDiff { removed: vec![], modified, added }
 }
 
 /// ➖️ `Unknown{index}` analogue of [`chunk_order_remove_text_diff`].
-pub async fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
     let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Unknown { index } if *index == at)).into_iter().collect();
     let modified = order
         .iter()
@@ -838,16 +864,16 @@ pub struct PngDiff {
 impl MutationDiff<PngSnapshot> for PngDiff {
     async fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
         if let Some(Some(plte)) = &self.plte {
-            validate_png_triple(base.plte.as_ref().map_or(0, Vec::len), &plte.removed, plte.modified.iter().map(|entry| entry.index), plte.added.iter().map(|entry| entry.index), ["plte"]).await?;
+            validate_png_triple(base.plte.as_ref().map_or(0, Vec::len), &plte.removed, plte.modified.iter().map(|entry| entry.index), plte.added.iter().map(|entry| entry.index), ["plte"])?;
         }
         if let Some(text) = &self.text_chunks {
-            validate_png_triple(base.text_chunks.len(), &text.removed, text.modified.iter().map(|entry| entry.index), text.added.iter().map(|entry| entry.index), ["textChunks"]).await?;
+            validate_png_triple(base.text_chunks.len(), &text.removed, text.modified.iter().map(|entry| entry.index), text.added.iter().map(|entry| entry.index), ["textChunks"])?;
         }
         if let Some(order) = &self.chunk_order {
-            validate_png_triple(base.chunk_order.len(), &order.removed, order.modified.iter().map(|entry| entry.index), order.added.iter().map(|entry| entry.index), ["chunkOrder"]).await?;
+            validate_png_triple(base.chunk_order.len(), &order.removed, order.modified.iter().map(|entry| entry.index), order.added.iter().map(|entry| entry.index), ["chunkOrder"])?;
         }
         if let Some(unknown) = &self.unknown_chunks {
-            validate_png_triple(base.unknown_chunks.len(), &unknown.removed, unknown.modified.iter().map(|entry| entry.index), unknown.added.iter().map(|entry| entry.index), ["unknownChunks"]).await?;
+            validate_png_triple(base.unknown_chunks.len(), &unknown.removed, unknown.modified.iter().map(|entry| entry.index), unknown.added.iter().map(|entry| entry.index), ["unknownChunks"])?;
         }
         let mut next = base.clone();
         if let Some(v) = self.width {
@@ -866,7 +892,7 @@ impl MutationDiff<PngSnapshot> for PngDiff {
             next.interlace = v;
         }
         if let Some(d) = &self.plte {
-            next.plte = apply_plte(&next.plte, d).await;
+            next.plte = apply_plte(&next.plte, d);
         }
         if let Some(v) = &self.trns {
             next.trns = v.clone();
@@ -890,16 +916,16 @@ impl MutationDiff<PngSnapshot> for PngDiff {
             next.bkgd = v.clone();
         }
         if let Some(td) = &self.text_chunks {
-            next.text_chunks = apply_text_chunks(&next.text_chunks, td).await;
+            next.text_chunks = apply_text_chunks(&next.text_chunks, td);
         }
         if let Some(v) = &self.pixels {
             next.pixels = v.clone();
         }
         if let Some(od) = &self.chunk_order {
-            next.chunk_order = apply_chunk_order(&next.chunk_order, od).await;
+            next.chunk_order = apply_chunk_order(&next.chunk_order, od);
         }
         if let Some(ud) = &self.unknown_chunks {
-            next.unknown_chunks = apply_unknown_chunks(&next.unknown_chunks, ud).await;
+            next.unknown_chunks = apply_unknown_chunks(&next.unknown_chunks, ud);
         }
         Ok(next)
     }
@@ -955,7 +981,8 @@ impl MutationDiff<PngSnapshot> for PngDiff {
     }
 }
 
-async fn validate_png_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_png_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
 where
     I: IntoIterator<Item = usize>,
     J: IntoIterator<Item = usize>,
@@ -966,13 +993,13 @@ where
     let mut removed_set = std::collections::HashSet::new();
     for &index in removed {
         if index >= base_len || !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "PNG collection removal is missing or duplicated").await.at(path.iter().map(String::as_str)).await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "PNG collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     let mut modified_set = std::collections::HashSet::new();
     for index in modified {
         if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "PNG collection modification is missing, duplicated, or removed").await.at(path.iter().map(String::as_str)).await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "PNG collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
         }
     }
     let added: Vec<usize> = added.into_iter().collect();
@@ -980,7 +1007,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "PNG collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)).await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "PNG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     Ok(())
@@ -1003,7 +1030,7 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
             bit_depth: (base.bit_depth != other.bit_depth).then_some(other.bit_depth),
             color_type: (base.color_type != other.color_type).then_some(other.color_type),
             interlace: (base.interlace != other.interlace).then_some(other.interlace),
-            plte: between_plte(&base.plte, &other.plte).await,
+            plte: between_plte(&base.plte, &other.plte),
             trns: (base.trns != other.trns).then(|| other.trns.clone()),
             gama: (base.gama != other.gama).then_some(other.gama),
             chrm: (base.chrm != other.chrm).then_some(other.chrm),
@@ -1011,10 +1038,10 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
             phys: (base.phys != other.phys).then_some(other.phys),
             time: (base.time != other.time).then_some(other.time),
             bkgd: (base.bkgd != other.bkgd).then(|| other.bkgd.clone()),
-            text_chunks: between_text_chunks(&base.text_chunks, &other.text_chunks).await,
+            text_chunks: between_text_chunks(&base.text_chunks, &other.text_chunks),
             pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()),
-            chunk_order: between_chunk_order(&base.chunk_order, &other.chunk_order).await,
-            unknown_chunks: between_unknown_chunks(&base.unknown_chunks, &other.unknown_chunks).await,
+            chunk_order: between_chunk_order(&base.chunk_order, &other.chunk_order),
+            unknown_chunks: between_unknown_chunks(&base.unknown_chunks, &other.unknown_chunks),
         }
     }
 
@@ -1040,8 +1067,9 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
 }
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-pub async fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
-    PngDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
+    PngDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
@@ -1050,7 +1078,8 @@ pub async fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDif
 // `NoMutation`/`SetSnapshot`, covered above) — each constructs the sparse `PngDiff` directly,
 // including the matching `chunk_order` delta where the mutation changes chunk presence/order.
 
-pub async fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
     PngDiff {
         width: (base.width != width).then_some(width),
         height: (base.height != height).then_some(height),
@@ -1061,76 +1090,90 @@ pub async fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_de
     }
 }
 
-pub async fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
-    PngDiff { plte: between_plte(&base.plte, plte).await, chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Plte), PngChunkMarker::Plte, base.plte.is_some(), plte.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
+    PngDiff { plte: between_plte(&base.plte, plte), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Plte), PngChunkMarker::Plte, base.plte.is_some(), plte.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
-    PngDiff { trns: (base.trns != *trns).then(|| trns.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Trns), PngChunkMarker::Trns, base.trns.is_some(), trns.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
+    PngDiff { trns: (base.trns != *trns).then(|| trns.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Trns), PngChunkMarker::Trns, base.trns.is_some(), trns.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
-    PngDiff { gama: (base.gama != gama).then_some(gama), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
+    PngDiff { gama: (base.gama != gama).then_some(gama), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
-    PngDiff { chrm: (base.chrm != chrm).then_some(chrm), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Chrm), PngChunkMarker::Chrm, base.chrm.is_some(), chrm.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
+    PngDiff { chrm: (base.chrm != chrm).then_some(chrm), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Chrm), PngChunkMarker::Chrm, base.chrm.is_some(), chrm.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
-    PngDiff { srgb: (base.srgb != srgb).then_some(srgb), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Srgb), PngChunkMarker::Srgb, base.srgb.is_some(), srgb.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
+    PngDiff { srgb: (base.srgb != srgb).then_some(srgb), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Srgb), PngChunkMarker::Srgb, base.srgb.is_some(), srgb.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
-    PngDiff { phys: (base.phys != phys).then_some(phys), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Phys), PngChunkMarker::Phys, base.phys.is_some(), phys.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
+    PngDiff { phys: (base.phys != phys).then_some(phys), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Phys), PngChunkMarker::Phys, base.phys.is_some(), phys.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
-    PngDiff { time: (base.time != time).then_some(time), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Time), PngChunkMarker::Time, base.time.is_some(), time.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
+    PngDiff { time: (base.time != time).then_some(time), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Time), PngChunkMarker::Time, base.time.is_some(), time.is_some()), ..Default::default() }
 }
 
-pub async fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
-    PngDiff { bkgd: (base.bkgd != *bkgd).then(|| bkgd.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Bkgd), PngChunkMarker::Bkgd, base.bkgd.is_some(), bkgd.is_some()).await, ..Default::default() }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
+    PngDiff { bkgd: (base.bkgd != *bkgd).then(|| bkgd.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Bkgd), PngChunkMarker::Bkgd, base.bkgd.is_some(), bkgd.is_some()), ..Default::default() }
 }
 
-pub async fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
     let at = index.min(base.text_chunks.len());
-    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![], added: vec![PngTextChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_text_diff(&base.chunk_order, at).await), ..Default::default() }
+    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![], added: vec![PngTextChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_text_diff(&base.chunk_order, at)), ..Default::default() }
 }
 
-pub async fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
     if index >= base.text_chunks.len() {
         return PngDiff::default();
     }
-    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_text_diff(&base.chunk_order, index).await), ..Default::default() }
+    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_text_diff(&base.chunk_order, index)), ..Default::default() }
 }
 
-pub async fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
     let existing = match base.text_chunks.get(index) {
         Some(c) => c,
         None => return PngDiff::default(),
     };
-    let d = PngTextChunkDiff::between(existing, &chunk).await;
-    if d.is_empty().await {
+    let d = PngTextChunkDiff::between(existing, &chunk);
+    if d.is_empty() {
         return PngDiff::default();
     }
     PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![PngTextChunkModified { index, diff: d }], added: vec![] }), ..Default::default() }
 }
 
-pub async fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
     PngDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 
-pub async fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
     let at = index.min(base.unknown_chunks.len());
-    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![], modified: vec![], added: vec![PngUnknownChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_unknown_diff(&base.chunk_order, at).await), ..Default::default() }
+    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![], modified: vec![], added: vec![PngUnknownChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_unknown_diff(&base.chunk_order, at)), ..Default::default() }
 }
 
-pub async fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
     if index >= base.unknown_chunks.len() {
         return PngDiff::default();
     }
-    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_unknown_diff(&base.chunk_order, index).await), ..Default::default() }
+    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_unknown_diff(&base.chunk_order, index)), ..Default::default() }
 }
 //#endregion 🔖️MutationDiffBuilders
 
@@ -1156,36 +1199,45 @@ pub async fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngD
 /// `PngMutation`'s own hand-rolled `OpText`/`OpBinary` (`🧬️mutations/🦀️component.rs`) reuses them
 /// instead of duplicating (same intra-artifact reuse pattern svg's diff/mutations pair uses).
 //#region 🔖️Primitives
-pub(crate) async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn parse_u8(s: &str) -> Result<u8, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_u16(s: &str) -> Result<u16, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only) — the whole grammar's parsing primitive.
-pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -1206,128 +1258,151 @@ pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out.push(&s[start..]);
     out
 }
-pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
     }
 }
-pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s).await?;
-    match split_top_level(inner, ',').await.as_slice() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    let inner = strip_brackets(s)?;
+    match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
     }
 }
-pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-pub(crate) async fn enc_color_type(c: PngColorType) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_color_type(c: PngColorType) -> String {
     c.to_u8().to_string()
 }
-pub(crate) async fn dec_color_type(s: &str) -> Result<PngColorType, String> {
-    PngColorType::from_u8(parse_u8(s).await?).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_color_type(s: &str) -> Result<PngColorType, String> {
+    PngColorType::from_u8(parse_u8(s)?)
 }
-pub(crate) async fn enc_rgb(c: &PngRgb) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_rgb(c: &PngRgb) -> String {
     format!("[{},{},{}]", c.r, c.g, c.b)
 }
-pub(crate) async fn dec_rgb(s: &str) -> Result<PngRgb, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_rgb(s: &str) -> Result<PngRgb, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
-    Ok(PngRgb { r: parse_u8(r).await?, g: parse_u8(g).await?, b: parse_u8(b).await? })
+    Ok(PngRgb { r: parse_u8(r)?, g: parse_u8(g)?, b: parse_u8(b)? })
 }
 /// 👁️ `I[<hex alpha bytes>]` (Indexed) / `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb).
-pub(crate) async fn enc_transparency(t: &PngTransparency) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_transparency(t: &PngTransparency) -> String {
     match t {
         PngTransparency::Indexed { alpha } => format!("I[{}]", hex_encode(alpha)),
         PngTransparency::Grayscale { gray } => format!("G[{gray}]"),
         PngTransparency::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
     }
 }
-pub(crate) async fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_transparency(s: &str) -> Result<PngTransparency, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
-        "I" => Ok(PngTransparency::Indexed { alpha: hex_decode(inner).await? }),
-        "G" => Ok(PngTransparency::Grayscale { gray: parse_u16(inner).await? }),
+        "I" => Ok(PngTransparency::Indexed { alpha: hex_decode(inner)? }),
+        "G" => Ok(PngTransparency::Grayscale { gray: parse_u16(inner)? }),
         "R" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [r, g, b] = parts.as_slice() else { return Err(format!("transparency rgb: expected 3 fields, got {}", parts.len())) };
-            Ok(PngTransparency::Rgb { r: parse_u16(r).await?, g: parse_u16(g).await?, b: parse_u16(b).await? })
+            Ok(PngTransparency::Rgb { r: parse_u16(r)?, g: parse_u16(g)?, b: parse_u16(b)? })
         }
         other => Err(format!("transparency: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_chromaticities(c: &PngChromaticities) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_chromaticities(c: &PngChromaticities) -> String {
     format!("[{},{},{},{},{},{},{},{}]", c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y)
 }
-pub(crate) async fn dec_chromaticities(s: &str) -> Result<PngChromaticities, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_chromaticities(s: &str) -> Result<PngChromaticities, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [wx, wy, rx, ry, gx, gy, bx, by] = parts.as_slice() else { return Err(format!("chromaticities: expected 8 fields, got {}", parts.len())) };
-    Ok(PngChromaticities { white_x: parse_u32(wx).await?, white_y: parse_u32(wy).await?, red_x: parse_u32(rx).await?, red_y: parse_u32(ry).await?, green_x: parse_u32(gx).await?, green_y: parse_u32(gy).await?, blue_x: parse_u32(bx).await?, blue_y: parse_u32(by).await? })
+    Ok(PngChromaticities { white_x: parse_u32(wx)?, white_y: parse_u32(wy)?, red_x: parse_u32(rx)?, red_y: parse_u32(ry)?, green_x: parse_u32(gx)?, green_y: parse_u32(gy)?, blue_x: parse_u32(bx)?, blue_y: parse_u32(by)? })
 }
-pub(crate) async fn enc_srgb_intent(s: PngSrgbIntent) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_srgb_intent(s: PngSrgbIntent) -> String {
     s.to_u8().to_string()
 }
-pub(crate) async fn dec_srgb_intent(s: &str) -> Result<PngSrgbIntent, String> {
-    PngSrgbIntent::from_u8(parse_u8(s).await?).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_srgb_intent(s: &str) -> Result<PngSrgbIntent, String> {
+    PngSrgbIntent::from_u8(parse_u8(s)?)
 }
-pub(crate) async fn enc_physical_dims(p: &PngPhysicalDims) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_physical_dims(p: &PngPhysicalDims) -> String {
     format!("[{},{},{}]", p.ppu_x, p.ppu_y, if p.unit_is_meter { 1 } else { 0 })
 }
-pub(crate) async fn dec_physical_dims(s: &str) -> Result<PngPhysicalDims, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_physical_dims(s: &str) -> Result<PngPhysicalDims, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [ppu_x, ppu_y, unit] = parts.as_slice() else { return Err(format!("physical dims: expected 3 fields, got {}", parts.len())) };
-    Ok(PngPhysicalDims { ppu_x: parse_u32(ppu_x).await?, ppu_y: parse_u32(ppu_y).await?, unit_is_meter: *unit == "1" })
+    Ok(PngPhysicalDims { ppu_x: parse_u32(ppu_x)?, ppu_y: parse_u32(ppu_y)?, unit_is_meter: *unit == "1" })
 }
-pub(crate) async fn enc_timestamp(t: &PngTimestamp) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_timestamp(t: &PngTimestamp) -> String {
     format!("[{},{},{},{},{},{}]", t.year, t.month, t.day, t.hour, t.minute, t.second)
 }
-pub(crate) async fn dec_timestamp(s: &str) -> Result<PngTimestamp, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_timestamp(s: &str) -> Result<PngTimestamp, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [year, month, day, hour, minute, second] = parts.as_slice() else { return Err(format!("timestamp: expected 6 fields, got {}", parts.len())) };
-    Ok(PngTimestamp { year: parse_u16(year).await?, month: parse_u8(month).await?, day: parse_u8(day).await?, hour: parse_u8(hour).await?, minute: parse_u8(minute).await?, second: parse_u8(second).await? })
+    Ok(PngTimestamp { year: parse_u16(year)?, month: parse_u8(month)?, day: parse_u8(day)?, hour: parse_u8(hour)?, minute: parse_u8(minute)?, second: parse_u8(second)? })
 }
 /// 🖼️ `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb) / `I[<index>]` (Indexed).
-pub(crate) async fn enc_background(b: &PngBackground) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_background(b: &PngBackground) -> String {
     match b {
         PngBackground::Grayscale { gray } => format!("G[{gray}]"),
         PngBackground::Rgb { r, g, b } => format!("R[{r},{g},{b}]"),
         PngBackground::Indexed { index } => format!("I[{index}]"),
     }
 }
-pub(crate) async fn dec_background(s: &str) -> Result<PngBackground, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_background(s: &str) -> Result<PngBackground, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest).await?;
+    let inner = strip_brackets(rest)?;
     match tag {
-        "G" => Ok(PngBackground::Grayscale { gray: parse_u16(inner).await? }),
+        "G" => Ok(PngBackground::Grayscale { gray: parse_u16(inner)? }),
         "R" => {
-            let parts = split_top_level(inner, ',').await;
+            let parts = split_top_level(inner, ',');
             let [r, g, b] = parts.as_slice() else { return Err(format!("background rgb: expected 3 fields, got {}", parts.len())) };
-            Ok(PngBackground::Rgb { r: parse_u16(r).await?, g: parse_u16(g).await?, b: parse_u16(b).await? })
+            Ok(PngBackground::Rgb { r: parse_u16(r)?, g: parse_u16(g)?, b: parse_u16(b)? })
         }
-        "I" => Ok(PngBackground::Indexed { index: parse_u8(inner).await? }),
+        "I" => Ok(PngBackground::Indexed { index: parse_u8(inner)? }),
         other => Err(format!("background: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_text_kind(k: PngTextKind) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_text_kind(k: PngTextKind) -> String {
     match k {
         PngTextKind::Text => "0".to_string(),
         PngTextKind::ZText => "1".to_string(),
         PngTextKind::IText => "2".to_string(),
     }
 }
-pub(crate) async fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
     match s {
         "0" => Ok(PngTextKind::Text),
         "1" => Ok(PngTextKind::ZText),
@@ -1335,28 +1410,33 @@ pub(crate) async fn dec_text_kind(s: &str) -> Result<PngTextKind, String> {
         other => Err(format!("text kind: unknown tag {other:?}")),
     }
 }
-pub(crate) async fn enc_text_chunk(c: &PngTextChunk) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_text_chunk(c: &PngTextChunk) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&c.keyword), enc_str(&c.value), if c.compressed { 1 } else { 0 }, enc_text_kind(c.kind), enc_str(&c.language_tag), enc_str(&c.translated_keyword),)
 }
-pub(crate) async fn dec_text_chunk(s: &str) -> Result<PngTextChunk, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_text_chunk(s: &str) -> Result<PngTextChunk, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
         return Err(format!("text chunk: expected 6 fields, got {}", parts.len()));
     };
-    Ok(PngTextChunk { keyword: dec_str(keyword).await?, value: dec_str(value).await?, compressed: *compressed == "1", kind: dec_text_kind(kind).await?, language_tag: dec_str(language_tag).await?, translated_keyword: dec_str(translated_keyword).await? })
+    Ok(PngTextChunk { keyword: dec_str(keyword)?, value: dec_str(value)?, compressed: *compressed == "1", kind: dec_text_kind(kind)?, language_tag: dec_str(language_tag)?, translated_keyword: dec_str(translated_keyword)? })
 }
-pub(crate) async fn enc_chunk(c: &PngChunk) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_chunk(c: &PngChunk) -> String {
     format!("[{},{}]", hex_encode(&c.kind), hex_encode(&c.data))
 }
-pub(crate) async fn dec_chunk(s: &str) -> Result<PngChunk, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_chunk(s: &str) -> Result<PngChunk, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, data] = parts.as_slice() else { return Err(format!("chunk: expected 2 fields, got {}", parts.len())) };
-    let kind_bytes = hex_decode(kind).await?;
+    let kind_bytes = hex_decode(kind)?;
     let kind: [u8; 4] = kind_bytes.as_slice().try_into().map_err(|_| format!("chunk kind: expected 4 bytes, got {}", kind_bytes.len()))?;
-    Ok(PngChunk { kind, data: hex_decode(data).await? })
+    Ok(PngChunk { kind, data: hex_decode(data)? })
 }
 /// 🧭️ Unit markers print as their bare literal chunk-name tag; `Text`/`Unknown` as `TAG[index]`.
-pub(crate) async fn enc_chunk_marker(m: &PngChunkMarker) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_chunk_marker(m: &PngChunkMarker) -> String {
     match m {
         PngChunkMarker::Ihdr => "IHDR".to_string(),
         PngChunkMarker::Plte => "PLTE".to_string(),
@@ -1373,7 +1453,8 @@ pub(crate) async fn enc_chunk_marker(m: &PngChunkMarker) -> String {
         PngChunkMarker::Unknown { index } => format!("UNKN[{index}]"),
     }
 }
-pub(crate) async fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> {
     match s {
         "IHDR" => Ok(PngChunkMarker::Ihdr),
         "PLTE" => Ok(PngChunkMarker::Plte),
@@ -1389,10 +1470,10 @@ pub(crate) async fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> 
         other => {
             if let Some(rest) = other.strip_prefix("TEXT[") {
                 let inner = rest.strip_suffix(']').ok_or_else(|| format!("chunk marker: bad TEXT shape {other:?}"))?;
-                Ok(PngChunkMarker::Text { index: parse_usize(inner).await? })
+                Ok(PngChunkMarker::Text { index: parse_usize(inner)? })
             } else if let Some(rest) = other.strip_prefix("UNKN[") {
                 let inner = rest.strip_suffix(']').ok_or_else(|| format!("chunk marker: bad UNKN shape {other:?}"))?;
-                Ok(PngChunkMarker::Unknown { index: parse_usize(inner).await? })
+                Ok(PngChunkMarker::Unknown { index: parse_usize(inner)? })
             } else {
                 Err(format!("chunk marker: unknown tag {other:?}"))
             }
@@ -1402,16 +1483,18 @@ pub(crate) async fn dec_chunk_marker(s: &str) -> Result<PngChunkMarker, String> 
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-async fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
     let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
-async fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+    let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -1425,11 +1508,13 @@ async fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>
     Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
 }
 
-async fn enc_plte_body(d: &PngPlteDiff) -> String {
-    enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_rgb(&m.rgb))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_rgb(&a.rgb))).collect::<Vec<_>>()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_plte_body(d: &PngPlteDiff) -> String {
+    enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_rgb(&m.rgb))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_rgb(&a.rgb))).collect::<Vec<_>>())
 }
-async fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
-    let (removed, modified, added) = dec_triple_body(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngPlteDiff {
         removed,
         modified: modified.into_iter().map(|(index, v)| Ok(PngPlteEntryModified { index, rgb: dec_rgb(&v)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1437,7 +1522,8 @@ async fn dec_plte_body(body: &str) -> Result<PngPlteDiff, String> {
     })
 }
 
-async fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.keyword, |v| enc_str(v)),
@@ -1448,25 +1534,28 @@ async fn enc_text_chunk_diff(d: &PngTextChunkDiff) -> String {
         encode_option(&d.translated_keyword, |v| enc_str(v)),
     )
 }
-async fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_text_chunk_diff(s: &str) -> Result<PngTextChunkDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [keyword, value, compressed, kind, language_tag, translated_keyword] = parts.as_slice() else {
         return Err(format!("text chunk diff: expected 6 fields, got {}", parts.len()));
     };
     Ok(PngTextChunkDiff {
-        keyword: decode_option(keyword, dec_str).await?,
-        value: decode_option(value, dec_str).await?,
-        compressed: decode_option(compressed, |v| Ok(v == "1")).await?,
-        kind: decode_option(kind, dec_text_kind).await?,
-        language_tag: decode_option(language_tag, dec_str).await?,
-        translated_keyword: decode_option(translated_keyword, dec_str).await?,
+        keyword: decode_option(keyword, dec_str)?,
+        value: decode_option(value, dec_str)?,
+        compressed: decode_option(compressed, |v| Ok(v == "1"))?,
+        kind: decode_option(kind, dec_text_kind)?,
+        language_tag: decode_option(language_tag, dec_str)?,
+        translated_keyword: decode_option(translated_keyword, dec_str)?,
     })
 }
-async fn enc_text_chunks_diff(d: &PngTextChunksDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_text_chunks_diff(d: &PngTextChunksDiff) -> String {
     format!("text-chunks{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_text_chunk_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_text_chunk(&a.chunk))).collect::<Vec<_>>(),))
 }
-async fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
-    let (removed, modified, added) = dec_triple_body(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngTextChunksDiff {
         removed,
         modified: modified.into_iter().map(|(index, v)| Ok(PngTextChunkModified { index, diff: dec_text_chunk_diff(&v)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1474,11 +1563,13 @@ async fn dec_text_chunks_diff(body: &str) -> Result<PngTextChunksDiff, String> {
     })
 }
 
-async fn enc_chunk_order_diff(d: &PngChunkOrderDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_chunk_order_diff(d: &PngChunkOrderDiff) -> String {
     format!("chunk-order{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_chunk_marker(&m.marker))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_chunk_marker(&a.marker))).collect::<Vec<_>>(),))
 }
-async fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
-    let (removed, modified, added) = dec_triple_body(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngChunkOrderDiff {
         removed,
         modified: modified.into_iter().map(|(index, v)| Ok(PngChunkOrderModified { index, marker: dec_chunk_marker(&v)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1486,11 +1577,13 @@ async fn dec_chunk_order_diff(body: &str) -> Result<PngChunkOrderDiff, String> {
     })
 }
 
-async fn enc_unknown_chunks_diff(d: &PngUnknownChunksDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_unknown_chunks_diff(d: &PngUnknownChunksDiff) -> String {
     format!("unknown-chunks{{{}}}", enc_triple_body(&d.removed, &d.modified.iter().map(|m| (m.index, enc_chunk(&m.chunk))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_chunk(&a.chunk))).collect::<Vec<_>>(),))
 }
-async fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
-    let (removed, modified, added) = dec_triple_body(body).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, String> {
+    let (removed, modified, added) = dec_triple_body(body)?;
     Ok(PngUnknownChunksDiff {
         removed,
         modified: modified.into_iter().map(|(index, v)| Ok(PngUnknownChunkModified { index, chunk: dec_chunk(&v)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1507,33 +1600,40 @@ async fn dec_unknown_chunks_diff(body: &str) -> Result<PngUnknownChunksDiff, Str
 // precedent — `dsl`/`store`/`protocol` all alias the same kernel crate root). `pub(crate)` so
 // `🧬️mutations/🦀️component.rs`'s own `OpBinary` impl reuses these instead of duplicating (same
 // intra-artifact reuse direction the text codecs above already establish).
-pub(crate) async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     let bytes = s.as_bytes();
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
-    let len = r.read_varint_u64().await? as usize;
-    let bytes = r.read_bytes(len).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "png binary utf8 string", offset: 0, detail: e.to_string() })
 }
-pub(crate) async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
-    let len = r.read_varint_u64().await? as usize;
-    Ok(r.read_bytes(len).await?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+    let len = r.read_varint_u64()? as usize;
+    Ok(r.read_bytes(len)?.to_vec())
 }
-pub(crate) async fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
     w.write_u8(c.r);
     w.write_u8(c.g);
     w.write_u8(c.b);
 }
-pub(crate) async fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<PngRgb, dsl::PackError> {
-    Ok(PngRgb { r: r.read_u8().await?, g: r.read_u8().await?, b: r.read_u8().await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<PngRgb, dsl::PackError> {
+    Ok(PngRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
-pub(crate) async fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
     match t {
         PngTransparency::Indexed { alpha } => {
             w.write_u8(0);
@@ -1551,36 +1651,42 @@ pub(crate) async fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTrans
         }
     }
 }
-pub(crate) async fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTransparency, dsl::PackError> {
-    match r.read_u8().await? {
-        0 => Ok(PngTransparency::Indexed { alpha: read_bin_blob(r).await? }),
-        1 => Ok(PngTransparency::Grayscale { gray: r.read_u16_le().await? }),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTransparency, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PngTransparency::Indexed { alpha: read_bin_blob(r)? }),
+        1 => Ok(PngTransparency::Grayscale { gray: r.read_u16_le()? }),
         2 => {
-            let rr = r.read_u16_le().await?;
-            let g = r.read_u16_le().await?;
-            let b = r.read_u16_le().await?;
+            let rr = r.read_u16_le()?;
+            let g = r.read_u16_le()?;
+            let b = r.read_u16_le()?;
             Ok(PngTransparency::Rgb { r: rr, g, b })
         }
         other => Err(dsl::PackError::Malformed { what: "png transparency tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) async fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromaticities) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromaticities) {
     for v in [c.white_x, c.white_y, c.red_x, c.red_y, c.green_x, c.green_y, c.blue_x, c.blue_y] {
         w.write_u32_le(v);
     }
 }
-pub(crate) async fn read_bin_chromaticities(r: &mut dsl::ByteReader<'_>) -> Result<PngChromaticities, dsl::PackError> {
-    Ok(PngChromaticities { white_x: r.read_u32_le().await?, white_y: r.read_u32_le().await?, red_x: r.read_u32_le().await?, red_y: r.read_u32_le().await?, green_x: r.read_u32_le().await?, green_y: r.read_u32_le().await?, blue_x: r.read_u32_le().await?, blue_y: r.read_u32_le().await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_chromaticities(r: &mut dsl::ByteReader<'_>) -> Result<PngChromaticities, dsl::PackError> {
+    Ok(PngChromaticities { white_x: r.read_u32_le()?, white_y: r.read_u32_le()?, red_x: r.read_u32_le()?, red_y: r.read_u32_le()?, green_x: r.read_u32_le()?, green_y: r.read_u32_le()?, blue_x: r.read_u32_le()?, blue_y: r.read_u32_le()? })
 }
-pub(crate) async fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
     w.write_u32_le(p.ppu_x);
     w.write_u32_le(p.ppu_y);
     w.write_u8(if p.unit_is_meter { 1 } else { 0 });
 }
-pub(crate) async fn read_bin_physical_dims(r: &mut dsl::ByteReader<'_>) -> Result<PngPhysicalDims, dsl::PackError> {
-    Ok(PngPhysicalDims { ppu_x: r.read_u32_le().await?, ppu_y: r.read_u32_le().await?, unit_is_meter: r.read_u8().await? != 0 })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_physical_dims(r: &mut dsl::ByteReader<'_>) -> Result<PngPhysicalDims, dsl::PackError> {
+    Ok(PngPhysicalDims { ppu_x: r.read_u32_le()?, ppu_y: r.read_u32_le()?, unit_is_meter: r.read_u8()? != 0 })
 }
-pub(crate) async fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
     w.write_u16_le(t.year);
     w.write_u8(t.month);
     w.write_u8(t.day);
@@ -1588,10 +1694,12 @@ pub(crate) async fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestam
     w.write_u8(t.minute);
     w.write_u8(t.second);
 }
-pub(crate) async fn read_bin_timestamp(r: &mut dsl::ByteReader<'_>) -> Result<PngTimestamp, dsl::PackError> {
-    Ok(PngTimestamp { year: r.read_u16_le().await?, month: r.read_u8().await?, day: r.read_u8().await?, hour: r.read_u8().await?, minute: r.read_u8().await?, second: r.read_u8().await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_timestamp(r: &mut dsl::ByteReader<'_>) -> Result<PngTimestamp, dsl::PackError> {
+    Ok(PngTimestamp { year: r.read_u16_le()?, month: r.read_u8()?, day: r.read_u8()?, hour: r.read_u8()?, minute: r.read_u8()?, second: r.read_u8()? })
 }
-pub(crate) async fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
     match b {
         PngBackground::Grayscale { gray } => {
             w.write_u8(0);
@@ -1609,27 +1717,30 @@ pub(crate) async fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackgro
         }
     }
 }
-pub(crate) async fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBackground, dsl::PackError> {
-    match r.read_u8().await? {
-        0 => Ok(PngBackground::Grayscale { gray: r.read_u16_le().await? }),
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBackground, dsl::PackError> {
+    match r.read_u8()? {
+        0 => Ok(PngBackground::Grayscale { gray: r.read_u16_le()? }),
         1 => {
-            let rr = r.read_u16_le().await?;
-            let g = r.read_u16_le().await?;
-            let b = r.read_u16_le().await?;
+            let rr = r.read_u16_le()?;
+            let g = r.read_u16_le()?;
+            let b = r.read_u16_le()?;
             Ok(PngBackground::Rgb { r: rr, g, b })
         }
-        2 => Ok(PngBackground::Indexed { index: r.read_u8().await? }),
+        2 => Ok(PngBackground::Indexed { index: r.read_u8()? }),
         other => Err(dsl::PackError::Malformed { what: "png background tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-async fn enc_text_kind_u8(k: PngTextKind) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_text_kind_u8(k: PngTextKind) -> u8 {
     match k {
         PngTextKind::Text => 0,
         PngTextKind::ZText => 1,
         PngTextKind::IText => 2,
     }
 }
-async fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
     match v {
         0 => Ok(PngTextKind::Text),
         1 => Ok(PngTextKind::ZText),
@@ -1637,39 +1748,44 @@ async fn dec_text_kind_u8(v: u8) -> Result<PngTextKind, dsl::PackError> {
         other => Err(dsl::PackError::Malformed { what: "png text kind tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) async fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
     write_bin_str(w, &c.keyword);
     write_bin_str(w, &c.value);
     w.write_u8(if c.compressed { 1 } else { 0 });
-    w.write_u8(enc_text_kind_u8(c.kind).await);
+    w.write_u8(enc_text_kind_u8(c.kind));
     write_bin_str(w, &c.language_tag);
     write_bin_str(w, &c.translated_keyword);
 }
-pub(crate) async fn read_bin_text_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunk, dsl::PackError> {
-    Ok(PngTextChunk { keyword: read_bin_str(r).await?, value: read_bin_str(r).await?, compressed: r.read_u8().await? != 0, kind: dec_text_kind_u8(r.read_u8().await?).await?, language_tag: read_bin_str(r).await?, translated_keyword: read_bin_str(r).await? })
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_text_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunk, dsl::PackError> {
+    Ok(PngTextChunk { keyword: read_bin_str(r)?, value: read_bin_str(r)?, compressed: r.read_u8()? != 0, kind: dec_text_kind_u8(r.read_u8()?)?, language_tag: read_bin_str(r)?, translated_keyword: read_bin_str(r)? })
 }
-pub(crate) async fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
     w.write_bytes(&c.kind);
     write_bin_blob(w, &c.data);
 }
-pub(crate) async fn read_bin_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngChunk, dsl::PackError> {
-    let kind_bytes = r.read_bytes(4).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngChunk, dsl::PackError> {
+    let kind_bytes = r.read_bytes(4)?;
     let kind: [u8; 4] = kind_bytes.try_into().map_err(|_| dsl::PackError::Malformed { what: "png chunk kind", offset: 0, detail: "expected 4 bytes".into() })?;
-    Ok(PngChunk { kind, data: read_bin_blob(r).await? })
+    Ok(PngChunk { kind, data: read_bin_blob(r)? })
 }
-pub(crate) async fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker) {
     match m {
-        PngChunkMarker::Ihdr => w.write_u8(0).await,
-        PngChunkMarker::Plte => w.write_u8(1).await,
-        PngChunkMarker::Trns => w.write_u8(2).await,
-        PngChunkMarker::Gama => w.write_u8(3).await,
-        PngChunkMarker::Chrm => w.write_u8(4).await,
-        PngChunkMarker::Srgb => w.write_u8(5).await,
-        PngChunkMarker::Phys => w.write_u8(6).await,
-        PngChunkMarker::Time => w.write_u8(7).await,
-        PngChunkMarker::Bkgd => w.write_u8(8).await,
-        PngChunkMarker::Idat => w.write_u8(9).await,
-        PngChunkMarker::Iend => w.write_u8(10).await,
+        PngChunkMarker::Ihdr => w.write_u8(0),
+        PngChunkMarker::Plte => w.write_u8(1),
+        PngChunkMarker::Trns => w.write_u8(2),
+        PngChunkMarker::Gama => w.write_u8(3),
+        PngChunkMarker::Chrm => w.write_u8(4),
+        PngChunkMarker::Srgb => w.write_u8(5),
+        PngChunkMarker::Phys => w.write_u8(6),
+        PngChunkMarker::Time => w.write_u8(7),
+        PngChunkMarker::Bkgd => w.write_u8(8),
+        PngChunkMarker::Idat => w.write_u8(9),
+        PngChunkMarker::Iend => w.write_u8(10),
         PngChunkMarker::Text { index } => {
             w.write_u8(11);
             w.write_varint_u64(*index as u64);
@@ -1680,8 +1796,9 @@ pub(crate) async fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunk
         }
     }
 }
-pub(crate) async fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngChunkMarker, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngChunkMarker, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(PngChunkMarker::Ihdr),
         1 => Ok(PngChunkMarker::Plte),
         2 => Ok(PngChunkMarker::Trns),
@@ -1693,36 +1810,40 @@ pub(crate) async fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result
         8 => Ok(PngChunkMarker::Bkgd),
         9 => Ok(PngChunkMarker::Idat),
         10 => Ok(PngChunkMarker::Iend),
-        11 => Ok(PngChunkMarker::Text { index: r.read_varint_u64().await? as usize }),
-        12 => Ok(PngChunkMarker::Unknown { index: r.read_varint_u64().await? as usize }),
+        11 => Ok(PngChunkMarker::Text { index: r.read_varint_u64()? as usize }),
+        12 => Ok(PngChunkMarker::Unknown { index: r.read_varint_u64()? as usize }),
         other => Err(dsl::PackError::Malformed { what: "png chunk marker tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
-pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
         Some(val) => {
             w.write_u8(1);
             write_value(w, val);
         }
     }
 }
-pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "png binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
-pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
     }
 }
-pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
-    let n = r.read_varint_u64().await? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+    let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
         out.push(read_item(r)?);
@@ -1732,12 +1853,13 @@ pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: 
 /// 🧩 Whole-`PngSnapshot` real binary encoding — reused by `PngMutation::SetSnapshot`'s own
 /// binary op arm (`🧬️mutations/🦀️component.rs`) so a full snapshot payload isn't hand-encoded
 /// a second time.
-pub(crate) async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     write_bin_str(w, &s.schema);
     w.write_u32_le(s.width);
     w.write_u32_le(s.height);
     w.write_u8(s.bit_depth);
-    w.write_u8(s.color_type.to_u8().await);
+    w.write_u8(s.color_type.to_u8());
     w.write_u8(if s.interlace { 1 } else { 0 });
     write_bin_option(w, &s.plte, |w, v: &Vec<PngRgb>| write_bin_vec(w, v, write_bin_rgb));
     write_bin_option(w, &s.trns, write_bin_transparency);
@@ -1752,26 +1874,27 @@ pub(crate) async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot)
     write_bin_vec(w, &s.chunk_order, write_bin_chunk_marker);
     write_bin_vec(w, &s.unknown_chunks, write_bin_chunk);
 }
-pub(crate) async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
     Ok(PngSnapshot {
-        schema: read_bin_str(r).await?,
-        width: r.read_u32_le().await?,
-        height: r.read_u32_le().await?,
-        bit_depth: r.read_u8().await?,
-        color_type: PngColorType::from_u8(r.read_u8().await?).await.map_err(|e| dsl::PackError::Malformed { what: "png color type", offset: 0, detail: e })?,
-        interlace: r.read_u8().await? != 0,
-        plte: read_bin_option(r, |r| read_bin_vec(r, read_bin_rgb)).await?,
-        trns: read_bin_option(r, read_bin_transparency).await?,
-        gama: read_bin_option(r, |r| r.read_u32_le()).await?,
-        chrm: read_bin_option(r, read_bin_chromaticities).await?,
-        srgb: read_bin_option(r, |r| semio_framework_plugin::resolve_ready(PngSrgbIntent::from_u8(r.read_u8()?)).map_err(|e| dsl::PackError::Malformed { what: "png srgb intent", offset: 0, detail: e })).await?,
-        phys: read_bin_option(r, read_bin_physical_dims).await?,
-        time: read_bin_option(r, read_bin_timestamp).await?,
-        bkgd: read_bin_option(r, read_bin_background).await?,
-        text_chunks: read_bin_vec(r, read_bin_text_chunk).await?,
-        pixels: read_bin_blob(r).await?,
-        chunk_order: read_bin_vec(r, read_bin_chunk_marker).await?,
-        unknown_chunks: read_bin_vec(r, read_bin_chunk).await?,
+        schema: read_bin_str(r)?,
+        width: r.read_u32_le()?,
+        height: r.read_u32_le()?,
+        bit_depth: r.read_u8()?,
+        color_type: PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png color type", offset: 0, detail: e })?,
+        interlace: r.read_u8()? != 0,
+        plte: read_bin_option(r, |r| read_bin_vec(r, read_bin_rgb))?,
+        trns: read_bin_option(r, read_bin_transparency)?,
+        gama: read_bin_option(r, |r| r.read_u32_le())?,
+        chrm: read_bin_option(r, read_bin_chromaticities)?,
+        srgb: read_bin_option(r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png srgb intent", offset: 0, detail: e }))?,
+        phys: read_bin_option(r, read_bin_physical_dims)?,
+        time: read_bin_option(r, read_bin_timestamp)?,
+        bkgd: read_bin_option(r, read_bin_background)?,
+        text_chunks: read_bin_vec(r, read_bin_text_chunk)?,
+        pixels: read_bin_blob(r)?,
+        chunk_order: read_bin_vec(r, read_bin_chunk_marker)?,
+        unknown_chunks: read_bin_vec(r, read_bin_chunk)?,
     })
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -1782,8 +1905,9 @@ pub(crate) async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<Png
 // produces one opaque `Vec<u8>` blob matching `../💾️binary/📡️component.protocol.semio`'s
 // `Array(u8, Field(<name>_len))` fields exactly (the blob's OWN internal removed/modified/
 // added shape isn't further protocol-walkable, see that file's own doc comment).
-async fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
+    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngPlteEntryModified| {
         w.write_varint_u64(m.index as u64);
@@ -1793,24 +1917,26 @@ async fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_rgb(w, &a.rgb);
     });
-    w.into_bytes().await
+    w.into_bytes()
 }
-async fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
+    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let rgb = read_bin_rgb(r)?;
         Ok(PngPlteEntryModified { index, rgb })
-    }).await?;
+    })?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let rgb = read_bin_rgb(r)?;
         Ok(PngPlteEntryAdded { index, rgb })
-    }).await?;
+    })?;
     Ok(PngPlteDiff { removed, modified, added })
 }
-async fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
     write_bin_option(w, &d.keyword, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.value, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.compressed, |w, v: &bool| w.write_u8(if *v { 1 } else { 0 }));
@@ -1818,18 +1944,20 @@ async fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff
     write_bin_option(w, &d.language_tag, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.translated_keyword, |w, v: &String| write_bin_str(w, v));
 }
-async fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkDiff, dsl::PackError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkDiff, dsl::PackError> {
     Ok(PngTextChunkDiff {
-        keyword: read_bin_option(r, read_bin_str).await?,
-        value: read_bin_option(r, read_bin_str).await?,
-        compressed: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
-        kind: read_bin_option(r, |r| dec_text_kind_u8(r.read_u8()?)).await?,
-        language_tag: read_bin_option(r, read_bin_str).await?,
-        translated_keyword: read_bin_option(r, read_bin_str).await?,
+        keyword: read_bin_option(r, read_bin_str)?,
+        value: read_bin_option(r, read_bin_str)?,
+        compressed: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
+        kind: read_bin_option(r, |r| dec_text_kind_u8(r.read_u8()?))?,
+        language_tag: read_bin_option(r, read_bin_str)?,
+        translated_keyword: read_bin_option(r, read_bin_str)?,
     })
 }
-async fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
+    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngTextChunkModified| {
         w.write_varint_u64(m.index as u64);
@@ -1839,25 +1967,27 @@ async fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_text_chunk(w, &a.chunk);
     });
-    w.into_bytes().await
+    w.into_bytes()
 }
-async fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
+    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let diff = read_bin_text_chunk_diff(r)?;
         Ok(PngTextChunkModified { index, diff })
-    }).await?;
+    })?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let chunk = read_bin_text_chunk(r)?;
         Ok(PngTextChunkAdded { index, chunk })
-    }).await?;
+    })?;
     Ok(PngTextChunksDiff { removed, modified, added })
 }
-async fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
+    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngChunkOrderModified| {
         w.write_varint_u64(m.index as u64);
@@ -1867,25 +1997,27 @@ async fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_chunk_marker(w, &a.marker);
     });
-    w.into_bytes().await
+    w.into_bytes()
 }
-async fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
+    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let marker = read_bin_chunk_marker(r)?;
         Ok(PngChunkOrderModified { index, marker })
-    }).await?;
+    })?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let marker = read_bin_chunk_marker(r)?;
         Ok(PngChunkOrderAdded { index, marker })
-    }).await?;
+    })?;
     Ok(PngChunkOrderDiff { removed, modified, added })
 }
-async fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new().await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
+    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngUnknownChunkModified| {
         w.write_varint_u64(m.index as u64);
@@ -1895,52 +2027,57 @@ async fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_chunk(w, &a.chunk);
     });
-    w.into_bytes().await
+    w.into_bytes()
 }
-async fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
+    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let chunk = read_bin_chunk(r)?;
         Ok(PngUnknownChunkModified { index, chunk })
-    }).await?;
+    })?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let chunk = read_bin_chunk(r)?;
         Ok(PngUnknownChunkAdded { index, chunk })
-    }).await?;
+    })?;
     Ok(PngUnknownChunksDiff { removed, modified, added })
 }
 /// 🧩 3-way flag (`0`=unchanged, `1`=cleared-to-`None`, `2`=set-to-`Some(value)`) for every
 /// TRI-STATE `Option<Option<T>>` field — see the protocol file's own doc comment for why this
 /// avoids chaining two `if`-guarded conditional fields (`Cond::eval` errors on a field that
 /// was itself only conditionally decoded).
-async fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0).await,
-        Some(None) => w.write_u8(1).await,
+        None => w.write_u8(0),
+        Some(None) => w.write_u8(1),
         Some(Some(val)) => {
             w.write_u8(2);
             write_value(w, val);
         }
     }
 }
-async fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
-    match r.read_u8().await? {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+    match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
         other => Err(dsl::PackError::Malformed { what: "png diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
-async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "png diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryDiffFrame
 
 //#region 🔖️TopLevel
-async fn print_png_diff(d: &PngDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_png_diff(d: &PngDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = d.width {
         tokens.push(format!("width={v}"));
@@ -1982,59 +2119,60 @@ async fn print_png_diff(d: &PngDiff) -> String {
         tokens.push(format!("bkgd={}", encode_option(v, enc_background)));
     }
     if let Some(v) = &d.text_chunks {
-        tokens.push(enc_text_chunks_diff(v).await);
+        tokens.push(enc_text_chunks_diff(v));
     }
     if let Some(v) = &d.pixels {
         tokens.push(format!("pixels={}", hex_encode(v)));
     }
     if let Some(v) = &d.chunk_order {
-        tokens.push(enc_chunk_order_diff(v).await);
+        tokens.push(enc_chunk_order_diff(v));
     }
     if let Some(v) = &d.unknown_chunks {
-        tokens.push(enc_unknown_chunks_diff(v).await);
+        tokens.push(enc_unknown_chunks_diff(v));
     }
     tokens.join(" ")
 }
-async fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
     let mut d = PngDiff::default();
     if line.is_empty() {
         return Ok(d);
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("width=") {
-            d.width = Some(parse_u32(rest).await?);
+            d.width = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("height=") {
-            d.height = Some(parse_u32(rest).await?);
+            d.height = Some(parse_u32(rest)?);
         } else if let Some(rest) = token.strip_prefix("bit-depth=") {
-            d.bit_depth = Some(parse_u8(rest).await?);
+            d.bit_depth = Some(parse_u8(rest)?);
         } else if let Some(rest) = token.strip_prefix("color-type=") {
-            d.color_type = Some(dec_color_type(rest).await?);
+            d.color_type = Some(dec_color_type(rest)?);
         } else if let Some(rest) = token.strip_prefix("interlace=") {
             d.interlace = Some(rest == "1");
         } else if let Some(rest) = token.strip_prefix("plte=") {
-            d.plte = Some(decode_option(rest, dec_plte_body).await?);
+            d.plte = Some(decode_option(rest, dec_plte_body)?);
         } else if let Some(rest) = token.strip_prefix("trns=") {
-            d.trns = Some(decode_option(rest, dec_transparency).await?);
+            d.trns = Some(decode_option(rest, dec_transparency)?);
         } else if let Some(rest) = token.strip_prefix("gama=") {
-            d.gama = Some(decode_option(rest, parse_u32).await?);
+            d.gama = Some(decode_option(rest, parse_u32)?);
         } else if let Some(rest) = token.strip_prefix("chrm=") {
-            d.chrm = Some(decode_option(rest, dec_chromaticities).await?);
+            d.chrm = Some(decode_option(rest, dec_chromaticities)?);
         } else if let Some(rest) = token.strip_prefix("srgb=") {
-            d.srgb = Some(decode_option(rest, dec_srgb_intent).await?);
+            d.srgb = Some(decode_option(rest, dec_srgb_intent)?);
         } else if let Some(rest) = token.strip_prefix("phys=") {
-            d.phys = Some(decode_option(rest, dec_physical_dims).await?);
+            d.phys = Some(decode_option(rest, dec_physical_dims)?);
         } else if let Some(rest) = token.strip_prefix("time=") {
-            d.time = Some(decode_option(rest, dec_timestamp).await?);
+            d.time = Some(decode_option(rest, dec_timestamp)?);
         } else if let Some(rest) = token.strip_prefix("bkgd=") {
-            d.bkgd = Some(decode_option(rest, dec_background).await?);
+            d.bkgd = Some(decode_option(rest, dec_background)?);
         } else if let Some(rest) = token.strip_prefix("text-chunks{") {
-            d.text_chunks = Some(dec_text_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "text-chunks: missing closing brace".to_string())?).await?);
+            d.text_chunks = Some(dec_text_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "text-chunks: missing closing brace".to_string())?)?);
         } else if let Some(rest) = token.strip_prefix("pixels=") {
-            d.pixels = Some(hex_decode(rest).await?);
+            d.pixels = Some(hex_decode(rest)?);
         } else if let Some(rest) = token.strip_prefix("chunk-order{") {
-            d.chunk_order = Some(dec_chunk_order_diff(rest.strip_suffix('}').ok_or_else(|| "chunk-order: missing closing brace".to_string())?).await?);
+            d.chunk_order = Some(dec_chunk_order_diff(rest.strip_suffix('}').ok_or_else(|| "chunk-order: missing closing brace".to_string())?)?);
         } else if let Some(rest) = token.strip_prefix("unknown-chunks{") {
-            d.unknown_chunks = Some(dec_unknown_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "unknown-chunks: missing closing brace".to_string())?).await?);
+            d.unknown_chunks = Some(dec_unknown_chunks_diff(rest.strip_suffix('}').ok_or_else(|| "unknown-chunks: missing closing brace".to_string())?)?);
         } else {
             return Err(format!("png diff: unknown token {token:?}"));
         }
@@ -2044,10 +2182,10 @@ async fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
 
 impl protocol::DiffCodec for PngDiff {
     async fn print_diff(&self) -> String {
-        print_png_diff(self).await
+        print_png_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_png_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_png_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ P2-P2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
@@ -2064,9 +2202,9 @@ impl protocol::DiffCodec for PngDiff {
 
         write_bin_tri_flag(&mut w, &self.plte, |w, v| write_bin_blob(w, &enc_plte_diff_bin(v)));
         write_bin_tri_flag(&mut w, &self.trns, |w, v| {
-            let mut inner = dsl::ByteWriter::new();
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
             write_bin_transparency(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.await.into_bytes()));
+            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
         write_bin_tri_flag(&mut w, &self.gama, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.chrm, |w, v| write_bin_chromaticities(w, v));
@@ -2074,9 +2212,9 @@ impl protocol::DiffCodec for PngDiff {
         write_bin_tri_flag(&mut w, &self.phys, |w, v| write_bin_physical_dims(w, v));
         write_bin_tri_flag(&mut w, &self.time, |w, v| write_bin_timestamp(w, v));
         write_bin_tri_flag(&mut w, &self.bkgd, |w, v| {
-            let mut inner = dsl::ByteWriter::new();
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
             write_bin_background(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.await.into_bytes()));
+            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
 
         write_bin_option(&mut w, &self.text_chunks, |w, v| write_bin_blob(w, &enc_text_chunks_diff_bin(v)));
@@ -2087,36 +2225,36 @@ impl protocol::DiffCodec for PngDiff {
         Ok(w.into_bytes().await)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes);
-        let width = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
-        let height = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
-        let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).await.map_err(diff_pack_err)?;
-        let color_type = read_bin_option(&mut r, |r| semio_framework_plugin::resolve_ready(PngColorType::from_u8(r.read_u8()?)).map_err(|e| dsl::PackError::Malformed { what: "png diff color type", offset: 0, detail: e })).await.map_err(diff_pack_err)?;
-        let interlace = read_bin_option(&mut r, |r| Ok(r.read_u8()? != 0)).await.map_err(diff_pack_err)?;
+        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
+        let color_type = read_bin_option(&mut r, |r| PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff color type", offset: 0, detail: e })).map_err(diff_pack_err)?;
+        let interlace = read_bin_option(&mut r, |r| Ok(r.read_u8()? != 0)).map_err(diff_pack_err)?;
 
-        let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
+        let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
         let trns = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&blob);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
             read_bin_transparency(&mut inner)
         })
-        .await.map_err(diff_pack_err)?;
-        let gama = read_bin_tri_flag(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
-        let chrm = read_bin_tri_flag(&mut r, read_bin_chromaticities).await.map_err(diff_pack_err)?;
-        let srgb = read_bin_tri_flag(&mut r, |r| semio_framework_plugin::resolve_ready(PngSrgbIntent::from_u8(r.read_u8()?)).map_err(|e| dsl::PackError::Malformed { what: "png diff srgb intent", offset: 0, detail: e })).await.map_err(diff_pack_err)?;
-        let phys = read_bin_tri_flag(&mut r, read_bin_physical_dims).await.map_err(diff_pack_err)?;
-        let time = read_bin_tri_flag(&mut r, read_bin_timestamp).await.map_err(diff_pack_err)?;
+        .map_err(diff_pack_err)?;
+        let gama = read_bin_tri_flag(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let chrm = read_bin_tri_flag(&mut r, read_bin_chromaticities).map_err(diff_pack_err)?;
+        let srgb = read_bin_tri_flag(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff srgb intent", offset: 0, detail: e })).map_err(diff_pack_err)?;
+        let phys = read_bin_tri_flag(&mut r, read_bin_physical_dims).map_err(diff_pack_err)?;
+        let time = read_bin_tri_flag(&mut r, read_bin_timestamp).map_err(diff_pack_err)?;
         let bkgd = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = dsl::ByteReader::new(&blob);
+            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
             read_bin_background(&mut inner)
         })
-        .await.map_err(diff_pack_err)?;
+        .map_err(diff_pack_err)?;
 
-        let text_chunks = read_bin_option(&mut r, |r| dec_text_chunks_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
-        let pixels = read_bin_option(&mut r, |r| read_bin_blob(r)).await.map_err(diff_pack_err)?;
-        let chunk_order = read_bin_option(&mut r, |r| dec_chunk_order_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
-        let unknown_chunks = read_bin_option(&mut r, |r| dec_unknown_chunks_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
+        let text_chunks = read_bin_option(&mut r, |r| dec_text_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let pixels = read_bin_option(&mut r, |r| read_bin_blob(r)).map_err(diff_pack_err)?;
+        let chunk_order = read_bin_option(&mut r, |r| dec_chunk_order_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let unknown_chunks = read_bin_option(&mut r, |r| dec_unknown_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
 
         Ok(PngDiff { width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks })
     }
@@ -2130,7 +2268,8 @@ impl protocol::DiffCodec for PngDiff {
 /// duplicating the literal case list; `handcrafted_diff_codec_tests::diff_codec_text_binary_
 /// roundtrip_law` below now calls it too (single source of truth, per CLAUDE.md).
 #[cfg(test)]
-pub(crate) async fn demo_snap_a() -> PngSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snap_a() -> PngSnapshot {
     PngSnapshot {
         schema: "stdio.png".into(),
         width: 10,
@@ -2156,7 +2295,8 @@ pub(crate) async fn demo_snap_a() -> PngSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) async fn demo_snap_b() -> PngSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_snap_b() -> PngSnapshot {
     PngSnapshot {
         schema: "stdio.png".into(),
         width: 11,
@@ -2179,7 +2319,8 @@ pub(crate) async fn demo_snap_b() -> PngSnapshot {
     }
 }
 #[cfg(test)]
-pub(crate) async fn demo_empty_snap() -> PngSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_empty_snap() -> PngSnapshot {
     PngSnapshot { schema: "stdio.png".into(), ..Default::default() }
 }
 /// ✅️ Representative `PngDiff` cases, incl. the empty (`None`) diff and the `Replace`-shaped
@@ -2187,7 +2328,8 @@ pub(crate) async fn demo_empty_snap() -> PngSnapshot {
 /// (both `Some(Some) -> Some(None)` and `None -> Some(Some)`), and every collection triple's
 /// removed/modified/added arms.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<PngDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
     let a = demo_snap_a();
     let b = demo_snap_b();
     let c = demo_empty_snap();

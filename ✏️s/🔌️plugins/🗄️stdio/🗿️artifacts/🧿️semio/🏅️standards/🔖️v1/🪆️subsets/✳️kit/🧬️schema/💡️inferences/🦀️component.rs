@@ -27,7 +27,7 @@ pub struct SemioKitInference {
 
 impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
     async fn infer(snapshot: &SemioKitSnapshot) -> Self {
-        Self { entries: compute_semio_kit_entries(snapshot).await }
+        Self { entries: compute_semio_kit_entries(snapshot) }
     }
 }
 
@@ -67,7 +67,8 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::kit::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_kit_artifact_schema_descriptor`'s registration.
-pub async fn semio_kit_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_kit_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.semio.kit.inference",
         inference: schema::FacetLeaves {

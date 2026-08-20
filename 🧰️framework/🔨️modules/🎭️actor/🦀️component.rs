@@ -960,6 +960,17 @@ impl CapabilityGrant {
         Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability").await?, scope: pack::read_opt_bytes(bytes, pos, "CapabilityGrant::scope").await? })
     }
 }
+/// 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the security property of
+/// the whole extension-activation design — an extension must never hold a capability its host plugin
+/// lacks. A REQUESTED grant survives only when `granted` (the parent's own already-granted set)
+/// carries a grant of the SAME `capability` name; an ungranted request is silently dropped, never
+/// escalated or substituted. This is an actual intersection, not "grant what was asked for": the
+/// output is always a subset of `requested`, bounded by `granted`. Matched by capability name only
+/// (this crate's `CapabilityGrant` is a minimal pack-codeable stand-in — see its own doc comment — so
+/// `scope` reconciliation belongs to the real broker at integration time, not this pure function).
+pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[CapabilityGrant]) -> Vec<CapabilityGrant> {
+    requested.iter().filter(|request| granted.iter().any(|grant| grant.capability == request.capability)).cloned().collect()
+}
 //#endregion 🔐️CapabilityGrant
 
 //#region 🚑️FailurePolicy
@@ -1489,6 +1500,23 @@ impl ShardTable {
             return *existing;
         }
         let shard = self.least_loaded(avoid).await;
+        self.assignment.insert(actor, shard);
+        shard
+    }
+
+    /// 📌️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): pins `actor` to an
+    /// EXACT shard, bypassing `pin`/`pin_avoiding`'s least-loaded heuristic entirely. The extension-
+    /// activation primitive: an extension actor pins to its PARENT's shard so parent↔extension
+    /// `MessageEndpoint::Extension` traffic never crosses a transport (`Kernel::activate_pinned`'s own
+    /// doc). Idempotent for an already-pinned actor, matching `pin`/`pin_avoiding`. `shard` is clamped
+    /// into `[0, shard_count)` defensively — every real caller derives it from another actor's own
+    /// live assignment, so an out-of-range value would only ever come from a caller bug, and clamping
+    /// keeps that bug a misplacement rather than a silently-dropped actor.
+    pub async fn pin_to(&mut self, actor: ActorId, shard: ShardId) -> ShardId {
+        if let Some(existing) = self.assignment.get(&actor) {
+            return *existing;
+        }
+        let shard = ShardId(shard.0.min(self.shard_count.saturating_sub(1)));
         self.assignment.insert(actor, shard);
         shard
     }
@@ -2306,11 +2334,18 @@ pub struct Kernel {
     scenes: HashMap<WindowId, SceneStore>,
     actors: HashMap<ActorId, ActorMeta>,
     next_ordinal: HashMap<PackageId, u32>,
+    /// 🔗️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): explicit parent→children
+    /// edge table for extension cascade — see `//#region 🔗️ExtensionActivation` below. Kept explicit
+    /// rather than re-derived from `ActorKind::Extension.plugin` on every cascade so that (a) cascade is
+    /// O(children) instead of an O(actors) scan, and (b) it survives multiple *instances* of one plugin
+    /// (several `PluginApp` actors sharing a `PackageId`, each with its own extension subtree) without
+    /// the `plugin: PackageId` field alone being able to disambiguate which instance a child belongs to.
+    links: HashMap<ActorId, Vec<ActorId>>,
 }
 
 impl Kernel {
     pub async fn new(shard_kind: ShardKind, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
-        Self { scheduler: Scheduler::new(grants_per_tick).await, shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve).await, scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new() }
+        Self { scheduler: Scheduler::new(grants_per_tick).await, shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve).await, scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new(), links: HashMap::new() }
     }
 
     /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and
@@ -2539,6 +2574,180 @@ impl Kernel {
     pub async fn runtime_metrics_snapshot(&self, sampled_at_ms: u64) -> RuntimeMetricsSnapshot {
         RuntimeMetricsSnapshot { kernel: self.metrics().await, actors: self.actor_metrics_samples().await, shards: self.shard_metrics_samples().await, sampled_at_ms }
     }
+
+    //#region 🔗️ExtensionActivation
+    /// 📌️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): [`Self::activate`],
+    /// widened for extension activation — pins to an EXACT `shard` via [`ShardTable::pin_to`] instead
+    /// of the least-loaded heuristic (so an extension always lands on its parent's shard — see
+    /// module design doc M6), and computes this actor's initial `capabilities` via
+    /// [`intersect_capabilities`] against `parent`'s own already-granted set when `parent` is
+    /// `Some` — the never-escalate-past-the-parent security property. `parent` is `None` for a
+    /// top-level activation with a caller-supplied grant set (e.g. a `PluginApp` whose capabilities
+    /// the host's own broker already resolved); passing `Some` is what makes this the extension path.
+    /// This method does **not** itself record the [`Self::link_extension`] parent→child edge — call
+    /// both from the host cascade so the two concerns (placement/capability vs. cascade topology)
+    /// stay independently testable.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn activate_pinned(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, shard: ShardId, parent: Option<ActorId>, requested_capabilities: Vec<CapabilityGrant>) -> ActorId {
+        let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
+        let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
+        *ordinal += 1;
+        let budget = lane_defaults::budget_for(lane).await;
+        let shard = self.shards.pin_to(id, shard).await;
+        self.scheduler.register_actor(id, package.clone(), lane, budget, shard).await;
+        let capabilities = match parent {
+            Some(parent_id) => {
+                let granted = self.actors.get(&parent_id).map(|meta| meta.capabilities.clone()).unwrap_or_default();
+                intersect_capabilities(&granted, &requested_capabilities).await
+            }
+            None => requested_capabilities,
+        };
+        self.actors.insert(id, ActorMeta { kind, package, capabilities, budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
+        id
+    }
+
+    /// 🔐️ Records/replaces an already-live actor's granted [`CapabilityGrant`] set — how a host's
+    /// broker (or, in tests, the caller) attaches the capabilities a `PluginApp` was actually granted
+    /// so that a later [`Self::activate_pinned`] can intersect an extension's requests against them.
+    pub async fn set_capabilities(&mut self, actor: ActorId, grants: Vec<CapabilityGrant>) -> Result<(), KernelError> {
+        let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        meta.capabilities = grants;
+        Ok(())
+    }
+
+    /// 🧭️ Convenience: an actor's pinned shard without paying [`Self::actor_record`]'s full
+    /// `ActorRecord` assembly cost (that allocates a fresh empty [`Mailbox`] every call).
+    pub async fn shard_of(&self, actor: ActorId) -> Option<ShardId> {
+        self.shards.shard_of(actor).await
+    }
+
+    /// 🔗️ Records a parent→child cascade edge. Both actors must already be live; the child is
+    /// typically an `ActorKind::Extension` just returned by [`Self::activate_pinned`], but this is not
+    /// itself enforced — cascade topology is a separate concern from actor kind (see this method's own
+    /// region doc).
+    pub async fn link_extension(&mut self, parent: ActorId, child: ActorId) -> Result<(), KernelError> {
+        if !self.actors.contains_key(&parent) || !self.actors.contains_key(&child) {
+            return Err(KernelError::UnknownActor);
+        }
+        self.links.entry(parent).or_default().push(child);
+        Ok(())
+    }
+
+    /// 🔗️ The direct children [`Self::link_extension`] recorded for `parent` — empty for a leaf or an
+    /// actor with no extensions.
+    pub async fn children_of(&self, parent: ActorId) -> Vec<ActorId> {
+        self.links.get(&parent).cloned().unwrap_or_default()
+    }
+
+    /// 🌳️ Iterative (never self-recursive — R10's "self-recursive async fn" residue shape applies to
+    /// `async fn`s exactly as much as sync ones, and this crate's own rule bans the `Box::pin` escape
+    /// hatch where a loop will do) post-order walk of `root`'s cascade subtree: every descendant
+    /// appears strictly before its own parent, terminating with `root` itself last — i.e. leaves-first.
+    /// Shared by every cascading lifecycle op below; [`Self::resume_cascade`] reverses this order to
+    /// get the symmetric parent-first restore direction the design calls for.
+    async fn subtree_leaves_first(&self, root: ActorId) -> Vec<ActorId> {
+        let mut order = Vec::new();
+        let mut stack = vec![(root, false)];
+        while let Some((node, expanded)) = stack.pop() {
+            if expanded {
+                order.push(node);
+                continue;
+            }
+            stack.push((node, true));
+            for child in self.children_of(node).await {
+                stack.push((child, false));
+            }
+        }
+        order
+    }
+
+    /// ✂️ Shared removal primitive behind [`Self::deactivate`] and [`Self::kill`] — full teardown of
+    /// `root`'s ENTIRE cascade subtree, leaves-first: `Scheduler::unregister_actor` (drops the DRR
+    /// entry + mailbox), `ShardTable::unpin` (frees the shard slot/any exclusive lease), removes the
+    /// `ActorMeta` and this actor's own outgoing link-table row. Also scrubs every removed id out of
+    /// every OTHER actor's children list, so a subtree removal can never leave a dangling edge pointing
+    /// at an id [`Self::actor_record`] can no longer resolve. Returns the removed ids leaves-first —
+    /// the caller's evidence that the cascade actually walked the whole subtree, not just `root`.
+    async fn cascade_remove(&mut self, root: ActorId) -> Vec<ActorId> {
+        let order = self.subtree_leaves_first(root).await;
+        for &id in &order {
+            self.scheduler.unregister_actor(id).await;
+            self.shards.unpin(id).await;
+            self.actors.remove(&id);
+            self.links.remove(&id);
+        }
+        for children in self.links.values_mut() {
+            children.retain(|child| !order.contains(child));
+        }
+        order
+    }
+
+    /// ✂️ Graceful cascade teardown: `root` and every extension hanging off it (transitively),
+    /// leaves-first, with **zero orphans** — no descendant is ever left registered after its ancestor
+    /// is gone. The call site this ticket's own design names: a plugin closing, or an extension being
+    /// uninstalled while live. Errors `UnknownActor` if `root` is not (or no longer) live.
+    pub async fn deactivate(&mut self, root: ActorId) -> Result<Vec<ActorId>, KernelError> {
+        if !self.actors.contains_key(&root) {
+            return Err(KernelError::UnknownActor);
+        }
+        Ok(self.cascade_remove(root).await)
+    }
+
+    /// 🔪️ The failure ladder's cascade teardown — same leaves-first, zero-orphan removal as
+    /// [`Self::deactivate`] (this crate's pure kernel state has no separate "abrupt vs. graceful"
+    /// axis: both fully retire the subtree; a host distinguishes them only by WHEN it calls each —
+    /// `deactivate` for user/uninstall-driven teardown, `kill` for the failure ladder giving up on an
+    /// unrecoverable actor). Kept as its own named entry point rather than an alias so call sites read
+    /// as intent, and so a future host-side distinction (e.g. a forced `ShardTransport::kill` versus a
+    /// graceful drain) has an unambiguous kernel-level hook to attach to. "Parent kill takes its
+    /// extensions down" (design doc M6's acceptance wording) is exactly this method called on the
+    /// parent.
+    pub async fn kill(&mut self, root: ActorId) -> Result<Vec<ActorId>, KernelError> {
+        if !self.actors.contains_key(&root) {
+            return Err(KernelError::UnknownActor);
+        }
+        Ok(self.cascade_remove(root).await)
+    }
+
+    /// 💤️ Cascading [`Self::suspend`], leaves-first: every descendant is suspended before `root`
+    /// itself. This is ALSO this crate's "checkpoint cascade" — [`ActorStatus::Suspended`] already
+    /// carries an optional checkpoint payload, so "checkpoint" and "suspend-with-bytes" are the same
+    /// kernel operation; only `root` receives the caller's `checkpoint` bytes (a per-descendant
+    /// checkpoint is a host/guest-runtime concern — the pure kernel only ever records the bytes it is
+    /// handed, never produces them). Descendants suspend with `checkpoint: None`.
+    pub async fn suspend_cascade(&mut self, root: ActorId, checkpoint: Option<Vec<u8>>) -> Result<Vec<ActorId>, KernelError> {
+        if !self.actors.contains_key(&root) {
+            return Err(KernelError::UnknownActor);
+        }
+        let order = self.subtree_leaves_first(root).await;
+        for &id in &order {
+            let bytes = if id == root { checkpoint.clone() } else { None };
+            self.suspend(id, bytes).await?;
+        }
+        Ok(order)
+    }
+
+    /// ▶️ Cascading [`Self::resume`], PARENT-first — the symmetric restore direction (design doc M6's
+    /// web-mirror doc: "symmetric cascade, restore: parent first"): a child's shard/mailbox is only
+    /// useful once its parent is running again. Skips any descendant that is not currently
+    /// [`ActorStatus::Suspended`] rather than erroring, since a partial cascade (only some children were
+    /// ever suspended) must still resume everything that legitimately can.
+    pub async fn resume_cascade(&mut self, root: ActorId) -> Result<Vec<ActorId>, KernelError> {
+        if !self.actors.contains_key(&root) {
+            return Err(KernelError::UnknownActor);
+        }
+        let mut order = self.subtree_leaves_first(root).await;
+        order.reverse();
+        let mut resumed = Vec::new();
+        for &id in &order {
+            if matches!(self.actor_status(id).await, Some(ActorStatus::Suspended { .. })) {
+                self.resume(id).await?;
+                resumed.push(id);
+            }
+        }
+        Ok(resumed)
+    }
+    //#endregion 🔗️ExtensionActivation
 }
 //#endregion 🏛️Kernel
 
@@ -3119,6 +3328,142 @@ mod tests {
             assert_eq!(metrics.shards, 4);
         }
         //#endregion 🔖️KernelFacade
+
+        //#region 🔖️ExtensionActivation
+        /// 📌️ terra-extension-activation: `activate_pinned` must place the extension actor on
+        /// EXACTLY the parent's shard, not wherever the least-loaded heuristic would otherwise choose
+        /// — the property `MessageEndpoint::Extension` traffic depends on to never cross a transport.
+        #[semio_framework_async_macros::async_test]
+        async fn activate_pinned_places_extension_on_parents_shard() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let plugin = PackageId("s.cad".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let parent_shard = kernel.shard_of(parent).await.expect("parent must be pinned by activate");
+
+            let ext_pkg = PackageId("s.cad.aec-extension".into());
+            let extension = kernel.activate_pinned(ext_pkg, 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, parent_shard, Some(parent), vec![]).await;
+
+            assert_eq!(kernel.shard_of(extension).await, Some(parent_shard), "extension must land on the parent's exact shard, never wherever least-loaded would pick");
+        }
+
+        /// ✂️ terra-extension-activation: deactivating a parent must remove BOTH extensions and the
+        /// parent itself, leaves-first, with zero orphans left in `kernel.metrics().actors`.
+        #[semio_framework_async_macros::async_test]
+        async fn deactivate_parent_cascades_leaves_first_with_zero_orphans() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let plugin = PackageId("s.cad".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let shard = kernel.shard_of(parent).await.unwrap();
+            let e1 = kernel.activate_pinned(PackageId("s.cad.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+            let e2 = kernel.activate_pinned(PackageId("s.cad.e2".into()), 3, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e2".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+            kernel.link_extension(parent, e1).await.unwrap();
+            kernel.link_extension(parent, e2).await.unwrap();
+            assert_eq!(kernel.metrics().await.actors, 3);
+
+            let removed = kernel.deactivate(parent).await.unwrap();
+            assert_eq!(removed.len(), 3, "parent + 2 extensions");
+            assert_eq!(*removed.last().unwrap(), parent, "leaves-first: parent removed LAST");
+            assert!(removed[..2].contains(&e1) && removed[..2].contains(&e2), "both extensions removed before the parent");
+            assert_eq!(kernel.metrics().await.actors, 0, "zero orphans after cascade");
+            assert!(kernel.actor_record(parent).await.is_none());
+            assert!(kernel.actor_record(e1).await.is_none());
+            assert!(kernel.actor_record(e2).await.is_none());
+            assert!(kernel.children_of(parent).await.is_empty(), "link table must not resurrect a removed parent's edge");
+        }
+
+        /// 🔪️ terra-extension-activation: `kill` on the parent must cascade identically to `deactivate`
+        /// — "a parent kill takes its extensions down" (design doc M6's own acceptance wording).
+        #[semio_framework_async_macros::async_test]
+        async fn kill_parent_takes_extensions_down() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let plugin = PackageId("s.flow".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let shard = kernel.shard_of(parent).await.unwrap();
+            let e1 = kernel.activate_pinned(PackageId("s.flow.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+            kernel.link_extension(parent, e1).await.unwrap();
+
+            let removed = kernel.kill(parent).await.unwrap();
+            assert_eq!(removed, vec![e1, parent], "leaves-first order: extension then parent");
+            assert_eq!(kernel.metrics().await.actors, 0);
+        }
+
+        /// 🚑️ terra-extension-activation: a single trap on an EXTENSION must restore/kill only that
+        /// extension — the parent's own status is untouched. Also proves package isolation: giving
+        /// each extension its OWN `PackageId` (the design choice the native cascade this test mirrors
+        /// makes — see `📓️terra-extension-activation-report.md`) means even reaching the QUARANTINE
+        /// threshold on the extension does not blast the parent's package, unlike two actors
+        /// deliberately sharing one `PackageId` (`failure_ladder_trap_then_quarantine_is_package_wide`,
+        /// which this test deliberately does not reproduce for the parent/extension pair).
+        #[semio_framework_async_macros::async_test]
+        async fn trapping_extension_never_faults_the_parent() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let plugin = PackageId("s.cad".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            kernel.complete(parent, &ok_turn().await, 0).await.unwrap();
+            assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active));
+
+            let shard = kernel.shard_of(parent).await.unwrap();
+            let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+            kernel.link_extension(parent, extension).await.unwrap();
+
+            let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+            let escalation = kernel.complete(extension, &faulted, 10).await.unwrap();
+            assert_eq!(escalation, FailureEscalation::Restart, "one trap must only Restart, never quarantine");
+            assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
+            assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active), "the parent must be completely untouched by its extension's trap");
+
+            // Push the SAME extension past the quarantine threshold — still must not reach the parent,
+            // because this test gave the extension its own PackageId (distinct from the parent's).
+            for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                kernel.complete(extension, &faulted, 10 + i as u64).await.unwrap();
+            }
+            assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Quarantined), "the extension itself does escalate to quarantine");
+            assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active), "package isolation: the parent must still be untouched, even at quarantine");
+        }
+
+        /// 🔐️ terra-extension-activation: the security property — a capability the parent was never
+        /// granted must be ABSENT from the extension's grants, not silently escalated. Observable via
+        /// `actor_record(extension).capabilities`, i.e. a broker denial, never a `KernelError`.
+        #[semio_framework_async_macros::async_test]
+        async fn extension_capability_grant_is_the_intersection_not_the_request() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 4).await;
+            let plugin = PackageId("s.cad".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            kernel.set_capabilities(parent, vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "net.fetch".into(), scope: None }]).await.unwrap();
+
+            let shard = kernel.shard_of(parent).await.unwrap();
+            let requested = vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "fs.admin".into(), scope: None }];
+            let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), requested).await;
+
+            let record = kernel.actor_record(extension).await.expect("extension must be live");
+            assert_eq!(record.capabilities.len(), 1, "only the grant the parent ALSO held may survive");
+            assert_eq!(record.capabilities[0].capability, "fs.read");
+            assert!(!record.capabilities.iter().any(|g| g.capability == "fs.admin"), "the parent never held fs.admin — it must be absent, not escalated");
+        }
+
+        /// 💤️▶️ terra-extension-activation: suspend cascades leaves-first (checkpoint bytes only on
+        /// the root), resume cascades parent-first (the symmetric restore direction).
+        #[semio_framework_async_macros::async_test]
+        async fn suspend_cascade_leaves_first_resume_cascade_parent_first() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let plugin = PackageId("s.cad".into());
+            let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let shard = kernel.shard_of(parent).await.unwrap();
+            let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+            kernel.link_extension(parent, extension).await.unwrap();
+
+            let order = kernel.suspend_cascade(parent, Some(vec![9, 9])).await.unwrap();
+            assert_eq!(order, vec![extension, parent], "leaves-first: extension suspended before parent");
+            assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Suspended { checkpoint: Some(vec![9, 9]) }));
+            assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Suspended { checkpoint: None }), "descendants carry no checkpoint bytes of their own");
+
+            let resumed = kernel.resume_cascade(parent).await.unwrap();
+            assert_eq!(resumed, vec![parent, extension], "parent-first: the symmetric restore direction");
+            assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active));
+            assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Active));
+        }
+        //#endregion 🔖️ExtensionActivation
 
         //#region 🔖️RuntimeMetricsSnapshot
         /// 📈️ T1 runtime evidence: drives two real actors (different packages/lanes) through

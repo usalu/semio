@@ -60,8 +60,9 @@ impl From<text::GltfInferenceTextError> for GltfInferenceBinaryError {
     }
 }
 
-pub async fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope) -> Result<Vec<u8>, GltfInferenceBinaryError> {
-    let payload = text::canonical_json_bytes(value).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope) -> Result<Vec<u8>, GltfInferenceBinaryError> {
+    let payload = text::canonical_json_bytes(value)?;
     let length = u64::try_from(payload.len()).map_err(|_| GltfInferenceBinaryError::PayloadLengthOverflow { declared: u64::MAX })?;
     let mut output = Vec::with_capacity(GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH + payload.len());
     output.extend_from_slice(&GLTF_INFERENCE_LEAF_BINARY_MAGIC);
@@ -71,13 +72,14 @@ pub async fn encode_gltf_inference_leaf_binary(value: &GltfInferenceLeafEnvelope
     output.extend_from_slice(&GLTF_INFERENCE_LEAF_BINARY_FLAGS.to_le_bytes());
     output.extend_from_slice(&GLTF_INFERENCE_LEAF_BINARY_SCHEMA_CRC32.to_le_bytes());
     output.extend_from_slice(&length.to_le_bytes());
-    output.extend_from_slice(&text::crc32_iso_hdlc(&payload).await.to_le_bytes());
-    output.extend_from_slice(&text::crc32_iso_hdlc(&output).await.to_le_bytes());
+    output.extend_from_slice(&text::crc32_iso_hdlc(&payload).to_le_bytes());
+    output.extend_from_slice(&text::crc32_iso_hdlc(&output).to_le_bytes());
     output.extend_from_slice(&payload);
     Ok(output)
 }
 
-pub async fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLeafEnvelope, GltfInferenceBinaryError> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLeafEnvelope, GltfInferenceBinaryError> {
     if input.len() < GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH {
         return Err(GltfInferenceBinaryError::TooShort { actual: input.len() });
     }
@@ -87,40 +89,40 @@ pub async fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInfer
     }
     let format_major = read_u16(input, 8);
     if format_major != GLTF_INFERENCE_LEAF_BINARY_FORMAT_MAJOR {
-        return Err(GltfInferenceBinaryError::FormatMajor { actual: format_major.await });
+        return Err(GltfInferenceBinaryError::FormatMajor { actual: format_major });
     }
     let format_minor = read_u16(input, 10);
     if format_minor != GLTF_INFERENCE_LEAF_BINARY_FORMAT_MINOR {
-        return Err(GltfInferenceBinaryError::FormatMinor { actual: format_minor.await });
+        return Err(GltfInferenceBinaryError::FormatMinor { actual: format_minor });
     }
     let schema_version = read_u32(input, 12);
     if schema_version != GLTF_INFERENCE_LEAF_BINARY_SCHEMA_VERSION {
-        return Err(GltfInferenceBinaryError::SchemaVersion { actual: schema_version.await });
+        return Err(GltfInferenceBinaryError::SchemaVersion { actual: schema_version });
     }
     let flags = read_u32(input, 16);
     if flags != GLTF_INFERENCE_LEAF_BINARY_FLAGS {
-        return Err(GltfInferenceBinaryError::Flags { actual: flags.await });
+        return Err(GltfInferenceBinaryError::Flags { actual: flags });
     }
     let schema_crc = read_u32(input, 20);
     if schema_crc != GLTF_INFERENCE_LEAF_BINARY_SCHEMA_CRC32 {
-        return Err(GltfInferenceBinaryError::SchemaCrc32 { actual: schema_crc.await });
+        return Err(GltfInferenceBinaryError::SchemaCrc32 { actual: schema_crc });
     }
     let declared_length = read_u64(input, 24);
     let payload_length = usize::try_from(declared_length).map_err(|_| GltfInferenceBinaryError::PayloadLengthOverflow { declared: declared_length })?;
-    let expected_length = GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH.checked_add(payload_length).ok_or(GltfInferenceBinaryError::PayloadLengthOverflow { declared: declared_length.await })?;
+    let expected_length = GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH.checked_add(payload_length).ok_or(GltfInferenceBinaryError::PayloadLengthOverflow { declared: declared_length })?;
     if expected_length != input.len() {
-        return Err(GltfInferenceBinaryError::LengthMismatch { declared: declared_length.await, actual: input.len() });
+        return Err(GltfInferenceBinaryError::LengthMismatch { declared: declared_length, actual: input.len() });
     }
     let declared_header_crc = read_u32(input, 36);
     let actual_header_crc = text::crc32_iso_hdlc(&input[..36]);
     if declared_header_crc != actual_header_crc {
-        return Err(GltfInferenceBinaryError::HeaderChecksum { declared: declared_header_crc.await, actual: actual_header_crc.await });
+        return Err(GltfInferenceBinaryError::HeaderChecksum { declared: declared_header_crc, actual: actual_header_crc });
     }
     let payload = &input[GLTF_INFERENCE_LEAF_BINARY_HEADER_LENGTH..];
     let declared_payload_crc = read_u32(input, 32);
     let actual_payload_crc = text::crc32_iso_hdlc(payload);
     if declared_payload_crc != actual_payload_crc {
-        return Err(GltfInferenceBinaryError::PayloadChecksum { declared: declared_payload_crc.await, actual: actual_payload_crc.await });
+        return Err(GltfInferenceBinaryError::PayloadChecksum { declared: declared_payload_crc, actual: actual_payload_crc });
     }
     let encoded = std::str::from_utf8(payload).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
     text::decode_gltf_inference_leaf_text(&format!(
@@ -129,16 +131,19 @@ pub async fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInfer
         payload.len(),
         text::crc32_iso_hdlc(payload)
     ))
-    .await.map_err(Into::into)
+    .map_err(Into::into)
 }
 
-async fn read_u16(input: &[u8], offset: usize) -> u16 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u16(input: &[u8], offset: usize) -> u16 {
     u16::from_le_bytes(input[offset..offset + 2].try_into().expect("fixed header slice"))
 }
-async fn read_u32(input: &[u8], offset: usize) -> u32 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u32(input: &[u8], offset: usize) -> u32 {
     u32::from_le_bytes(input[offset..offset + 4].try_into().expect("fixed header slice"))
 }
-async fn read_u64(input: &[u8], offset: usize) -> u64 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u64(input: &[u8], offset: usize) -> u64 {
     u64::from_le_bytes(input[offset..offset + 8].try_into().expect("fixed header slice"))
 }
 //#endregion 📨️Envelope

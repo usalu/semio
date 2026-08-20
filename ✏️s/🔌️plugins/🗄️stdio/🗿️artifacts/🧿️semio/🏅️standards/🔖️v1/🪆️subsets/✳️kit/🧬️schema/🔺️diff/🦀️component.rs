@@ -70,7 +70,8 @@ pub struct SemioKitDiff {
 }
 
 impl SemioKitDiff {
-    pub async fn is_empty_diff(&self) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty_diff(&self) -> bool {
         self.types.is_none() && self.designs.is_none() && self.objects.is_none() && self.models.is_none() && self.properties.is_none() && self.representations.is_none()
     }
 }
@@ -144,7 +145,7 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
         }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff().await
+        self.is_empty_diff()
     }
 }
 //#endregion 🔖️Diff
@@ -152,7 +153,8 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
 //#region 🔖️HandcraftedDiffCodec
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_child_list, dec_child_opt, dec_design_list, dec_link_list, dec_type_list, enc_child_list, enc_child_opt, enc_design_list, enc_link_list, enc_type_list};
 
-async fn print_kit_diff(d: &SemioKitDiff) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_kit_diff(d: &SemioKitDiff) -> String {
     let mut fields = Vec::new();
     if let Some(t) = &d.types {
         fields.push(format!("t={}", enc_type_list(&t.values)));
@@ -174,7 +176,8 @@ async fn print_kit_diff(d: &SemioKitDiff) -> String {
     }
     fields.join(";")
 }
-async fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
     let mut d = SemioKitDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -182,12 +185,12 @@ async fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
     for field in line.split(';') {
         let (tag, rest) = field.split_once('=').ok_or_else(|| format!("kit diff: missing '=' in {field:?}"))?;
         match tag {
-            "t" => d.types = Some(SemioKitTypeList { values: dec_type_list(rest).await? }),
-            "d" => d.designs = Some(SemioKitDesignList { values: dec_design_list(rest).await? }),
-            "o" => d.objects = Some(SemioKitObjectChildList { values: dec_child_list(rest).await? }),
-            "m" => d.models = Some(SemioKitModelChildList { values: dec_child_list(rest).await? }),
-            "p" => d.properties = Some(dec_child_opt(rest).await?),
-            "r" => d.representations = Some(SemioKitLinkList { values: dec_link_list(rest).await? }),
+            "t" => d.types = Some(SemioKitTypeList { values: dec_type_list(rest)? }),
+            "d" => d.designs = Some(SemioKitDesignList { values: dec_design_list(rest)? }),
+            "o" => d.objects = Some(SemioKitObjectChildList { values: dec_child_list(rest)? }),
+            "m" => d.models = Some(SemioKitModelChildList { values: dec_child_list(rest)? }),
+            "p" => d.properties = Some(dec_child_opt(rest)?),
+            "r" => d.representations = Some(SemioKitLinkList { values: dec_link_list(rest)? }),
             other => return Err(format!("kit diff: unknown field tag {other:?}")),
         }
     }
@@ -196,10 +199,10 @@ async fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
 
 impl protocol::DiffCodec for SemioKitDiff {
     async fn print_diff(&self) -> String {
-        print_kit_diff(self).await
+        print_kit_diff(self)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_kit_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_kit_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=types, bit1=designs,
@@ -258,14 +261,14 @@ impl protocol::DiffCodec for SemioKitDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
         let map_err = |e: String| protocol::ProtocolError::Malformed { what: "kit diff field", offset: 2, detail: e };
-        let types = if presence & 0b0000_0001 != 0 { Some(SemioKitTypeList { values: read_type_list(&mut reader).await.map_err(map_err)? }) } else { None };
-        let designs = if presence & 0b0000_0010 != 0 { Some(SemioKitDesignList { values: read_design_list(&mut reader).await.map_err(map_err)? }) } else { None };
-        let objects = if presence & 0b0000_0100 != 0 { Some(SemioKitObjectChildList { values: read_child_list(&mut reader).await.map_err(map_err)? }) } else { None };
-        let models = if presence & 0b0000_1000 != 0 { Some(SemioKitModelChildList { values: read_child_list(&mut reader).await.map_err(map_err)? }) } else { None };
-        let properties = if presence & 0b0001_0000 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
-        let representations = if presence & 0b0010_0000 != 0 { Some(SemioKitLinkList { values: read_link_list(&mut reader).await.map_err(map_err)? }) } else { None };
+        let types = if presence & 0b0000_0001 != 0 { Some(SemioKitTypeList { values: read_type_list(&mut reader).map_err(map_err)? }) } else { None };
+        let designs = if presence & 0b0000_0010 != 0 { Some(SemioKitDesignList { values: read_design_list(&mut reader).map_err(map_err)? }) } else { None };
+        let objects = if presence & 0b0000_0100 != 0 { Some(SemioKitObjectChildList { values: read_child_list(&mut reader).map_err(map_err)? }) } else { None };
+        let models = if presence & 0b0000_1000 != 0 { Some(SemioKitModelChildList { values: read_child_list(&mut reader).map_err(map_err)? }) } else { None };
+        let properties = if presence & 0b0001_0000 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
+        let representations = if presence & 0b0010_0000 != 0 { Some(SemioKitLinkList { values: read_link_list(&mut reader).map_err(map_err)? }) } else { None };
         Ok(SemioKitDiff { types, designs, objects, models, properties, representations })
     }
 }
@@ -275,7 +278,8 @@ impl protocol::DiffCodec for SemioKitDiff {
 /// 🌱 Representative `SemioKitDiff` cases — single source of truth for
 /// `diff_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_diff_cases() -> Vec<SemioKitDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
     vec![
         SemioKitDiff::default(),

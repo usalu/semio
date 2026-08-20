@@ -13,9 +13,10 @@ pub struct GltfBindSceneRootNodeInverse {
     pub expected_nodes: Vec<usize>,
     pub touched_paths: Vec<String>,
 }
-pub async fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeInverse, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
-    let after = crate::artifacts::gltf::schema::mutations::bind_scene_root_node::mutation::apply(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfBindSceneRootNodeInverse, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let after = crate::artifacts::gltf::schema::mutations::bind_scene_root_node::mutation::apply(payload, base)?;
     Ok(GltfBindSceneRootNodeInverse {
         scene: payload.scene,
         node: payload.node,
@@ -24,19 +25,21 @@ pub async fn derive(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot)
         touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, payload.position)],
     })
 }
-pub async fn apply(base: &GltfSnapshot, inverse: &GltfBindSceneRootNodeInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(base: &GltfSnapshot, inverse: &GltfBindSceneRootNodeInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/scenes/{}/nodes/{}", inverse.scene, inverse.position);
     if inverse.touched_paths.len() != 1 || inverse.touched_paths[0] != path {
-        return Err(reject("gltf.mutation.invalid-touched-path", path, "inverse touched path does not match its root coordinates").await);
+        return Err(reject("gltf.mutation.invalid-touched-path", path, "inverse touched path does not match its root coordinates"));
     }
     let nodes = &base.document.scenes.get(inverse.scene).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/scenes", "scene is absent"))?.nodes;
     if *nodes != inverse.expected_nodes || nodes.get(inverse.position) != Some(&inverse.node) {
-        return Err(reject("gltf.mutation.stale-inverse", format!("document/scenes/{}/nodes/{}", inverse.scene, inverse.position), "scene roots do not equal the planned forward state").await);
+        return Err(reject("gltf.mutation.stale-inverse", format!("document/scenes/{}/nodes/{}", inverse.scene, inverse.position), "scene roots do not equal the planned forward state"));
     }
     let mut next = base.clone();
     next.document.scenes[inverse.scene].nodes.remove(inverse.position);
     Ok(next)
 }
-pub async fn encode(inverse: &GltfBindSceneRootNodeInverse) -> Result<Vec<u8>, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode(inverse: &GltfBindSceneRootNodeInverse) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(inverse)
 }

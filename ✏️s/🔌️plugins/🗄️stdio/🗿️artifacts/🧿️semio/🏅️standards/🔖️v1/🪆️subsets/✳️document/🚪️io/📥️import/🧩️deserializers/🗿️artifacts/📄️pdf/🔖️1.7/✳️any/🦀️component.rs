@@ -49,7 +49,8 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage;
 
-    pub(crate) async fn sample_pdf() -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(crate) fn sample_pdf() -> PdfSnapshot {
         let mut p1 = PdfPage::new(612.0, 792.0);
         p1.text = "Page one text.".into();
         let mut p2 = PdfPage::new(612.0, 792.0);

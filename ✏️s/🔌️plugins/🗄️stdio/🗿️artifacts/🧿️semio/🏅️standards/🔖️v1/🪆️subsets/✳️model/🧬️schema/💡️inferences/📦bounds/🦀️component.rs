@@ -21,7 +21,8 @@ pub struct SemioModelBounds {
     pub entity_count: u32,
 }
 
-async fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_any: &mut bool) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, seen_any: &mut bool) {
     if !*seen_any {
         *min = *p;
         *max = *p;
@@ -40,7 +41,8 @@ async fn expand(min: &mut SemioPoint3, max: &mut SemioPoint3, p: &SemioPoint3, s
 /// returns `SemioModelBounds::default()` (min == max == origin, `entity_count: 0`), matching the
 /// derived zero struct — the same degenerate-empty convention `image`'s own header-fold facet
 /// documents.
-pub async fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBounds {
     let mut min = SemioPoint3::default();
     let mut max = SemioPoint3::default();
     let mut seen_any = false;
@@ -64,11 +66,13 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioQuaternion, SemioTransform};
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
-    async fn placed(x: f64, y: f64, z: f64) -> SemioTransform {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn placed(x: f64, y: f64, z: f64) -> SemioTransform {
         SemioTransform { translation: SemioPoint3 { x, y, z }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }
 
-    async fn populated() -> SemioModelSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioModelSnapshot {
         SemioModelSnapshot {
             schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
             spatial: vec![

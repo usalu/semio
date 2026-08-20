@@ -3,7 +3,7 @@
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
 
 // #region 🔖️Schemas
-async fn material_schema() -> Schema {
+fn material_schema() -> Schema {
     Schema {
         id: "material".into(),
         module: "bim".into(),
@@ -14,7 +14,7 @@ async fn material_schema() -> Schema {
     }
 }
 
-async fn space_schema() -> Schema {
+fn space_schema() -> Schema {
     Schema {
         id: "space".into(),
         module: "bim".into(),
@@ -25,7 +25,7 @@ async fn space_schema() -> Schema {
     }
 }
 
-async fn wall_schema() -> Schema {
+fn wall_schema() -> Schema {
     Schema {
         id: "wall".into(),
         module: "bim".into(),
@@ -36,7 +36,7 @@ async fn wall_schema() -> Schema {
     }
 }
 
-async fn slab_schema() -> Schema {
+fn slab_schema() -> Schema {
     Schema {
         id: "slab".into(),
         module: "bim".into(),
@@ -47,7 +47,7 @@ async fn slab_schema() -> Schema {
     }
 }
 
-async fn column_schema() -> Schema {
+fn column_schema() -> Schema {
     Schema {
         id: "column".into(),
         module: "bim".into(),
@@ -58,7 +58,7 @@ async fn column_schema() -> Schema {
     }
 }
 
-async fn window_schema() -> Schema {
+fn window_schema() -> Schema {
     Schema {
         id: "window".into(),
         module: "bim".into(),
@@ -69,7 +69,7 @@ async fn window_schema() -> Schema {
     }
 }
 
-async fn story_schema() -> Schema {
+fn story_schema() -> Schema {
     Schema {
         id: "story".into(),
         module: "bim".into(),
@@ -85,7 +85,7 @@ async fn story_schema() -> Schema {
     }
 }
 
-async fn building_schema() -> Schema {
+fn building_schema() -> Schema {
     Schema {
         id: "building".into(),
         module: "bim".into(),
@@ -98,59 +98,59 @@ async fn building_schema() -> Schema {
 // #endregion 🔖️Schemas
 
 // #region 🔖️Helpers
-async fn number_dictionary(value: f64) -> Dictionary {
+fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-async fn text_dictionary(value: impl Into<String>) -> Dictionary {
+fn text_dictionary(value: impl Into<String>) -> Dictionary {
     Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value.into())))
 }
 
-async fn number_channel(id: &str, operator_id: &str, default: f64) -> ChannelSpec {
+fn number_channel(id: &str, operator_id: &str, default: f64) -> ChannelSpec {
     ChannelSpec::number_default(id, default, &[operator_id])
 }
 
-async fn text_channel(id: &str, operator_id: &str, default: &str) -> ChannelSpec {
+fn text_channel(id: &str, operator_id: &str, default: &str) -> ChannelSpec {
     ChannelSpec::requires(id, &[operator_id]).with_default(Value::Dictionary(text_dictionary(default)))
 }
 
-async fn out_material() -> ChannelSpec {
+fn out_material() -> ChannelSpec {
     ChannelSpec::named("M", "Mat", "material", "Material")
 }
 
-async fn out_space() -> ChannelSpec {
+fn out_space() -> ChannelSpec {
     ChannelSpec::named("S", "Spc", "space", "Space")
 }
 
-async fn out_wall() -> ChannelSpec {
+fn out_wall() -> ChannelSpec {
     ChannelSpec::named("W", "Wal", "wall", "Wall")
 }
 
-async fn out_slab() -> ChannelSpec {
+fn out_slab() -> ChannelSpec {
     ChannelSpec::named("S", "Slb", "slab", "Slab")
 }
 
-async fn out_column() -> ChannelSpec {
+fn out_column() -> ChannelSpec {
     ChannelSpec::named("C", "Col", "column", "Column")
 }
 
-async fn out_window() -> ChannelSpec {
+fn out_window() -> ChannelSpec {
     ChannelSpec::named("W", "Win", "window", "Window")
 }
 
-async fn out_story() -> ChannelSpec {
+fn out_story() -> ChannelSpec {
     ChannelSpec::named("S", "Sty", "story", "Story")
 }
 
-async fn out_building() -> ChannelSpec {
+fn out_building() -> ChannelSpec {
     ChannelSpec::named("B", "Bld", "building", "Building")
 }
 
-async fn out_floor_area() -> ChannelSpec {
+fn out_floor_area() -> ChannelSpec {
     ChannelSpec::named("A", "FlA", "floorArea", "FloorArea")
 }
 
-async fn out_gross_volume() -> ChannelSpec {
+fn out_gross_volume() -> ChannelSpec {
     ChannelSpec::named("V", "GrV", "grossVolume", "GrossVolume")
 }
 
@@ -168,7 +168,7 @@ struct OperatorMeta<'a> {
     summary: &'a str,
 }
 
-async fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
+fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: meta.id.into(),
         extension: "bim".into(),
@@ -183,36 +183,36 @@ async fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output:
     }
 }
 
-async fn register_element<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schema_id: &str) {
+fn register_element<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schema_id: &str) {
     registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[schema_id, "element"]);
 }
 
-async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
+fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
+fn read_channel_text(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     let dict = input.get(key).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))?;
     dict.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
-async fn read_field_number(dict: &Dictionary, key: &str) -> Option<f64> {
+fn read_field_number(dict: &Dictionary, key: &str) -> Option<f64> {
     dict.get(key).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64())
 }
 
 #[cfg(test)]
-async fn read_field_text(dict: &Dictionary, key: &str) -> Option<String> {
+fn read_field_text(dict: &Dictionary, key: &str) -> Option<String> {
     dict.get(key).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).map(str::to_string)
 }
 
-async fn list_indices(list: &Dictionary) -> Vec<usize> {
+fn list_indices(list: &Dictionary) -> Vec<usize> {
     let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
     indices.sort_unstable();
     indices
 }
 
-async fn list_from_variadic(items: Option<&Dictionary>) -> Dictionary {
+fn list_from_variadic(items: Option<&Dictionary>) -> Dictionary {
     let mut out = Dictionary::with_schema("list");
     let Some(items) = items else {
         return out;
@@ -227,7 +227,7 @@ async fn list_from_variadic(items: Option<&Dictionary>) -> Dictionary {
     out
 }
 
-async fn collect_elements_and_spaces(items: Option<&Dictionary>) -> (Dictionary, Dictionary) {
+fn collect_elements_and_spaces(items: Option<&Dictionary>) -> (Dictionary, Dictionary) {
     let mut elements = Dictionary::with_schema("list");
     let mut spaces = Dictionary::with_schema("list");
     let Some(items) = items else {
@@ -252,7 +252,7 @@ async fn collect_elements_and_spaces(items: Option<&Dictionary>) -> (Dictionary,
     (elements, spaces)
 }
 
-async fn story_floor_area(story: &Dictionary) -> f64 {
+fn story_floor_area(story: &Dictionary) -> f64 {
     if let Some(slab) = story.get("slab").and_then(|value| value.as_dictionary()) {
         return read_field_number(slab, "width").unwrap_or(0.0) * read_field_number(slab, "depth").unwrap_or(0.0);
     }
@@ -267,11 +267,11 @@ async fn story_floor_area(story: &Dictionary) -> f64 {
     total
 }
 
-async fn story_gross_volume(story: &Dictionary) -> f64 {
+fn story_gross_volume(story: &Dictionary) -> f64 {
     story_floor_area(story) * read_field_number(story, "height").unwrap_or(0.0)
 }
 
-async fn building_stories(building: &Dictionary) -> Option<&Dictionary> {
+fn building_stories(building: &Dictionary) -> Option<&Dictionary> {
     building.get("stories").and_then(|value| value.as_dictionary())
 }
 // #endregion 🔖️Helpers
@@ -280,7 +280,7 @@ async fn building_stories(building: &Dictionary) -> Option<&Dictionary> {
 struct MaterialElement;
 
 impl Operator for MaterialElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "material",
             Dictionary::with_schema("material")
@@ -295,7 +295,7 @@ impl Operator for MaterialElement {
 struct SpaceElement;
 
 impl Operator for SpaceElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "space",
             Dictionary::with_schema("space")
@@ -309,7 +309,7 @@ impl Operator for SpaceElement {
 struct WallElement;
 
 impl Operator for WallElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "wall",
             Dictionary::with_schema("wall")
@@ -323,7 +323,7 @@ impl Operator for WallElement {
 struct SlabElement;
 
 impl Operator for SlabElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "slab",
             Dictionary::with_schema("slab")
@@ -337,7 +337,7 @@ impl Operator for SlabElement {
 struct ColumnElement;
 
 impl Operator for ColumnElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "column",
             Dictionary::with_schema("column")
@@ -351,7 +351,7 @@ impl Operator for ColumnElement {
 struct WindowElement;
 
 impl Operator for WindowElement {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         Ok(channel_output(
             "window",
             Dictionary::with_schema("window")
@@ -367,7 +367,7 @@ impl Operator for WindowElement {
 struct AssembleStory;
 
 impl Operator for AssembleStory {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let elevation = read_channel_number(input, "elevation").unwrap_or(0.0);
         let height = read_channel_number(input, "height")?;
         let (elements, spaces) = collect_elements_and_spaces(input.get("elements").and_then(|value| value.as_dictionary()));
@@ -383,7 +383,7 @@ impl Operator for AssembleStory {
 struct AssembleBuilding;
 
 impl Operator for AssembleBuilding {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let name = read_channel_text(input, "name").unwrap_or_else(|_| "Building".into());
         let stories = list_from_variadic(input.get("stories").and_then(|value| value.as_dictionary()));
         Ok(channel_output("building", Dictionary::with_schema("building").insert("name", Value::Atom(Atom::String(name))).insert("stories", Value::Dictionary(stories))))
@@ -395,7 +395,7 @@ impl Operator for AssembleBuilding {
 struct FloorArea;
 
 impl Operator for FloorArea {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let building = read_building(input, "building")?;
         let mut total = 0.0;
         if let Some(stories) = building_stories(building) {
@@ -412,7 +412,7 @@ impl Operator for FloorArea {
 struct GrossVolume;
 
 impl Operator for GrossVolume {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let building = read_building(input, "building")?;
         let mut total = 0.0;
         if let Some(stories) = building_stories(building) {
@@ -426,13 +426,13 @@ impl Operator for GrossVolume {
     }
 }
 
-async fn read_building<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+fn read_building<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
     input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("building")).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 // #endregion 🔖️Measure
 
 /// 📦️ Registers bim schemas and operators.
-pub async fn register(registry: &mut Registry) {
+pub fn register(registry: &mut Registry) {
     registry.register_schema(material_schema());
     registry.register_schema(space_schema());
     registry.register_schema(wall_schema());
@@ -566,7 +566,7 @@ pub async fn register(registry: &mut Registry) {
 }
 
 #[cfg(any(test, feature = "component-guest"))]
-async fn module_registry() -> Registry {
+fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
     registry
@@ -578,7 +578,7 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
 
-    async fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
+    fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
         out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
     }
 
@@ -786,7 +786,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let extension_id = "bim";
         let label = "Bim";
         let icon_id = "bim";
@@ -800,21 +800,25 @@ mod extension_guest {
         topic_payload
     }
 
-    async fn bundle() -> ExtensionBundle {
+    // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
+    // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
+    // path_scope); bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request.
+    // See R9.
+    fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        ExtensionBundle::new("bim", "Bim", "0.1.0")
-            .extends("flow")
-            .mode(ExecutionMode::Linked)
-            .contributes_topic("flow.extension", flow_topic_payload)
-            .contributes_topic("flow.extension", procedural3d_topic_payload)
-            .handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-                })?;
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            })
+        let bundle = ExtensionBundle::new("bim", "Bim", "0.1.0").extends("flow");
+        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
+                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
+            })?;
+            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+        }))
     }
 
     semio_framework_plugin::extension_exports!(bundle);

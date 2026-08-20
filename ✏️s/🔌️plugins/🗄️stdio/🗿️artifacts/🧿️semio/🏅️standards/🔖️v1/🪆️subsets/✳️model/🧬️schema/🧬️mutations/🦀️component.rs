@@ -25,7 +25,8 @@ use serde::{Deserialize, Serialize};
 /// blanket `Deserialize for Option<T>` treats `null` as absence at ANY nesting depth. Combined with
 /// `skip_serializing_if = "Option::is_none"` (so "untouched" omits the key entirely), this makes
 /// key-PRESENT-with-`null` unambiguously mean `Some(None)`.
-async fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: Deserialize<'de>,
@@ -112,7 +113,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
     async fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
-            SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioModelMutation::InsertSpatialNode { node } => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::RemoveSpatialNode { id } => SemioModelDiff { spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::SetSpatialNode { id, kind, name, parent_id, placement } => SemioModelDiff {
@@ -189,9 +190,10 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub async fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
-    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot).await;
-    outcome.apply_to(snapshot).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
+    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -203,7 +205,8 @@ pub async fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutat
 /// requires every nested type in the mutation's field tree to itself implement `dsl::DslField` (via
 /// `dsl::DslRecord`), a repo-wide framework capability this hand-rolled vocabulary does not depend
 /// on (f6-final-summary.md §4: generics/tuple/nested-array derive gaps).
-async fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
     format!(
         "[{},{},{},{}]",
         enc_str(&s.schema),
@@ -212,17 +215,19 @@ async fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
         format!("[{}]", s.relations.iter().map(enc_relation).collect::<Vec<_>>().join(",")),
     )
 }
-async fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [schema, spatial, elements, relations] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
-    let spatial = split_top_level(strip_brackets(spatial).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_spatial_node).collect::<Result<Vec<_>, String>>()?;
-    let elements = split_top_level(strip_brackets(elements).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?;
-    let relations = split_top_level(strip_brackets(relations).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_relation).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioModelSnapshot { schema: dec_str(schema).await?, spatial, elements, relations })
+    let spatial = split_top_level(strip_brackets(spatial)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_spatial_node).collect::<Result<Vec<_>, String>>()?;
+    let elements = split_top_level(strip_brackets(elements)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?;
+    let relations = split_top_level(strip_brackets(relations)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_relation).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioModelSnapshot { schema: dec_str(schema)?, spatial, elements, relations })
 }
 
-async fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
     match m {
         SemioModelMutation::NoMutation => "no-mutation".to_string(),
         SemioModelMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_semio_model_snapshot(snapshot)),
@@ -254,7 +259,8 @@ async fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
         }
     }
 }
-async fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
     if line == "no-mutation" {
         return Ok(SemioModelMutation::NoMutation);
     }
@@ -263,46 +269,47 @@ async fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, St
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("model mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioModelMutation::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?).await? }),
-        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode { node: dec_spatial_node(arg("node")?).await? }),
-        "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode { id: dec_str(arg("id")?).await? }),
+        "set-snapshot" => Ok(SemioModelMutation::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?)? }),
+        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode { node: dec_spatial_node(arg("node")?)? }),
+        "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode { id: dec_str(arg("id")?)? }),
         "set-spatial-node" => Ok(SemioModelMutation::SetSpatialNode {
-            id: dec_str(arg("id")?).await?,
-            kind: decode_option(arg("kind")?, dec_spatial_kind).await?,
-            name: decode_option(arg("name")?, dec_str).await?,
-            parent_id: decode_option(arg("parent_id")?, |s| decode_option(s, dec_str)).await?,
-            placement: decode_option(arg("placement")?, dec_transform).await?,
+            id: dec_str(arg("id")?)?,
+            kind: decode_option(arg("kind")?, dec_spatial_kind)?,
+            name: decode_option(arg("name")?, dec_str)?,
+            parent_id: decode_option(arg("parent_id")?, |s| decode_option(s, dec_str))?,
+            placement: decode_option(arg("placement")?, dec_transform)?,
         }),
-        "insert-element" => Ok(SemioModelMutation::InsertElement { element: dec_element(arg("element")?).await? }),
-        "remove-element" => Ok(SemioModelMutation::RemoveElement { id: dec_str(arg("id")?).await? }),
+        "insert-element" => Ok(SemioModelMutation::InsertElement { element: dec_element(arg("element")?)? }),
+        "remove-element" => Ok(SemioModelMutation::RemoveElement { id: dec_str(arg("id")?)? }),
         "set-element" => Ok(SemioModelMutation::SetElement {
-            id: dec_str(arg("id")?).await?,
-            class: decode_option(arg("class")?, dec_element_class).await?,
-            placement: decode_option(arg("placement")?, dec_transform).await?,
-            geometry: decode_option(arg("geometry")?, dec_geometry_ref).await?,
-            spatial_id: decode_option(arg("spatial_id")?, |s| decode_option(s, dec_str)).await?,
-            psets: decode_option(arg("psets")?, |s| dec_list(s, dec_property_set)).await?,
+            id: dec_str(arg("id")?)?,
+            class: decode_option(arg("class")?, dec_element_class)?,
+            placement: decode_option(arg("placement")?, dec_transform)?,
+            geometry: decode_option(arg("geometry")?, dec_geometry_ref)?,
+            spatial_id: decode_option(arg("spatial_id")?, |s| decode_option(s, dec_str))?,
+            psets: decode_option(arg("psets")?, |s| dec_list(s, dec_property_set))?,
         }),
-        "insert-relation" => Ok(SemioModelMutation::InsertRelation { relation: dec_relation(arg("relation")?).await? }),
-        "remove-relation" => Ok(SemioModelMutation::RemoveRelation { id: dec_str(arg("id")?).await? }),
-        "set-relation" => Ok(SemioModelMutation::SetRelation { id: dec_str(arg("id")?).await?, kind: decode_option(arg("kind")?, dec_relation_kind).await?, from: decode_option(arg("from")?, dec_str).await?, to: decode_option(arg("to")?, dec_str).await? }),
+        "insert-relation" => Ok(SemioModelMutation::InsertRelation { relation: dec_relation(arg("relation")?)? }),
+        "remove-relation" => Ok(SemioModelMutation::RemoveRelation { id: dec_str(arg("id")?)? }),
+        "set-relation" => Ok(SemioModelMutation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? }),
         other => Err(format!("model mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioModelMutation {
     async fn print_op(&self) -> String {
-        print_semio_model_mutation(self).await
+        print_semio_model_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_model_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_model_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// 🏷️ Ordinal table, same declaration order as `SemioModelMutation`'s own enum variants and
 /// `parse_semio_model_mutation`'s keyword match — the real binary `tag` field's source of truth.
 const OP_KEYWORDS: [&str; 11] = ["no-mutation", "set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
-async fn variant_ordinal(m: &SemioModelMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioModelMutation) -> u8 {
     match m {
         SemioModelMutation::NoMutation => 0,
         SemioModelMutation::SetSnapshot { .. } => 1,
@@ -320,8 +327,9 @@ async fn variant_ordinal(m: &SemioModelMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_model_mutation` (empty for
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
-async fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
-    match print_semio_model_mutation(m).await.split_once(' ') {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
+    match print_semio_model_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -336,8 +344,8 @@ async fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 impl OpBinary for SemioModelMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_semio_model_mutation_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -362,13 +370,15 @@ impl OpBinary for SemioModelMutation {
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn sample_transform() -> SemioTransform {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn sample_transform() -> SemioTransform {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
     SemioTransform { translation: SemioPoint3 { x: 5.0, y: 6.0, z: 7.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
 #[cfg(test)]
-pub(crate) async fn fixture() -> SemioModelSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn fixture() -> SemioModelSnapshot {
     let mut snap = SemioModelSnapshot::default();
     snap.spatial.push(SpatialNode { id: "s1".into(), kind: SpatialKind::Site, name: "Site".into(), parent_id: None, placement: SemioTransform::identity() });
     snap.elements.push(SemioModelElement { id: "e1".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
@@ -377,7 +387,8 @@ pub(crate) async fn fixture() -> SemioModelSnapshot {
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SemioModelMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let base = fixture();
     vec![
         SemioModelMutation::NoMutation,
@@ -403,7 +414,8 @@ mod tests {
     /// 🧪️ mutation_diff_law + inverse_law, exercised for every non-trivial variant: `mutation.diff(base)`
     /// must equal what `apply_semio_model_mutation` actually applied, and applying the mutation's
     /// own `inverse()` must restore `base` exactly.
-    async fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
         let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(&mutation, base);
         let mut applied = base.clone();
         let produced = apply_semio_model_mutation(&mut applied, &mutation);

@@ -31,17 +31,20 @@ impl Default for ZipArtifact {
 
 impl ZipArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> ZipSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> ZipSnapshot {
         ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: ZipSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: ZipSnapshot) -> Self {
         Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: ZipSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: ZipSnapshot) {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
         self.comment = snapshot.comment;
@@ -54,7 +57,8 @@ impl ZipArtifact {
 /// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
 /// artifact struct.
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_zip_snapshot() -> ZipSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot::default()
 }
 
@@ -64,7 +68,8 @@ pub async fn empty_zip_snapshot() -> ZipSnapshot {
 /// `💡️inferences/🦀️component.rs`) and for this artifact's own `protocol_walk_law` (walked against
 /// the REAL `📸️snapshot/💾️binary/📡️component.protocol.semio` — needs at least one central-directory
 /// entry for the `repeat`/`backward`/`jump` construct to have real bytes to walk).
-pub async fn demo_zip_snapshot() -> ZipSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
         entries: vec![ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec() }, ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec() }],
@@ -75,7 +80,8 @@ pub async fn demo_zip_snapshot() -> ZipSnapshot {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.zip`.
-pub async fn zip_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn zip_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.zip",
         artifact: schema::FacetLeaves {
@@ -141,7 +147,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -160,25 +166,29 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl ZipBuilderConstruction {
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
-        pub async fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             self.snapshot.entries.push(ZipEntry { name: name.into(), data });
             self
         }
 
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
-        pub async fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             self.snapshot.entries.push(ZipEntry { name: name.into(), data });
             self
         }
 
         /// ➕️ Adds a fully-specified member (metadata-faithful construction path).
-        pub async fn with_entry(mut self, entry: ZipEntry) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_entry(mut self, entry: ZipEntry) -> Self {
             self.snapshot.entries.push(entry);
             self
         }
 
         /// 💬️ Sets the archive-level (EOCD) comment.
-        pub async fn with_comment(mut self, comment: impl Into<String>) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
             self.snapshot.comment = comment.into();
             self
         }

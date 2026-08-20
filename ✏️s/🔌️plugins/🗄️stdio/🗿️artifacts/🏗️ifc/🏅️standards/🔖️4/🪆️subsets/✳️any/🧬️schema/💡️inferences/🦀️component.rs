@@ -27,7 +27,7 @@ pub struct IfcInference {
 
 impl protocol::Inference<IfcSnapshot> for IfcInference {
     async fn infer(snapshot: &IfcSnapshot) -> Self {
-        Self { bounds: compute_ifc_bounds(snapshot).await }
+        Self { bounds: compute_ifc_bounds(snapshot) }
     }
 }
 
@@ -66,7 +66,8 @@ impl ArtifactInferrer for crate::artifacts::ifc::standards::v4::subsets::any::sc
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `ifc_artifact_schema_descriptor`'s registration.
-pub async fn ifc_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ifc_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ifc.inference",
         inference: schema::FacetLeaves {

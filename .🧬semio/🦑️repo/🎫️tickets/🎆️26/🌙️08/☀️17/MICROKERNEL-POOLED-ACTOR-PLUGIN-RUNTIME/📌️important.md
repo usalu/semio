@@ -4,6 +4,106 @@
 
 ---
 
+## 🎯 cross-packet finding (extension-activation, 2026-08-20) — M6 kernel primitives + both hosts' cascade DONE and green; two small lease-requests open, bench fixture NOT wired
+
+`extension-activation` (M6) is DONE for its own `path_scope`. `🎭️actor`: `activate_pinned`
+(exact-shard pin + parent-capability intersection), `link_extension`/`children_of`, and cascading
+`deactivate`/`kill` (leaves-first, zero orphans)/`suspend_cascade` (leaves-first)/`resume_cascade`
+(parent-first) all built, all tested. `cargo test -p semio-framework-actor --lib` **76 passed / 0
+failed** (70 baseline + 6 new, by name in the report), `--all-targets` EXIT 0, forced-rebuild
+census (R12/R13/R17) **0 dropped futures, 0 warnings**. Native (`🎯️targets/🧊️wgpu/📦️glue.rs`
+`create_app`/`destroy_app`) and web (`🎠️kernel/🟦️component.ts` `ActivationRegistry`) both wired
+with descriptor-driven cascade (26 real extension descriptors, `🔣️plugins.json`, embedded via
+`include_str!` natively / `PluginCatalog.extensions` on web) and both independently tested: TS
+`bun nx run @semio-tech/framework-kernel:test` **40 passed / 0 failed** (33 baseline incl. a real
+regression this packet caused-and-fixed in `suspend`'s statement ordering + 7 new, by name). Each
+gives extensions their OWN `PackageId` (not the parent's) so package-wide quarantine can never
+blast the parent — proven by `trapping_extension_never_faults_the_parent`. Full detail, every
+file:line, every test result:
+`📓️terra-extension-activation-report.md` (rewritten in place — supersedes the same-named file
+from an earlier, differently-scoped run of this packet; that run's own two additions in
+`💻️os/🖥️host/🦀️component.rs` and `🎠️kernel/🦀️component.rs` [the RUST one, not the TS file this
+run touched] are untouched and still stand).
+
+**`semio-framework-os-renderer-wgpu --lib`/`--all-targets` could NOT be verified — 682
+pre-existing, unrelated errors in `semio-framework-ui` (`🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/
+🦀️draw.rs` and siblings, missing `.await`) block the whole crate before it ever reaches this
+packet's own glue.rs code, confirmed identical (682, same crate) before AND after this packet's
+edits — zero regression, but also zero compiler verification possible for glue.rs today.** Also
+found and fixed IN this packet's own `create_app` (upstream of the new cascade code, same
+function): `GuestRuntime::compile` called without `.await` — a second, independent, pre-existing
+async-migration-residue bug, same class as the one below.
+
+**Two small lease-requests open (neither blocks THIS packet's own acceptance, both block "same
+shard as parent" placement and, transitively, the 50×50 bench fixture)**:
+1. `🎯️targets/🧊️wgpu/🎠️runtime.rs`'s `ParallelRuntime` (owned by `kernel-async-native`) has no
+   `activate_pinned` entry point — its `shards` field is private, so an extension cannot be forced
+   onto its parent's exact shard from outside that file. Needs one small additive method mirroring
+   the existing `activate` almost verbatim (exact signature in the report §7).
+2. `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`'s `ShardClient.activate` has the identical
+   gap on the web side.
+
+**New finding, NOT fixed by this packet (would need `runtime.rs`, out of `path_scope`)**:
+`ParallelRuntime::activate` (`runtime.rs`) calls `self.kernel.activate(...)` — now `pub async fn`
+on `Kernel` (landed via the `actor-green` async migration, AFTER `runtime.rs` was last touched) —
+**without `.await`**, from a non-async fn. Read directly, this cannot compile; the whole
+`semio-framework-os-renderer-wgpu` crate has never actually been checked since that migration
+landed (masked by the `semio-framework-ui` blocker above) so this has not yet been measured
+against a real compiler, only confirmed by reading the exact call site's types. Flagging for
+whoever picks up the `runtime.rs` lease above — the `activate_pinned` addition will need the same
+`.await` fix applied to sit next to a working `activate`.
+
+**The 50×50 bench fixture (`budget_3_activate_100`, `scale_bench` module, same `glue.rs`) was
+NOT wired to the real cascade — said plainly, not claimed: it needs BOTH lease #1 above (`Env`
+goes through the identical `ParallelRuntime::activate` the native host uses) AND its own separate
+rewrite (today it only activates one plugin's extensions, not all 50; its own title even says "50
+plugins + 50 extensions of ONE plugin"). The real 2,550-record fixture exists on disk
+(`🔣️bench-registry.json`, confirmed `extensionsPerPlugin: 50`, `extensions: 2500`) — it is simply
+not yet exercised end-to-end. Full honest-gaps section in the report, §7.
+
+---
+
+## 🎯 cross-packet finding (shard-lane, 2026-08-20) — M3 pieces 1+2 DONE and green; `budget_4_and_5` still unmeasurable (unrelated crate broken); presence wire-shape mismatch flagged
+
+`shard-lane` is DONE: lane-priority two-queue `ShardLoop::pump` (piece 1) + graceful
+`TurnFault::DeadlineExceeded → ShardOutcome::Turn{MoreWork}` epoch-yield handling (piece 2), both in
+`🔌️plugin/🖥️host/🧵️shard/🦀️component.rs`, proven by two new shard-level tests (`an_interactive_grant_
+is_executed_before_background_grants_queued_the_same_pump`, `a_turn_that_hits_its_epoch_deadline_
+yields_more_work_not_a_fault_and_stays_registered`). `semio-framework-plugin-host --lib`/
+`--all-targets` EXIT 0, tests **127/0/1** (was 125/0/1), `semio-framework-actor` **70/0** unchanged
+(not touched — both named regression tests re-verified non-vacuous). Root-cause diagnosis CONFIRMED
+with two corrections (no `ShardFrame::Grant.lane` field needed — `Envelope.lane` already carries it;
+epoch arming already existed, only the graceful-yield behavior was missing). Full detail:
+`📓️terra-shard-lane-report.md`.
+
+**`budget_4_and_5` p95 NOT MEASURED — blocked on an unrelated crate, not this packet's scope**:
+`semio-framework-os-scale-fixture` (`🧫️fixtures/🔌️scale/🦀️component.rs`) fails to build for
+`wasm32-wasip2` with 4 errors — stale `PatchOp::Replace`/`PatchReplace`/`UiPatch.kind` (a WIT
+patch-op shape that changed elsewhere, this fixture never updated) plus its own missing `presence`
+field (see next finding). This blocks the native bench pipeline (`bun ./📜️script.ts bench plugins
+--renderer native`) for ANYONE, not just this packet — needs its own dedicated fix before
+`budget_4_and_5` (or any of budgets 2-8) can be re-measured.
+
+**New finding, NOT fixed by this packet (needs a coordinator decision)**: `kernel::TurnResult.
+presence: Vec<ui_contract::PresenceUpdate>` (M2/`sdk-wire`'s new field) cannot be honestly populated
+at the two real turn-path sites that construct it from a guest's `poll` result
+(`🔌️plugin/🖥️host/🦀️component.rs`'s `WasmtimeRuntime::execute_turn`, `⏳️runtime.rs`'s
+`convert_poll_success`) — both left `presence: Vec::new()` with a documented reason, not silently.
+The WIT `reactor.turn-result.presence: list<presence-update>` field DOES carry real guest data, but
+`presence-update{peer: pack}` wraps a pack-encoded `📡️replication/📡️wire::PresencePeer` — the
+**collaboration-roster** shape (actor/connected_at_ms/drag-ghost/interaction/views) — while
+`ui_contract::PresenceUpdate` wants the **render-plane**, `(surface, node_key)`-addressed
+hover/selection channel (a structurally different record; `🎠️kernel/🦀️component.rs:918-923`'s own
+doc comment calls these two different channels). No `PresencePeer → PresenceUpdate` conversion
+exists anywhere in the repo; `kernel_turn_result_to_wit`, the fn name that doc comment points at as
+the pairing conversion, is referenced in that ONE doc comment and built nowhere. Either the WIT
+`presence-update` shape needs to change to carry render-plane data, or a real
+`PresencePeer → PresenceUpdate` mapping needs to be designed and built (guest-SDK-side, forward
+direction) before these two sites can carry anything but an honest empty default. Full detail in
+`📓️terra-shard-lane-report.md` §5.
+
+---
+
 ## 🎯 cross-packet finding (host-dropped-futures, 2026-08-20) — `semio-framework-plugin-host --lib` is GREEN; new `🛎️services` Send bug found (not fixed)
 
 `host-dropped-futures` is DONE. Forced-rebuild dropped-future census on `semio-framework-plugin-host
@@ -842,3 +942,234 @@ this specific file as freshly repaired, so the tool re-corrupted work the coordi
 
 It remains preferable to a hand-rolled regex (R10, span-keyed beats name-keyed). It is **not**
 trustworthy unattended, and its output is never evidence of its own correctness.
+
+
+## R21 — "own errors = 0" is MEANINGLESS when the build aborts upstream (sol, 2026-08-20)
+
+sol measured `semio-s-plugin-stdio`, `note` and `cad` after the 14-agent wave and got **own=0,
+inherited=62** for all three, and briefly read that as "the fleet is fixed". **It is not.** The build
+aborts in `semio-framework-plugin` and never compiles a single line of fleet code, so the own-count is
+zero by construction — the same shape as `note` reporting 23,792 errors mid-stdio-rewrite earlier today.
+
+**Before reporting an own-error count, confirm the compiler actually REACHED that crate.** Check the
+tail of the cargo output for `could not compile <upstream>` — if an upstream crate failed, every
+downstream number is an artifact. sol flagged this exact trap earlier in the session and then fell into
+it anyway; the guard has to be mechanical, not remembered.
+
+## R22 — a concurrent refactor in a shared file is NOT the workforce's to fix (sol, 2026-08-20)
+
+During the wave a peer session began a UI-vocabulary refactor in `🔌️plugin/🦀️component.rs`
+(`UiNode` → `ComponentTree`/`BuiltNode`, new `ui_wgpu::wgpu::` paths, 22 files touched). It left the
+SDK red mid-flight, which blocked the entire Fleet phase.
+
+**Four independent packets hit it and all four handled it correctly**: `terra-fleet-wasm`,
+`terra-stdio-finish`, `terra-sdk-tests` and `terra-runtime-rewrite` each identified it as a total
+upstream out-of-scope blocker, made **zero production edits**, and reported upward instead of
+"fixing" it. `terra-stdio-finish` in particular did read-only work only.
+
+That is the correct behaviour and it is now doctrine: **an in-progress refactor by another session must
+never be reverted or "repaired" by an executor.** Reverting it would destroy a concurrent dev's work,
+which CLAUDE.md's no-git-modifying rule exists to prevent. Distinguish it from abandoned wreckage with
+a liveness probe (mtimes + `git log --date=iso`) — abandoned damage gets fixed (R18/R20 precedent),
+LIVE work gets waited on and escalated to the human.
+
+
+---
+
+# 🌅️ UNIFIED PROGRAM RULINGS (sol, 2026-08-20 15:00) — the two programs are now ONE
+
+The peer session running `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY` is GONE (liveness probe
+14:52: zero `.rs` files modified repo-wide in the preceding 15 minutes; SDK 40 min stale). The user has
+designated this session the sole coordinator. **R22's exclusion zone is DISSOLVED** — the UI-vocabulary
+files are ours to finish, not to route around. That ticket's unfinished work is absorbed here.
+
+Plan of record for the unified program: `📓️design-unified.md` (six handcrafted mechanisms M1–M6 +
+packet registry + wave DAG + gates). Fleet UI migration recipe: `📓️recipe-plugin.md`.
+
+## E6 (NEW exception class) — the UI crates are sync by decree
+
+`semio-framework-ui-contract`, `-ui-runtime`, `-ui-render`, `-ui-scene` (and the backend targets):
+**frame construction and input dispatch are literal sync `fn`**. Async lives only at the outer
+boundaries — event loop, GPU submission, transport, actors. This OVERRIDES R2's universal-async rule
+inside those crates and is inherited from the absorbed program's own owner ruling U1.
+
+Rationale: a reconciler/layout/hit-test pass is a pure function of (previous tree, next tree) run to
+completion inside one frame. Making it async buys no suspension point and costs a future allocation
+per node. Untagged violations in EITHER direction are defects: `async` inside these crates without a
+boundary reason, or a boundary that blocks instead of awaiting.
+
+## M2 WIRE DECISION — `presence-update` is RENDER-PLANE, not the replication roster
+
+The WIT `turn-result.presence` slot and the reactor's own gap note DISAGREED: the WIT comment said the
+payload is a pack-encoded replication `PresencePeer`, the reactor note said it comes from a
+`ui_runtime::PresenceHub`. **Ruling: it carries pack-encoded `ui_contract::PresenceUpdate`.**
+
+Reason: the consumer of a turn result is the RENDERER, and it needs presence addressed by
+`(surface, node_key)` with a TTL — which is exactly `PresenceUpdate`'s shape. The collaboration roster
+already has its own dedicated channel (`ephemeral_snapshot` outbound, `AppCommand::Presence` →
+`adopt_presence` inbound); shipping the whole roster on every turn would be strictly worse and would
+duplicate a plane that already works. `kernel::TurnResult` gains a `presence` field to match.
+
+Presence NEVER touches the document store on either side. A hover must not produce a document
+revision — that would defeat the revisioned patch protocol and destroy patch minimality.
+
+## The two planes of collaboration (so no packet conflates them again)
+
+1. **Collaboration truth** (exists, untouched): typed `A::Presence` + `InteractionState` replicate via
+   the backbone roster. `adopt_presence` is the ONLY plugin ingress for peers.
+2. **Render-plane presence** (new): derived per turn inside `stamp_and_cache_interaction_ui` from that
+   same `InteractionState` plus `peers_selecting`/`peers_hovering`, drained into a per-actor
+   `PresenceHub` in the reactor, flushed once per poll onto `TurnResult.presence`.
+
+## R23 — `grep -c '^error'` is WRONG for `--message-format=short`
+
+sol measured three gate crates as "1 error" each when they had 296, 1 and 3. With `--message-format=short`
+rustc emits `path:line:col: error[E0308]: …`, so `^error` matches ONLY the final
+`error: could not compile` summary line. **Count with `grep -cE ': error'`.** This is the same class as
+R12's grep defect and R21's upstream-abort artifact: a query that cannot report its own failure returned
+a confident wrong number. Where a count would change a judgement, cross-check it with a second,
+differently-shaped query.
+
+## R24 — the R14 trap fires on ALIASES too, and it fired again today
+
+`cargo check -p semio-framework-plugin --lib` was EXIT 0 natively, `--all-features` EXIT 0 — and the
+**wasip2 guest surface had 4 errors**: `⚛️reactor/🦀️component.rs` referenced `ui_contract::UiIntent`,
+`ui_contract::UiRevision` and `ui_contract::Activity` with **no such alias declared anywhere**. The whole
+reactor module is gated on `target_arch = "wasm32", target_env = "p2"`, so no native build — not `--lib`,
+not `--all-features`, not `cargo test` — had ever compiled those four lines. Fixed by sol (gated
+`use semio_framework_ui_contract as ui_contract;`, matching the sibling `kernel` import's gating exactly).
+
+Standing consequence, restated because this is the SECOND time it has cost this ticket: **any packet
+touching `🔌️plugin/**` must name `--target wasm32-wasip2 --features component-guest` in its acceptance.
+Native green says nothing about the code the plugins actually ship.**
+
+## Verified GATE S′ state at ratification (sol-measured, 2026-08-20 ~15:00, HEAD bd1ce10b9b)
+
+| gate | result |
+|---|---|
+| `semio-framework-plugin --lib` | EXIT 0 |
+| `semio-framework-plugin --lib --all-features` | EXIT 0 |
+| `semio-framework-plugin --lib --target wasm32-wasip2 --features component-guest` | **EXIT 0** (was 4 errors) |
+| `… --features component-extension-guest` | **EXIT 0** (was 4 errors) |
+| SDK forced-rebuild dropped-future census | **0** |
+| `semio-framework-plugin-host --lib` | EXIT 0 — the earlier rustc ICE does NOT reproduce |
+| `semio-framework-os-kernel --lib` + `cargo test --lib` | EXIT 0 · **779 passed / 0 failed** |
+
+## The fleet is TWO independent lanes, not one queue (measured 2026-08-20 14:55)
+
+63 fleet crates. **34 depend on `semio-s-plugin-stdio`; 29 do NOT** (all extensions:
+cad-aec-*, cad-spatial-shape, draw-fsm*, flow-extension-*, imperative-*, playbook-procedural,
+process-*, sourcing-*, trinity-jack-*). The 29 carry only 1–5 own errors each and are gated behind
+three small upstream crates — `semio-framework-compiler` (296), `semio-s-imperative-extension-sdk` (1),
+`semio-s-plugin-cad-spatial-shape` (3). So the 29 go green in PARALLEL with stdio's 18,757, not behind
+it. Naming the aborting crate is worth as much as fixing one (rule re-earned: three different upstream
+aborts were hiding behind "the fleet is blocked on stdio").
+
+
+## R25 — R19 needs a MECHANICAL guard: query reverse deps before dispatch (sol, 2026-08-20 15:30)
+
+**sol violated R19 again, having written R19 into these rules after committing the same error earlier
+in this program.** Dispatched `scene-surface` to relocate the 15 product scene structs out of
+`semio-framework-ui`, while `stdio-green` was live and transitively depends on that crate. Result: the
+relocation went mid-flight red (~100 errors, E0116/E0117/E0255/E0560/E0599/E0609) and blocked
+`stdio-green` from measuring its own crate at all — plus a bad relative path in the new `ui_scene`
+dependency briefly failed at MANIFEST LOAD, which breaks every cargo command repo-wide before cargo
+even selects a crate.
+
+**Why the rule failed twice:** R19 says "check whether the path_scope is in the DEPENDENCY GRAPH of a
+live packet", but sol checked what is easy to check — that the PATH SCOPES were disjoint. They were:
+`🖱️ui/**` and `✏️s/🔌️plugins/🗄️stdio/**` share no files. Disjoint paths say nothing about the crate
+graph. A rule that requires judgement gets skipped under dispatch pressure; a rule with a command does not.
+
+**The guard, to be run before EVERY dispatch that edits a crate:**
+```
+cargo metadata --format-version 1 | python3 -c "import json,sys; d=json.load(sys.stdin); t='<crate>'; print([p['name'] for p in d['packages'] if any(x['name']==t for x in p['dependencies'])])"
+```
+If that list intersects any live packet's crate closure, do not co-dispatch — sequence it, or accept and
+ANNOUNCE the blockage to both packets up front.
+
+Measured for the record: **`semio-framework-ui` has 15 direct dependents** — `semio-framework`,
+`semio-framework-os`, `-os-flow`, `-os-infinite`, `-os-mcp`, `-os-renderer-wgpu`, `semio-framework-plugin`,
+`semio-framework-plugin-host`, `semio-framework-repo-cli`, and fleet plugins cad / dag / flow /
+mathematical / playbook / procedural. It is one of the highest-fan-in crates in the tree and should have
+been treated as a quiet-window crate, exactly like the SDK.
+
+**Corollary that DID work and should be kept:** `stdio-green` was pre-authorized in its brief to expect
+transient breakage from an authorized sibling, to escalate once, and to keep doing scoped work rather
+than poll. It did precisely that — diagnosed the manifest break to the exact line, verified twice a
+minute apart, reported once, and carried on. Cost: minutes. The same situation without pre-authorization
+cost a packet ~20,000 seconds earlier in this ticket. **Pre-authorizing the expected collision is
+cheaper than preventing every collision** — but it is not a substitute for the reverse-dep query.
+
+## R26 — a mid-flight crate relocation must never end a turn red
+
+A packet moving types BETWEEN crates holds a partially-rewired graph at every intermediate step. If its
+crate has downstream dependents, "red between turns" is not a private state — it is a global outage.
+Standing requirement for any relocation packet: after every edit that could affect the source crate,
+`cargo check -p <source-crate> --lib`, and never end a turn with it failing. Stage the move (source
+crate re-exports from the destination in the interim) rather than landing it atomically across turns.
+A clean revert with a written reason is a SUCCESS for such a packet, not a failure.
+
+
+## 📌️ PENDING BUG — `ParallelRuntime::activate` drops the kernel activation future
+
+Found by `extension-activation`, confirmed by sol with a targeted grep:
+`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/…/🎯️targets/🧊️wgpu/🎠️runtime.rs:159`
+```rust
+let actor = self.kernel.activate(package, plugin_ordinal, kind, lane, window, event);
+```
+No `.await`. If this is reached, the actor is **never actually registered with the kernel** — the exact
+shape of the `🎭️actor` defect that left the DRR-fairness and interactive-isolation tests passing against
+an EMPTY scheduler.
+
+**NOT fixed yet, deliberately.** That crate cannot compile (blocked behind `semio-framework-ui
+--features wgpu-engine`, 682 errors), so the fix cannot be verified, and a blind edit to the native
+activation path is exactly the kind of unverifiable change this ticket has been burned by. It is also
+possible the surrounding code will need more than an `.await` once the crate type-checks.
+
+**Owner: whoever holds `📺️renderer/**` the moment `ui-engine-green` lands.** sol will assign it then
+and it is a hard condition of the native path being called working — with a RUNTIME check that an
+activated actor actually appears in `kernel.metrics().actors`, not merely that it compiles.
+
+Note the pattern: this bug was invisible to every gate for the same reason the 682 errors were — nobody
+ever compiled the configuration the native renderer actually uses (R27).
+
+
+## R29 — the FIFTH residue shape: an orphaned `Box::pin` from de-asyncifying a RECURSIVE fn
+
+Found by `fleet-extensions-green` while reverting `🗣️dsl`. R10 catalogues four residue shapes no tool
+can fix; this is the **inverse of its third** (recursive `async fn` needing `Box::pin` to break the
+infinite future size) and it was never written down.
+
+**Shape.** When you de-asyncify a fn that was recursive, every `Box::pin(call(...))` its callers used to
+break the self-referential future now wraps a **plain value** instead of a Future. Nonsensical, and the
+`.await` is already gone so there is nothing await-shaped to notice.
+
+**Why it is dangerous: it does not look like async residue.** It surfaces as
+```
+error[E0277]: the size for values of type `str` cannot be known at compilation time
+error[E0277]: `Pin<Box<Value>>: Serialize` is not satisfied
+```
+— sizing and trait-bound errors that read like unrelated generics bugs and will send an unprepared
+packet hunting in completely the wrong place.
+
+**Why it spreads beyond the edited crate.** `🏪️store` and `🎒️pack/🔢️value` broke without being touched,
+because they use the same `Box::pin` mutual-recursion idiom against dsl's now-sync helpers. That is not
+new damage — it is R17's own logic (the compiler reaching code it could not previously reach).
+
+**Fix**: strip `Box::pin(` and its matching `)`, leaving the bare call. Uniform and mechanical, so it is
+safe to apply file-by-file with a rebuild after each. **Expect this on every remaining fleet crate** —
+stdio alone carries 13,000+ R9 reversions, and `🎒️pack`/`🏪️store` sit in nearly every dependency graph.
+
+### 📐️ And the coordination rule this incident finally makes explicit
+**A lease must cover the CLOSURE of a change, not its origin.** sol scoped a lease to `🗣️dsl/🔍️lexer`
++ `🔤️token` — the definitions — which made it impossible to complete, because you cannot make a
+function sync without owning its callers, and cannot unwrap a `Box::pin` without owning the file it sits
+in. Result: os-kernel left red across turns (R26 violation) and two *finished* packets blocked behind
+it. sol then pre-extended the lease to `🏪️store/**` and `🎒️pack/**` **before** the packet hit the fence
+a second time, with the guard "fix only breakage your reversion caused; report pre-existing defects
+rather than fixing them, they have other owners."
+
+Three lease errors by sol in one day (`semio-framework-ui` co-dispatch, `🗣️dsl` reverse-dep guard
+skipped, `🗣️dsl` scoped to origin not closure). The generalisable half: **before granting a lease, ask
+what ELSE must change for the change to compile — and grant that too, or do not grant it at all.**

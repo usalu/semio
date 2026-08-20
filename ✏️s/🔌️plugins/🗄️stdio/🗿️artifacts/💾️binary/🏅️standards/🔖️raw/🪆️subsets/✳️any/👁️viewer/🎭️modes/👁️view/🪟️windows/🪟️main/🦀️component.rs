@@ -16,20 +16,22 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::binary::create_binary_viewer`.
-pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::window_kind().await }
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `BinarySnapshot -> UiNode` read: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, always `read_only: true`, plus a trailing `#`-prefixed byte-count comment.
-pub async fn render(document: &BinarySnapshot) -> UiNode {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &BinarySnapshot) -> UiNode {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
     let text = if total > shown { format!("{hex}\n# total bytes: {total} (showing first {shown})") } else { format!("{hex}\n# total bytes: {total}") };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: true }).await
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: true })
 }
 //#endregion 🔖️Render
 

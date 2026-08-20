@@ -9,12 +9,13 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{BrepFa
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     let Some(face) = base.faces.iter().find(|f| f.id == payload.face_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]).await;
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]);
     };
     if face.surface == payload.new_surface {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id)).await;
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id));
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
         faces: Some(NamedTripleDiff {
@@ -23,6 +24,6 @@ pub async fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protoco
             added: vec![],
         }),
         ..Default::default()
-    }).await
+    })
 }
 //#endregion 🔖️Diff

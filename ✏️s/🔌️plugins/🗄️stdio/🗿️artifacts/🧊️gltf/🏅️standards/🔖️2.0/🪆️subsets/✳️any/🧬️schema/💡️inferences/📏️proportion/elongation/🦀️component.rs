@@ -8,18 +8,22 @@ pub struct GltfElongationInference;
 impl GltfInferenceLeaf for GltfElongationInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.elongation.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.elongation.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
 }
-pub async fn descriptor() -> GltfInferenceLeafDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfElongationInference::DESCRIPTOR
 }
-pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
-    exact(if extent[0] > 0.0 { extent[1] / extent[0] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology)).await
+    exact(if extent[0] > 0.0 { extent[1] / extent[0] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
-pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
 }
-pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.proportion.elongation)
 }
 

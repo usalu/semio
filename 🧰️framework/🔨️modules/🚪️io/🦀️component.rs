@@ -1082,7 +1082,7 @@ pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveErr
 pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
     let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
-    dialects.sort_by_key(|dialect| resolve_ready(ArtifactDialect::from(*dialect).to_coordinate()));
+    dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
     dialects.dedup();
     Ok(dialects)
 }
@@ -1105,7 +1105,7 @@ pub async fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<Artifac
     let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut seen: BTreeMap<String, &'static ComposerEntry> = BTreeMap::new();
     for entry in reg.values() {
-        seen.entry(ArtifactDialect::from(entry.writes).to_coordinate().await).or_insert(*entry);
+        seen.entry(ArtifactDialect::from(entry.writes).to_coordinate()).or_insert(*entry);
     }
     Ok(seen.into_values().map(|entry| (ArtifactDialect::from(entry.writes), entry.reads.iter().map(|&d| ArtifactDialect::from(d)).collect())).collect())
 }
@@ -1656,7 +1656,7 @@ pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Re
     for wire in wire_sources {
         validate_wire_dialect("compose-source", &wire.dialect).await?;
         validate_wire_payload("compose-source", &wire.payload).await?;
-        let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, resolve_ready(wire.dialect.to_coordinate()))))?;
+        let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, wire.dialect.to_coordinate())))?;
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
     match resolve_ready((entry.compose)(&sources)) {
@@ -2354,8 +2354,8 @@ mod tests {
             ArtifactRef { artifact_id: "doc.v2-final.draft".to_string(), dialect: ArtifactDialect { artifact_kind: "s.norm.en-1994-1".to_string(), standard: "2024".to_string(), subset: "cc6".to_string() } },
         ];
         for artifact_ref in cases {
-            let uri = artifact_ref.to_uri().await;
-            let parsed = ArtifactRef::parse_uri(&uri).await.unwrap_or_else(|e| panic!("{uri:?} should round-trip: {e}"));
+            let uri = artifact_ref.to_uri();
+            let parsed = ArtifactRef::parse_uri(&uri).unwrap_or_else(|e| panic!("{uri:?} should round-trip: {e}"));
             assert_eq!(parsed, artifact_ref);
         }
     }
@@ -2364,15 +2364,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_ref_to_uri_matches_expected_shape() {
         let artifact_ref = ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
-        assert_eq!(artifact_ref.to_uri().await, "abc123!s.stdio.gif@87a/*");
+        assert_eq!(artifact_ref.to_uri(), "abc123!s.stdio.gif@87a/*");
     }
 
     /// ⚠️ `parse_uri` rejects a missing `!` and an empty artifact id, mirroring
     /// `parse_coordinate`'s own empty-component rejection.
     #[semio_framework_async_macros::async_test]
     async fn artifact_ref_parse_uri_rejects_malformed_input() {
-        assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").await.is_err(), "missing '!' should fail");
-        assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").await.is_err(), "empty artifact id should fail");
+        assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").is_err(), "missing '!' should fail");
+        assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").is_err(), "empty artifact id should fail");
     }
 }
 //#endregion 🔖️Tests
@@ -2480,7 +2480,7 @@ pub mod io_mechanism {
         // suspends).
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", super::resolve_ready(from.to_coordinate()), super::resolve_ready(into.to_coordinate())),
+                Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", from.to_coordinate(), into.to_coordinate()),
                 Self::Unavailable => f.write_str("io mechanism registry unavailable"),
             }
         }
@@ -2565,7 +2565,7 @@ pub mod io_mechanism {
 
     async fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
         let min_fidelity = route.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().unwrap_or(0);
-        let joined = route.iter().map(|entry| super::resolve_ready(ArtifactDialect::from(entry.into).to_coordinate())).collect::<Vec<_>>().join(",");
+        let joined = route.iter().map(|entry| ArtifactDialect::from(entry.into).to_coordinate()).collect::<Vec<_>>().join(",");
         (std::cmp::Reverse(min_fidelity), route.len(), joined)
     }
 
@@ -2592,7 +2592,7 @@ pub mod io_mechanism {
     async fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
         let max_hops = max_hops.min(3);
         if max_hops == 0 {
-            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate().await, into.to_coordinate().await), diagnostics: Vec::new() });
+            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
         }
         let mut candidates: Vec<Vec<&'static IoEntry>> = Vec::new();
         let mut path: Vec<&'static IoEntry> = Vec::new();
@@ -2600,7 +2600,7 @@ pub mod io_mechanism {
         visited.insert(from.clone());
         walk_routes(registry, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
         if candidates.is_empty() {
-            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate().await, into.to_coordinate().await), diagnostics: Vec::new() });
+            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
         }
         let mut ranked = Vec::with_capacity(candidates.len());
         for route in candidates {
@@ -2628,8 +2628,8 @@ pub mod io_mechanism {
         let mut diagnostics = Vec::new();
         for hop in &route.hops {
             let key = (hop.from.clone(), hop.into.clone());
-            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", super::resolve_ready(hop.from.to_coordinate()), super::resolve_ready(hop.into.to_coordinate())), diagnostics: Vec::new() })?;
-            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", super::resolve_ready(hop.from.to_coordinate()), super::resolve_ready(hop.into.to_coordinate()), error.message), diagnostics: error.diagnostics })?;
+            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate()), diagnostics: Vec::new() })?;
+            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.message), diagnostics: error.diagnostics })?;
             current = outcome.value;
             diagnostics.extend(outcome.diagnostics);
         }
@@ -2656,7 +2656,7 @@ pub mod io_mechanism {
             .filter_map(|entry| entry.sniff.map(|sniff| (ArtifactDialect::from(entry.into), sniff(payload))))
             .filter(|(_, confidence)| *confidence != Confidence::None)
             .collect();
-        found.sort_by(|a, b| super::resolve_ready(b.1.rank()).cmp(&super::resolve_ready(a.1.rank())).then_with(|| super::resolve_ready(a.0.to_coordinate()).cmp(&super::resolve_ready(b.0.to_coordinate()))));
+        found.sort_by(|a, b| super::resolve_ready(b.1.rank()).cmp(&super::resolve_ready(a.1.rank())).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
         found
     }
 

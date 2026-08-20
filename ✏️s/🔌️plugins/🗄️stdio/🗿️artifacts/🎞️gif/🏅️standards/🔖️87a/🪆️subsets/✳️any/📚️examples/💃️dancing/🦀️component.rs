@@ -8,7 +8,8 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "dancing";
-pub async fn label() -> LocalizedLabel {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Dancing", "Dancing")
 }
 pub const ICON: &str = "file";
@@ -19,13 +20,15 @@ pub const DANCING_GIF_BYTES: &[u8] = include_bytes!("🖼️assets/🖼️dancin
 /// 📄️ Decodes [`DANCING_GIF_BYTES`] via the real 89a codec. Panics (at example-registration
 /// time, not at runtime for end users) if the fixture ever stops decoding — that's a real
 /// regression this example exists to catch, not something to paper over with a fallback.
-pub async fn decoded_snapshot() -> crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot {
-    crate::artifacts::gif::standards::v89a::engine::decode_gif(DANCING_GIF_BYTES).await.expect("dancing.gif fixture must decode via the real GIF89a codec")
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decoded_snapshot() -> crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot {
+    crate::artifacts::gif::standards::v89a::engine::decode_gif(DANCING_GIF_BYTES).expect("dancing.gif fixture must decode via the real GIF89a codec")
 }
 
-pub async fn source() -> ExampleSource {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn source() -> ExampleSource {
     let artifact_json = serde_json::to_string(&decoded_snapshot()).expect("serialize decoded GifSnapshot");
-    ExampleSource::new(ID, label(), artifact_json, ICON).await
+    ExampleSource::new(ID, label(), artifact_json, ICON)
 }
 
 #[cfg(test)]

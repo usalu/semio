@@ -37,7 +37,8 @@ impl Default for StepBounds {
 
 /// 🔢️ `StepValue::Real`/`Integer` -> `f64`, mirroring `IfcValue::as_real`/`Part21Value::as_real`
 /// since `StepValue` itself has no such helper.
-async fn step_value_as_real(v: &StepValue) -> Option<f64> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn step_value_as_real(v: &StepValue) -> Option<f64> {
     match v {
         StepValue::Real(r) => Some(*r),
         StepValue::Integer(i) => Some(*i as f64),
@@ -48,7 +49,8 @@ async fn step_value_as_real(v: &StepValue) -> Option<f64> {
 /// 🔍️ Finds `entity.args`'s coordinate aggregate: the first `Aggregate` of 2-4 members, every
 /// member real/integer-convertible — tolerates AP214's real `('label',(x,y,z))` arg order (the
 /// aggregate at index 1) without assuming a fixed position.
-async fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
     args.iter().find_map(|v| match v {
         StepValue::Aggregate(items) if (2..=4).contains(&items.len()) => {
             let reals: Vec<f64> = items.iter().filter_map(step_value_as_real).collect();
@@ -60,7 +62,8 @@ async fn coordinate_aggregate(args: &[StepValue]) -> Option<Vec<f64>> {
 
 /// 📦️ Computes [`StepBounds`] by folding every `CARTESIAN_POINT` entity's coordinate aggregate
 /// (found via [`coordinate_aggregate`], honest about AP214's real leading-label arg shape).
-pub async fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
     let mut min = [0.0f64; 3];
     let mut max = [0.0f64; 3];
     let mut seen = false;
@@ -70,7 +73,7 @@ pub async fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
         if !entity.name.eq_ignore_ascii_case("CARTESIAN_POINT") {
             continue;
         }
-        let Some(coords) = coordinate_aggregate(&entity.args).await else { continue };
+        let Some(coords) = coordinate_aggregate(&entity.args) else { continue };
         let p = [coords.first().copied().unwrap_or(0.0), coords.get(1).copied().unwrap_or(0.0), coords.get(2).copied().unwrap_or(0.0)];
         point_count += 1;
         if !seen {
@@ -96,7 +99,8 @@ mod tests {
     use crate::artifacts::step::schema::snapshot::StepEntity;
     use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 
-    async fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {
         StepEntity { id, name: "CARTESIAN_POINT".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(z)])], complex: Vec::new() }
     }
 

@@ -19,7 +19,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 const OP_KEYWORDS: [&str; 17] =
     ["createLayer", "deleteLayer", "createNode", "deleteNode", "moveNode", "dragNodes", "rotate", "scale", "reorderNodes", "group", "ungroup", "flatten", "unflatten", "replacePath", "replaceFill", "changeStrokeColor", "changeStrokeWidth"];
 
-async fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
     match m {
         SemioDrawingMutation::CreateLayer(_) => 0,
         SemioDrawingMutation::DeleteLayer(_) => 1,
@@ -43,9 +44,10 @@ async fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
 
 /// ✂️ Just the argument tail of `print_op` — the binary frame's `tag` byte already carries the
 /// keyword, so the text keyword itself (and its `:` separator) is redundant in the binary payload.
-async fn print_op_args(m: &SemioDrawingMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_op_args(m: &SemioDrawingMutation) -> String {
     use protocol::OpText;
-    match m.print_op().await.split_once(':') {
+    match m.print_op().split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -54,8 +56,8 @@ async fn print_op_args(m: &SemioDrawingMutation) -> String {
 impl protocol::OpBinary for SemioDrawingMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
-        out.extend_from_slice(print_op_args(self).await.as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {

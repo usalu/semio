@@ -88,8 +88,9 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` -- no full-replace
 /// slot exists on `PdfDiff` to short-circuit into.
-pub async fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
-    PdfDiff::between(base, next).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
+    PdfDiff::between(base, next)
 }
 //#endregion 🔖️Diff
 
@@ -100,7 +101,8 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
     use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 
-    async fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
         PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width, height, text: text.into() } }
     }
 
@@ -165,10 +167,12 @@ mod tests {
     //#endregion absorb_law
 
     //#region field_sweep
-    async fn sweep_a() -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> PdfSnapshot {
         snap(612.0, 792.0, "base text")
     }
-    async fn sweep_b() -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> PdfSnapshot {
         snap(300.5, 400.25, "changed text")
     }
 

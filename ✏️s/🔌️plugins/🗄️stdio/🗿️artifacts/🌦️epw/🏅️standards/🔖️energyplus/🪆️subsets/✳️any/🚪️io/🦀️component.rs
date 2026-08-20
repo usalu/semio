@@ -46,19 +46,21 @@ pub mod derived_composition {
     //#region 🔖️Register
     /// 📌️ Registers this subset's schema descriptor, inferences, document codec. Called from
     /// this artifact's root-level `register()` (former standard-level `engine::register()`).
-    pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register() {
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
             crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
-        ).await);
+        ));
     }
 
     /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to the artifact schema descriptor above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-    pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor().await);
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn register_artifact_inferences() {
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor());
     }
     //#endregion 🔖️Register
 }
@@ -68,7 +70,8 @@ pub use derived_composition::*;
 //#region 🔖️Sniff
 /// 🔍️ Real magic: an EPW file's first line always starts with the `LOCATION` keyword
 /// (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#location).
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
     let text = String::from_utf8_lossy(bytes);
     text.trim_start().starts_with("LOCATION,")
 }
@@ -78,7 +81,8 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// ✂️ Splits on the file's own line-ending convention (CRLF if present anywhere, else bare LF —
 /// real EPW files are CRLF, but decode stays lenient for hand-edited/foreign input); drops a
 /// single trailing empty segment produced by a final line terminator.
-async fn split_lines(text: &str) -> Vec<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_lines(text: &str) -> Vec<&str> {
     let mut lines: Vec<&str> = if text.contains("\r\n") { text.split("\r\n").collect() } else { text.split('\n').collect() };
     if lines.last() == Some(&"") {
         lines.pop();
@@ -86,7 +90,8 @@ async fn split_lines(text: &str) -> Vec<&str> {
     lines
 }
 
-async fn require_prefix<'a>(line: &'a str, prefix: &str) -> Result<&'a str, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_prefix<'a>(line: &'a str, prefix: &str) -> Result<&'a str, String> {
     if line.starts_with(prefix) {
         Ok(line)
     } else {
@@ -98,7 +103,8 @@ async fn require_prefix<'a>(line: &'a str, prefix: &str) -> Result<&'a str, Stri
 //#region 🔖️Location
 /// 📐️ EPW LOCATION line: `LOCATION,City,StateProvince,Country,Source,WMO,Latitude,Longitude,
 /// TimeZone,Elevation` — 10 comma-separated tokens (`LOCATION` keyword + 9 data fields).
-pub async fn parse_location_line(line: &str) -> Result<EpwLocation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_location_line(line: &str) -> Result<EpwLocation, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() != 10 || fields[0] != "LOCATION" {
         return Err(format!("epw: LOCATION line must have exactly 10 fields, got {}: {line:?}", fields.len()));
@@ -116,7 +122,8 @@ pub async fn parse_location_line(line: &str) -> Result<EpwLocation, String> {
     })
 }
 
-async fn encode_location_line(l: &EpwLocation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_location_line(l: &EpwLocation) -> String {
     format!("LOCATION,{},{},{},{},{},{},{},{},{}", l.city, l.state_province, l.country, l.source, l.wmo, l.latitude, l.longitude, l.time_zone, l.elevation)
 }
 //#endregion 🔖️Location
@@ -124,7 +131,8 @@ async fn encode_location_line(l: &EpwLocation) -> String {
 //#region 🔖️DataPeriods
 /// 📐️ DATA PERIODS line: `DATA PERIODS,N,RecordsPerHour,(Name,StartDayOfWeek,StartDate,EndDate)×N`.
 /// The leading `N` is re-derived from `periods.len()` on encode (redundant, not lossy).
-async fn parse_data_periods_line(line: &str) -> Result<EpwDataPeriods, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_data_periods_line(line: &str) -> Result<EpwDataPeriods, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() < 3 || fields[0] != "DATA PERIODS" {
         return Err(format!("epw: DATA PERIODS line malformed: {line:?}"));
@@ -139,7 +147,8 @@ async fn parse_data_periods_line(line: &str) -> Result<EpwDataPeriods, String> {
     Ok(EpwDataPeriods { records_per_hour, periods })
 }
 
-async fn encode_data_periods_line(d: &EpwDataPeriods) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_data_periods_line(d: &EpwDataPeriods) -> String {
     let mut out = format!("DATA PERIODS,{},{}", d.periods.len(), d.records_per_hour);
     for p in &d.periods {
         out.push_str(&format!(",{},{},{},{}", p.name, p.start_day_of_week, p.start_date, p.end_date));
@@ -152,40 +161,42 @@ async fn encode_data_periods_line(d: &EpwDataPeriods) -> String {
 /// 📐️ One data record: exactly 35 comma-separated columns, spec order — no defaults, no
 /// coercion; a wrong column count is a hard decode error (contrast with energy's plugin-side
 /// `EpwWeather::parse`, which silently defaults short/malformed rows).
-async fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() != EPW_RECORD_FIELD_COUNT {
         return Err(format!("expected {EPW_RECORD_FIELD_COUNT} columns, got {}: {line:?}", fields.len()));
     }
     let values: Vec<String> = fields.iter().map(|s| s.to_string()).collect();
     let arr: [String; EPW_RECORD_FIELD_COUNT] = values.try_into().map_err(|_| "record: field count mismatch".to_string())?;
-    Ok(EpwRecord::from_fields(arr).await)
+    Ok(EpwRecord::from_fields(arr))
 }
 //#endregion 🔖️Record
 
 //#region 🔖️SnapshotCodec
 /// 📥️ Decodes a full EPW text document: 8 typed/retained header lines + N fully-typed 35-column
 /// data records.
-pub async fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
-    let lines = split_lines(text).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
+    let lines = split_lines(text);
     if lines.len() < 8 {
         return Err(format!("epw: expected at least 8 header lines, got {}", lines.len()));
     }
-    let location = parse_location_line(lines[0]).await?;
-    let design_conditions = require_prefix(lines[1], "DESIGN CONDITIONS").await?.to_string();
-    let typical_extreme_periods = require_prefix(lines[2], "TYPICAL/EXTREME PERIODS").await?.to_string();
-    let ground_temperatures = require_prefix(lines[3], "GROUND TEMPERATURES").await?.to_string();
-    let holidays_dst = require_prefix(lines[4], "HOLIDAYS/DAYLIGHT SAVINGS").await?.to_string();
-    let comments_1 = require_prefix(lines[5], "COMMENTS 1").await?.to_string();
-    let comments_2 = require_prefix(lines[6], "COMMENTS 2").await?.to_string();
-    let data_periods = parse_data_periods_line(lines[7]).await?;
+    let location = parse_location_line(lines[0])?;
+    let design_conditions = require_prefix(lines[1], "DESIGN CONDITIONS")?.to_string();
+    let typical_extreme_periods = require_prefix(lines[2], "TYPICAL/EXTREME PERIODS")?.to_string();
+    let ground_temperatures = require_prefix(lines[3], "GROUND TEMPERATURES")?.to_string();
+    let holidays_dst = require_prefix(lines[4], "HOLIDAYS/DAYLIGHT SAVINGS")?.to_string();
+    let comments_1 = require_prefix(lines[5], "COMMENTS 1")?.to_string();
+    let comments_2 = require_prefix(lines[6], "COMMENTS 2")?.to_string();
+    let data_periods = parse_data_periods_line(lines[7])?;
 
     let mut records = Vec::with_capacity(lines.len().saturating_sub(8));
     for (i, line) in lines[8..].iter().enumerate() {
         if line.trim().is_empty() {
             continue;
         }
-        records.push(parse_record_line(line).await.map_err(|e| format!("epw: record {i}: {e}"))?);
+        records.push(parse_record_line(line).map_err(|e| format!("epw: record {i}: {e}"))?);
     }
     if records.is_empty() {
         return Err("epw: no data records".into());
@@ -197,18 +208,19 @@ pub async fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
 /// 📤️ Encodes a full EPW text document. Always emits CRLF line endings (the real EnergyPlus
 /// convention, matching every field's own retained W0 fixture) with a trailing CRLF after the
 /// last record.
-pub async fn encode_epw(snap: &EpwSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_epw(snap: &EpwSnapshot) -> String {
     let mut lines: Vec<String> = Vec::with_capacity(8 + snap.records.len());
-    lines.push(encode_location_line(&snap.location).await);
+    lines.push(encode_location_line(&snap.location));
     lines.push(snap.design_conditions.clone());
     lines.push(snap.typical_extreme_periods.clone());
     lines.push(snap.ground_temperatures.clone());
     lines.push(snap.holidays_dst.clone());
     lines.push(snap.comments_1.clone());
     lines.push(snap.comments_2.clone());
-    lines.push(encode_data_periods_line(&snap.data_periods).await);
+    lines.push(encode_data_periods_line(&snap.data_periods));
     for r in &snap.records {
-        lines.push(r.fields().await.join(","));
+        lines.push(r.fields().join(","));
     }
     let mut out = lines.join("\r\n");
     out.push_str("\r\n");

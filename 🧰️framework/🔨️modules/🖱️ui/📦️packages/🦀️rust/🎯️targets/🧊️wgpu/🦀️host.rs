@@ -5,11 +5,11 @@ use crate::wgpu::input::{KeyAction, PointerCallbacks, PointerModifiers};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, NamedKey};
 
-pub async fn pointer_coords(_window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
+pub fn pointer_coords(_window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
     (position.x as f32, position.y as f32)
 }
 
-pub async fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
+pub fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
     PointerModifiers { shift: modifiers.shift_key(), ctrl: modifiers.control_key(), alt: modifiers.alt_key(), meta: modifiers.super_key() }
 }
 
@@ -22,7 +22,7 @@ pub struct WindowInputState {
     pub modifiers: PointerModifiers,
 }
 
-pub async fn dispatch_window_event(window: &winit::window::Window, event: &WindowEvent, input: &mut WindowInputState, callbacks: &PointerCallbacks) -> bool {
+pub fn dispatch_window_event(window: &winit::window::Window, event: &WindowEvent, input: &mut WindowInputState, callbacks: &PointerCallbacks) -> bool {
     match event {
         WindowEvent::ModifiersChanged(modifiers) => {
             input.modifiers = modifiers_from_winit(modifiers.state());
@@ -73,7 +73,7 @@ pub async fn dispatch_window_event(window: &winit::window::Window, event: &Windo
     }
 }
 
-async fn mouse_button_to_i16(button: MouseButton) -> i16 {
+fn mouse_button_to_i16(button: MouseButton) -> i16 {
     match button {
         MouseButton::Left => 0,
         MouseButton::Right => 2,
@@ -84,7 +84,7 @@ async fn mouse_button_to_i16(button: MouseButton) -> i16 {
     }
 }
 
-async fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
+fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
     match &event.logical_key {
         Key::Named(NamedKey::Backspace) => Some(KeyAction::Backspace),
         Key::Named(NamedKey::Delete) => Some(KeyAction::Delete),

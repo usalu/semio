@@ -26,7 +26,7 @@ use crate::wgpu::component::ui::{ui_control_to_node, UiButtonNode, UiNode, UiPre
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
 use crate::wgpu::IconName;
 
-async fn variant_discriminant(node: &UiNode) -> u32 {
+fn variant_discriminant(node: &UiNode) -> u32 {
     match node {
         UiNode::Stack(_) => 0,
         UiNode::Text(_) => 1,
@@ -50,7 +50,7 @@ async fn variant_discriminant(node: &UiNode) -> u32 {
     }
 }
 
-async fn explicit_id(node: &UiNode) -> Option<&str> {
+fn explicit_id(node: &UiNode) -> Option<&str> {
     match node {
         UiNode::Stack(n) => n.id.as_deref(),
         UiNode::Button(n) => n.id.as_deref(),
@@ -71,7 +71,7 @@ async fn explicit_id(node: &UiNode) -> Option<&str> {
     }
 }
 
-async fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
+fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
     match explicit_id(node) {
         Some(id) if !id.is_empty() => NodeKey::Explicit(id.to_string()),
         _ => NodeKey::Positional(variant_discriminant(node), ordinal),
@@ -84,7 +84,7 @@ async fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
 /// Everything else has no nested `UiNode` payload to recurse into. `presence.state == Hidden`
 /// children are dropped here — hidden means not rendered at all, so they get no retained node, no
 /// layout, no paint, no hit-test; this is the one choke point every caller goes through.
-async fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
+fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
     let children = match node {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Section(n) => n.children.iter().map(Cow::Borrowed).collect(),
@@ -103,7 +103,7 @@ async fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
 /// identity (it's what `UiSelectNode.value` itself holds to name the current choice), so reusing it as
 /// the row's key needs no extra bookkeeping. See this module's doc comment for the open/closed
 /// `WidgetState` wiring request this groundwork is waiting on.
-async fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
+fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(item.value.clone()), icon_id: IconName::CircleDot, label: item.label.clone(), action: with_item_value_arg(&select.on_change, &item.value), style: None, presence: UiPresence::default(), menu: None })
 }
 
@@ -111,7 +111,7 @@ async fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
 /// so a click on one synthesized `Select` row is distinguishable from any other row once a later
 /// events milestone dispatches it — `on_change.clone()` alone would fire an identical, valueless
 /// action for every row.
-async fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescriptor {
+fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescriptor {
     let mut merged = action.clone();
     let mut entries = match merged.args.take() {
         Some(DslValue::Object(map)) => map,
@@ -124,7 +124,7 @@ async fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDe
 
 /// 🌳️ Synthesizes one retained `Stack` row per `Tree` section, keyed by `section.id`, wrapping its
 /// `items` (recursively expanded by `tree_item_row`) as retained children.
-async fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNode {
+fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
         gap: None,
@@ -150,7 +150,7 @@ async fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -
 /// fields, only clones them into `WidgetSpec`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
 /// MECHANISM W3a: `hover_action`/`unhover_action` are deleted — hover is now framework-owned per
 /// `UiTreeNode.interaction_domain`, never a per-item action.
-async fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
+fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
         children.push(ui_control_to_node(control.clone()));
@@ -172,14 +172,14 @@ async fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode 
 /// sections), so this leaves `UiButtonNode.id` unset — `node_key`'s positional fallback (keyed by the
 /// action's ordinal within its parent row's `actions` list) is already stable across re-renders for a
 /// fixed action set, matching every other id-less synthesized/leaf child in this module.
-async fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
+fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
     UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id.clone(), label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence: UiPresence::default(), menu: None })
 }
 //#endregion 🔖️CompositeExpansion
 
 /// ⚖️ Whether the two nodes' *own* scalar fields (excluding nested `UiNode` children, which are
 /// reconciled and dirtied independently) are equal.
-async fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
+fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
     match (previous, next) {
         (UiNode::Stack(p), UiNode::Stack(n)) => {
             p.direction == n.direction && p.gap == n.gap && p.padding == n.padding && p.id == n.id && p.presence == n.presence && p.activate == n.activate && p.drop_action == n.drop_action && p.children.len() == n.children.len()
@@ -195,7 +195,7 @@ async fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
 /// (i.e. `state` crossing into/out of `Hidden`) always counts — a hidden element occupies no layout
 /// space at all, so becoming hidden/unhidden must re-run layout for its parent, unlike every other
 /// `presence` change (selected/status/hover/previewed/disabled), which is paint-only.
-async fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
+fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     if previous.presence().visible() != next.presence().visible() {
         return true;
     }
@@ -213,7 +213,7 @@ impl UiTree {
     /// child matching, minimal-dirty-flag diffing of matched nodes, insertion of unmatched incoming
     /// children, removal of unmatched existing children. Re-applying an identical tree sets zero
     /// dirty flags anywhere in the tree.
-    pub async fn apply_tree(&mut self, incoming: &UiNode) {
+    pub fn apply_tree(&mut self, incoming: &UiNode) {
         let key = node_key(incoming, 0);
         match self.root {
             Some(root_id) if self.node(root_id).map(|n| &n.key) == Some(&key) => {
@@ -229,14 +229,14 @@ impl UiTree {
         }
     }
 
-    async fn insert_new_root(&mut self, key: NodeKey, incoming: &UiNode) {
+    fn insert_new_root(&mut self, key: NodeKey, incoming: &UiNode) {
         let id = self.insert_child(None, Node::new(key, WidgetSpec(incoming.clone())));
         self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
         self.root = Some(id);
         self.reconcile_children(id, incoming);
     }
 
-    async fn diff_and_update(&mut self, id: NodeId, incoming: &UiNode) {
+    fn diff_and_update(&mut self, id: NodeId, incoming: &UiNode) {
         let (needs_layout, needs_paint) = match self.node(id) {
             Some(node) if own_fields_equal(&node.spec.0, incoming) => (false, false),
             Some(node) if layout_affecting_change(&node.spec.0, incoming) => (true, true),
@@ -259,7 +259,7 @@ impl UiTree {
     /// comment for the `WidgetState` open/closed wiring request that gates actually showing them)
     /// without re-deriving it from `spec.0` itself. Deliberately bypasses `mark_dirty` — direct flag
     /// mutation, no `SUBTREE_DIRTY` bubbling — since this is bookkeeping metadata, not a repaint signal.
-    async fn sync_composite_flags(&mut self, id: NodeId, incoming: &UiNode) {
+    fn sync_composite_flags(&mut self, id: NodeId, incoming: &UiNode) {
         if let UiNode::Select(select) = incoming {
             if let Some(node) = self.node_mut(id) {
                 node.flags.set(NodeFlags::HAS_POPUP, !select.items.is_empty());
@@ -267,7 +267,7 @@ impl UiTree {
         }
     }
 
-    async fn reconcile_children(&mut self, parent: NodeId, incoming: &UiNode) {
+    fn reconcile_children(&mut self, parent: NodeId, incoming: &UiNode) {
         self.sync_composite_flags(parent, incoming);
         let incoming_children = children_of(incoming);
         let existing_children: Vec<NodeId> = self.children(parent).collect();
@@ -315,23 +315,23 @@ mod tests {
     use crate::wgpu::component::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
     use crate::wgpu::tree::NodeFlags;
 
-    async fn action() -> ActionDescriptor {
+    fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
     }
 
-    async fn text(value: &str) -> UiNode {
+    fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    async fn button(id: &str, label: &str) -> UiNode {
+    fn button(id: &str, label: &str) -> UiNode {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
-    async fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
+    fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
     }
 
-    async fn clear_dirty(tree: &mut UiTree, id: NodeId) {
+    fn clear_dirty(tree: &mut UiTree, id: NodeId) {
         if let Some(node) = tree.node_mut(id) {
             node.flags.set(NodeFlags::DIRTY_LAYOUT, false);
             node.flags.set(NodeFlags::DIRTY_PAINT, false);
@@ -343,14 +343,14 @@ mod tests {
         }
     }
 
-    async fn any_dirty(tree: &UiTree, id: NodeId) -> bool {
+    fn any_dirty(tree: &UiTree, id: NodeId) -> bool {
         let node = tree.node(id).unwrap();
         let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY);
         dirty || tree.children(id).any(|child| any_dirty(tree, child))
     }
 
     #[test]
-    async fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
+    fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
         let mut tree = UiTree::new();
         let ui = stack("root", vec![text("hello"), button("btn", "Go")]);
         tree.apply_tree(&ui);
@@ -364,7 +364,7 @@ mod tests {
     }
 
     #[test]
-    async fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() {
+    fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("root", vec![text("hello"), text("world")]));
         let root = tree.root.unwrap();
@@ -383,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    async fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched() {
+    fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("root", vec![text("hello")]));
         let root = tree.root.unwrap();
@@ -401,7 +401,7 @@ mod tests {
     }
 
     #[test]
-    async fn removing_a_child_frees_its_arena_slot() {
+    fn removing_a_child_frees_its_arena_slot() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("root", vec![text("hello"), text("bye")]));
         let root = tree.root.unwrap();
@@ -415,7 +415,7 @@ mod tests {
     }
 
     //#region 🔖️CompositeExpansionTests
-    async fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
+    fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
@@ -427,7 +427,7 @@ mod tests {
         })
     }
 
-    async fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
+    fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
         UiTreeItemNode {
             id: id.into(),
             label: label.into(),
@@ -446,7 +446,7 @@ mod tests {
         }
     }
 
-    async fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
+    fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
         if let Some(ids) = selected_ids {
             let selected: HashSet<String> = ids.into_iter().collect();
             ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new(), None, &|_id: &str| Vec::new());
@@ -455,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    async fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() {
+    fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() {
         let mut tree = UiTree::new();
         tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
         let root = tree.root.unwrap();
@@ -475,7 +475,7 @@ mod tests {
     }
 
     #[test]
-    async fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
+    fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
         let mut tree = UiTree::new();
         tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
         let root = tree.root.unwrap();
@@ -492,7 +492,7 @@ mod tests {
     }
 
     #[test]
-    async fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
+    fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
         let mut tree = UiTree::new();
         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
         let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
@@ -518,7 +518,7 @@ mod tests {
     }
 
     #[test]
-    async fn tree_item_control_and_trailing_actions_become_retained_children_too() {
+    fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         let mut tree = UiTree::new();
         let item = UiTreeItemNode {
             control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    async fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
+    fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
         let mut tree = UiTree::new();
         let select_ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
         tree.apply_tree(&select_ui);

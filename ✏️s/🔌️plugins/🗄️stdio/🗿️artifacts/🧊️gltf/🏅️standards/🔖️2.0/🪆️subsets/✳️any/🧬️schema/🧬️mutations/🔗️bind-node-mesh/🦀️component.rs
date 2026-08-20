@@ -50,7 +50,8 @@ mod diff {
     use crate::artifacts::gltf::schema::diff::GltfDiff;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub async fn diff(payload: &BindNodeMesh, base: &GltfSnapshot) -> GltfDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn diff(payload: &BindNodeMesh, base: &GltfSnapshot) -> GltfDiff {
         payload.plan(base).unwrap_or_default()
     }
 }
@@ -64,7 +65,8 @@ mod inverse {
     use crate::artifacts::gltf::schema::modules::mutation_dispatch::*;
     use crate::artifacts::gltf::GltfSnapshot;
     
-    pub async fn inverse(payload: &BindNodeMesh, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(payload: &BindNodeMesh, base: &GltfSnapshot) -> Vec<GltfMutation> {
         base.document.nodes.get(payload.index).map(|node| vec![GltfMutation::BindNodeMesh(BindNodeMesh { index: payload.index, mesh: node.mesh })]).unwrap_or_default()
     }
 }

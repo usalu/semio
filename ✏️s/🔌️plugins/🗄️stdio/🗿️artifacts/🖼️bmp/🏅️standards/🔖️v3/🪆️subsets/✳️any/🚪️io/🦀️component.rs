@@ -68,13 +68,16 @@ use crate::artifacts::bmp::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA}
 //#region ByteIo
 const BMP_MAGIC: [u8; 2] = *b"BM";
 
-async fn read_u16(b: &[u8], pos: usize) -> Result<u16, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u16(b: &[u8], pos: usize) -> Result<u16, String> {
     b.get(pos..pos + 2).map(|s| u16::from_le_bytes([s[0], s[1]])).ok_or_else(|| "bmp: truncated (u16)".into())
 }
-async fn read_u32(b: &[u8], pos: usize) -> Result<u32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_u32(b: &[u8], pos: usize) -> Result<u32, String> {
     b.get(pos..pos + 4).map(|s| u32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (u32)".into())
 }
-async fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
     b.get(pos..pos + 4).map(|s| i32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (i32)".into())
 }
 //#endregion ByteIo
@@ -82,14 +85,16 @@ async fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
 //#region RowGeometry
 /// 📏 BMP scanlines are padded to a 4-byte boundary: `((width*bpp + 31) / 32) * 4`. `pub(crate)`
 /// so `../🧬️schema`'s own `demo_bmp_snapshot()` can compute a real `image_size`.
-pub(crate) async fn row_bytes(width: u32, bpp: u16) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn row_bytes(width: u32, bpp: u16) -> usize {
     (((width as usize * bpp as usize) + 31) / 32) * 4
 }
 //#endregion RowGeometry
 
 //#region Bitfields
 /// 🧮 `(shift, bit-width)` of a contiguous bitfield mask, used to extract+normalize a channel.
-async fn mask_shift_width(mask: u32) -> (u32, u32) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn mask_shift_width(mask: u32) -> (u32, u32) {
     if mask == 0 {
         return (0, 0);
     }
@@ -98,8 +103,9 @@ async fn mask_shift_width(mask: u32) -> (u32, u32) {
     (shift, width)
 }
 
-async fn extract_channel(raw: u32, mask: u32) -> u8 {
-    let (shift, width) = mask_shift_width(mask).await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn extract_channel(raw: u32, mask: u32) -> u8 {
+    let (shift, width) = mask_shift_width(mask);
     if width == 0 {
         return 0;
     }
@@ -114,7 +120,8 @@ async fn extract_channel(raw: u32, mask: u32) -> u8 {
 //#endregion Bitfields
 
 //#region IndexUnpack
-async fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
     match bpp {
         8 => row[x] as usize,
         4 => {
@@ -136,28 +143,29 @@ async fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
 //#endregion IndexUnpack
 
 //#region Codec
-pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     if bytes.len() < 14 || bytes[0..2] != BMP_MAGIC {
         return Err("bmp: bad signature".into());
     }
-    let data_offset = read_u32(bytes, 10).await? as usize;
-    let header_size = read_u32(bytes, 14).await?;
+    let data_offset = read_u32(bytes, 10)? as usize;
+    let header_size = read_u32(bytes, 14)?;
     if (header_size as usize) < 40 {
         return Err(format!("bmp: unsupported info header size {header_size}"));
     }
-    let width_i = read_i32(bytes, 18).await?;
-    let height_i = read_i32(bytes, 22).await?;
+    let width_i = read_i32(bytes, 18)?;
+    let height_i = read_i32(bytes, 22)?;
     // 🧾 The rest of BITMAPINFOHEADER's 11 real fields — read honestly regardless of which
     // branch (empty-sentinel vs. real image) follows, per the recipe's "codec fills what it
     // decodes" rule.
-    let planes = read_u16(bytes, 26).await?;
-    let bpp = read_u16(bytes, 28).await?;
-    let compression = read_u32(bytes, 30).await?;
-    let image_size = read_u32(bytes, 34).await?;
-    let x_pixels_per_meter = read_i32(bytes, 38).await?;
-    let y_pixels_per_meter = read_i32(bytes, 42).await?;
-    let colors_used_field = read_u32(bytes, 46).await?;
-    let colors_important = read_u32(bytes, 50).await?;
+    let planes = read_u16(bytes, 26)?;
+    let bpp = read_u16(bytes, 28)?;
+    let compression = read_u32(bytes, 30)?;
+    let image_size = read_u32(bytes, 34)?;
+    let x_pixels_per_meter = read_i32(bytes, 38)?;
+    let y_pixels_per_meter = read_i32(bytes, 42)?;
+    let colors_used_field = read_u32(bytes, 46)?;
+    let colors_important = read_u32(bytes, 50)?;
 
     if width_i == 0 && height_i == 0 {
         // 🌱 The zero-dimension "empty document" case round-tripped by encode_bmp — no pixel
@@ -204,21 +212,21 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
         if header_size == 40 {
             // 📌 Classic Win9x extension: 3 (sometimes 4) DWORD masks immediately follow the
             // core 40-byte BITMAPINFOHEADER, before the pixel data.
-            masks[0] = read_u32(bytes, cursor).await?;
-            masks[1] = read_u32(bytes, cursor + 4).await?;
-            masks[2] = read_u32(bytes, cursor + 8).await?;
+            masks[0] = read_u32(bytes, cursor)?;
+            masks[1] = read_u32(bytes, cursor + 4)?;
+            masks[2] = read_u32(bytes, cursor + 8)?;
             cursor += 12;
             if cursor + 4 <= data_offset {
-                masks[3] = read_u32(bytes, cursor).await?;
+                masks[3] = read_u32(bytes, cursor)?;
                 cursor += 4;
             }
         } else {
             // 📌 BITMAPV2/V3/V4/V5INFOHEADER embed the masks at fixed offsets inside the header.
-            masks[0] = read_u32(bytes, 14 + 40).await?;
-            masks[1] = read_u32(bytes, 14 + 44).await?;
-            masks[2] = read_u32(bytes, 14 + 48).await?;
+            masks[0] = read_u32(bytes, 14 + 40)?;
+            masks[1] = read_u32(bytes, 14 + 44)?;
+            masks[2] = read_u32(bytes, 14 + 48)?;
             if header_size >= 56 {
-                masks[3] = read_u32(bytes, 14 + 52).await?;
+                masks[3] = read_u32(bytes, 14 + 52)?;
             }
         }
     } else if bpp == 16 {
@@ -281,10 +289,10 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
                     let so = x * 2;
                     let raw = u16::from_le_bytes([row[so], row[so + 1]]) as u32;
                     let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]).await;
-                    pixels[o + 1] = extract_channel(raw, masks[1]).await;
-                    pixels[o + 2] = extract_channel(raw, masks[2]).await;
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]).await } else { 255 };
+                    pixels[o] = extract_channel(raw, masks[0]);
+                    pixels[o + 1] = extract_channel(raw, masks[1]);
+                    pixels[o + 2] = extract_channel(raw, masks[2]);
+                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
                 }
             }
             32 => {
@@ -292,10 +300,10 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
                     let so = x * 4;
                     let raw = u32::from_le_bytes([row[so], row[so + 1], row[so + 2], row[so + 3]]);
                     let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]).await;
-                    pixels[o + 1] = extract_channel(raw, masks[1]).await;
-                    pixels[o + 2] = extract_channel(raw, masks[2]).await;
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]).await } else { 255 };
+                    pixels[o] = extract_channel(raw, masks[0]);
+                    pixels[o + 1] = extract_channel(raw, masks[1]);
+                    pixels[o + 2] = extract_channel(raw, masks[2]);
+                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
                 }
             }
             _ => return Err(format!("bmp: unsupported bit depth {bpp}")),
@@ -332,7 +340,8 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// metadata simply doesn't apply to this encode target). A real implementation could reasonably
 /// restrict *encode* to 24/32-bit only while *decode* covers every depth, which is exactly the
 /// scope cut made here.
-pub async fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);
     let expected = w as usize * h as usize * 4;
     if snap.pixels.len() != expected {
@@ -367,7 +376,7 @@ pub async fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
             BmpRowOrder::BottomUp => h as usize - 1 - file_row,
             BmpRowOrder::TopDown => file_row,
         };
-        let mut row_buf = vec![0u8; rb.await];
+        let mut row_buf = vec![0u8; rb];
         for x in 0..w as usize {
             let i = (src_y * w as usize + x) * 4;
             let o = x * 3;
@@ -383,13 +392,14 @@ pub async fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
-pub async fn register() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
     crate::artifacts::bmp::io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA).await);
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA));
 }
 
 /// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
@@ -404,18 +414,21 @@ pub async fn register() {
 /// (`dsl::DslOps` gives per-variant specs via `DslVariants`, no single canonical id to register
 /// under — `register-schema-spec-one-spec-per-artifact`, this ticket's own recipe §5).
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec);
     dsl::registry::register_schema_spec("stdio.bmp#diff", crate::artifacts::bmp::schema::diff::BmpDiff::__dsl_diff_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 
 /// 📌️ Registers the full 5-role `LanguageSpec` set (Document/Ops/Diff/Pack/Spr — this ticket's
 /// own recipe §4 checklist item, json's own exemplar shape) for handcrafted facet grammars
 /// (text) and protocols (binary) — was a single Document-only registration before this wave.
-pub async fn register_pilot_languages() {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
     dsl::register_language(dsl::LanguageSpec {
         id: "stdio.bmp",
         extension: Some("bmp"),
@@ -473,15 +486,17 @@ pub async fn register_pilot_languages() {
 }
 
 /// 📌️ Registers schema leaves for `s.stdio.bmp`.
-pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_schema() {
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor());
 }
 
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
-pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor().await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_artifact_inferences() {
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
 
@@ -491,7 +506,8 @@ mod tests {
     use super::*;
     use crate::artifacts::bmp::schema::{demo_bmp_snapshot, empty_bmp_snapshot};
 
-    async fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
         let mut out = Vec::with_capacity((w * h * 4) as usize);
         for y in 0..h {
             for x in 0..w {
@@ -557,7 +573,8 @@ mod tests {
     /// 🧪 Hand-encodes a 4-bit indexed (16-color-capable, 4 used) BMP with a non-trivial
     /// checkerboard-ish index pattern and asserts `decode_bmp` reconstructs the exact palette
     /// colors — proves palette lookup + sub-byte (nibble) unpacking + bottom-up row order.
-    async fn hand_encode_indexed(width: u32, height: u32, bpp: u16, palette: &[[u8; 4]], indices: &[Vec<usize>]) -> Vec<u8> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn hand_encode_indexed(width: u32, height: u32, bpp: u16, palette: &[[u8; 4]], indices: &[Vec<usize>]) -> Vec<u8> {
         let rb = row_bytes(width, bpp);
         let palette_bytes = palette.len() * 4;
         let data_offset = 14 + 40 + palette_bytes;

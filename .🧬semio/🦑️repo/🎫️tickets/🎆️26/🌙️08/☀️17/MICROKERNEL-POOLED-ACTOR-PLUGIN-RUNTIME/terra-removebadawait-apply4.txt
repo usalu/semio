@@ -1,0 +1,25 @@
+[pass 1] errors=6452 bad-await=490 out-of-scope=0
+  removed 430
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71216 is b'd.dict_get("Producer")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71178 is b'semio_framework_plugin::resolve_ready(d.dict_get("Producer"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71103 is b'd.dict_get("Creator")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71065 is b'semio_framework_plugin::resolve_ready(d.dict_get("Creator"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70990 is b'd.dict_get("Keywords")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70952 is b'semio_framework_plugin::resolve_ready(d.dict_get("Keywords"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70877 is b'd.dict_get("Subject")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70839 is b'semio_framework_plugin::resolve_ready(d.dict_get("Subject"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70766 is b'd.dict_get("Author")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70728 is b'semio_framework_plugin::resolve_ready(d.dict_get("Author"))', not b'await'
+[pass 2] errors=6019 bad-await=60 out-of-scope=0
+  removed 0
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71126 is b'd.dict_get("Producer")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71088 is b'semio_framework_plugin::resolve_ready(d.dict_get("Producer"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 71013 is b'd.dict_get("Creator")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70975 is b'semio_framework_plugin::resolve_ready(d.dict_get("Creator"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70900 is b'd.dict_get("Keywords")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70862 is b'semio_framework_plugin::resolve_ready(d.dict_get("Keywords"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70787 is b'd.dict_get("Subject")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70749 is b'semio_framework_plugin::resolve_ready(d.dict_get("Subject"))', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70676 is b'd.dict_get("Author")', not b'await'
+    REFUSED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs: span at 70638 is b'semio_framework_plugin::resolve_ready(d.dict_get("Author"))', not b'await'
+  no progress — stopping

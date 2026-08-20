@@ -18,7 +18,7 @@ use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::input_element::render_input;
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
-pub(crate) async fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let seg = bounds.w / 3.0;
     let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
     let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);

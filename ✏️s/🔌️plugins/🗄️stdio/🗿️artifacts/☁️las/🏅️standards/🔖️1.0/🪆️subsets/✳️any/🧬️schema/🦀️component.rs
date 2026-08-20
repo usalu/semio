@@ -31,15 +31,18 @@ impl Default for LasArtifact {
 }
 
 impl LasArtifact {
-    pub async fn to_snapshot(&self) -> LasSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> LasSnapshot {
         LasSnapshot { schema: self.schema.clone(), header: self.header.clone(), vlrs: self.vlrs.clone(), points: self.points.clone() }
     }
 
-    pub async fn from_snapshot(snapshot: LasSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, vlrs: snapshot.vlrs, points: snapshot.points }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: LasSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
         self.vlrs = snapshot.vlrs;
@@ -49,7 +52,8 @@ impl LasArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn las_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn las_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.las",
         artifact: schema::FacetLeaves {
@@ -236,7 +240,8 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_las_snapshot() -> LasSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_las_snapshot() -> LasSnapshot {
     LasSnapshot::default()
 }
 
@@ -245,7 +250,8 @@ pub async fn empty_las_snapshot() -> LasSnapshot {
 /// (`📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`, both regenerated
 /// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those
 /// fixtures, asserted equal by `conformance_laws::fixture_honesty_law`.
-pub async fn demo_las_snapshot() -> LasSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_las_snapshot() -> LasSnapshot {
     use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
     use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
     LasSnapshot {
@@ -325,5 +331,6 @@ pub async fn demo_las_snapshot() -> LasSnapshot {
 /// reachable as `crate::artifacts::las::engine::register_schema_specs` (the plugin root's
 /// `.setup(...)` call, ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6 g4) — `dsl::registry::
 /// register_schema_spec` is a separate registry no `ArtifactDeclaration` field covers.
-pub async fn register_schema_specs() {}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_schema_specs() {}
 //#endregion 🔖️Register

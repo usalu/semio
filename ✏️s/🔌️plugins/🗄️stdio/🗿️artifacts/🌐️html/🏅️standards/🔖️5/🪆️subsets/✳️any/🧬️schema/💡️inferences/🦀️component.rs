@@ -25,7 +25,7 @@ pub struct HtmlInference {
 
 impl Inference<HtmlSnapshot> for HtmlInference {
     async fn infer(snapshot: &HtmlSnapshot) -> Self {
-        Self { outline: HtmlOutline::compute(snapshot).await }
+        Self { outline: HtmlOutline::compute(snapshot) }
     }
 }
 
@@ -62,7 +62,8 @@ impl ArtifactInferrer for crate::artifacts::html::standards::v5::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `html_artifact_schema_descriptor`'s registration.
-pub async fn html_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn html_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.html.inference",
         inference: schema::FacetLeaves {

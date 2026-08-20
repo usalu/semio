@@ -12,18 +12,19 @@ pub struct GltfBindNodeChildPayload {
     pub position: usize,
 }
 
-pub async fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
-    checked_index(payload.parent, base.document.nodes.len(), "document/nodes").await?;
-    checked_index(payload.child, base.document.nodes.len(), "document/nodes").await?;
-    checked_position(payload.position, base.document.nodes[payload.parent].children.len(), "document/nodes/children").await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
+    checked_position(payload.position, base.document.nodes[payload.parent].children.len(), "document/nodes/children")?;
     if payload.parent == payload.child || base.document.nodes[payload.parent].children.contains(&payload.child) {
-        return Err(reject("gltf.mutation.invalid-child-link", format!("document/nodes/{}/children", payload.parent), "self and duplicate child links are forbidden").await);
+        return Err(reject("gltf.mutation.invalid-child-link", format!("document/nodes/{}/children", payload.parent), "self and duplicate child links are forbidden"));
     }
     let mut pending = vec![payload.child];
     let mut seen = std::collections::BTreeSet::new();
     while let Some(node) = pending.pop() {
         if node == payload.parent {
-            return Err(reject("gltf.mutation.node-cycle", format!("document/nodes/{}/children", payload.parent), "relationship closes a cycle").await);
+            return Err(reject("gltf.mutation.node-cycle", format!("document/nodes/{}/children", payload.parent), "relationship closes a cycle"));
         }
         if seen.insert(node) {
             let current = base.document.nodes.get(node).ok_or_else(|| reject("gltf.mutation.invalid-reference", format!("document/nodes/{}", node), "child graph contains a missing node"))?;
@@ -33,8 +34,9 @@ pub async fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -
     Ok(())
 }
 
-pub async fn apply(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
     let mut next = base.clone();
     next.document.nodes[payload.parent].children.insert(payload.position, payload.child);
     Ok(next)

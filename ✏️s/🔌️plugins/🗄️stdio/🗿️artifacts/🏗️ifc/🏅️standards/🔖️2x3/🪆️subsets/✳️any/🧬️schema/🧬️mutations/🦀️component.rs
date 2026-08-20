@@ -60,7 +60,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
         match self {
             Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()).await,
             Ifc2x3Mutation::SetSnapshot { snapshot } => {
-                crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).await.expect("IFC2X3 SetSnapshot must carry a valid logical model");
+                crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
                 return protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot));
             }
             Ifc2x3Mutation::UpsertInstance { instance } => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
@@ -107,11 +107,11 @@ async fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push(']');
 }
 async fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
-    let fields = split_top_level(strip_brackets(s).await?, ',').await;
+    let fields = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, instances, edm_preamble] = fields.as_slice() else {
         return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", fields.len()));
     };
-    Ok(Ifc2x3Snapshot { schema: dec_str(schema).await?, document: Part21Document { header: dec_part21_header(header).await?, instances: dec_instance_list(instances).await? }, edm_preamble: dec_optional_edm_preamble(edm_preamble).await? })
+    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances: dec_instance_list(instances)? }, edm_preamble: dec_optional_edm_preamble(edm_preamble)? })
 }
 
 async fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
@@ -136,9 +136,9 @@ async fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     let (arg_key, arg_val) = rest.split_once('=').ok_or_else(|| format!("ifc2x3 mutation: missing arg for {keyword:?}"))?;
     match (keyword, arg_key) {
         ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val).await? }),
-        ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance { instance: dec_part21_instance(arg_val).await? }),
+        ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance { instance: dec_part21_instance(arg_val)? }),
         ("remove-instance", "id") => Ok(Ifc2x3Mutation::RemoveInstance { id: arg_val.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader { header: dec_part21_header(arg_val).await? }),
+        ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader { header: dec_part21_header(arg_val)? }),
         (other, _) => Err(format!("ifc2x3 mutation: unknown keyword {other:?}")),
     }
 }
@@ -174,16 +174,16 @@ async fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
     }
 }
 async fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
-    let schema = read_str_bin(reader).await?;
-    let header = dec_part21_header_bin(reader).await?;
+    let schema = read_str_bin(reader)?;
+    let header = dec_part21_header_bin(reader)?;
     let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut instances = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        instances.push(dec_part21_instance_bin(reader).await?);
+        instances.push(dec_part21_instance_bin(reader)?);
     }
     let edm_preamble = match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some(dec_edm_preamble_bin(reader).await?),
+        1 => Some(dec_edm_preamble_bin(reader)?),
         tag => return Err(format!("ifc2x3 snapshot: invalid EDM preamble presence {tag}")),
     };
     Ok(Ifc2x3Snapshot { schema, document: Part21Document { header, instances }, edm_preamble })
@@ -210,9 +210,9 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         match self {
             Ifc2x3Mutation::NoMutation => {}
             Ifc2x3Mutation::SetSnapshot { snapshot } => enc_ifc2x3_snapshot_bin(snapshot, &mut out).await,
-            Ifc2x3Mutation::UpsertInstance { instance } => enc_part21_instance_bin(instance, &mut out).await,
+            Ifc2x3Mutation::UpsertInstance { instance } => enc_part21_instance_bin(instance, &mut out),
             Ifc2x3Mutation::RemoveInstance { id } => store::pack_rt::write_varint_u64(&mut out, *id).await,
-            Ifc2x3Mutation::SetHeader { header } => enc_part21_header_bin(header, &mut out).await,
+            Ifc2x3Mutation::SetHeader { header } => enc_part21_header_bin(header, &mut out),
         }
         Ok(out)
     }
@@ -232,7 +232,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
                 Ifc2x3Mutation::SetSnapshot { snapshot }
             }
             2 => {
-                let instance = dec_part21_instance_bin(&mut reader).await.map_err(|e| malformed("op instance", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::UpsertInstance { instance }
             }
             3 => {
@@ -240,7 +240,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
                 Ifc2x3Mutation::RemoveInstance { id }
             }
             4 => {
-                let header = dec_part21_header_bin(&mut reader).await.map_err(|e| malformed("op header", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::SetHeader { header }
             }
             other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),

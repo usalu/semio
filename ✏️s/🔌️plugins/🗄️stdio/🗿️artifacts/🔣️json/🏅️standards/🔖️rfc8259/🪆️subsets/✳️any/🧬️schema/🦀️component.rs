@@ -28,17 +28,20 @@ impl Default for JsonArtifact {
 
 impl JsonArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> JsonSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> JsonSnapshot {
         JsonSnapshot { schema: self.schema.clone(), value: self.value.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: JsonSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: JsonSnapshot) -> Self {
         Self { schema: snapshot.schema, value: snapshot.value }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: JsonSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: JsonSnapshot) {
         self.schema = snapshot.schema;
         self.value = snapshot.value;
     }
@@ -47,7 +50,8 @@ impl JsonArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.json`.
-pub async fn json_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn json_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.json",
         artifact: schema::FacetLeaves {
@@ -112,7 +116,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -151,8 +155,9 @@ pub mod derived_analysis {
     /// 🔍 JSON has no magic bytes — a real parse attempt with our own rfc8259 recursive-descent
     /// parser is the strongest available signal (cheap for realistic file sizes); fall back to a
     /// first-non-whitespace-character heuristic when the bytes aren't valid UTF-8 text at all.
-    async fn looks_like_json(text: &str) -> IoConfidence {
-        if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).await.is_ok() {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_json(text: &str) -> IoConfidence {
+        if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).is_ok() {
             return IoConfidence::High;
         }
         match text.trim_start().chars().next() {
@@ -172,15 +177,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_json(body).await
+                    looks_like_json(body)
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_json(&text).await,
+                        Ok(text) => looks_like_json(&text),
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_json(text).await,
+                        Ok(text) => looks_like_json(text),
                         Err(_) => IoConfidence::Low,
                     },
                 },

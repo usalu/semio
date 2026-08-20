@@ -20,7 +20,8 @@ pub struct PngDimensions {
 }
 
 /// 📐️ Computes [`PngDimensions`] from a snapshot's IHDR fields — pure, total, O(1).
-pub async fn compute_png_dimensions(snapshot: &PngSnapshot) -> PngDimensions {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compute_png_dimensions(snapshot: &PngSnapshot) -> PngDimensions {
     PngDimensions {
         width: snapshot.width,
         height: snapshot.height,

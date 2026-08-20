@@ -16,6 +16,9 @@ workspace = true
 path = "📦️glue.rs"
 
 [dependencies]
+# 🧬️ The builder-side tree is plain data; serializing it lets a guest ship a fixture or a whole tree
+# without going through reconciliation, which the SDK's describe/testkit paths rely on.
+serde = { version = "1.0.219", features = ["derive"] }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]

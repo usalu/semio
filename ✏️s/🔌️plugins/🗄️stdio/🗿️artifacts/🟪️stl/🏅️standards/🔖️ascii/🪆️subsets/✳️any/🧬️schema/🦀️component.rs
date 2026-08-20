@@ -31,17 +31,20 @@ impl Default for StlArtifact {
 
 impl StlArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> StlSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> StlSnapshot {
         StlSnapshot { schema: self.schema.clone(), solid_name: self.solid_name.clone(), triangles: self.triangles.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: StlSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: StlSnapshot) -> Self {
         Self { schema: snapshot.schema, solid_name: snapshot.solid_name, triangles: snapshot.triangles }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: StlSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: StlSnapshot) {
         self.schema = snapshot.schema;
         self.solid_name = snapshot.solid_name;
         self.triangles = snapshot.triangles;
@@ -51,7 +54,8 @@ impl StlArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.stl`.
-pub async fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn stl_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.stl",
         artifact: schema::FacetLeaves {
@@ -155,7 +159,8 @@ pub mod derived_analysis {
     /// 🔍 ASCII STL starts with a `solid` keyword and a real body has `facet`/`vertex`
     /// structure; binary STL has no fixed magic, so a plausible triangle-count framing
     /// (`84 + count*50 == len`) is the best available signal.
-    async fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
         if bytes.starts_with(b"solid") {
             if let Ok(text) = std::str::from_utf8(bytes) {
                 if text.contains("facet") && text.contains("vertex") && text.contains("endsolid") {
@@ -184,11 +189,11 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_stl(body.as_bytes()).await
+                    looks_like_stl(body.as_bytes())
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
-                    Ok((_, inner)) => looks_like_stl(&inner).await,
-                    Err(_) => looks_like_stl(bytes).await,
+                    Ok((_, inner)) => looks_like_stl(&inner),
+                    Err(_) => looks_like_stl(bytes),
                 },
             }
         }
@@ -258,7 +263,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
 /// `crate::artifacts::stl::engine::empty_stl_snapshot` through the `engine` barrel shim.
-pub async fn empty_stl_snapshot() -> StlSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_stl_snapshot() -> StlSnapshot {
     StlSnapshot::default()
 }
 
@@ -276,7 +282,8 @@ pub async fn empty_stl_snapshot() -> StlSnapshot {
 /// primitives don't cleanly cover (same "model realistically" convention this ticket's recipe
 /// documents throughout, not a `mechanism_gaps` entry of its own since it's a strict subset of the
 /// already-documented `protocol-prim-ref-recursion`-adjacent raw-span family).
-pub async fn demo_stl_snapshot() -> StlSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_stl_snapshot() -> StlSnapshot {
     StlSnapshot {
         schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
         solid_name: "demo".into(),

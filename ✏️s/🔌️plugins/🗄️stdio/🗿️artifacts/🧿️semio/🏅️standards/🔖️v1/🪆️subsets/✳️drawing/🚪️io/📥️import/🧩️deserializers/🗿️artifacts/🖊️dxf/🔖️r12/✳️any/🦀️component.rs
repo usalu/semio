@@ -26,7 +26,8 @@ const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: 
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
 //#region 🔖️Geometry
-async fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x: cx + r, y: cy } },
         PathSegment::ArcTo { rx: r, ry: r, x_rotation: 0.0, large_arc: true, sweep: true, to: SemioPoint2 { x: cx - r, y: cy } },
@@ -35,7 +36,8 @@ async fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {
     ]
 }
 
-async fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathSegment> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathSegment> {
     let (sr, er) = (start_deg.to_radians(), end_deg.to_radians());
     let start = SemioPoint2 { x: cx + r * sr.cos(), y: cy + r * sr.sin() };
     let end = SemioPoint2 { x: cx + r * er.cos(), y: cy + r * er.sin() };
@@ -46,11 +48,12 @@ async fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec
 //#endregion 🔖️Geometry
 
 //#region 🔖️EntityMap
-async fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     match e {
         DxfEntity::Line { start, end, .. } => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
-        DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius).await, style: None }),
-        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle).await, style: None }),
+        DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
+        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle), style: None }),
         DxfEntity::Polyline { vertices, closed, .. } => {
             let mut segments: Vec<PathSegment> = vertices
                 .iter()
@@ -84,7 +87,8 @@ async fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     }
 }
 
-async fn entity_layer(e: &DxfEntity) -> Option<&str> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_layer(e: &DxfEntity) -> Option<&str> {
     match e {
         DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
             Some(layer.as_str())
@@ -107,8 +111,8 @@ impl ArtifactDeserializer for SemioDrawingFromDxf {
         let mut order: Vec<String> = Vec::new();
         let mut buckets: std::collections::HashMap<String, Vec<DrawNode>> = std::collections::HashMap::new();
         for e in &from.entities {
-            let Some(node) = draw_node_from_entity(e).await else { continue };
-            let layer = entity_layer(e).await.unwrap_or("0").to_string();
+            let Some(node) = draw_node_from_entity(e) else { continue };
+            let layer = entity_layer(e).unwrap_or("0").to_string();
             if !buckets.contains_key(&layer) {
                 order.push(layer.clone());
             }
@@ -131,7 +135,8 @@ impl ArtifactDeserializer for SemioDrawingFromDxf {
 mod tests {
     use super::*;
 
-    async fn sample_dxf() -> DxfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_dxf() -> DxfSnapshot {
         DxfSnapshot {
             entities: vec![
                 DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },

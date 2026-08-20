@@ -34,17 +34,20 @@ impl Default for TxtArtifact {
 
 impl TxtArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> TxtSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> TxtSnapshot {
         TxtSnapshot { schema: self.schema.clone(), lines: self.lines.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: TxtSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: TxtSnapshot) -> Self {
         Self { schema: snapshot.schema, lines: snapshot.lines, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: TxtSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: TxtSnapshot) {
         self.schema = snapshot.schema;
         self.lines = snapshot.lines;
         self.trailing_newline = snapshot.trailing_newline;
@@ -55,7 +58,8 @@ impl TxtArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.txt`.
-pub async fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn txt_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.txt",
         artifact: schema::FacetLeaves {
@@ -120,7 +124,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot).await?;
@@ -160,7 +164,8 @@ pub mod derived_analysis {
     /// trivially valid by construction (`High`); a `Binary` source is inspected for actual
     /// UTF-8 validity and the presence of NUL bytes (the standard "probably not text"
     /// signal binary sniffers use).
-    async fn classify_bytes(bytes: &[u8]) -> IoConfidence {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn classify_bytes(bytes: &[u8]) -> IoConfidence {
         match std::str::from_utf8(bytes) {
             Ok(_) if !bytes.contains(&0) => IoConfidence::High,
             Ok(_) => IoConfidence::Medium,
@@ -176,8 +181,8 @@ pub mod derived_analysis {
             match source {
                 AnalyzeSource::Text(_) => IoConfidence::High,
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
-                    Ok((_, inner)) => classify_bytes(&inner).await,
-                    Err(_) => classify_bytes(bytes).await,
+                    Ok((_, inner)) => classify_bytes(&inner),
+                    Err(_) => classify_bytes(bytes),
                 },
             }
         }
@@ -238,15 +243,17 @@ pub use derived_analysis::*;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_txt_snapshot() -> TxtSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_txt_snapshot() -> TxtSnapshot {
     TxtSnapshot::default()
 }
 
 /// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
 /// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P3 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
-pub async fn demo_txt_snapshot() -> TxtSnapshot {
-    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).await.unwrap_or_else(|_| empty_txt_snapshot())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_txt_snapshot() -> TxtSnapshot {
+    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -328,7 +335,8 @@ mod tests {
     /// `sweep_b` (2 lines vs. 3) — see the `field_sweep_covers_every_mutable_field` doc comment
     /// for why a flat, unkeyed `Vec<String>` collection needs an asymmetric length to exercise
     /// `removed`/`added` at all.
-    async fn sweep_a() -> TxtSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_a() -> TxtSnapshot {
         TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modify-me".into()], trailing_newline: false, line_ending: LineEnding::Lf }
     }
 
@@ -336,7 +344,8 @@ mod tests {
     /// one modified in place (`modify-me` → `modified!`), one genuinely new tail line
     /// (`added!`) that only exists because `sweep_b` is longer than `sweep_a`;
     /// `trailing_newline`/`line_ending` both flip.
-    async fn sweep_b() -> TxtSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sweep_b() -> TxtSnapshot {
         TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["keep-me".into(), "modified!".into(), "added!".into()], trailing_newline: true, line_ending: LineEnding::CrLf }
     }
 

@@ -1,0 +1,11 @@
+   Compiling serde_core v1.0.228
+   Compiling zmij v1.0.21
+   Compiling memchr v2.8.0
+   Compiling bitflags v2.11.1
+   Compiling itoa v1.0.18
+   Compiling wit-bindgen v0.57.1
+   Compiling serde v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling semio-framework-os-scale-fixture v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 4.45s
+EXIT:0

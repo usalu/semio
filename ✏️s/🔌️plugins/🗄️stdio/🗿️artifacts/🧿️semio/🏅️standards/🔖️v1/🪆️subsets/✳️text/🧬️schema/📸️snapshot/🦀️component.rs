@@ -90,30 +90,37 @@ impl Default for SemioTextSnapshot {
 /// style `✳️image`'s/`✳️audio`'s own `📸️snapshot`/`🔺️diff`/`🧬️mutations` facets already establish,
 /// duplicated locally (not imported across facets) to keep each facet module independently
 /// compilable, per that precedent's own doc comment.
-async fn hex_encode(bytes: &[u8]) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes()).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
-async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
-pub(crate) async fn enc_mark_kind(k: SemioTextMarkKind) -> char {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_mark_kind(k: SemioTextMarkKind) -> char {
     match k {
         SemioTextMarkKind::Bold => 'b',
         SemioTextMarkKind::Italic => 'i',
@@ -121,7 +128,8 @@ pub(crate) async fn enc_mark_kind(k: SemioTextMarkKind) -> char {
         SemioTextMarkKind::Link => 'l',
     }
 }
-pub(crate) async fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> {
     match s {
         "b" => Ok(SemioTextMarkKind::Bold),
         "i" => Ok(SemioTextMarkKind::Italic),
@@ -130,30 +138,36 @@ pub(crate) async fn dec_mark_kind(s: &str) -> Result<SemioTextMarkKind, String> 
         other => Err(format!("bad mark kind {other:?}")),
     }
 }
-pub(crate) async fn enc_mark(m: &SemioTextMark) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
-pub(crate) async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioTextMark { kind: dec_mark_kind(kind).await?, href: dec_str(href).await? })
+    Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
 }
-pub(crate) async fn enc_run(r: &SemioTextRun) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_run(r: &SemioTextRun) -> String {
     format!("[{},{},{}]", enc_str(&r.language), enc_str(&r.content), enc_list(&r.marks, enc_mark))
 }
-pub(crate) async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
-    let parts = split_top_level(strip_brackets(s).await?, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_run(s: &str) -> Result<SemioTextRun, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioTextRun { language: dec_str(language).await?, content: dec_str(content).await?, marks: dec_list(marks, dec_mark).await? })
+    Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks: dec_list(marks, dec_mark)? })
 }
 
 /// 📄️ The real structured text body: two lines — `schema=<hex>`, `runs=[<run>,...]` — matching the
 /// grammar's `document = artifact-mark schema-line runs-line`. Newlines are pure lexer trivia in
 /// the shared dialect, so this is genuinely recognizable by `dsl::Recognizer`, not merely readable.
-async fn print_text_snapshot_body(s: &SemioTextSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_text_snapshot_body(s: &SemioTextSnapshot) -> String {
     format!("schema={}\nruns={}", enc_str(&s.schema), enc_list(&s.runs, enc_run))
 }
-async fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, String> {
     let mut schema = None;
     let mut runs = Vec::new();
     for line in body.lines() {
@@ -162,9 +176,9 @@ async fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, Strin
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest).await?);
+            schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("runs=") {
-            runs = dec_list(rest, dec_run).await?;
+            runs = dec_list(rest, dec_run)?;
         } else {
             return Err(format!("semio text snapshot: unknown line {line:?}"));
         }
@@ -176,22 +190,27 @@ async fn parse_text_snapshot_body(body: &str) -> Result<SemioTextSnapshot, Strin
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers every other real semio codec in this standard uses).
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-pub(crate) async fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
     match k {
         SemioTextMarkKind::Bold => 0,
         SemioTextMarkKind::Italic => 1,
@@ -199,7 +218,8 @@ pub(crate) async fn mark_kind_tag(k: SemioTextMarkKind) -> u8 {
         SemioTextMarkKind::Link => 3,
     }
 }
-pub(crate) async fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, String> {
     match tag {
         0 => Ok(SemioTextMarkKind::Bold),
         1 => Ok(SemioTextMarkKind::Italic),
@@ -208,16 +228,19 @@ pub(crate) async fn mark_kind_from_tag(tag: u8) -> Result<SemioTextMarkKind, Str
         other => Err(format!("unsupported mark kind tag {other}")),
     }
 }
-pub(crate) async fn write_mark(out: &mut Vec<u8>, m: &SemioTextMark) {
-    out.push(mark_kind_tag(m.kind).await);
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_mark(out: &mut Vec<u8>, m: &SemioTextMark) {
+    out.push(mark_kind_tag(m.kind));
     write_str_lp(out, &m.href);
 }
-pub(crate) async fn read_mark(reader: &mut store::ByteReader<'_>) -> Result<SemioTextMark, String> {
-    let kind = mark_kind_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?).await?;
-    let href = read_str_lp(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_mark(reader: &mut store::ByteReader<'_>) -> Result<SemioTextMark, String> {
+    let kind = mark_kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+    let href = read_str_lp(reader)?;
     Ok(SemioTextMark { kind, href })
 }
-pub(crate) async fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
     write_str_lp(out, &r.language);
     write_str_lp(out, &r.content);
     store::pack_rt::write_varint_u64(out, r.marks.len() as u64);
@@ -225,13 +248,14 @@ pub(crate) async fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
         write_mark(out, m);
     }
 }
-pub(crate) async fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRun, String> {
-    let language = read_str_lp(reader).await?;
-    let content = read_str_lp(reader).await?;
-    let mark_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRun, String> {
+    let language = read_str_lp(reader)?;
+    let content = read_str_lp(reader)?;
+    let mark_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut marks = Vec::with_capacity(mark_count as usize);
     for _ in 0..mark_count {
-        marks.push(read_mark(reader).await?);
+        marks.push(read_mark(reader)?);
     }
     Ok(SemioTextRun { language, content, marks })
 }
@@ -240,7 +264,8 @@ pub(crate) async fn read_run(reader: &mut store::ByteReader<'_>) -> Result<Semio
 /// protocol-walkable, matching `📡️component.protocol.semio`'s header/segment fields exactly —
 /// then `runs` (varint count + per-run language/content/marks) as the honest opaque `payload`
 /// tail (`protocol-array-of-records` gap — homogeneous, variable-length repeated records).
-async fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -251,18 +276,19 @@ async fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
     }
     out
 }
-async fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes).await;
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader).await?;
-    let run_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader)?;
+    let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut runs = Vec::with_capacity(run_count as usize);
     for _ in 0..run_count {
-        runs.push(read_run(&mut reader).await?);
+        runs.push(read_run(&mut reader)?);
     }
     Ok(SemioTextSnapshot { schema, runs })
 }
@@ -281,7 +307,7 @@ impl store::ArtifactDsl for SemioTextSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_text_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_text_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
@@ -305,7 +331,7 @@ impl store::ArtifactPack for SemioTextSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_text_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
+        decode_text_snapshot_binary(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -316,7 +342,8 @@ impl store::ArtifactPack for SemioTextSnapshot {
 /// `📚️examples/…/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio` and for the conformance-law
 /// tests in `🚪️io/🦀️component.rs`.
 #[cfg(test)]
-pub(crate) async fn demo_text_snapshot() -> SemioTextSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
     SemioTextSnapshot {
         schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
         runs: vec![
@@ -333,7 +360,8 @@ pub(crate) async fn demo_text_snapshot() -> SemioTextSnapshot {
 mod tests {
     use super::*;
 
-    async fn populated() -> SemioTextSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn populated() -> SemioTextSnapshot {
         demo_text_snapshot()
     }
 

@@ -12,21 +12,24 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
-    TableWindowKit::editable_window_kind().await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn definition() -> WindowKindDefinition {
+    TableWindowKit::editable_window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     (columns, rows)
 }
 
-pub async fn render(document: &BcfSnapshot) -> UiNode {
-    let (columns, rows) = columns_and_rows(document).await;
-    TableWindowKit::render(&TableView { columns, rows }).await
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &BcfSnapshot) -> UiNode {
+    let (columns, rows) = columns_and_rows(document);
+    TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render
 

@@ -108,28 +108,32 @@ pub enum DocxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub async fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-async fn block_at<'a>(base: &'a DocxSnapshot, path: &DocxBlockPath) -> Option<&'a DocxBlock> {
-    resolve_blocks(&base.document.body, &path.segments).await?.get(path.index)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn block_at<'a>(base: &'a DocxSnapshot, path: &DocxBlockPath) -> Option<&'a DocxBlock> {
+    resolve_blocks(&base.document.body, &path.segments)?.get(path.index)
 }
 
-async fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn style_at<'a>(base: &'a DocxSnapshot, id: &str) -> Option<&'a DocxStyle> {
     base.document.styles.iter().find(|s| s.id == id)
 }
 
-async fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifacts::zip::opc::OpcPart> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifacts::zip::opc::OpcPart> {
     let p = path.trim_start_matches('/');
     base.opc.parts.iter().find(|part| part.path == p)
 }
@@ -142,16 +146,16 @@ impl Mutation<DocxSnapshot> for DocxMutation {
     async fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DocxMutation::NoMutation => DocxDiff::default(),
-            DocxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
-            DocxMutation::InsertBlock { path, block } => diff_insert_block(path, block.clone()).await,
-            DocxMutation::RemoveBlock { path } => diff_remove_block(path).await,
-            DocxMutation::SetBlockContent { path, block } => match block_at(base, path).await {
-                Some(old) => diff_set_block_content(path, old, block).await,
+            DocxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            DocxMutation::InsertBlock { path, block } => diff_insert_block(path, block.clone()),
+            DocxMutation::RemoveBlock { path } => diff_remove_block(path),
+            DocxMutation::SetBlockContent { path, block } => match block_at(base, path) {
+                Some(old) => diff_set_block_content(path, old, block),
                 None => DocxDiff::default(),
             },
-            DocxMutation::SetRunText { path, run_index, text } => diff_set_run_text(&base.document, path, *run_index, text).await,
-            DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => diff_set_run_formatting(&base.document, path, *run_index, *bold, *italic, *underline).await,
-            DocxMutation::InsertStyle { style } => diff_insert_style(style.clone()).await,
+            DocxMutation::SetRunText { path, run_index, text } => diff_set_run_text(&base.document, path, *run_index, text),
+            DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline } => diff_set_run_formatting(&base.document, path, *run_index, *bold, *italic, *underline),
+            DocxMutation::InsertStyle { style } => diff_insert_style(style.clone()),
             DocxMutation::RemoveStyle { id } => diff_remove_style(id),
             DocxMutation::SetStyleName { id, name } => diff_set_style_name(id, name),
             DocxMutation::SetStyleBasedOn { id, based_on } => diff_set_style_based_on(id, based_on.clone()),
@@ -165,17 +169,17 @@ impl Mutation<DocxSnapshot> for DocxMutation {
             DocxMutation::NoMutation => vec![DocxMutation::NoMutation],
             DocxMutation::SetSnapshot { .. } => vec![DocxMutation::SetSnapshot { snapshot: base.clone() }],
             DocxMutation::InsertBlock { path, .. } => vec![DocxMutation::RemoveBlock { path: path.clone() }],
-            DocxMutation::RemoveBlock { path } => match block_at(base, path).await {
+            DocxMutation::RemoveBlock { path } => match block_at(base, path) {
                 Some(block) => vec![DocxMutation::InsertBlock { path: path.clone(), block: block.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
-            DocxMutation::SetBlockContent { path, .. } => match block_at(base, path).await {
+            DocxMutation::SetBlockContent { path, .. } => match block_at(base, path) {
                 Some(block) => vec![DocxMutation::SetBlockContent { path: path.clone(), block: block.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
             DocxMutation::SetRunText { path, run_index, .. } => {
                 let old = resolve_blocks(&base.document.body, &path.segments)
-                    .await.and_then(|blocks| blocks.get(path.index))
+                    .and_then(|blocks| blocks.get(path.index))
                     .and_then(|b| match b {
                         DocxBlock::Paragraph(p) => p.runs.get(*run_index),
                         _ => None,
@@ -187,7 +191,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
                 }
             }
             DocxMutation::SetRunFormatting { path, run_index, .. } => {
-                let old = resolve_blocks(&base.document.body, &path.segments).await.and_then(|blocks| blocks.get(path.index)).and_then(|b| match b {
+                let old = resolve_blocks(&base.document.body, &path.segments).and_then(|blocks| blocks.get(path.index)).and_then(|b| match b {
                     DocxBlock::Paragraph(p) => p.runs.get(*run_index),
                     _ => None,
                 });
@@ -197,23 +201,23 @@ impl Mutation<DocxSnapshot> for DocxMutation {
                 }
             }
             DocxMutation::InsertStyle { style } => vec![DocxMutation::RemoveStyle { id: style.id.clone() }],
-            DocxMutation::RemoveStyle { id } => match style_at(base, id).await {
+            DocxMutation::RemoveStyle { id } => match style_at(base, id) {
                 Some(style) => vec![DocxMutation::InsertStyle { style: style.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
-            DocxMutation::SetStyleName { id, .. } => match style_at(base, id).await {
+            DocxMutation::SetStyleName { id, .. } => match style_at(base, id) {
                 Some(style) => vec![DocxMutation::SetStyleName { id: id.clone(), name: style.name.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
-            DocxMutation::SetStyleBasedOn { id, .. } => match style_at(base, id).await {
+            DocxMutation::SetStyleBasedOn { id, .. } => match style_at(base, id) {
                 Some(style) => vec![DocxMutation::SetStyleBasedOn { id: id.clone(), based_on: style.based_on.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
-            DocxMutation::SetPart { path, .. } => match part_at(base, path).await {
+            DocxMutation::SetPart { path, .. } => match part_at(base, path) {
                 Some(part) => vec![DocxMutation::SetPart { path: path.clone(), content_type: part.content_type.clone(), bytes: part.bytes.clone() }],
                 None => vec![DocxMutation::RemovePart { path: path.clone() }],
             },
-            DocxMutation::RemovePart { path } => match part_at(base, path).await {
+            DocxMutation::RemovePart { path } => match part_at(base, path) {
                 Some(part) => vec![DocxMutation::SetPart { path: path.clone(), content_type: part.content_type.clone(), bytes: part.bytes.clone() }],
                 None => vec![DocxMutation::NoMutation],
             },
@@ -228,83 +232,97 @@ impl Mutation<DocxSnapshot> for DocxMutation {
 /// (`hex_encode`/`enc_block`/`enc_style`/`enc_opc_part`/`split_top_level`/...) rather than
 /// duplicating them a second time in this file. Grammar: `keyword arg=value ...`
 /// (space-separated), same shape the derive's own handcrafted-wrapper convention uses.
-async fn enc_path_segment(seg: &DocxPathSegment) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_path_segment(seg: &DocxPathSegment) -> String {
     format!("[{},{},{}]", seg.block_index, seg.row, seg.cell)
 }
-async fn dec_path_segment(s: &str) -> Result<DocxPathSegment, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_path_segment(s: &str) -> Result<DocxPathSegment, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [block_index, row, cell] = parts.as_slice() else { return Err(format!("path segment: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxPathSegment { block_index: parse_usize(block_index).await?, row: parse_usize(row).await?, cell: parse_usize(cell).await? })
+    Ok(DocxPathSegment { block_index: parse_usize(block_index)?, row: parse_usize(row)?, cell: parse_usize(cell)? })
 }
-async fn enc_block_path(p: &DocxBlockPath) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block_path(p: &DocxBlockPath) -> String {
     format!("[{},{}]", enc_list(&p.segments, enc_path_segment), p.index)
 }
-async fn dec_block_path(s: &str) -> Result<DocxBlockPath, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block_path(s: &str) -> Result<DocxBlockPath, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [segments, index] = parts.as_slice() else { return Err(format!("block path: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxBlockPath { segments: dec_list_segments(segments).await?, index: parse_usize(index).await? })
+    Ok(DocxBlockPath { segments: dec_list_segments(segments)?, index: parse_usize(index)? })
 }
-async fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
-    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 
 /// 🌱 Full (non-diff) `OpcContentTypes`/`OpcPackage`/`DocxDocument`/`DocxSnapshot` codecs — only
 /// `SetSnapshot`'s whole-payload encoding needs these, so (unlike `DocxDiff`'s value codecs) they
 /// live here rather than in the diff file.
-async fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_content_types(ct: &OpcContentTypes) -> String {
     format!("[{},{}]", enc_list(&ct.defaults, enc_ct_entry), enc_list(&ct.overrides, enc_ct_entry))
 }
-async fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types: expected 2 fields, got {}", parts.len())) };
     Ok(OpcContentTypes {
-        defaults: split_top_level(strip_brackets(defaults).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
-        overrides: split_top_level(strip_brackets(overrides).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
+        defaults: split_top_level(strip_brackets(defaults)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
+        overrides: split_top_level(strip_brackets(overrides)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ct_entry).collect::<Result<Vec<_>, String>>()?,
     })
 }
 /// 🗺️ `relationships: HashMap<String, Vec<OpcRelationship>>` -- owners sorted for a deterministic
 /// encoding (`DiffCodec`/`OpText` LAWS both require determinism; `HashMap` iteration order does not
 /// guarantee it).
-async fn enc_opc_package(pkg: &OpcPackage) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_package(pkg: &OpcPackage) -> String {
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
     owners.sort();
     let rel_entries: Vec<(String, Vec<OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
     format!("[{},{},{}]", enc_list(&pkg.parts, enc_opc_part), enc_opc_content_types(&pkg.content_types), enc_list(&rel_entries, enc_rel_owner_entry))
 }
-async fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [p, ct, rels] = parts.as_slice() else { return Err(format!("opc package: expected 3 fields, got {}", parts.len())) };
-    let parts_list = split_top_level(strip_brackets(p).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_opc_part).collect::<Result<Vec<_>, String>>()?;
-    let rel_entries = split_top_level(strip_brackets(rels).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
-    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct).await?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>(), ..Default::default() })
+    let parts_list = split_top_level(strip_brackets(p)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_opc_part).collect::<Result<Vec<_>, String>>()?;
+    let rel_entries = split_top_level(strip_brackets(rels)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rel_owner_entry).collect::<Result<Vec<_>, String>>()?;
+    Ok(OpcPackage { parts: parts_list, content_types: dec_opc_content_types(ct)?, relationships: rel_entries.into_iter().collect::<HashMap<_, _>>(), ..Default::default() })
 }
-async fn enc_docx_document(doc: &DocxDocument) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_docx_document(doc: &DocxDocument) -> String {
     format!("[{},{}]", enc_list(&doc.body, enc_block), enc_list(&doc.styles, enc_style))
 }
-async fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_docx_document(s: &str) -> Result<DocxDocument, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [body, styles] = parts.as_slice() else { return Err(format!("document: expected 2 fields, got {}", parts.len())) };
     Ok(DocxDocument {
-        body: split_top_level(strip_brackets(body).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect::<Result<Vec<_>, String>>()?,
-        styles: split_top_level(strip_brackets(styles).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?,
+        body: split_top_level(strip_brackets(body)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect::<Result<Vec<_>, String>>()?,
+        styles: split_top_level(strip_brackets(styles)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?,
     })
 }
-async fn enc_docx_snapshot(s: &DocxSnapshot) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_docx_snapshot(s: &DocxSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), enc_opc_package(&s.opc), enc_docx_document(&s.document))
 }
-async fn dec_docx_snapshot(s: &str) -> Result<DocxSnapshot, String> {
-    let inner = strip_brackets(s).await?;
-    let parts = split_top_level(inner, ',').await;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_docx_snapshot(s: &str) -> Result<DocxSnapshot, String> {
+    let inner = strip_brackets(s)?;
+    let parts = split_top_level(inner, ',');
     let [schema, opc, document] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxSnapshot { schema: dec_str(schema).await?, opc: dec_opc_package(opc).await?, document: dec_docx_document(document).await? })
+    Ok(DocxSnapshot { schema: dec_str(schema)?, opc: dec_opc_package(opc)?, document: dec_docx_document(document)? })
 }
 
-async fn print_docx_mutation(m: &DocxMutation) -> String {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn print_docx_mutation(m: &DocxMutation) -> String {
     match m {
         DocxMutation::NoMutation => "no-mutation".to_string(),
         DocxMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_docx_snapshot(snapshot)),
@@ -323,7 +341,8 @@ async fn print_docx_mutation(m: &DocxMutation) -> String {
         DocxMutation::RemovePart { path } => format!("remove-part path={}", enc_str(path)),
     }
 }
-async fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     if line == "no-mutation" {
         return Ok(DocxMutation::NoMutation);
     }
@@ -332,28 +351,28 @@ async fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("docx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(DocxMutation::SetSnapshot { snapshot: dec_docx_snapshot(arg("snapshot")?).await? }),
-        "insert-block" => Ok(DocxMutation::InsertBlock { path: dec_block_path(arg("path")?).await?, block: dec_block(arg("block")?).await? }),
-        "remove-block" => Ok(DocxMutation::RemoveBlock { path: dec_block_path(arg("path")?).await? }),
-        "set-block-content" => Ok(DocxMutation::SetBlockContent { path: dec_block_path(arg("path")?).await?, block: dec_block(arg("block")?).await? }),
-        "set-run-text" => Ok(DocxMutation::SetRunText { path: dec_block_path(arg("path")?).await?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?).await? }),
-        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting { path: dec_block_path(arg("path")?).await?, run_index: usize_arg("run-index")?, bold: dec_bool(arg("bold")?).await?, italic: dec_bool(arg("italic")?).await?, underline: dec_bool(arg("underline")?).await? }),
-        "insert-style" => Ok(DocxMutation::InsertStyle { style: dec_style(arg("style")?).await? }),
-        "remove-style" => Ok(DocxMutation::RemoveStyle { id: dec_str(arg("id")?).await? }),
-        "set-style-name" => Ok(DocxMutation::SetStyleName { id: dec_str(arg("id")?).await?, name: dec_str(arg("name")?).await? }),
-        "set-style-based-on" => Ok(DocxMutation::SetStyleBasedOn { id: dec_str(arg("id")?).await?, based_on: decode_option(arg("based-on")?, dec_str).await? }),
-        "set-part" => Ok(DocxMutation::SetPart { path: dec_str(arg("path")?).await?, content_type: dec_str(arg("content-type")?).await?, bytes: hex_decode(arg("bytes")?).await? }),
-        "remove-part" => Ok(DocxMutation::RemovePart { path: dec_str(arg("path")?).await? }),
+        "set-snapshot" => Ok(DocxMutation::SetSnapshot { snapshot: dec_docx_snapshot(arg("snapshot")?)? }),
+        "insert-block" => Ok(DocxMutation::InsertBlock { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "remove-block" => Ok(DocxMutation::RemoveBlock { path: dec_block_path(arg("path")?)? }),
+        "set-block-content" => Ok(DocxMutation::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? }),
+        "set-run-text" => Ok(DocxMutation::SetRunText { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, text: dec_str(arg("text")?)? }),
+        "set-run-formatting" => Ok(DocxMutation::SetRunFormatting { path: dec_block_path(arg("path")?)?, run_index: usize_arg("run-index")?, bold: dec_bool(arg("bold")?)?, italic: dec_bool(arg("italic")?)?, underline: dec_bool(arg("underline")?)? }),
+        "insert-style" => Ok(DocxMutation::InsertStyle { style: dec_style(arg("style")?)? }),
+        "remove-style" => Ok(DocxMutation::RemoveStyle { id: dec_str(arg("id")?)? }),
+        "set-style-name" => Ok(DocxMutation::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? }),
+        "set-style-based-on" => Ok(DocxMutation::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? }),
+        "set-part" => Ok(DocxMutation::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, bytes: hex_decode(arg("bytes")?)? }),
+        "remove-part" => Ok(DocxMutation::RemovePart { path: dec_str(arg("path")?)? }),
         other => Err(format!("docx mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for DocxMutation {
     async fn print_op(&self) -> String {
-        print_docx_mutation(self).await
+        print_docx_mutation(self)
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_docx_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_docx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -366,31 +385,35 @@ impl OpText for DocxMutation {
 /// `dec_rel_bin` (`../🔺️diff/🦀️component.rs`, `pub(crate)` to this artifact).
 use crate::artifacts::docx::schema::diff::{dec_block_bin, dec_opc_part_bin, dec_rel_bin, dec_style_bin, enc_block_bin, enc_opc_part_bin, enc_rel_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
 
-async fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, seg.block_index as u64);
     store::pack_rt::write_varint_u64(out, seg.row as u64);
     store::pack_rt::write_varint_u64(out, seg.cell as u64);
 }
-async fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
-    let block_index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let cell = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
+    let block_index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let cell = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(DocxPathSegment { block_index, row, cell })
 }
-async fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.segments.len() as u64);
     for seg in &p.segments {
         enc_path_segment_bin(seg, out);
     }
     store::pack_rt::write_varint_u64(out, p.index as u64);
 }
-async fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut segments = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        segments.push(dec_path_segment_bin(reader).await?);
+        segments.push(dec_path_segment_bin(reader)?);
     }
-    let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(DocxBlockPath { segments, index })
 }
 
@@ -399,7 +422,8 @@ async fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBl
 /// `enc_opc_content_types`/`enc_opc_package`/`enc_docx_document`/`enc_docx_snapshot` text forms
 /// above. Owners sorted for a deterministic encoding, same `HashMap`-iteration-order caveat those
 /// text forms document.
-async fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ct.defaults.len() as u64);
     for e in &ct.defaults {
         write_str_lp(out, &e.0);
@@ -411,20 +435,22 @@ async fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
         write_str_lp(out, &e.1);
     }
 }
-async fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
-    let default_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut defaults = Vec::with_capacity(default_count as usize);
     for _ in 0..default_count {
-        defaults.push((read_str_lp(reader).await?, read_str_lp(reader).await?));
+        defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
     }
-    let override_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut overrides = Vec::with_capacity(override_count as usize);
     for _ in 0..override_count {
-        overrides.push((read_str_lp(reader).await?, read_str_lp(reader).await?));
+        overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
     }
     Ok(OpcContentTypes { defaults, overrides })
 }
-async fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, pkg.parts.len() as u64);
     for p in &pkg.parts {
         enc_opc_part_bin(p, out);
@@ -442,27 +468,29 @@ async fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
-    let part_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
-        parts.push(dec_opc_part_bin(reader).await?);
+        parts.push(dec_opc_part_bin(reader)?);
     }
-    let content_types = dec_opc_content_types_bin(reader).await?;
-    let owner_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let content_types = dec_opc_content_types_bin(reader)?;
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut relationships = HashMap::with_capacity(owner_count as usize);
     for _ in 0..owner_count {
-        let owner = read_str_lp(reader).await?;
-        let rel_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let owner = read_str_lp(reader)?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut list = Vec::with_capacity(rel_count as usize);
         for _ in 0..rel_count {
-            list.push(dec_rel_bin(reader).await?);
+            list.push(dec_rel_bin(reader)?);
         }
         relationships.insert(owner, list);
     }
     Ok(OpcPackage { parts, content_types, relationships, ..Default::default() })
 }
-async fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, doc.body.len() as u64);
     for b in &doc.body {
         enc_block_bin(b, out);
@@ -472,28 +500,31 @@ async fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
         enc_style_bin(s, out);
     }
 }
-async fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
-    let body_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
+    let body_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut body = Vec::with_capacity(body_count as usize);
     for _ in 0..body_count {
-        body.push(dec_block_bin(reader).await?);
+        body.push(dec_block_bin(reader)?);
     }
-    let style_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(style_count as usize);
     for _ in 0..style_count {
-        styles.push(dec_style_bin(reader).await?);
+        styles.push(dec_style_bin(reader)?);
     }
     Ok(DocxDocument { body, styles })
 }
-async fn enc_docx_snapshot_bin(s: &DocxSnapshot, out: &mut Vec<u8>) {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_docx_snapshot_bin(s: &DocxSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     enc_opc_package_bin(&s.opc, out);
     enc_docx_document_bin(&s.document, out);
 }
-async fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
-    let schema = read_str_lp(reader).await?;
-    let opc = dec_opc_package_bin(reader).await?;
-    let document = dec_docx_document_bin(reader).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let opc = dec_opc_package_bin(reader)?;
+    let document = dec_docx_document_bin(reader)?;
     Ok(DocxSnapshot { schema, opc, document })
 }
 //#endregion 🔖️OpBinaryCodec
@@ -523,12 +554,12 @@ impl OpBinary for DocxMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             DocxMutation::NoMutation => {}
-            DocxMutation::SetSnapshot { snapshot } => enc_docx_snapshot_bin(snapshot, &mut out).await,
+            DocxMutation::SetSnapshot { snapshot } => enc_docx_snapshot_bin(snapshot, &mut out),
             DocxMutation::InsertBlock { path, block } => {
                 enc_block_path_bin(path, &mut out);
                 enc_block_bin(block, &mut out);
             }
-            DocxMutation::RemoveBlock { path } => enc_block_path_bin(path, &mut out).await,
+            DocxMutation::RemoveBlock { path } => enc_block_path_bin(path, &mut out),
             DocxMutation::SetBlockContent { path, block } => {
                 enc_block_path_bin(path, &mut out);
                 enc_block_bin(block, &mut out);
@@ -545,8 +576,8 @@ impl OpBinary for DocxMutation {
                 out.push(*italic as u8);
                 out.push(*underline as u8);
             }
-            DocxMutation::InsertStyle { style } => enc_style_bin(style, &mut out).await,
-            DocxMutation::RemoveStyle { id } => write_str_lp(&mut out, id).await,
+            DocxMutation::InsertStyle { style } => enc_style_bin(style, &mut out),
+            DocxMutation::RemoveStyle { id } => write_str_lp(&mut out, id),
             DocxMutation::SetStyleName { id, name } => {
                 write_str_lp(&mut out, id);
                 write_str_lp(&mut out, name);
@@ -563,7 +594,7 @@ impl OpBinary for DocxMutation {
                 write_str_lp(&mut out, content_type);
                 write_bytes_lp(&mut out, bytes);
             }
-            DocxMutation::RemovePart { path } => write_str_lp(&mut out, path).await,
+            DocxMutation::RemovePart { path } => write_str_lp(&mut out, path),
         }
         Ok(out)
     }
@@ -576,31 +607,31 @@ impl OpBinary for DocxMutation {
         match tag {
             0 => Ok(DocxMutation::NoMutation),
             1 => {
-                let snapshot = dec_docx_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_block_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::InsertBlock { path, block })
             }
             3 => {
-                let path = dec_block_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::RemoveBlock { path })
             }
             4 => {
-                let path = dec_block_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetBlockContent { path, block })
             }
             5 => {
-                let path = dec_block_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let run_index = reader.read_varint_u64().await.map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let text = read_str_lp(&mut reader).await.map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetRunText { path, run_index, text })
             }
             6 => {
-                let path = dec_block_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let run_index = reader.read_varint_u64().await.map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let bold = reader.read_u8().await.map_err(|e| malformed("op bold", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
                 let italic = reader.read_u8().await.map_err(|e| malformed("op italic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
@@ -608,32 +639,32 @@ impl OpBinary for DocxMutation {
                 Ok(DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline })
             }
             7 => {
-                let style = dec_style_bin(&mut reader).await.map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::InsertStyle { style })
             }
             8 => {
-                let id = read_str_lp(&mut reader).await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::RemoveStyle { id })
             }
             9 => {
-                let id = read_str_lp(&mut reader).await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetStyleName { id, name })
             }
             10 => {
-                let id = read_str_lp(&mut reader).await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let has = reader.read_u8().await.map_err(|e| malformed("op based_on presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let based_on = if has != 0 { Some(read_str_lp(&mut reader).await.map_err(|e| malformed("op based_on", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(DocxMutation::SetStyleBasedOn { id, based_on })
             }
             11 => {
-                let path = read_str_lp(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let content_type = read_str_lp(&mut reader).await.map_err(|e| malformed("op content_type", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let bytes = read_bytes_lp(&mut reader).await.map_err(|e| malformed("op bytes", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetPart { path, content_type, bytes })
             }
             12 => {
-                let path = read_str_lp(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::RemovePart { path })
             }
             other => Err(malformed("op tag", 1, format!("unknown DocxMutation tag {other}"))),
@@ -649,12 +680,14 @@ impl OpBinary for DocxMutation {
 /// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
 #[cfg(test)]
-async fn fixture() -> DocxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fixture() -> DocxSnapshot {
     crate::artifacts::docx::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
 }
 
 #[cfg(test)]
-async fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
     DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
 }
 
@@ -667,7 +700,8 @@ async fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -
 /// name-keyed collection, order-independent) get one removed, one modified-in-every-field, one
 /// added. OPC content_types/parts/relationships each get one removed, one modified, one added.
 #[cfg(test)]
-async fn sweep_a() -> DocxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sweep_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -697,7 +731,8 @@ async fn sweep_a() -> DocxSnapshot {
 }
 
 #[cfg(test)]
-async fn sweep_b() -> DocxSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sweep_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -749,7 +784,8 @@ async fn sweep_b() -> DocxSnapshot {
 
 /// 🧪️ The demo cases proper -- one representative `DocxMutation` per variant.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<DocxMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
     vec![
         DocxMutation::NoMutation,
         DocxMutation::SetSnapshot { snapshot: sweep_b() },
@@ -951,7 +987,8 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -959,7 +996,8 @@ mod tests {
         absorbed
     }
 
-    async fn body_diff(diff: &DocxDiff) -> &crate::artifacts::docx::schema::diff::DocxBlocksDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn body_diff(diff: &DocxDiff) -> &crate::artifacts::docx::schema::diff::DocxBlocksDiff {
         diff.document.as_ref().expect("document diff present").body.as_ref().expect("body diff present")
     }
 

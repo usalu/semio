@@ -26,7 +26,7 @@ pub struct PlyInference {
 
 impl protocol::Inference<PlySnapshot> for PlyInference {
     async fn infer(snapshot: &PlySnapshot) -> Self {
-        Self { bounds: compute_ply_bounds(snapshot).await }
+        Self { bounds: compute_ply_bounds(snapshot) }
     }
 }
 
@@ -66,7 +66,8 @@ impl ArtifactInferrer for crate::artifacts::ply::standards::v1_0::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ply.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `ply_artifact_schema_descriptor`'s registration.
-pub async fn ply_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn ply_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.stdio.ply.inference",
         inference: schema::FacetLeaves {

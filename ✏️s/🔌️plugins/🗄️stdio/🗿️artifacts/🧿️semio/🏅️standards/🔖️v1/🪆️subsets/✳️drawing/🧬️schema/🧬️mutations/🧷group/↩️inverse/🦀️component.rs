@@ -8,11 +8,12 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations:
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
     if !is_contiguous_ascending(&payload.indices) {
         return Vec::new();
     }
-    match node_at(base, &payload.parent).await {
+    match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) if payload.indices.iter().all(|&i| i < children.len()) => {
             let mut path = payload.parent.path.clone();
             path.push(payload.indices[0]);

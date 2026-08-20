@@ -94,7 +94,8 @@ pub enum LogBase {
 
 impl LogBase {
     /// 📏️ Natural logarithm of this base's numeric value (`ln(base)`).
-    pub async fn ln(self) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ln(self) -> f64 {
         match self {
             Self::Nats => 1.0,
             Self::Bits => core::f64::consts::LN_2,
@@ -104,7 +105,8 @@ impl LogBase {
     }
 
     /// 📏️ Validates that a custom base is usable (`b > 0`, `b != 1`, finite).
-    pub async fn validate(self) -> Result<(), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate(self) -> Result<(), EntropyError> {
         if let Self::Base(b) = self {
             if !b.is_finite() || b <= 0.0 || (b - 1.0).abs() < 1e-15 {
                 return Err(EntropyError::InvalidConfig { field: "log_base", reason: "custom logarithm base must be finite, positive, and not equal to 1" });
@@ -114,18 +116,21 @@ impl LogBase {
     }
 
     /// 📏️ Converts a value already expressed in nats into this base.
-    pub async fn from_nats(self, nats: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_nats(self, nats: f64) -> f64 {
         nats / self.ln()
     }
 
     /// 📏️ Converts a value expressed in this base into nats.
-    pub async fn to_nats(self, value: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_nats(self, value: f64) -> f64 {
         value * self.ln()
     }
 
     /// 📏️ Converts `value` from one base to another without an intermediate caller-visible step.
-    pub async fn convert(value: f64, from: LogBase, to: LogBase) -> f64 {
-        to.from_nats(from.to_nats(value).await).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn convert(value: f64, from: LogBase, to: LogBase) -> f64 {
+        to.from_nats(from.to_nats(value))
     }
 }
 // #endregion 🔖️Units
@@ -179,10 +184,11 @@ pub struct Estimate {
 
 impl Estimate {
     /// 📦️ Returns a copy of this estimate with `value`/`std_error`/`ci` converted to `base`.
-    pub async fn in_base(&self, base: LogBase) -> Estimate {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn in_base(&self, base: LogBase) -> Estimate {
         let convert = |v: f64| LogBase::convert(v, self.base, base);
         Estimate {
-            value: convert(self.value).await,
+            value: convert(self.value),
             base,
             method: self.method,
             n: self.n,
@@ -195,13 +201,15 @@ impl Estimate {
     }
 
     /// 📦️ Value converted to bits.
-    pub async fn bits(&self) -> f64 {
-        LogBase::convert(self.value, self.base, LogBase::Bits).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bits(&self) -> f64 {
+        LogBase::convert(self.value, self.base, LogBase::Bits)
     }
 
     /// 📦️ Value converted to nats.
-    pub async fn nats(&self) -> f64 {
-        LogBase::convert(self.value, self.base, LogBase::Nats).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn nats(&self) -> f64 {
+        LogBase::convert(self.value, self.base, LogBase::Nats)
     }
 }
 // #endregion 🔖️Estimate
@@ -307,7 +315,8 @@ pub mod numeric {
 
     /// 🔬️ Natural log of the gamma function, accurate to ~1e-13 relative error for `x > 0`.
     /// Lanczos approximation, g = 7, n = 9 (Numerical Recipes coefficient set).
-    pub async fn ln_gamma(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ln_gamma(x: f64) -> f64 {
         if x < 0.5 {
             // 🔬️ Reflection formula: Gamma(x) * Gamma(1-x) = pi / sin(pi*x).
             let sin_term = (core::f64::consts::PI * x).sin();
@@ -325,14 +334,16 @@ pub mod numeric {
 
     /// 🔬️ Gamma function via `exp(ln_gamma(x))`. Prefer [`ln_gamma`] directly when only the log is
     /// needed (avoids overflow for large `x`).
-    pub async fn gamma(x: f64) -> f64 {
-        ln_gamma(x).await.exp()
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn gamma(x: f64) -> f64 {
+        ln_gamma(x).exp()
     }
 
     /// 🔬️ Digamma function `psi(x) = d/dx ln(Gamma(x))`. Uses the recurrence `psi(x) = psi(x+1) -
     /// 1/x` to shift small `x` into the region where the asymptotic series converges well (`x >=
     /// 6`), then the standard asymptotic expansion in `1/x^2`.
-    pub async fn digamma(mut x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn digamma(mut x: f64) -> f64 {
         let mut result = 0.0;
         while x < 6.0 {
             result -= 1.0 / x;
@@ -346,7 +357,8 @@ pub mod numeric {
 
     /// 🔬️ Trigamma function `psi'(x)`, the derivative of [`digamma`]. Same shift-and-asymptotic
     /// strategy as `digamma`.
-    pub async fn trigamma(mut x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn trigamma(mut x: f64) -> f64 {
         let mut result = 0.0;
         while x < 6.0 {
             result += 1.0 / (x * x);
@@ -361,7 +373,8 @@ pub mod numeric {
     /// 🔬️ Error function via Abramowitz & Stegun 7.1.26 (max abs error ~1.5e-7), refined with one
     /// Newton step against [`erfc`]'s complementary identity is unnecessary at this tolerance for
     /// entropy-estimator purposes (bandwidth selection, normal CDF).
-    pub async fn erf(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn erf(x: f64) -> f64 {
         let sign = if x < 0.0 { -1.0 } else { 1.0 };
         let x = x.abs();
         let a1 = 0.254_829_592;
@@ -376,18 +389,21 @@ pub mod numeric {
     }
 
     /// 🔬️ Complementary error function `1 - erf(x)`.
-    pub async fn erfc(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn erfc(x: f64) -> f64 {
         1.0 - erf(x)
     }
 
     /// 🔬️ Standard normal CDF `Phi(x)`.
-    pub async fn normal_cdf(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normal_cdf(x: f64) -> f64 {
         0.5 * erfc(-x / core::f64::consts::SQRT_2)
     }
 
     /// 🔬️ Inverse standard normal CDF (quantile function), Acklam's rational approximation
     /// (relative error < 1.15e-9 across `(0, 1)`), refined by one Halley step.
-    pub async fn inverse_normal_cdf(p: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse_normal_cdf(p: f64) -> f64 {
         if !(0.0..=1.0).contains(&p) {
             return f64::NAN;
         }
@@ -421,7 +437,8 @@ pub mod numeric {
 
     /// 🔬️ Regularized lower incomplete gamma function `P(a, x)`, via series expansion for `x < a+1`
     /// and a continued fraction for `x >= a+1` (standard Numerical Recipes split).
-    pub async fn regularized_lower_incomplete_gamma(a: f64, x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn regularized_lower_incomplete_gamma(a: f64, x: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
         }
@@ -443,7 +460,8 @@ pub mod numeric {
         }
     }
 
-    async fn regularized_upper_incomplete_gamma_cf(a: f64, x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn regularized_upper_incomplete_gamma_cf(a: f64, x: f64) -> f64 {
         let tiny = 1e-300;
         let mut b = x + 1.0 - a;
         let mut c = 1.0 / tiny;
@@ -471,7 +489,8 @@ pub mod numeric {
     }
 
     /// 🔬️ Regularized upper incomplete gamma function `Q(a, x) = 1 - P(a, x)`.
-    pub async fn regularized_upper_incomplete_gamma(a: f64, x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn regularized_upper_incomplete_gamma(a: f64, x: f64) -> f64 {
         1.0 - regularized_lower_incomplete_gamma(a, x)
     }
 
@@ -483,7 +502,8 @@ pub mod numeric {
 
     impl LogFactorialCache {
         /// 🔬️ Precomputes `ln(k!)` for `k` in `0..=max_n`.
-        pub async fn new(max_n: usize) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(max_n: usize) -> Self {
             let mut cache = Vec::with_capacity(max_n + 1);
             cache.push(0.0);
             for k in 1..=max_n {
@@ -493,10 +513,11 @@ pub mod numeric {
         }
 
         /// 🔬️ `ln(n!)`, falling back to `ln_gamma(n + 1)` beyond the cached range.
-        pub async fn get(&self, n: usize) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn get(&self, n: usize) -> f64 {
             match self.cache.get(n) {
                 Some(&v) => v,
-                None => ln_gamma(n as f64 + 1.0).await,
+                None => ln_gamma(n as f64 + 1.0),
             }
         }
     }
@@ -505,7 +526,8 @@ pub mod numeric {
     // #region 🔖️StableSummation
     /// 🔬️ Neumaier's improved Kahan compensated summation: tracks a running compensation term so
     /// that summing many small values alongside a few large ones does not lose precision.
-    pub async fn neumaier_sum(values: impl IntoIterator<Item = f64>) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn neumaier_sum(values: impl IntoIterator<Item = f64>) -> f64 {
         let mut sum = 0.0_f64;
         let mut compensation = 0.0_f64;
         for value in values {
@@ -523,10 +545,11 @@ pub mod numeric {
     /// 🔬️ Pairwise (divide-and-conquer) summation: `O(log n)` error growth instead of `O(n)` for
     /// naive left-to-right summation, useful for large flat arrays where compensated summation's
     /// per-element overhead is undesirable.
-    pub async fn pairwise_sum(values: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn pairwise_sum(values: &[f64]) -> f64 {
         const BASE_CASE: usize = 128;
         if values.len() <= BASE_CASE {
-            return neumaier_sum(values.iter().copied()).await;
+            return neumaier_sum(values.iter().copied());
         }
         let mid = values.len() / 2;
         pairwise_sum(&values[..mid]) + pairwise_sum(&values[mid..])
@@ -534,7 +557,8 @@ pub mod numeric {
 
     /// 🔬️ Numerically stable `x * ln(x)`, defined as `0` at `x == 0` (the standard entropy
     /// convention `0 log 0 = 0`, taken as a limit).
-    pub async fn x_ln_x(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn x_ln_x(x: f64) -> f64 {
         if x <= 0.0 {
             0.0
         } else {
@@ -544,14 +568,15 @@ pub mod numeric {
 
     /// 🔬️ `log(sum(exp(values)))` computed without overflow by factoring out the maximum element.
     /// Returns `f64::NEG_INFINITY` for an empty input.
-    pub async fn log_sum_exp(values: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn log_sum_exp(values: &[f64]) -> f64 {
         let Some(&max) = values.iter().max_by(|a, b| a.total_cmp(b)) else {
             return f64::NEG_INFINITY;
         };
         if !max.is_finite() {
             return max;
         }
-        let sum = neumaier_sum(values.iter().map(|&v| (v - max).exp())).await;
+        let sum = neumaier_sum(values.iter().map(|&v| (v - max).exp()));
         max + sum.ln()
     }
     // #endregion 🔖️StableSummation
@@ -567,12 +592,14 @@ pub mod numeric {
     impl Xorshift64 {
         /// 🎲️ Seeds the generator. A seed of `0` is remapped to a fixed nonzero constant since
         /// xorshift's all-zero state is a fixed point.
-        pub async fn new(seed: u64) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(seed: u64) -> Self {
             Self { state: if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed } }
         }
 
         /// 🎲️ Next raw 64-bit output.
-        pub async fn next_u64(&mut self) -> u64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next_u64(&mut self) -> u64 {
             let mut x = self.state;
             x ^= x << 13;
             x ^= x >> 7;
@@ -582,13 +609,15 @@ pub mod numeric {
         }
 
         /// 🎲️ Uniform `f64` in `[0, 1)`.
-        pub async fn next_f64(&mut self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next_f64(&mut self) -> f64 {
             (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
         }
 
         /// 🎲️ Uniform integer in `[0, bound)` via Lemire's rejection-free-in-practice method (biased
         /// only by a negligible `2^-64` amount, acceptable for permutation/bootstrap indices).
-        pub async fn next_below(&mut self, bound: usize) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next_below(&mut self, bound: usize) -> usize {
             if bound == 0 {
                 return 0;
             }
@@ -598,17 +627,19 @@ pub mod numeric {
         /// 🎲️ One standard-normal sample via Box-Muller (caller pays two uniform draws per call;
         /// simplicity over the two-sample-per-call optimization since callers rarely need high
         /// throughput Gaussian streams).
-        pub async fn next_gaussian(&mut self) -> f64 {
-            let u1 = (self.next_f64()).await.max(f64::MIN_POSITIVE);
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn next_gaussian(&mut self) -> f64 {
+            let u1 = (self.next_f64()).max(f64::MIN_POSITIVE);
             let u2 = self.next_f64();
             (-2.0 * u1.ln()).sqrt() * (2.0 * core::f64::consts::PI * u2).cos()
         }
 
         /// 🎲️ In-place Fisher-Yates shuffle.
-        pub async fn shuffle<T>(&mut self, slice: &mut [T]) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn shuffle<T>(&mut self, slice: &mut [T]) {
             for i in (1..slice.len()).rev() {
                 let j = self.next_below(i + 1);
-                slice.swap(i, j.await);
+                slice.swap(i, j);
             }
         }
     }
@@ -617,14 +648,16 @@ pub mod numeric {
     // #region 🔖️Hygiene
     /// 🧹️ Overflow-safe product of bin-count-like dimensions, returning `None` on overflow rather
     /// than silently wrapping.
-    pub async fn checked_state_count(dims: &[usize]) -> Option<u128> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn checked_state_count(dims: &[usize]) -> Option<u128> {
         dims.iter().try_fold(1u128, |acc, &d| acc.checked_mul(d as u128))
     }
 
     /// 🧹️ Clips a near-zero-but-negative eigenvalue/entropy estimate to exactly `0.0` when it falls
     /// within `tolerance` of zero; leaves values further negative untouched (callers decide whether
     /// that indicates a real error).
-    pub async fn clamp_near_zero(value: f64, tolerance: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn clamp_near_zero(value: f64, tolerance: f64) -> f64 {
         if value < 0.0 && value >= -tolerance {
             0.0
         } else {
@@ -846,7 +879,8 @@ pub mod counts {
 
     impl Counts {
         /// 🧮️ Builds a dense count table from `u32` symbols over `0..alphabet_size`.
-        pub async fn from_symbols(symbols: &[u32], alphabet_size: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_symbols(symbols: &[u32], alphabet_size: usize) -> Result<Self, EntropyError> {
             if symbols.is_empty() {
                 return Err(EntropyError::EmptyInput { what: "symbols" });
             }
@@ -865,7 +899,8 @@ pub mod counts {
 
         /// 🧮️ Builds a dense count table from weighted symbol observations. Weights must be finite
         /// and non-negative.
-        pub async fn from_weighted(symbols: &[u32], weights: &[f64], alphabet_size: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_weighted(symbols: &[u32], weights: &[f64], alphabet_size: usize) -> Result<Self, EntropyError> {
             if symbols.len() != weights.len() {
                 return Err(EntropyError::LengthMismatch { expected: symbols.len(), actual: weights.len() });
             }
@@ -893,7 +928,8 @@ pub mod counts {
 
         /// 🧮️ Builds counts directly from a raw non-negative count vector (e.g. already-tabulated
         /// external data).
-        pub async fn from_counts(raw: &[u64]) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_counts(raw: &[u64]) -> Result<Self, EntropyError> {
             if raw.is_empty() {
                 return Err(EntropyError::EmptyInput { what: "counts" });
             }
@@ -903,22 +939,26 @@ pub mod counts {
             Ok(Self { counts, total, n_raw })
         }
 
-        pub async fn alphabet_size(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn alphabet_size(&self) -> usize {
             self.counts.len()
         }
 
-        pub async fn total(&self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn total(&self) -> f64 {
             self.total
         }
 
         /// 🧮️ Raw number of observations consumed (ignores weighting).
-        pub async fn n_raw(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn n_raw(&self) -> usize {
             self.n_raw
         }
 
         /// 🧮️ Effective sample size `(sum w)^2 / sum(w^2)`, equal to `n_raw` for unweighted/integer
         /// counts.
-        pub async fn n_effective(&self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn n_effective(&self) -> f64 {
             let sum_sq: f64 = self.counts.iter().map(|c| c * c).sum();
             if sum_sq <= 0.0 {
                 0.0
@@ -927,28 +967,33 @@ pub mod counts {
             }
         }
 
-        pub async fn raw(&self) -> &[f64] {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn raw(&self) -> &[f64] {
             &self.counts
         }
 
         /// 🧮️ Number of symbols with strictly positive count (the occupied support size).
-        pub async fn support_size(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn support_size(&self) -> usize {
             self.counts.iter().filter(|&&c| c > 0.0).count()
         }
 
         /// 🧮️ Number of symbols observed exactly once (singletons), used by Chao-Shen/Good-Turing
         /// coverage diagnostics.
-        pub async fn singletons(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn singletons(&self) -> usize {
             self.counts.iter().filter(|&&c| (c - 1.0).abs() < 1e-12).count()
         }
 
         /// 🧮️ Number of symbols observed exactly twice (doubletons).
-        pub async fn doubletons(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn doubletons(&self) -> usize {
             self.counts.iter().filter(|&&c| (c - 2.0).abs() < 1e-12).count()
         }
 
         /// 🧮️ Maximum-likelihood plug-in probability vector `count_i / total`.
-        pub async fn probabilities(&self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn probabilities(&self) -> Vec<f64> {
             if self.total <= 0.0 {
                 return vec![0.0; self.counts.len()];
             }
@@ -956,7 +1001,8 @@ pub mod counts {
         }
 
         /// 🧮️ Applies a smoothing prior and returns the resulting posterior probability vector.
-        pub async fn smoothed_probabilities(&self, prior: SmoothingPrior) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn smoothed_probabilities(&self, prior: SmoothingPrior) -> Vec<f64> {
             let k = self.counts.len() as f64;
             let pseudo = match prior {
                 SmoothingPrior::None => 0.0,
@@ -1000,7 +1046,8 @@ pub mod counts {
 
     impl JointCounts {
         /// 🧮️ Builds a joint table from two equal-length symbol sequences.
-        pub async fn from_pairs(x: &[u32], y: &[u32], x_size: usize, y_size: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_pairs(x: &[u32], y: &[u32], x_size: usize, y_size: usize) -> Result<Self, EntropyError> {
             if x.len() != y.len() {
                 return Err(EntropyError::LengthMismatch { expected: x.len(), actual: y.len() });
             }
@@ -1019,20 +1066,24 @@ pub mod counts {
             Ok(Self { counts, rows: x_size, cols: y_size, total })
         }
 
-        pub async fn shape(&self) -> (usize, usize) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn shape(&self) -> (usize, usize) {
             (self.rows, self.cols)
         }
 
-        pub async fn total(&self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn total(&self) -> f64 {
             self.total
         }
 
-        pub async fn get(&self, row: usize, col: usize) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn get(&self, row: usize, col: usize) -> f64 {
             self.counts[row * self.cols + col]
         }
 
         /// 🧮️ Row-major joint probability matrix, flattened.
-        pub async fn joint_probabilities(&self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn joint_probabilities(&self) -> Vec<f64> {
             if self.total <= 0.0 {
                 return vec![0.0; self.counts.len()];
             }
@@ -1040,18 +1091,21 @@ pub mod counts {
         }
 
         /// 🧮️ Marginal probability vector over rows (the `x` variable).
-        pub async fn marginal_x(&self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn marginal_x(&self) -> Vec<f64> {
             (0..self.rows).map(|r| (0..self.cols).map(|c| self.get(r, c)).sum::<f64>() / self.total.max(1.0)).collect()
         }
 
         /// 🧮️ Marginal probability vector over columns (the `y` variable).
-        pub async fn marginal_y(&self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn marginal_y(&self) -> Vec<f64> {
             (0..self.cols).map(|c| (0..self.rows).map(|r| self.get(r, c)).sum::<f64>() / self.total.max(1.0)).collect()
         }
 
         /// 🧮️ Flattened counts as a [`Counts`] over the joint alphabet `rows * cols`, e.g. for
         /// applying a discrete bias-corrected estimator to the joint distribution directly.
-        pub async fn as_counts(&self) -> Counts {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn as_counts(&self) -> Counts {
             Counts { counts: self.counts.clone(), total: self.total, n_raw: self.total as usize }
         }
     }
@@ -1061,7 +1115,8 @@ pub mod counts {
     /// 🧮️ Validates and (if within tolerance) renormalizes a probability vector: rejects `NaN`/`Inf`,
     /// rejects probabilities more negative than `tolerances.negative_probability`, clamps tiny
     /// negatives to zero, and renormalizes when `|sum - 1| <= tolerances.renormalize_sum`.
-    pub async fn validate_probabilities(p: &[f64], tolerances: Tolerances) -> Result<Vec<f64>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate_probabilities(p: &[f64], tolerances: Tolerances) -> Result<Vec<f64>, EntropyError> {
         if p.is_empty() {
             return Err(EntropyError::EmptyInput { what: "probabilities" });
         }
@@ -1075,7 +1130,7 @@ pub mod counts {
             }
             out.push(v.max(0.0));
         }
-        let sum: f64 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum(out.iter().copied()).await;
+        let sum: f64 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum(out.iter().copied());
         if (sum - 1.0).abs() > tolerances.renormalize_sum {
             return Err(EntropyError::NotNormalized { sum });
         }
@@ -1089,7 +1144,8 @@ pub mod counts {
 
     /// 🧮️ Maps arbitrary hashable category labels to a dense `0..k` integer alphabet, in first-seen
     /// order (deterministic given a fixed input order).
-    pub async fn encode_categories<T: std::hash::Hash + Eq + Clone>(labels: &[T]) -> (Vec<u32>, usize) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn encode_categories<T: std::hash::Hash + Eq + Clone>(labels: &[T]) -> (Vec<u32>, usize) {
         let mut map: HashMap<T, u32> = HashMap::new();
         let mut symbols = Vec::with_capacity(labels.len());
         for label in labels {
@@ -1207,45 +1263,50 @@ pub mod discrete {
 
     // #region 🔖️Shannon
     /// 📐️ Shannon entropy `H(p) = -sum p_i log p_i`, in `base`.
-    pub async fn entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         let nats = -neumaier_sum(p.iter().map(|&pi| x_ln_x(pi)));
-        Ok(base.from_nats(nats).await)
+        Ok(base.from_nats(nats))
     }
 
     /// 📐️ Binary entropy `H(p) = -p log p - (1-p) log(1-p)` for a single Bernoulli parameter.
-    pub async fn binary_entropy(p: f64, base: LogBase) -> Result<f64, EntropyError> {
-        entropy(&[p, 1.0 - p], base).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn binary_entropy(p: f64, base: LogBase) -> Result<f64, EntropyError> {
+        entropy(&[p, 1.0 - p], base)
     }
 
     /// 📐️ Joint Shannon entropy `H(X,Y)` of a flattened row-major joint probability matrix.
-    pub async fn joint_entropy(joint_p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        entropy(joint_p, base).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn joint_entropy(joint_p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        entropy(joint_p, base)
     }
 
     /// 📐️ Conditional entropy `H(Y|X) = H(X,Y) - H(X)` from a flattened row-major joint probability
     /// matrix with `rows` values of `X` and `cols` values of `Y`.
-    pub async fn conditional_entropy(joint_p: &[f64], rows: usize, cols: usize, base: LogBase) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn conditional_entropy(joint_p: &[f64], rows: usize, cols: usize, base: LogBase) -> Result<f64, EntropyError> {
         if joint_p.len() != rows * cols {
             return Err(EntropyError::ShapeMismatch { what: "joint_p", expected: rows * cols, actual: joint_p.len() });
         }
-        let h_xy = joint_entropy(joint_p, base).await?;
+        let h_xy = joint_entropy(joint_p, base)?;
         let marginal_x: Vec<f64> = (0..rows).map(|r| (0..cols).map(|c| joint_p[r * cols + c]).sum()).collect();
-        let h_x = entropy(&marginal_x, base).await?;
+        let h_x = entropy(&marginal_x, base)?;
         Ok(h_xy - h_x)
     }
 
     /// 📐️ Cross-entropy `H(p, q) = -sum p_i log q_i`. Returns `f64::INFINITY` when `p_i > 0` and
     /// `q_i == 0` for some `i` (mathematically correct: the code built for `q` cannot represent
     /// that symbol).
-    pub async fn cross_entropy(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cross_entropy(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
         if p.len() != q.len() {
             return Err(EntropyError::LengthMismatch { expected: p.len(), actual: q.len() });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
-        let q = validate_probabilities(q, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
+        let q = validate_probabilities(q, Tolerances::default())?;
         let mut nats = 0.0;
         for (&pi, &qi) in p.iter().zip(q.iter()) {
             if pi <= 0.0 {
@@ -1256,19 +1317,20 @@ pub mod discrete {
             }
             nats -= pi * qi.ln();
         }
-        Ok(base.from_nats(nats).await)
+        Ok(base.from_nats(nats))
     }
     // #endregion 🔖️Shannon
 
     // #region 🔖️Generalized
     /// 📐️ Hartley entropy `log(k)` of a support of size `k` (the entropy of a uniform distribution
     /// over `k` symbols; also the `alpha -> 0` limit of Rényi entropy).
-    pub async fn hartley_entropy(support_size: usize, base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn hartley_entropy(support_size: usize, base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
         if support_size == 0 {
             return Err(EntropyError::EmptyInput { what: "support" });
         }
-        Ok(base.from_nats((support_size as f64).ln()).await)
+        Ok(base.from_nats((support_size as f64).ln()))
     }
 
     /// 📐️ Rényi entropy of order `alpha`: `H_alpha(p) = 1/(1-alpha) * log(sum p_i^alpha)`.
@@ -1276,49 +1338,53 @@ pub mod discrete {
     /// directly rather than this formula's removable singularity — this function returns
     /// [`EntropyError::UndefinedResult`] for `alpha` exactly `1.0`. `alpha == 0` returns the
     /// [`hartley_entropy`] of the occupied support (`0^0` is conventionally excluded from the sum).
-    pub async fn renyi_entropy(p: &[f64], alpha: f64, base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn renyi_entropy(p: &[f64], alpha: f64, base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
         if !alpha.is_finite() {
             return Err(EntropyError::InvalidConfig { field: "alpha", reason: "must be finite" });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         if alpha == 1.0 {
             return Err(EntropyError::UndefinedResult { reason: "Renyi entropy at alpha=1 is the Shannon limit; call entropy() instead" });
         }
         if alpha == 0.0 {
-            return hartley_entropy(p.iter().filter(|&&pi| pi > 0.0).count(), base).await;
+            return hartley_entropy(p.iter().filter(|&&pi| pi > 0.0).count(), base);
         }
         let sum_alpha = neumaier_sum(p.iter().filter(|&&pi| pi > 0.0).map(|&pi| pi.powf(alpha)));
         if sum_alpha <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "sum of p^alpha is non-positive" });
         }
-        let nats = sum_alpha.await.ln() / (1.0 - alpha);
-        Ok(base.from_nats(nats).await)
+        let nats = sum_alpha.ln() / (1.0 - alpha);
+        Ok(base.from_nats(nats))
     }
 
     /// 📐️ Collision entropy: Rényi entropy at `alpha = 2`, `-log(sum p_i^2)`.
-    pub async fn collision_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        renyi_entropy(p, 2.0, base).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn collision_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        renyi_entropy(p, 2.0, base)
     }
 
     /// 📐️ Min-entropy: the `alpha -> infinity` limit of Rényi entropy, `-log(max_i p_i)`.
-    pub async fn min_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn min_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         let max_p = p.iter().copied().fold(0.0_f64, f64::max);
         if max_p <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "all probabilities are zero" });
         }
-        Ok(base.from_nats(-max_p.ln()).await)
+        Ok(base.from_nats(-max_p.ln()))
     }
 
     /// 📐️ Tsallis entropy of entropic index `q`: `S_q(p) = (1 - sum p_i^q) / (q - 1)`. Unitless by
     /// convention (no logarithm base); the `q -> 1` limit equals Shannon entropy in nats.
-    pub async fn tsallis_entropy(p: &[f64], q: f64) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tsallis_entropy(p: &[f64], q: f64) -> Result<f64, EntropyError> {
         if !q.is_finite() {
             return Err(EntropyError::InvalidConfig { field: "q", reason: "must be finite" });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         if (q - 1.0).abs() < 1e-12 {
             return Ok(-neumaier_sum(p.iter().map(|&pi| x_ln_x(pi))));
         }
@@ -1328,31 +1394,33 @@ pub mod discrete {
 
     /// 📐️ Sharma-Mittal entropy, a two-parameter family generalizing both Rényi (`beta -> 1`) and
     /// Tsallis (`beta == alpha`): `SM_{alpha,beta}(p) = (1/(1-beta)) * [(sum p_i^alpha)^((1-beta)/(1-alpha)) - 1]`.
-    pub async fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, EntropyError> {
         if !alpha.is_finite() || !beta.is_finite() {
             return Err(EntropyError::InvalidConfig { field: "alpha/beta", reason: "must be finite" });
         }
         if (alpha - 1.0).abs() < 1e-12 || (beta - 1.0).abs() < 1e-12 {
             return Err(EntropyError::UndefinedResult { reason: "Sharma-Mittal requires alpha != 1 and beta != 1" });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         let sum_alpha = neumaier_sum(p.iter().filter(|&&pi| pi > 0.0).map(|&pi| pi.powf(alpha)));
         if sum_alpha <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "sum of p^alpha is non-positive" });
         }
         let exponent = (1.0 - beta) / (1.0 - alpha);
-        Ok((sum_alpha.await.powf(exponent) - 1.0) / (1.0 - beta))
+        Ok((sum_alpha.powf(exponent) - 1.0) / (1.0 - beta))
     }
 
     /// 📐️ Kaniadakis (kappa-) entropy: `S_kappa(p) = -sum p_i * (p_i^kappa - p_i^{-kappa}) / (2 kappa)`,
     /// defined for `kappa` in `(-1, 1) \ {0}`; the `kappa -> 0` limit is Shannon entropy in nats.
-    pub async fn kaniadakis_entropy(p: &[f64], kappa: f64) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn kaniadakis_entropy(p: &[f64], kappa: f64) -> Result<f64, EntropyError> {
         // 🔐️ `kappa.is_nan()` is explicit here (rather than relying on `!(kappa.abs() < 1.0)`'s
         // NaN-through-negation behavior) so a NaN input is rejected exactly as before.
         if kappa.is_nan() || kappa.abs() >= 1.0 {
             return Err(EntropyError::InvalidConfig { field: "kappa", reason: "must satisfy |kappa| < 1" });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
         if kappa.abs() < 1e-12 {
             return Ok(-neumaier_sum(p.iter().map(|&pi| x_ln_x(pi))));
         }
@@ -1364,9 +1432,10 @@ pub mod discrete {
     // #region 🔖️Normalized
     /// 📐️ Shannon entropy divided by the Hartley entropy of the *declared* alphabet size (`p.len()`),
     /// giving a value in `[0, 1]` regardless of how concentrated `p` is.
-    pub async fn normalized_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        let h = entropy(p, base).await?;
-        let h_max = hartley_entropy(p.len(), base).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn normalized_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        let h = entropy(p, base)?;
+        let h_max = hartley_entropy(p.len(), base)?;
         if h_max <= 0.0 {
             return Ok(0.0);
         }
@@ -1599,7 +1668,8 @@ pub mod estimators {
         JamesStein,
     }
 
-    async fn method_name(method: DiscreteMethod) -> &'static str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn method_name(method: DiscreteMethod) -> &'static str {
         match method {
             DiscreteMethod::Plugin => "plugin",
             DiscreteMethod::MillerMadow => "miller_madow",
@@ -1615,17 +1685,19 @@ pub mod estimators {
     // #endregion 🔖️Method
 
     // #region 🔖️PlugIn
-    async fn plugin_entropy_nats(counts: &Counts) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn plugin_entropy_nats(counts: &Counts) -> f64 {
         let n = counts.total();
         if n <= 0.0 {
             return 0.0;
         }
-        -neumaier_sum(counts.raw().await.iter().map(|&c| x_ln_x(c / n)))
+        -neumaier_sum(counts.raw().iter().map(|&c| x_ln_x(c / n)))
     }
     // #endregion 🔖️PlugIn
 
     // #region 🔖️MillerMadow
-    async fn miller_madow_nats(counts: &Counts) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn miller_madow_nats(counts: &Counts) -> f64 {
         let n = counts.total();
         let k_obs = counts.support_size() as f64;
         plugin_entropy_nats(counts) + (k_obs - 1.0) / (2.0 * n)
@@ -1634,24 +1706,27 @@ pub mod estimators {
 
     // #region 🔖️Grassberger
     /// 📊️ Grassberger's `G(n) = psi(n) + 0.5 * (-1)^n * (psi((n+1)/2) - psi(n/2))`, defined for `n >= 1`.
-    async fn grassberger_g(n: u64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn grassberger_g(n: u64) -> f64 {
         let nf = n as f64;
         let sign = if n.is_multiple_of(2) { 1.0 } else { -1.0 };
         digamma(nf) + 0.5 * sign * (digamma((nf + 1.0) / 2.0) - digamma(nf / 2.0))
     }
 
-    async fn grassberger_nats(counts: &Counts) -> f64 {
-        let n = counts.total().await;
-        let sum: f64 = neumaier_sum(counts.raw().await.iter().filter(|&&c| c > 0.0).map(|&c| c * grassberger_g(c.round() as u64))).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn grassberger_nats(counts: &Counts) -> f64 {
+        let n = counts.total();
+        let sum: f64 = neumaier_sum(counts.raw().iter().filter(|&&c| c > 0.0).map(|&c| c * grassberger_g(c.round() as u64)));
         n.ln() - sum / n
     }
     // #endregion 🔖️Grassberger
 
     // #region 🔖️ChaoShen
-    async fn chao_shen_nats(counts: &Counts) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn chao_shen_nats(counts: &Counts) -> Result<f64, EntropyError> {
         let n = counts.total();
         let f1 = counts.singletons() as f64;
-        let coverage = if f1 >= n.await { 1.0 - (n - 1.0).max(0.0) / n } else { 1.0 - f1 / n };
+        let coverage = if f1 >= n { 1.0 - (n - 1.0).max(0.0) / n } else { 1.0 - f1 / n };
         if coverage <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "Chao-Shen coverage estimate is non-positive" });
         }
@@ -1674,31 +1749,35 @@ pub mod estimators {
     // #region 🔖️Dirichlet
     /// 📊️ Posterior-mean entropy under a symmetric Dirichlet(alpha) prior over the full declared
     /// alphabet (unoccupied bins each contribute `alpha * psi(alpha + 1)`, so they are *not* skipped).
-    async fn bayes_entropy_nats(counts: &Counts, alpha: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bayes_entropy_nats(counts: &Counts, alpha: f64) -> f64 {
         let n = counts.total();
         let k = counts.alphabet_size() as f64;
         let denom = n + k * alpha;
-        let sum = neumaier_sum(counts.raw().await.iter().map(|&c| (c + alpha) * digamma(c + alpha + 1.0)));
-        digamma(denom + 1.0) - sum / denom.await.await.await.await.await.await
+        let sum = neumaier_sum(counts.raw().iter().map(|&c| (c + alpha) * digamma(c + alpha + 1.0)));
+        digamma(denom + 1.0) - sum / denom
     }
     // #endregion 🔖️Dirichlet
 
     // #region 🔖️Nsb
-    async fn log_evidence(counts: &Counts, alpha: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn log_evidence(counts: &Counts, alpha: f64) -> f64 {
         let n = counts.total();
         let k = counts.alphabet_size() as f64;
         let base = ln_gamma(k * alpha) - ln_gamma(n + k * alpha);
-        let occupied: f64 = neumaier_sum(counts.raw().await.iter().filter(|&&c| c > 0.0).map(|&c| ln_gamma(c + alpha) - ln_gamma(alpha)));
+        let occupied: f64 = neumaier_sum(counts.raw().iter().filter(|&&c| c > 0.0).map(|&c| ln_gamma(c + alpha) - ln_gamma(alpha)));
         base + occupied
     }
 
-    async fn xi_of_alpha(alpha: f64, k: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn xi_of_alpha(alpha: f64, k: f64) -> f64 {
         digamma(k * alpha + 1.0) - digamma(alpha + 1.0)
     }
 
     /// 📊️ Inverts `xi(alpha) = target` by bisection in `log(alpha)` space (xi is monotone increasing
     /// in alpha, mapping `alpha in (0, inf)` onto `xi in (0, ln K)`).
-    async fn invert_xi(target: f64, k: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn invert_xi(target: f64, k: f64) -> f64 {
         let mut lo = -27.0_f64; // 🔬️ alpha ~ 1e-12
         let mut hi = 27.0_f64; // 🔬️ alpha ~ 1e12
         for _ in 0..80 {
@@ -1715,7 +1794,8 @@ pub mod estimators {
 
     /// 📊️ Standard `n`-point Gauss-Legendre nodes/weights on `[-1, 1]`, via Newton iteration on the
     /// Legendre-polynomial three-term recurrence (no external dependency, no hardcoded tables).
-    async fn gauss_legendre(n: usize) -> (Vec<f64>, Vec<f64>) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn gauss_legendre(n: usize) -> (Vec<f64>, Vec<f64>) {
         let mut nodes = vec![0.0_f64; n];
         let mut weights = vec![0.0_f64; n];
         let m = n.div_ceil(2);
@@ -1750,14 +1830,15 @@ pub mod estimators {
 
     /// 📊️ NSB posterior-mean entropy via fixed 20-node Gauss-Legendre quadrature over `xi in (delta,
     /// ln K - delta)`, mapping each node to `alpha` by bisection and weighting by the log-evidence.
-    async fn nsb_nats(counts: &Counts) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn nsb_nats(counts: &Counts) -> Result<f64, EntropyError> {
         let k = counts.alphabet_size() as f64;
         if k < 2.0 {
             return Err(EntropyError::InvalidConfig { field: "alphabet_size", reason: "NSB requires at least 2 symbols" });
         }
         let ln_k = k.ln();
         let delta = 1e-8 * ln_k.max(1e-12);
-        let (nodes, weights) = gauss_legendre(20).await;
+        let (nodes, weights) = gauss_legendre(20);
         let (a, b) = (delta, (ln_k - delta).max(delta + 1e-9));
         let half = (b - a) / 2.0;
         let mid = (b + a) / 2.0;
@@ -1767,12 +1848,12 @@ pub mod estimators {
         for (&x, &w) in nodes.iter().zip(weights.iter()) {
             let xi = half * x + mid;
             let alpha = invert_xi(xi, k);
-            let evidence = log_evidence(counts, alpha.await);
+            let evidence = log_evidence(counts, alpha);
             let quad_weight = half * w;
             log_weighted.push(evidence + quad_weight.max(1e-300).ln());
-            h_alpha.push(bayes_entropy_nats(counts, alpha.await));
+            h_alpha.push(bayes_entropy_nats(counts, alpha));
         }
-        let log_norm = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::log_sum_exp(&log_weighted).await;
+        let log_norm = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::log_sum_exp(&log_weighted);
         if !log_norm.is_finite() {
             return Err(EntropyError::NotConverged { what: "NSB quadrature", iterations: nodes.len() });
         }
@@ -1782,13 +1863,14 @@ pub mod estimators {
     // #endregion 🔖️Nsb
 
     // #region 🔖️JamesStein
-    async fn james_stein_nats(counts: &Counts) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn james_stein_nats(counts: &Counts) -> f64 {
         let n = counts.total();
         let k = counts.alphabet_size() as f64;
         let target = 1.0 / k;
-        let p_hat = counts.probabilities().await;
-        let sum_sq: f64 = neumaier_sum(p_hat.iter().map(|&p| p * p)).await;
-        let sum_sq_dev: f64 = neumaier_sum(p_hat.iter().map(|&p| (target - p).powi(2))).await;
+        let p_hat = counts.probabilities();
+        let sum_sq: f64 = neumaier_sum(p_hat.iter().map(|&p| p * p));
+        let sum_sq_dev: f64 = neumaier_sum(p_hat.iter().map(|&p| (target - p).powi(2)));
         let lambda = if sum_sq_dev <= 0.0 || n <= 1.0 { 1.0 } else { ((1.0 - sum_sq) / ((n - 1.0) * sum_sq_dev)).clamp(0.0, 1.0) };
         let shrunk: Vec<f64> = p_hat.iter().map(|&p| lambda * target + (1.0 - lambda) * p).collect();
         -neumaier_sum(shrunk.iter().map(|&p| x_ln_x(p)))
@@ -1796,13 +1878,14 @@ pub mod estimators {
     // #endregion 🔖️JamesStein
 
     // #region 🔖️Jackknife
-    async fn jackknife_nats(counts: &Counts) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn jackknife_nats(counts: &Counts) -> f64 {
         let n = counts.total();
         let h_plugin = plugin_entropy_nats(counts);
         if n <= 1.0 {
-            return h_plugin.await;
+            return h_plugin;
         }
-        let raw = counts.raw().await;
+        let raw = counts.raw();
         let n_minus_1 = n - 1.0;
         let mut weighted_sum = 0.0_f64;
         for (i, &ci) in raw.iter().enumerate() {
@@ -1823,28 +1906,29 @@ pub mod estimators {
     // #region 🔖️Dispatch
     /// 📊️ Estimates the Shannon entropy of the distribution underlying `counts` using the given bias
     /// correction, returning an [`Estimate`] with support/coverage diagnostics.
-    pub async fn entropy_discrete(counts: &[u64], method: DiscreteMethod, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
-        let counts = Counts::from_counts(counts).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entropy_discrete(counts: &[u64], method: DiscreteMethod, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
+        let counts = Counts::from_counts(counts)?;
         let n = counts.total();
         let k = counts.alphabet_size();
         let support = counts.support_size();
 
         let nats = match method {
-            DiscreteMethod::Plugin => plugin_entropy_nats(&counts).await,
-            DiscreteMethod::MillerMadow => miller_madow_nats(&counts).await,
-            DiscreteMethod::Grassberger => grassberger_nats(&counts).await,
-            DiscreteMethod::Jackknife => jackknife_nats(&counts).await,
-            DiscreteMethod::ChaoShen => chao_shen_nats(&counts).await?,
-            DiscreteMethod::SchurmannGrassberger => bayes_entropy_nats(&counts, 1.0 / k as f64).await,
-            DiscreteMethod::Nsb => nsb_nats(&counts).await?,
+            DiscreteMethod::Plugin => plugin_entropy_nats(&counts),
+            DiscreteMethod::MillerMadow => miller_madow_nats(&counts),
+            DiscreteMethod::Grassberger => grassberger_nats(&counts),
+            DiscreteMethod::Jackknife => jackknife_nats(&counts),
+            DiscreteMethod::ChaoShen => chao_shen_nats(&counts)?,
+            DiscreteMethod::SchurmannGrassberger => bayes_entropy_nats(&counts, 1.0 / k as f64),
+            DiscreteMethod::Nsb => nsb_nats(&counts)?,
             DiscreteMethod::Dirichlet(alpha) => {
                 if !(alpha > 0.0 && alpha.is_finite()) {
                     return Err(EntropyError::InvalidConfig { field: "alpha", reason: "must be finite and positive" });
                 }
-                bayes_entropy_nats(&counts, alpha).await
+                bayes_entropy_nats(&counts, alpha)
             }
-            DiscreteMethod::JamesStein => james_stein_nats(&counts).await,
+            DiscreteMethod::JamesStein => james_stein_nats(&counts),
         };
 
         let mut warnings = Vec::new();
@@ -1852,7 +1936,7 @@ pub mod estimators {
             warnings.push(Warning::SmallSample { n: n as usize, recommended: 5 * k });
         }
         if support * 2 < k {
-            warnings.push(Warning::Undersampled { occupied_bins: support.await, total_bins: k.await });
+            warnings.push(Warning::Undersampled { occupied_bins: support, total_bins: k });
         }
         let clamped = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-9 * (k as f64).ln().max(1.0));
         if clamped != nats {
@@ -1860,11 +1944,11 @@ pub mod estimators {
         }
 
         Ok(Estimate {
-            value: base.from_nats(clamped.await).await,
+            value: base.from_nats(clamped),
             base,
-            method: method_name(method).await,
-            n: counts.n_raw().await,
-            n_effective: counts.n_effective().await,
+            method: method_name(method),
+            n: counts.n_raw(),
+            n_effective: counts.n_effective(),
             std_error: None,
             ci: None::<ConfidenceInterval>,
             warnings,
@@ -2031,7 +2115,8 @@ pub mod knn {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Metric};
 
     // #region 🔖️Distance
-    async fn distance(a: &[f64], b: &[f64], metric: Metric) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn distance(a: &[f64], b: &[f64], metric: Metric) -> f64 {
         match metric {
             Metric::Euclidean => a.iter().zip(b).map(|(&x, &y)| (x - y) * (x - y)).sum::<f64>().sqrt(),
             Metric::Manhattan => a.iter().zip(b).map(|(&x, &y)| (x - y).abs()).sum(),
@@ -2057,7 +2142,8 @@ pub mod knn {
         root: Option<usize>,
     }
 
-    async fn build_recursive(points: &[f64], dim: usize, indices: &mut [usize], depth: usize, nodes: &mut Vec<Node>) -> Option<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn build_recursive(points: &[f64], dim: usize, indices: &mut [usize], depth: usize, nodes: &mut Vec<Node>) -> Option<usize> {
         if indices.is_empty() {
             return None;
         }
@@ -2069,12 +2155,13 @@ pub mod knn {
         nodes.push(Node { idx, split_dim, left: None, right: None });
         let left = build_recursive(points, dim, &mut indices[..mid], depth + 1, nodes);
         let right = build_recursive(points, dim, &mut indices[mid + 1..], depth + 1, nodes);
-        nodes[node_pos].left = left.await;
-        nodes[node_pos].right = right.await;
+        nodes[node_pos].left = left;
+        nodes[node_pos].right = right;
         Some(node_pos)
     }
 
-    async fn insert_bounded(best: &mut Vec<(f64, usize)>, item: (f64, usize), k: usize) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_bounded(best: &mut Vec<(f64, usize)>, item: (f64, usize), k: usize) {
         if best.len() < k {
             best.push(item);
             return;
@@ -2090,7 +2177,8 @@ pub mod knn {
         }
     }
 
-    async fn worst_distance(best: &[(f64, usize)], k: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn worst_distance(best: &[(f64, usize)], k: usize) -> f64 {
         if best.len() < k {
             f64::INFINITY
         } else {
@@ -2101,7 +2189,8 @@ pub mod knn {
     impl KdTree {
         /// 🌲️ Builds a tree over `points` (row-major `n x dim`). `O(n (log n)^2)` due to per-level
         /// sort-based median selection.
-        pub async fn build(points: &[f64], dim: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn build(points: &[f64], dim: usize) -> Result<Self, EntropyError> {
             if dim == 0 {
                 return Err(EntropyError::InvalidConfig { field: "dim", reason: "must be at least 1" });
             }
@@ -2118,40 +2207,45 @@ pub mod knn {
             Ok(Self { points: points.to_vec(), dim, n, nodes, root })
         }
 
-        pub async fn len(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn len(&self) -> usize {
             self.n
         }
 
-        pub async fn is_empty(&self) -> bool {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn is_empty(&self) -> bool {
             self.n == 0
         }
 
-        async fn point(&self, idx: usize) -> &[f64] {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn point(&self, idx: usize) -> &[f64] {
             &self.points[idx * self.dim..(idx + 1) * self.dim]
         }
 
         /// 🌲️ The `k` nearest neighbors to `query` by `metric`, excluding stored index `exclude` if
         /// given (used for leave-one-out self-queries). Returns `(index, distance)` sorted ascending.
-        pub async fn k_nearest(&self, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Vec<(usize, f64)> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn k_nearest(&self, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Vec<(usize, f64)> {
             let mut best: Vec<(f64, usize)> = Vec::with_capacity(k);
             self.search_knn(self.root, query, k, metric, exclude, &mut best);
             best.sort_by(|a, b| a.0.total_cmp(&b.0));
             best.into_iter().map(|(d, i)| (i, d)).collect()
         }
 
-        async fn search_knn(&self, node: Option<usize>, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>, best: &mut Vec<(f64, usize)>) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn search_knn(&self, node: Option<usize>, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>, best: &mut Vec<(f64, usize)>) {
             let Some(pos) = node else { return };
             let node_ref = &self.nodes[pos];
             let point_idx = node_ref.idx;
             if Some(point_idx) != exclude {
-                let d = distance(self.point(point_idx).await, query, metric);
-                insert_bounded(best, (d.await, point_idx), k);
+                let d = distance(self.point(point_idx), query, metric);
+                insert_bounded(best, (d, point_idx), k);
             }
             let split_dim = node_ref.split_dim;
             let diff = query[split_dim] - self.point(point_idx)[split_dim];
             let (near, far) = if diff < 0.0 { (node_ref.left, node_ref.right) } else { (node_ref.right, node_ref.left) };
             self.search_knn(near, query, k, metric, exclude, best);
-            if diff.abs() < worst_distance(best, k).await {
+            if diff.abs() < worst_distance(best, k) {
                 self.search_knn(far, query, k, metric, exclude, best);
             }
         }
@@ -2159,17 +2253,19 @@ pub mod knn {
         /// 🌲️ Strict count of points with `distance(query, point) < radius` (the KSG/Kozachenko-
         /// Leonenko convention: a closed radius equal to the k-th neighbor distance always excludes
         /// that neighbor itself, avoiding a `log(0)` in the digamma-based estimators).
-        pub async fn count_within_radius(&self, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn count_within_radius(&self, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>) -> usize {
             let mut count = 0usize;
             self.count_recursive(self.root, query, radius, metric, exclude, &mut count);
             count
         }
 
-        async fn count_recursive(&self, node: Option<usize>, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>, count: &mut usize) {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn count_recursive(&self, node: Option<usize>, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>, count: &mut usize) {
             let Some(pos) = node else { return };
             let node_ref = &self.nodes[pos];
             let point_idx = node_ref.idx;
-            if Some(point_idx) != exclude && distance(self.point(point_idx).await, query, metric) < radius {
+            if Some(point_idx) != exclude && distance(self.point(point_idx), query, metric) < radius {
                 *count += 1;
             }
             let split_dim = node_ref.split_dim;
@@ -2186,7 +2282,8 @@ pub mod knn {
     /// 🌲️ `O(n)` reference k-nearest-neighbor search, used as the correctness oracle for [`KdTree`]
     /// in tests and as a drop-in for callers with `n` small enough that tree overhead does not pay
     /// off.
-    pub async fn brute_force_knn(points: &[f64], dim: usize, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Result<Vec<(usize, f64)>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn brute_force_knn(points: &[f64], dim: usize, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Result<Vec<(usize, f64)>, EntropyError> {
         if dim == 0 || !points.len().is_multiple_of(dim) {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "must evenly divide points length" });
         }
@@ -2203,7 +2300,8 @@ pub mod knn {
     mod tests {
         use super::*;
 
-        async fn random_points(n: usize, dim: usize, seed: u64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn random_points(n: usize, dim: usize, seed: u64) -> Vec<f64> {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(seed);
             (0..n * dim).map(|_| rng.next_f64() * 10.0 - 5.0).collect()
         }
@@ -2313,14 +2411,16 @@ pub mod continuous {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{BinsSpec, ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Shared
-    async fn mean_and_sd(x: &[f64]) -> (f64, f64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn mean_and_sd(x: &[f64]) -> (f64, f64) {
         let n = x.len() as f64;
         let mean = neumaier_sum(x.iter().copied()) / n;
         let var = neumaier_sum(x.iter().map(|&v| (v - mean).powi(2))) / n;
         (mean, var.sqrt())
     }
 
-    async fn validate_series(x: &[f64], what: &'static str) -> Result<(), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validate_series(x: &[f64], what: &'static str) -> Result<(), EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what });
         }
@@ -2333,7 +2433,8 @@ pub mod continuous {
     }
 
     /// 📈️ Default spacing-estimator window `m = round(sqrt(N))`, clamped to `[1, N/2 - 1]`.
-    async fn default_spacing_m(n: usize) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn default_spacing_m(n: usize) -> usize {
         let m = (n as f64).sqrt().round() as usize;
         m.clamp(1, (n / 2).saturating_sub(1).max(1))
     }
@@ -2349,7 +2450,8 @@ pub mod continuous {
     }
 
     impl Kernel {
-        async fn log_density_contribution(self, scaled_diff: f64) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn log_density_contribution(self, scaled_diff: f64) -> f64 {
             match self {
                 // 📈️ Standard normal kernel K(u) = (1/sqrt(2*pi)) * exp(-u^2/2); the additive
                 // -0.5*ln(2*pi) term is the kernel's own normalizing constant and must not be
@@ -2394,12 +2496,13 @@ pub mod continuous {
 
     impl KdeDensity {
         /// 📈️ Fits a KDE to `x`, selecting bandwidth `h` per `cfg.bandwidth` if not [`Bandwidth::Fixed`].
-        pub async fn fit(x: &[f64], cfg: KdeConfig) -> Result<Self, EntropyError> {
-            validate_series(x, "kde input").await?;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn fit(x: &[f64], cfg: KdeConfig) -> Result<Self, EntropyError> {
+            validate_series(x, "kde input")?;
             if x.len() < 2 {
                 return Err(EntropyError::InsufficientData { what: "KDE", needed: 2, actual: x.len() });
             }
-            let (_, sd) = mean_and_sd(x).await;
+            let (_, sd) = mean_and_sd(x);
             if sd <= 0.0 {
                 return Err(EntropyError::DegenerateInput { what: "constant series has zero bandwidth" });
             }
@@ -2418,7 +2521,8 @@ pub mod continuous {
         }
 
         /// 📈️ Density estimate at `x` using the full sample (not leave-one-out).
-        pub async fn pdf(&self, x: f64) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn pdf(&self, x: f64) -> f64 {
             let n = self.data.len() as f64;
             let log_terms: Vec<f64> = self.data.iter().map(|&xi| self.kernel.log_density_contribution((x - xi) / self.h)).collect();
             (log_sum_exp(&log_terms) - n.ln() - self.h.ln()).exp()
@@ -2426,8 +2530,9 @@ pub mod continuous {
 
         /// 📈️ Leave-one-out differential entropy plug-in: `-1/N * sum ln f_{-i}(x_i)`, which removes
         /// the systematic downward bias the self-term introduces in plain resubstitution.
-        pub async fn entropy(&self, base: LogBase) -> Result<Estimate, EntropyError> {
-            base.validate().await?;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn entropy(&self, base: LogBase) -> Result<Estimate, EntropyError> {
+            base.validate()?;
             let n = self.data.len();
             let nf = n as f64;
             let mut sum_log_density = 0.0_f64;
@@ -2437,13 +2542,14 @@ pub mod continuous {
                 sum_log_density += log_density;
             }
             let nats = -sum_log_density / nf;
-            Ok(Estimate { value: base.from_nats(nats).await, base, method: "kde_loo", n, n_effective: nf, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: vec![("bandwidth", self.h)] })
+            Ok(Estimate { value: base.from_nats(nats), base, method: "kde_loo", n, n_effective: nf, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: vec![("bandwidth", self.h)] })
         }
     }
     // #endregion 🔖️Kde
 
     // #region 🔖️Histogram
-    async fn histogram_entropy_nats(x: &[f64], bins: &BinsSpec) -> Result<(f64, usize), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn histogram_entropy_nats(x: &[f64], bins: &BinsSpec) -> Result<(f64, usize), EntropyError> {
         let n = x.len() as f64;
         let (min, max) = x.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)));
         // 🔐️ x is already validated finite by every caller, so a plain `<=` (no NaN concern) is
@@ -2458,7 +2564,7 @@ pub mod continuous {
                     BinsSpec::Fixed(k) => *k,
                     BinsSpec::Sturges => (1.0 + (x.len() as f64).log2()).ceil() as usize,
                     BinsSpec::Scott => {
-                        let (_, sd) = mean_and_sd(x).await;
+                        let (_, sd) = mean_and_sd(x);
                         let width = 3.49 * sd / (x.len() as f64).powf(1.0 / 3.0);
                         (((max - min) / width.max(1e-12)).ceil() as usize).max(1)
                     }
@@ -2471,7 +2577,7 @@ pub mod continuous {
                         (((max - min) / width.max(1e-12)).ceil() as usize).max(1)
                     }
                     BinsSpec::Doane => {
-                        let (_, sd) = mean_and_sd(x).await;
+                        let (_, sd) = mean_and_sd(x);
                         let n = x.len() as f64;
                         let mean = neumaier_sum(x.iter().copied()) / n;
                         let skew = if sd > 0.0 { neumaier_sum(x.iter().map(|&v| ((v - mean) / sd).powi(3))) / n } else { 0.0 };
@@ -2511,16 +2617,17 @@ pub mod continuous {
     // #endregion 🔖️Histogram
 
     // #region 🔖️Knn
-    async fn kozachenko_leonenko_nats(x: &[f64], k: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn kozachenko_leonenko_nats(x: &[f64], k: usize) -> Result<f64, EntropyError> {
         let n = x.len();
         if k == 0 || k >= n {
             return Err(EntropyError::InvalidConfig { field: "k", reason: "must satisfy 0 < k < n" });
         }
-        let tree = KdTree::build(x, 1).await?;
+        let tree = KdTree::build(x, 1)?;
         let mut sum_log_eps = 0.0_f64;
         for (i, &xi) in x.iter().enumerate() {
             let neighbors = tree.k_nearest(&[xi], k, Metric::Chebyshev, Some(i));
-            let eps = neighbors.await.last().map_or(0.0, |&(_, d)| d);
+            let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
             if eps <= 0.0 {
                 return Err(EntropyError::DegenerateInput { what: "duplicate points cause zero k-th neighbor distance" });
             }
@@ -2531,13 +2638,15 @@ pub mod continuous {
     // #endregion 🔖️Knn
 
     // #region 🔖️Spacing
-    async fn sorted_with_clamped(x: &[f64], i: i64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sorted_with_clamped(x: &[f64], i: i64) -> f64 {
         let n = x.len() as i64;
         let clamped = i.clamp(1, n);
         x[(clamped - 1) as usize]
     }
 
-    async fn vasicek_nats(x: &[f64], m: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn vasicek_nats(x: &[f64], m: usize) -> Result<f64, EntropyError> {
         let mut sorted = x.to_vec();
         sorted.sort_by(|a, b| a.total_cmp(b));
         let n = sorted.len();
@@ -2555,7 +2664,8 @@ pub mod continuous {
         Ok(sum / nf)
     }
 
-    async fn correa_nats(x: &[f64], m: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn correa_nats(x: &[f64], m: usize) -> Result<f64, EntropyError> {
         let mut sorted = x.to_vec();
         sorted.sort_by(|a, b| a.total_cmp(b));
         let n = sorted.len() as i64;
@@ -2582,8 +2692,9 @@ pub mod continuous {
     // #endregion 🔖️Spacing
 
     // #region 🔖️Gaussian
-    async fn gaussian_mle_nats(x: &[f64]) -> Result<f64, EntropyError> {
-        let (_, sd) = mean_and_sd(x).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn gaussian_mle_nats(x: &[f64]) -> Result<f64, EntropyError> {
+        let (_, sd) = mean_and_sd(x);
         if sd <= 0.0 {
             return Err(EntropyError::DegenerateInput { what: "constant series has zero variance" });
         }
@@ -2603,7 +2714,8 @@ pub mod continuous {
         GaussianMle,
     }
 
-    async fn method_name(method: &ContinuousMethod) -> &'static str {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn method_name(method: &ContinuousMethod) -> &'static str {
         match method {
             ContinuousMethod::Histogram(_) => "histogram",
             ContinuousMethod::Kde(_) => "kde_loo",
@@ -2616,9 +2728,10 @@ pub mod continuous {
 
     /// 📈️ Estimates the differential entropy of the distribution underlying `x` (raw continuous
     /// samples) using the given `method`.
-    pub async fn entropy_continuous(x: &[f64], method: &ContinuousMethod, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
-        validate_series(x, "continuous input").await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entropy_continuous(x: &[f64], method: &ContinuousMethod, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
+        validate_series(x, "continuous input")?;
         let n = x.len();
         if n < 2 {
             return Err(EntropyError::InsufficientData { what: "continuous entropy", needed: 2, actual: n });
@@ -2627,31 +2740,31 @@ pub mod continuous {
         let mut diagnostics = Vec::new();
         let nats = match method {
             ContinuousMethod::Histogram(bins) => {
-                let (nats, k) = histogram_entropy_nats(x, bins).await?;
+                let (nats, k) = histogram_entropy_nats(x, bins)?;
                 diagnostics.push(("bins", k as f64));
                 nats
             }
             ContinuousMethod::Kde(cfg) => {
-                let density = KdeDensity::fit(x, *cfg).await?;
-                let est = density.entropy(LogBase::Nats).await?;
+                let density = KdeDensity::fit(x, *cfg)?;
+                let est = density.entropy(LogBase::Nats)?;
                 diagnostics.push(("bandwidth", density.h));
                 est.value
             }
             ContinuousMethod::Knn { k } => {
                 diagnostics.push(("k", *k as f64));
-                kozachenko_leonenko_nats(x, *k).await?
+                kozachenko_leonenko_nats(x, *k)?
             }
             ContinuousMethod::Vasicek { m } => {
-                let m = if *m == 0 { default_spacing_m(n).await } else { *m };
+                let m = if *m == 0 { default_spacing_m(n) } else { *m };
                 diagnostics.push(("m", m as f64));
-                vasicek_nats(x, m).await?
+                vasicek_nats(x, m)?
             }
             ContinuousMethod::Correa { m } => {
-                let m = if *m == 0 { default_spacing_m(n).await } else { *m };
+                let m = if *m == 0 { default_spacing_m(n) } else { *m };
                 diagnostics.push(("m", m as f64));
-                correa_nats(x, m).await?
+                correa_nats(x, m)?
             }
-            ContinuousMethod::GaussianMle => gaussian_mle_nats(x).await?,
+            ContinuousMethod::GaussianMle => gaussian_mle_nats(x)?,
         };
 
         let mut warnings = Vec::new();
@@ -2659,7 +2772,7 @@ pub mod continuous {
             warnings.push(Warning::SmallSample { n, recommended: 30 });
         }
 
-        Ok(Estimate { value: base.from_nats(nats).await, base, method: method_name(method).await, n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
+        Ok(Estimate { value: base.from_nats(nats), base, method: method_name(method), n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
     }
     // #endregion 🔖️Dispatch
 
@@ -2668,7 +2781,8 @@ pub mod continuous {
     mod tests {
         use super::*;
 
-        async fn box_muller_gaussian(n: usize, seed: u64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn box_muller_gaussian(n: usize, seed: u64) -> Vec<f64> {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(seed);
             (0..n).map(|_| rng.next_gaussian()).collect()
         }
@@ -2794,12 +2908,13 @@ pub mod divergence {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, LogBase, Tolerances};
 
     // #region 🔖️Shared
-    async fn validate_pair(p: &[f64], q: &[f64]) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validate_pair(p: &[f64], q: &[f64]) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
         if p.len() != q.len() {
             return Err(EntropyError::LengthMismatch { expected: p.len(), actual: q.len() });
         }
-        let p = validate_probabilities(p, Tolerances::default()).await?;
-        let q = validate_probabilities(q, Tolerances::default()).await?;
+        let p = validate_probabilities(p, Tolerances::default())?;
+        let q = validate_probabilities(q, Tolerances::default())?;
         Ok((p, q))
     }
     // #endregion 🔖️Shared
@@ -2807,9 +2922,10 @@ pub mod divergence {
     // #region 🔖️KlFamily
     /// 📏️ Forward KL divergence `D(p || q) = sum p_i ln(p_i / q_i)`. Mathematically honest: returns
     /// `f64::INFINITY` when `p_i > 0` and `q_i == 0` for some `i` (no silent smoothing).
-    pub async fn kl_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
-        let (p, q) = validate_pair(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn kl_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
+        let (p, q) = validate_pair(p, q)?;
         let mut nats = 0.0_f64;
         for (&pi, &qi) in p.iter().zip(q.iter()) {
             if pi <= 0.0 {
@@ -2820,18 +2936,20 @@ pub mod divergence {
             }
             nats += pi * (pi / qi).ln();
         }
-        Ok(base.from_nats(nats).await)
+        Ok(base.from_nats(nats))
     }
 
     /// 📏️ Reverse KL divergence `D(q || p)`.
-    pub async fn reverse_kl_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        kl_divergence(q, p, base).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn reverse_kl_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        kl_divergence(q, p, base)
     }
 
     /// 📏️ Jeffreys divergence, the symmetrized KL: `D(p||q) + D(q||p)`.
-    pub async fn jeffreys_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        let a = kl_divergence(p, q, base).await?;
-        let b = kl_divergence(q, p, base).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn jeffreys_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        let a = kl_divergence(p, q, base)?;
+        let b = kl_divergence(q, p, base)?;
         Ok(a + b)
     }
     // #endregion 🔖️KlFamily
@@ -2839,46 +2957,50 @@ pub mod divergence {
     // #region 🔖️JensenFamily
     /// 📏️ Jensen-Shannon divergence: `0.5*D(p||m) + 0.5*D(q||m)` with `m = 0.5*(p+q)`. Always finite
     /// and bounded by `ln(2)` in nats regardless of support overlap.
-    pub async fn js_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
-        let (p, q) = validate_pair(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn js_divergence(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
+        let (p, q) = validate_pair(p, q)?;
         let m: Vec<f64> = p.iter().zip(q.iter()).map(|(&pi, &qi)| 0.5 * (pi + qi)).collect();
-        let d_pm = kl_divergence(&p, &m, LogBase::Nats).await?;
-        let d_qm = kl_divergence(&q, &m, LogBase::Nats).await?;
-        Ok(base.from_nats(0.5 * d_pm + 0.5 * d_qm).await)
+        let d_pm = kl_divergence(&p, &m, LogBase::Nats)?;
+        let d_qm = kl_divergence(&q, &m, LogBase::Nats)?;
+        Ok(base.from_nats(0.5 * d_pm + 0.5 * d_qm))
     }
 
     /// 📏️ Jensen-Shannon distance, the square root of [`js_divergence`] in nats (a true metric).
-    pub async fn js_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        Ok(js_divergence(p, q, LogBase::Nats).await?.sqrt())
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn js_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        Ok(js_divergence(p, q, LogBase::Nats)?.sqrt())
     }
 
     /// 📏️ Weighted Jensen-Shannon divergence with mixture weight `pi_p` for `p` (`pi_q = 1 - pi_p`).
-    pub async fn weighted_js_divergence(p: &[f64], q: &[f64], pi_p: f64, base: LogBase) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn weighted_js_divergence(p: &[f64], q: &[f64], pi_p: f64, base: LogBase) -> Result<f64, EntropyError> {
         if !(0.0..=1.0).contains(&pi_p) {
             return Err(EntropyError::InvalidConfig { field: "pi_p", reason: "must be in [0, 1]" });
         }
-        base.validate().await?;
-        let (p, q) = validate_pair(p, q).await?;
+        base.validate()?;
+        let (p, q) = validate_pair(p, q)?;
         let m: Vec<f64> = p.iter().zip(q.iter()).map(|(&pi, &qi)| pi_p * pi + (1.0 - pi_p) * qi).collect();
-        let d_pm = kl_divergence(&p, &m, LogBase::Nats).await?;
-        let d_qm = kl_divergence(&q, &m, LogBase::Nats).await?;
-        Ok(base.from_nats(pi_p * d_pm + (1.0 - pi_p) * d_qm).await)
+        let d_pm = kl_divergence(&p, &m, LogBase::Nats)?;
+        let d_qm = kl_divergence(&q, &m, LogBase::Nats)?;
+        Ok(base.from_nats(pi_p * d_pm + (1.0 - pi_p) * d_qm))
     }
     // #endregion 🔖️JensenFamily
 
     // #region 🔖️RenyiTsallis
     /// 📏️ Rényi divergence of order `alpha != 1`: `D_alpha(p||q) = 1/(alpha-1) * ln(sum p_i^alpha
     /// q_i^(1-alpha))`. `alpha == 1` is the KL limit — call [`kl_divergence`] instead.
-    pub async fn renyi_divergence(p: &[f64], q: &[f64], alpha: f64, base: LogBase) -> Result<f64, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn renyi_divergence(p: &[f64], q: &[f64], alpha: f64, base: LogBase) -> Result<f64, EntropyError> {
+        base.validate()?;
         if !alpha.is_finite() || alpha <= 0.0 {
             return Err(EntropyError::InvalidConfig { field: "alpha", reason: "must be finite and positive" });
         }
         if (alpha - 1.0).abs() < 1e-12 {
             return Err(EntropyError::UndefinedResult { reason: "Renyi divergence at alpha=1 is the KL limit; call kl_divergence() instead" });
         }
-        let (p, q) = validate_pair(p, q).await?;
+        let (p, q) = validate_pair(p, q)?;
         let mut sum = 0.0_f64;
         for (&pi, &qi) in p.iter().zip(q.iter()) {
             if pi <= 0.0 {
@@ -2892,19 +3014,20 @@ pub mod divergence {
         if sum <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "sum is non-positive" });
         }
-        Ok(base.from_nats(sum.ln() / (alpha - 1.0)).await)
+        Ok(base.from_nats(sum.ln() / (alpha - 1.0)))
     }
 
     /// 📏️ Tsallis divergence of entropic index `alpha != 1`: `(sum p_i^alpha q_i^(1-alpha) - 1) /
     /// (alpha - 1)`. Unitless (no logarithm base).
-    pub async fn tsallis_divergence(p: &[f64], q: &[f64], alpha: f64) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn tsallis_divergence(p: &[f64], q: &[f64], alpha: f64) -> Result<f64, EntropyError> {
         if !alpha.is_finite() || alpha <= 0.0 {
             return Err(EntropyError::InvalidConfig { field: "alpha", reason: "must be finite and positive" });
         }
         if (alpha - 1.0).abs() < 1e-12 {
-            return kl_divergence(p, q, LogBase::Nats).await;
+            return kl_divergence(p, q, LogBase::Nats);
         }
-        let (p, q) = validate_pair(p, q).await?;
+        let (p, q) = validate_pair(p, q)?;
         let mut sum = 0.0_f64;
         for (&pi, &qi) in p.iter().zip(q.iter()) {
             if pi <= 0.0 {
@@ -2921,21 +3044,24 @@ pub mod divergence {
 
     // #region 🔖️ClassicalDistances
     /// 📏️ Hellinger distance: `sqrt(0.5 * sum (sqrt(p_i) - sqrt(q_i))^2)`, bounded in `[0, 1]`.
-    pub async fn hellinger_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        let (p, q) = validate_pair(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn hellinger_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        let (p, q) = validate_pair(p, q)?;
         let sum = neumaier_sum(p.iter().zip(q.iter()).map(|(&pi, &qi)| (pi.sqrt() - qi.sqrt()).powi(2)));
         Ok((0.5 * sum).max(0.0).sqrt())
     }
 
     /// 📏️ Bhattacharyya coefficient `BC(p,q) = sum sqrt(p_i q_i)`, in `[0, 1]`.
-    pub async fn bhattacharyya_coefficient(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        let (p, q) = validate_pair(p, q).await?;
-        Ok(neumaier_sum(p.iter().zip(q.iter()).map(|(&pi, &qi)| (pi * qi).sqrt())).await.clamp(0.0, 1.0))
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bhattacharyya_coefficient(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        let (p, q) = validate_pair(p, q)?;
+        Ok(neumaier_sum(p.iter().zip(q.iter()).map(|(&pi, &qi)| (pi * qi).sqrt())).clamp(0.0, 1.0))
     }
 
     /// 📏️ Bhattacharyya distance `-ln(BC(p,q))`.
-    pub async fn bhattacharyya_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        let bc = bhattacharyya_coefficient(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bhattacharyya_distance(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        let bc = bhattacharyya_coefficient(p, q)?;
         if bc <= 0.0 {
             return Ok(f64::INFINITY);
         }
@@ -2943,14 +3069,16 @@ pub mod divergence {
     }
 
     /// 📏️ Total variation distance: `0.5 * sum |p_i - q_i|`, bounded in `[0, 1]`.
-    pub async fn total_variation(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        let (p, q) = validate_pair(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn total_variation(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        let (p, q) = validate_pair(p, q)?;
         Ok(0.5 * neumaier_sum(p.iter().zip(q.iter()).map(|(&pi, &qi)| (pi - qi).abs())))
     }
 
     /// 📏️ Pearson chi-square divergence: `sum (p_i - q_i)^2 / q_i`.
-    pub async fn chi_square_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        let (p, q) = validate_pair(p, q).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn chi_square_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        let (p, q) = validate_pair(p, q)?;
         let mut sum = 0.0_f64;
         for (&pi, &qi) in p.iter().zip(q.iter()) {
             if qi <= 0.0 {
@@ -2965,8 +3093,9 @@ pub mod divergence {
     }
 
     /// 📏️ Neyman (reverse) chi-square divergence: `sum (p_i - q_i)^2 / p_i`.
-    pub async fn neyman_chi_square_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
-        chi_square_divergence(q, p).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn neyman_chi_square_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+        chi_square_divergence(q, p)
     }
     // #endregion 🔖️ClassicalDistances
 
@@ -2974,7 +3103,8 @@ pub mod divergence {
     /// 📏️ Empirical 1-D Wasserstein (earth-mover) distance between two raw sample sets, computed as
     /// the area between their empirical CDFs (`integral |F_x(t) - F_y(t)| dt`), which is exact and
     /// requires no binning.
-    pub async fn wasserstein_1d(x: &[f64], y: &[f64]) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn wasserstein_1d(x: &[f64], y: &[f64]) -> Result<f64, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -3016,7 +3146,8 @@ pub mod divergence {
 
     /// 📏️ Szekely-Rizzo energy distance: `2*E|X-Y| - E|X-X'| - E|Y-Y'|`, estimated by the standard
     /// `O(n*m)` U-statistic over raw samples.
-    pub async fn energy_distance(x: &[f64], y: &[f64]) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn energy_distance(x: &[f64], y: &[f64]) -> Result<f64, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -3035,10 +3166,11 @@ pub mod divergence {
     /// 📏️ Log-det (Stein) divergence between two `n x n` covariance-like SPD matrices (row-major):
     /// `ln|det(Sigma_q)| - ln|det(Sigma_p)| + tr(Sigma_q^-1 Sigma_p) - n`, computed via Cholesky
     /// solves rather than an explicit matrix inverse.
-    pub async fn log_det_divergence(cov_p: &[f64], cov_q: &[f64], n: usize) -> Result<f64, EntropyError> {
-        let ld_p = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_p, n).await?;
-        let ld_q = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_q, n).await?;
-        let l_q = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::cholesky(cov_q, n).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn log_det_divergence(cov_p: &[f64], cov_q: &[f64], n: usize) -> Result<f64, EntropyError> {
+        let ld_p = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_p, n)?;
+        let ld_q = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_q, n)?;
+        let l_q = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::matrix::cholesky(cov_q, n)?;
         // 🔢️ tr(Sigma_q^-1 Sigma_p) via solving L_q L_q^T X = Sigma_p column-by-column, then summing
         // the diagonal of X (forward/backward substitution, no explicit inverse).
         let mut trace = 0.0_f64;
@@ -3068,7 +3200,8 @@ pub mod divergence {
     /// 📏️ Bregman divergence `D_phi(p, q) = phi(p) - phi(q) - grad_phi(q) . (p - q)` for an arbitrary
     /// convex `phi`, supplied as closures so callers can instantiate squared-Euclidean, KL
     /// (`phi = negentropy`), Itakura-Saito, or any other Bregman generator without a new function.
-    pub async fn bregman_divergence(p: &[f64], q: &[f64], phi: impl Fn(&[f64]) -> f64, grad_phi_q: impl Fn(&[f64]) -> Vec<f64>) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bregman_divergence(p: &[f64], q: &[f64], phi: impl Fn(&[f64]) -> f64, grad_phi_q: impl Fn(&[f64]) -> Vec<f64>) -> Result<f64, EntropyError> {
         if p.len() != q.len() {
             return Err(EntropyError::LengthMismatch { expected: p.len(), actual: q.len() });
         }
@@ -3081,7 +3214,8 @@ pub mod divergence {
     }
 
     /// 📏️ Itakura-Saito divergence between two positive spectra: `sum (p_i/q_i - ln(p_i/q_i) - 1)`.
-    pub async fn itakura_saito_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn itakura_saito_divergence(p: &[f64], q: &[f64]) -> Result<f64, EntropyError> {
         if p.len() != q.len() {
             return Err(EntropyError::LengthMismatch { expected: p.len(), actual: q.len() });
         }
@@ -3279,14 +3413,16 @@ pub mod mutual {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Packing
-    async fn counts_to_u64(raw: &[f64]) -> Vec<u64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn counts_to_u64(raw: &[f64]) -> Vec<u64> {
         raw.iter().map(|&c| c.round().max(0.0) as u64).collect()
     }
 
     /// 🔗️ Packs several aligned symbol sequences into one joint symbol via mixed-radix encoding,
     /// checked against `u32` overflow.
-    async fn pack_symbols(parts: &[&[u32]], sizes: &[usize]) -> Result<(Vec<u32>, usize), EntropyError> {
-        let total = checked_state_count(sizes).await.ok_or(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size overflows u128" })?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pack_symbols(parts: &[&[u32]], sizes: &[usize]) -> Result<(Vec<u32>, usize), EntropyError> {
+        let total = checked_state_count(sizes).ok_or(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size overflows u128" })?;
         if total > u32::MAX as u128 {
             return Err(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size exceeds u32::MAX" });
         }
@@ -3302,9 +3438,10 @@ pub mod mutual {
         Ok((combined, total as usize))
     }
 
-    async fn plugin_entropy_nats(symbols: &[u32], alphabet: usize) -> Result<f64, EntropyError> {
-        let counts = Counts::from_symbols(symbols, alphabet).await?;
-        let est = entropy_discrete(&counts_to_u64(counts.raw().await), DiscreteMethod::Plugin, LogBase::Nats).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn plugin_entropy_nats(symbols: &[u32], alphabet: usize) -> Result<f64, EntropyError> {
+        let counts = Counts::from_symbols(symbols, alphabet)?;
+        let est = entropy_discrete(&counts_to_u64(counts.raw()), DiscreteMethod::Plugin, LogBase::Nats)?;
         Ok(est.value)
     }
     // #endregion 🔖️Packing
@@ -3312,8 +3449,9 @@ pub mod mutual {
     // #region 🔖️DiscreteMi
     /// 🔗️ Discrete mutual information `I(X;Y) = H(X) + H(Y) - H(X,Y)`, all three terms estimated
     /// with the same bias-correction `method` for internal consistency.
-    pub async fn mutual_information(x: &[u32], y: &[u32], method: DiscreteMethod, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mutual_information(x: &[u32], y: &[u32], method: DiscreteMethod, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if x.len() != y.len() {
             return Err(EntropyError::LengthMismatch { expected: x.len(), actual: y.len() });
         }
@@ -3322,13 +3460,13 @@ pub mod mutual {
         }
         let x_size = *x.iter().max().unwrap() as usize + 1;
         let y_size = *y.iter().max().unwrap() as usize + 1;
-        let joint = JointCounts::from_pairs(x, y, x_size, y_size).await?;
-        let marg_x = Counts::from_symbols(x, x_size).await?;
-        let marg_y = Counts::from_symbols(y, y_size).await?;
+        let joint = JointCounts::from_pairs(x, y, x_size, y_size)?;
+        let marg_x = Counts::from_symbols(x, x_size)?;
+        let marg_y = Counts::from_symbols(y, y_size)?;
 
-        let h_xy = entropy_discrete(&counts_to_u64(joint.as_counts().await.raw().await), method, LogBase::Nats).await?;
-        let h_x = entropy_discrete(&counts_to_u64(marg_x.raw().await), method, LogBase::Nats).await?;
-        let h_y = entropy_discrete(&counts_to_u64(marg_y.raw().await), method, LogBase::Nats).await?;
+        let h_xy = entropy_discrete(&counts_to_u64(joint.as_counts().raw()), method, LogBase::Nats)?;
+        let h_x = entropy_discrete(&counts_to_u64(marg_x.raw()), method, LogBase::Nats)?;
+        let h_y = entropy_discrete(&counts_to_u64(marg_y.raw()), method, LogBase::Nats)?;
 
         let nats = clamp_near_zero(h_x.value + h_y.value - h_xy.value, 1e-9);
         let mut warnings = h_x.warnings;
@@ -3336,7 +3474,7 @@ pub mod mutual {
         warnings.extend(h_xy.warnings);
 
         Ok(Estimate {
-            value: base.from_nats(nats.await).await,
+            value: base.from_nats(nats),
             base,
             method: "discrete_mi",
             n: x.len(),
@@ -3350,8 +3488,9 @@ pub mod mutual {
 
     /// 🔗️ Discrete conditional mutual information `I(X;Y|Z) = H(X,Z) + H(Y,Z) - H(X,Y,Z) - H(Z)`,
     /// estimated with the maximum-likelihood plug-in on packed joint symbols.
-    pub async fn conditional_mutual_information(x: &[u32], y: &[u32], z: &[u32], base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn conditional_mutual_information(x: &[u32], y: &[u32], z: &[u32], base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if x.len() != y.len() || y.len() != z.len() {
             return Err(EntropyError::LengthMismatch { expected: x.len(), actual: y.len().min(z.len()) });
         }
@@ -3362,17 +3501,17 @@ pub mod mutual {
         let ys = *y.iter().max().unwrap() as usize + 1;
         let zs = *z.iter().max().unwrap() as usize + 1;
 
-        let (xz, xz_size) = pack_symbols(&[x, z], &[xs, zs]).await?;
-        let (yz, yz_size) = pack_symbols(&[y, z], &[ys, zs]).await?;
-        let (xyz, xyz_size) = pack_symbols(&[x, y, z], &[xs, ys, zs]).await?;
+        let (xz, xz_size) = pack_symbols(&[x, z], &[xs, zs])?;
+        let (yz, yz_size) = pack_symbols(&[y, z], &[ys, zs])?;
+        let (xyz, xyz_size) = pack_symbols(&[x, y, z], &[xs, ys, zs])?;
 
-        let h_xz = plugin_entropy_nats(&xz, xz_size).await?;
-        let h_yz = plugin_entropy_nats(&yz, yz_size).await?;
-        let h_xyz = plugin_entropy_nats(&xyz, xyz_size).await?;
-        let h_z = plugin_entropy_nats(z, zs).await?;
+        let h_xz = plugin_entropy_nats(&xz, xz_size)?;
+        let h_yz = plugin_entropy_nats(&yz, yz_size)?;
+        let h_xyz = plugin_entropy_nats(&xyz, xyz_size)?;
+        let h_z = plugin_entropy_nats(z, zs)?;
 
         let nats = clamp_near_zero(h_xz + h_yz - h_xyz - h_z, 1e-9);
-        Ok(Estimate { value: base.from_nats(nats.await).await, base, method: "discrete_cmi_plugin", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: vec![("z_alphabet", zs as f64)] })
+        Ok(Estimate { value: base.from_nats(nats), base, method: "discrete_cmi_plugin", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: vec![("z_alphabet", zs as f64)] })
     }
     // #endregion 🔖️DiscreteMi
 
@@ -3394,7 +3533,8 @@ pub mod mutual {
     }
 
     impl KsgConfig {
-        pub async fn new(k: usize, variant: KsgVariant) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(k: usize, variant: KsgVariant) -> Result<Self, EntropyError> {
             if k == 0 {
                 return Err(EntropyError::InvalidConfig { field: "k", reason: "must be at least 1" });
             }
@@ -3405,7 +3545,8 @@ pub mod mutual {
     /// 🔗️ Continuous mutual information via the Kraskov-Stögbauer-Grassberger kNN estimator.
     /// Digamma-based and therefore computed (and returned) in nats; call [`Estimate::in_base`] on
     /// the result to convert.
-    pub async fn mutual_information_knn(x: &[f64], y: &[f64], cfg: KsgConfig) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mutual_information_knn(x: &[f64], y: &[f64], cfg: KsgConfig) -> Result<Estimate, EntropyError> {
         if x.len() != y.len() {
             return Err(EntropyError::LengthMismatch { expected: x.len(), actual: y.len() });
         }
@@ -3414,7 +3555,7 @@ pub mod mutual {
             return Err(EntropyError::InvalidConfig { field: "k", reason: "must be less than the sample size" });
         }
         let joint: Vec<f64> = x.iter().zip(y.iter()).flat_map(|(&xi, &yi)| [xi, yi]).collect();
-        let tree = KdTree::build(&joint, 2).await?;
+        let tree = KdTree::build(&joint, 2)?;
 
         let mut sum_digamma_nx = 0.0_f64;
         let mut sum_digamma_ny = 0.0_f64;
@@ -3423,15 +3564,15 @@ pub mod mutual {
             let neighbors = tree.k_nearest(&query, cfg.k, Metric::Chebyshev, Some(i));
             match cfg.variant {
                 KsgVariant::Ksg1 => {
-                    let eps = neighbors.await.last().map_or(0.0, |&(_, d)| d);
+                    let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
                     let nx = (0..n).filter(|&j| j != i && (x[j] - x[i]).abs() < eps).count();
                     let ny = (0..n).filter(|&j| j != i && (y[j] - y[i]).abs() < eps).count();
                     sum_digamma_nx += digamma(nx as f64 + 1.0);
                     sum_digamma_ny += digamma(ny as f64 + 1.0);
                 }
                 KsgVariant::Ksg2 => {
-                    let eps_x = neighbors.await.iter().map(|&(j, _)| (x[j] - x[i]).abs()).fold(0.0_f64, f64::max);
-                    let eps_y = neighbors.await.iter().map(|&(j, _)| (y[j] - y[i]).abs()).fold(0.0_f64, f64::max);
+                    let eps_x = neighbors.iter().map(|&(j, _)| (x[j] - x[i]).abs()).fold(0.0_f64, f64::max);
+                    let eps_y = neighbors.iter().map(|&(j, _)| (y[j] - y[i]).abs()).fold(0.0_f64, f64::max);
                     let nx = (0..n).filter(|&j| j != i && (x[j] - x[i]).abs() <= eps_x).count();
                     let ny = (0..n).filter(|&j| j != i && (y[j] - y[i]).abs() <= eps_y).count();
                     sum_digamma_nx += digamma(nx.max(1) as f64);
@@ -3452,7 +3593,7 @@ pub mod mutual {
         }
 
         Ok(Estimate {
-            value: clamped.await,
+            value: clamped,
             base: LogBase::Nats,
             method: match cfg.variant {
                 KsgVariant::Ksg1 => "ksg1",
@@ -3469,7 +3610,8 @@ pub mod mutual {
     // #endregion 🔖️Ksg
 
     // #region 🔖️Multivariate
-    async fn multivariate_joint_and_marginal_entropies(vars: &[&[u32]], sizes: &[usize]) -> Result<(f64, Vec<f64>), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn multivariate_joint_and_marginal_entropies(vars: &[&[u32]], sizes: &[usize]) -> Result<(f64, Vec<f64>), EntropyError> {
         if vars.is_empty() {
             return Err(EntropyError::EmptyInput { what: "vars" });
         }
@@ -3479,51 +3621,55 @@ pub mod mutual {
                 return Err(EntropyError::LengthMismatch { expected: n, actual: v.len() });
             }
         }
-        let (joint, joint_size) = pack_symbols(vars, sizes).await?;
-        let h_joint = plugin_entropy_nats(&joint, joint_size).await?;
+        let (joint, joint_size) = pack_symbols(vars, sizes)?;
+        let h_joint = plugin_entropy_nats(&joint, joint_size)?;
         let marginals: Result<Vec<f64>, EntropyError> = vars.iter().zip(sizes.iter()).map(|(&v, &s)| plugin_entropy_nats(v, s)).collect();
         Ok((h_joint, marginals?))
     }
 
     /// 🔗️ Total correlation (multi-information) `sum H(X_i) - H(X_1,...,X_n)`.
-    pub async fn total_correlation(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
-        let (h_joint, marginals) = multivariate_joint_and_marginal_entropies(vars, sizes).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn total_correlation(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
+        let (h_joint, marginals) = multivariate_joint_and_marginal_entropies(vars, sizes)?;
         let nats = clamp_near_zero(marginals.iter().sum::<f64>() - h_joint, 1e-9);
-        Ok(multivariate_estimate(nats.await, base, "total_correlation", vars[0].len()).await)
+        Ok(multivariate_estimate(nats, base, "total_correlation", vars[0].len()))
     }
 
     /// 🔗️ Dual total correlation (binding information): `sum_i H(X_{-i}) - (n-1) * H(X_1,...,X_n)`,
     /// where `X_{-i}` is the joint of all variables except `i`.
-    pub async fn dual_total_correlation(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dual_total_correlation(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         let n_vars = vars.len();
         if n_vars < 2 {
             return Err(EntropyError::InvalidConfig { field: "vars", reason: "dual total correlation needs at least 2 variables" });
         }
-        let (h_joint, _) = multivariate_joint_and_marginal_entropies(vars, sizes).await?;
+        let (h_joint, _) = multivariate_joint_and_marginal_entropies(vars, sizes)?;
         let mut sum_rest = 0.0_f64;
         for i in 0..n_vars {
             let rest_vars: Vec<&[u32]> = vars.iter().enumerate().filter(|&(j, _)| j != i).map(|(_, &v)| v).collect();
             let rest_sizes: Vec<usize> = sizes.iter().enumerate().filter(|&(j, _)| j != i).map(|(_, &s)| s).collect();
-            let (h_rest, _) = multivariate_joint_and_marginal_entropies(&rest_vars, &rest_sizes).await?;
+            let (h_rest, _) = multivariate_joint_and_marginal_entropies(&rest_vars, &rest_sizes)?;
             sum_rest += h_rest;
         }
         let nats = clamp_near_zero(sum_rest - (n_vars as f64 - 1.0) * h_joint, 1e-9);
-        Ok(multivariate_estimate(nats.await, base, "dual_total_correlation", vars[0].len()).await)
+        Ok(multivariate_estimate(nats, base, "dual_total_correlation", vars[0].len()))
     }
 
     /// 🔗️ O-information: `total_correlation - dual_total_correlation`. Positive values indicate
     /// redundancy-dominated interactions, negative values synergy-dominated ones.
-    pub async fn o_information(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
-        let tc = total_correlation(vars, sizes, LogBase::Nats).await?;
-        let dtc = dual_total_correlation(vars, sizes, LogBase::Nats).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn o_information(vars: &[&[u32]], sizes: &[usize], base: LogBase) -> Result<Estimate, EntropyError> {
+        let tc = total_correlation(vars, sizes, LogBase::Nats)?;
+        let dtc = dual_total_correlation(vars, sizes, LogBase::Nats)?;
         let nats = tc.value - dtc.value;
-        Ok(multivariate_estimate(nats, base, "o_information", vars[0].len()).await)
+        Ok(multivariate_estimate(nats, base, "o_information", vars[0].len()))
     }
 
-    async fn multivariate_estimate(nats: f64, base: LogBase, method: &'static str, n: usize) -> Estimate {
-        Estimate { value: base.from_nats(nats).await, base, method, n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: Vec::new() }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn multivariate_estimate(nats: f64, base: LogBase, method: &'static str, n: usize) -> Estimate {
+        Estimate { value: base.from_nats(nats), base, method, n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: Vec::new() }
     }
     // #endregion 🔖️Multivariate
 
@@ -3671,8 +3817,9 @@ pub mod pid {
     /// 🧩️ Packs several aligned symbol sequences into one joint symbol via mixed-radix encoding. A
     /// local copy of `mutual::pack_symbols`'s approach: that helper is private to its own module, so
     /// this module keeps its own small copy rather than reaching into `mutual`'s internals.
-    async fn pack_symbols(parts: &[&[u32]], sizes: &[usize]) -> Result<(Vec<u32>, usize), EntropyError> {
-        let total = checked_state_count(sizes).await.ok_or(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size overflows u128" })?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pack_symbols(parts: &[&[u32]], sizes: &[usize]) -> Result<(Vec<u32>, usize), EntropyError> {
+        let total = checked_state_count(sizes).ok_or(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size overflows u128" })?;
         if total > u32::MAX as u128 {
             return Err(EntropyError::InvalidConfig { field: "sizes", reason: "joint alphabet size exceeds u32::MAX" });
         }
@@ -3693,8 +3840,9 @@ pub mod pid {
     /// 🧩️ Williams-Beer specific information `I_spec(A -> t) = sum_a p(a|t) ln(p(t|a)/p(t))` for
     /// every target outcome `t`, alongside the target marginal `p(t)` used to weight it into a
     /// mutual information (`I(A;T) = sum_t p(t) I_spec(A -> t)`) or an `I_min` redundancy term.
-    async fn specific_information(a: &[u32], a_size: usize, t: &[u32], t_size: usize) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
-        let joint = JointCounts::from_pairs(a, t, a_size, t_size).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn specific_information(a: &[u32], a_size: usize, t: &[u32], t_size: usize) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
+        let joint = JointCounts::from_pairs(a, t, a_size, t_size)?;
         let total = joint.total();
         let p_a = joint.marginal_x();
         let p_t = joint.marginal_y();
@@ -3711,17 +3859,18 @@ pub mod pid {
                 let p_a_given_t = p_at / p_t[tj];
                 let p_t_given_a = p_at / p_a[ai];
                 Some(p_a_given_t * (p_t_given_a / p_t[tj]).ln())
-            })).await;
+            }));
         }
-        Ok((i_spec, p_t.await))
+        Ok((i_spec, p_t))
     }
 
     /// 🧩️ Mutual information `I(A;T)`, computed via the same specific-information pathway used by
     /// every PID atom below, so the total-vs-atoms consistency checks never compare two independently
     /// derived formulas for "the same" quantity.
-    async fn mutual_information_via_specific(a: &[u32], a_size: usize, t: &[u32], t_size: usize) -> Result<f64, EntropyError> {
-        let (i_spec, p_t) = specific_information(a, a_size, t, t_size).await?;
-        Ok(clamp_near_zero(neumaier_sum(i_spec.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)).await, 1e-9).await)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn mutual_information_via_specific(a: &[u32], a_size: usize, t: &[u32], t_size: usize) -> Result<f64, EntropyError> {
+        let (i_spec, p_t) = specific_information(a, a_size, t, t_size)?;
+        Ok(clamp_near_zero(neumaier_sum(i_spec.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)), 1e-9))
     }
     // #endregion 🔖️SpecificInformation
 
@@ -3744,8 +3893,9 @@ pub mod pid {
     /// not cancel consistently across the recombination the way it does for a single MI estimate —
     /// that would need its own dedicated derivation. This first implementation documents that
     /// limitation rather than silently under- or over-correcting.
-    pub async fn pid_two_sources(source1: &[u32], source2: &[u32], target: &[u32], sizes: (usize, usize, usize), base: LogBase) -> Result<PidAtoms, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn pid_two_sources(source1: &[u32], source2: &[u32], target: &[u32], sizes: (usize, usize, usize), base: LogBase) -> Result<PidAtoms, EntropyError> {
+        base.validate()?;
         if source1.len() != source2.len() {
             return Err(EntropyError::LengthMismatch { expected: source1.len(), actual: source2.len() });
         }
@@ -3757,20 +3907,20 @@ pub mod pid {
         }
         let (s1_size, s2_size, t_size) = sizes;
 
-        let (i_spec1, p_t) = specific_information(source1, s1_size, target, t_size).await?;
-        let (i_spec2, _) = specific_information(source2, s2_size, target, t_size).await?;
-        let (joint12, joint12_size) = pack_symbols(&[source1, source2], &[s1_size, s2_size]).await?;
-        let i12_nats = mutual_information_via_specific(&joint12, joint12_size, target, t_size).await?;
+        let (i_spec1, p_t) = specific_information(source1, s1_size, target, t_size)?;
+        let (i_spec2, _) = specific_information(source2, s2_size, target, t_size)?;
+        let (joint12, joint12_size) = pack_symbols(&[source1, source2], &[s1_size, s2_size])?;
+        let i12_nats = mutual_information_via_specific(&joint12, joint12_size, target, t_size)?;
 
-        let i1_nats = clamp_near_zero(neumaier_sum(i_spec1.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)).await, 1e-9);
-        let i2_nats = clamp_near_zero(neumaier_sum(i_spec2.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)).await, 1e-9);
+        let i1_nats = clamp_near_zero(neumaier_sum(i_spec1.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)), 1e-9);
+        let i2_nats = clamp_near_zero(neumaier_sum(i_spec2.iter().zip(p_t.iter()).map(|(&i, &p)| p * i)), 1e-9);
 
-        let redundancy_nats = clamp_near_zero(neumaier_sum((0..t_size).map(|tj| p_t[tj] * i_spec1[tj].min(i_spec2[tj]))).await, 1e-9);
+        let redundancy_nats = clamp_near_zero(neumaier_sum((0..t_size).map(|tj| p_t[tj] * i_spec1[tj].min(i_spec2[tj]))), 1e-9);
         let unique1_nats = clamp_near_zero(i1_nats - redundancy_nats, 1e-9);
         let unique2_nats = clamp_near_zero(i2_nats - redundancy_nats, 1e-9);
         let synergy_nats = clamp_near_zero(i12_nats - i1_nats - i2_nats + redundancy_nats, 1e-9);
 
-        Ok(PidAtoms { redundancy: base.from_nats(redundancy_nats.await).await, unique_1: base.from_nats(unique1_nats.await).await, unique_2: base.from_nats(unique2_nats.await).await, synergy: base.from_nats(synergy_nats.await).await })
+        Ok(PidAtoms { redundancy: base.from_nats(redundancy_nats), unique_1: base.from_nats(unique1_nats), unique_2: base.from_nats(unique2_nats), synergy: base.from_nats(synergy_nats) })
     }
     // #endregion 🔖️TwoSourcePid
 
@@ -3795,7 +3945,8 @@ pub mod pid {
     // pattern-matches too eagerly here since the target value is self-referential on the loop
     // variable `a`).
     #[allow(clippy::manual_contains)]
-    async fn is_below(alpha: &LatticeNode, beta: &LatticeNode) -> bool {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_below(alpha: &LatticeNode, beta: &LatticeNode) -> bool {
         beta.iter().all(|&b| alpha.iter().any(|&a| (a & b) == a))
     }
 
@@ -3803,7 +3954,8 @@ pub mod pid {
     /// another) by brute force over the `2^7` subsets of the 7-element ground set of non-empty
     /// masks — exhaustively correct at this size and self-verifying against the known count of 18,
     /// rather than a hand-typed (and hand-error-prone) list.
-    async fn enumerate_antichain_nodes() -> Vec<LatticeNode> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn enumerate_antichain_nodes() -> Vec<LatticeNode> {
         let mut nodes = Vec::new();
         for bits in 1u32..(1u32 << NON_EMPTY_SUBSET_MASKS.len()) {
             let mut chosen: Vec<u32> = Vec::new();
@@ -3838,8 +3990,9 @@ pub mod pid {
         /// the target's alphabet size. Rejects `sources.len() != 3` — this first implementation does
         /// not attempt a general-`n` lattice (the antichain count grows combinatorially and the
         /// well-known closed enumeration only exists at small `n`).
-        pub async fn compute(sources: &[&[u32]], target: &[u32], sizes: &[usize], target_size: usize, base: LogBase) -> Result<Self, EntropyError> {
-            base.validate().await?;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn compute(sources: &[&[u32]], target: &[u32], sizes: &[usize], target_size: usize, base: LogBase) -> Result<Self, EntropyError> {
+            base.validate()?;
             if sources.len() != 3 {
                 return Err(EntropyError::InvalidConfig { field: "sources", reason: "PidLattice currently supports exactly 3 sources" });
             }
@@ -3864,14 +4017,14 @@ pub mod pid {
                 let idxs: Vec<usize> = (0..3).filter(|i| mask & (1 << i) != 0).collect();
                 let parts: Vec<&[u32]> = idxs.iter().map(|&i| sources[i]).collect();
                 let part_sizes: Vec<usize> = idxs.iter().map(|&i| sizes[i]).collect();
-                packed[mask as usize] = Some(pack_symbols(&parts, &part_sizes).await?);
+                packed[mask as usize] = Some(pack_symbols(&parts, &part_sizes)?);
             }
 
             let mut spec: [Option<Vec<f64>>; 8] = [None, None, None, None, None, None, None, None];
             let mut p_t: Vec<f64> = Vec::new();
             for &mask in NON_EMPTY_SUBSET_MASKS.iter() {
                 let (sym, size) = packed[mask as usize].as_ref().unwrap();
-                let (i_spec, this_p_t) = specific_information(sym, *size, target, target_size).await?;
+                let (i_spec, this_p_t) = specific_information(sym, *size, target, target_size)?;
                 if p_t.is_empty() {
                     p_t = this_p_t;
                 }
@@ -3879,10 +4032,10 @@ pub mod pid {
             }
             // #endregion 🔖️SubsetJoints
 
-            let total_mi_nats = clamp_near_zero(neumaier_sum(spec[7].as_ref().unwrap().iter().zip(p_t.iter()).map(|(&i, &p)| p * i)).await, 1e-9);
+            let total_mi_nats = clamp_near_zero(neumaier_sum(spec[7].as_ref().unwrap().iter().zip(p_t.iter()).map(|(&i, &p)| p * i)), 1e-9);
 
             // #region 🔖️IMin
-            let nodes = enumerate_antichain_nodes().await;
+            let nodes = enumerate_antichain_nodes();
             let i_min_nats: Vec<f64> = nodes
                 .iter()
                 .map(|node| {
@@ -3915,7 +4068,8 @@ pub mod pid {
         }
 
         /// 🧩️ Number of lattice nodes — always 18 for `n = 3` sources.
-        pub async fn node_count(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn node_count(&self) -> usize {
             self.nodes.len()
         }
 
@@ -3923,8 +4077,9 @@ pub mod pid {
         /// [`PidLattice::compute`]) for the antichain described by `node_sets`: each inner `Vec<usize>`
         /// is a 0-based source-index subset, and both the outer and inner order are irrelevant (the
         /// antichain is compared as a set of sets).
-        pub async fn partial_information(&self, node_sets: &[Vec<usize>]) -> Option<f64> {
-            self.node_index(node_sets).await.map(|i| self.base.from_nats(self.partial_info_nats[i]))
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn partial_information(&self, node_sets: &[Vec<usize>]) -> Option<f64> {
+            self.node_index(node_sets).map(|i| self.base.from_nats(self.partial_info_nats[i]))
         }
 
         /// 🧩️ Looks up the raw `I_min(alpha)` redundancy value (before Mobius inversion) at the node
@@ -3932,11 +4087,13 @@ pub mod pid {
         /// [`PidLattice::partial_information`] atom is derived from, useful for inspecting the
         /// lattice's intermediate state (e.g. confirming monotonicity along [`is_below`]) rather than
         /// only its final decomposition.
-        pub async fn i_min(&self, node_sets: &[Vec<usize>], base: LogBase) -> Option<f64> {
-            self.node_index(node_sets).await.map(|i| base.from_nats(self.i_min_nats[i]))
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn i_min(&self, node_sets: &[Vec<usize>], base: LogBase) -> Option<f64> {
+            self.node_index(node_sets).map(|i| base.from_nats(self.i_min_nats[i]))
         }
 
-        async fn node_index(&self, node_sets: &[Vec<usize>]) -> Option<usize> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn node_index(&self, node_sets: &[Vec<usize>]) -> Option<usize> {
             let mut masks: Vec<u32> = node_sets.iter().map(|subset| subset.iter().fold(0u32, |acc, &idx| acc | 1u32.checked_shl(idx as u32).unwrap_or(0))).collect();
             masks.sort_unstable();
             masks.dedup();
@@ -3945,8 +4102,9 @@ pub mod pid {
 
         /// 🧩️ The total joint mutual information `I(S1,S2,S3;T)`, converted to `base` (independent of
         /// whatever `base` was passed to [`PidLattice::compute`]).
-        pub async fn total_mutual_information(&self, base: LogBase) -> f64 {
-            base.from_nats(self.total_mi_nats).await
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn total_mutual_information(&self, base: LogBase) -> f64 {
+            base.from_nats(self.total_mi_nats)
         }
     }
     // #endregion 🔖️Lattice
@@ -4092,7 +4250,8 @@ pub mod fisher {
     /// log-likelihood function at `theta`: `-(L(theta+h) - 2*L(theta) + L(theta-h)) / h^2`, with a
     /// fixed step `h = 1e-4 * theta.abs().max(1.0)` (scale-aware so it works across parameter
     /// magnitudes).
-    pub async fn fisher_information(log_likelihood: impl Fn(f64) -> f64, theta: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fisher_information(log_likelihood: impl Fn(f64) -> f64, theta: f64) -> f64 {
         let h = 1e-4 * theta.abs().max(1.0);
         let forward = log_likelihood(theta + h);
         let center = log_likelihood(theta);
@@ -4103,13 +4262,15 @@ pub mod fisher {
 
     // #region 🔖️Criteria
     /// 📉️ Akaike information criterion: `2*k - 2*ln_L`.
-    pub async fn aic(log_likelihood: f64, num_params: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn aic(log_likelihood: f64, num_params: usize) -> f64 {
         2.0 * num_params as f64 - 2.0 * log_likelihood
     }
 
     /// 📉️ Corrected AIC for small sample sizes: `aic + (2*k*(k+1)) / (n - k - 1)`. Errors with
     /// [`EntropyError::InvalidConfig`] if `n <= k + 1` (undefined).
-    pub async fn aicc(log_likelihood: f64, num_params: usize, n: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn aicc(log_likelihood: f64, num_params: usize, n: usize) -> Result<f64, EntropyError> {
         let k = num_params as f64;
         let n = n as f64;
         if n <= k + 1.0 {
@@ -4119,21 +4280,24 @@ pub mod fisher {
     }
 
     /// 📉️ Bayesian information criterion: `k * ln(n) - 2*ln_L`.
-    pub async fn bic(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bic(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
         num_params as f64 * (n as f64).ln() - 2.0 * log_likelihood
     }
 
     /// 📉️ Hannan-Quinn criterion: `2*k*ln(ln(n)) - 2*ln_L`. For `n <= e` (so `ln(ln(n))` is undefined
     /// or non-positive) the penalty term is treated as `0.0` rather than producing NaN/negative
     /// infinity — a small-`n` edge case, not a claim that HQC is well-defined there.
-    pub async fn hqc(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn hqc(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
         let penalty = if (n as f64) <= core::f64::consts::E { 0.0 } else { 2.0 * num_params as f64 * (n as f64).ln().ln() };
         penalty - 2.0 * log_likelihood
     }
 
     /// 📉️ A simple two-part-code minimum-description-length approximation:
     /// `-ln_L + 0.5 * k * ln(n)` (equivalent to BIC/2 in the log-likelihood term's convention).
-    pub async fn mdl(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn mdl(log_likelihood: f64, num_params: usize, n: usize) -> f64 {
         -log_likelihood + 0.5 * num_params as f64 * (n as f64).ln()
     }
     // #endregion 🔖️Criteria
@@ -4296,7 +4460,8 @@ pub mod symbolic {
     /// for `i` in `0..=(x.len() - (dim-1)*tau - 1)`. The foundational primitive behind every
     /// window-based symbolizer in this module (ordinal and dispersion patterns) as well as
     /// phase-space reconstruction used elsewhere in the crate.
-    pub async fn embed(x: &[f64], dim: usize, tau: usize) -> Result<Vec<Vec<f64>>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn embed(x: &[f64], dim: usize, tau: usize) -> Result<Vec<Vec<f64>>, EntropyError> {
         if dim < 1 {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "embedding dimension must be at least 1" });
         }
@@ -4337,7 +4502,8 @@ pub mod symbolic {
     // #region 🔖️Ordinal
     /// 🔤️ Saturating factorial (`n!` for small `n`, saturates to `u64::MAX` rather than wrapping or
     /// panicking for `n` large enough to overflow — realistic ordinal-pattern dimensions are `<= 8`).
-    async fn factorial(n: usize) -> u64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn factorial(n: usize) -> u64 {
         let mut acc: u64 = 1;
         for k in 2..=n as u64 {
             acc = acc.saturating_mul(k);
@@ -4351,7 +4517,8 @@ pub mod symbolic {
     /// single integer. `TiePolicy::Error` rejects any exact tie up front; `StableRank` and
     /// `Jitterless` are treated identically here (both fall through to the stable-sort tie-break) —
     /// a documented simplification for this first implementation, since neither adds real jitter.
-    async fn ordinal_pattern_symbol(window: &[f64], ties: TiePolicy) -> Result<u32, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ordinal_pattern_symbol(window: &[f64], ties: TiePolicy) -> Result<u32, EntropyError> {
         let dim = window.len();
         if ties == TiePolicy::Error {
             for i in 0..dim {
@@ -4386,7 +4553,8 @@ pub mod symbolic {
     impl OrdinalConfig {
         /// 🔤️ Validated constructor: `dim >= 2` (a single-value "pattern" carries no order
         /// information) and `tau >= 1`. Defaults `ties` to [`TiePolicy::StableRank`].
-        pub async fn new(dim: usize, tau: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(dim: usize, tau: usize) -> Result<Self, EntropyError> {
             if dim < 2 {
                 return Err(EntropyError::InvalidConfig { field: "dim", reason: "ordinal patterns need dim >= 2 to carry order information" });
             }
@@ -4397,7 +4565,8 @@ pub mod symbolic {
         }
 
         /// 🔤️ Consuming setter for the tie policy.
-        pub async fn with_ties(mut self, ties: TiePolicy) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_ties(mut self, ties: TiePolicy) -> Self {
             self.ties = ties;
             self
         }
@@ -4418,14 +4587,15 @@ pub mod symbolic {
 
     impl OrdinalSymbolizer {
         /// 🔤️ Wraps an already-validated [`OrdinalConfig`].
-        pub async fn new(cfg: OrdinalConfig) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(cfg: OrdinalConfig) -> Self {
             Self { cfg }
         }
     }
 
     impl Symbolizer for OrdinalSymbolizer {
         async fn symbolize(&self, x: &[f64]) -> Result<Vec<u32>, EntropyError> {
-            let windows = embed(x, self.cfg.dim, self.cfg.tau).await?;
+            let windows = embed(x, self.cfg.dim, self.cfg.tau)?;
             windows.iter().map(|w| ordinal_pattern_symbol(w, self.cfg.ties)).collect()
         }
 
@@ -4449,7 +4619,8 @@ pub mod symbolic {
         /// 🔤️ Validated constructor: `classes >= 2`, `dim >= 1`, `tau >= 1`, and `classes^dim` must
         /// fit within the `u32` symbol codomain that [`Symbolizer::symbolize`] returns (checked via
         /// [`checked_state_count`], which itself guards `usize`/`u128` overflow of the raw product).
-        pub async fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
             if classes < 2 {
                 return Err(EntropyError::InvalidConfig { field: "classes", reason: "dispersion needs at least 2 classes" });
             }
@@ -4460,7 +4631,7 @@ pub mod symbolic {
                 return Err(EntropyError::InvalidConfig { field: "tau", reason: "embedding delay must be at least 1" });
             }
             let dims = vec![classes; dim];
-            let fits = matches!(checked_state_count(&dims).await, Some(count) if count <= u32::MAX as u128);
+            let fits = matches!(checked_state_count(&dims), Some(count) if count <= u32::MAX as u128);
             if !fits {
                 return Err(EntropyError::InvalidConfig { field: "classes/dim", reason: "classes^dim must fit within the u32 symbol range" });
             }
@@ -4488,7 +4659,7 @@ pub mod symbolic {
                     c.clamp(0.0, classes_f - 1.0)
                 })
                 .collect();
-            let windows = embed(&classed, self.dim, self.tau).await?;
+            let windows = embed(&classed, self.dim, self.tau)?;
             let mut out = Vec::with_capacity(windows.len());
             for w in &windows {
                 let mut symbol: usize = 0;
@@ -4502,7 +4673,7 @@ pub mod symbolic {
 
         async fn alphabet_size(&self) -> usize {
             let dims = vec![self.classes; self.dim];
-            checked_state_count(&dims).await.map_or(usize::MAX, |c| c as usize)
+            checked_state_count(&dims).map_or(usize::MAX, |c| c as usize)
         }
     }
     // #endregion 🔖️Dispersion
@@ -4516,7 +4687,8 @@ pub mod symbolic {
 
     impl QuantileSymbolizer {
         /// 🔤️ Validated constructor: `bins >= 2`.
-        pub async fn new(bins: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(bins: usize) -> Result<Self, EntropyError> {
             if bins < 2 {
                 return Err(EntropyError::InvalidConfig { field: "bins", reason: "must be at least 2" });
             }
@@ -4558,7 +4730,8 @@ pub mod symbolic {
     impl ThresholdSymbolizer {
         /// 🔤️ Validated constructor: `edges` must be non-empty, every entry finite, and the sequence
         /// strictly ascending. Never silently sorts — an out-of-order `edges` is a caller bug.
-        pub async fn new(edges: Vec<f64>) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(edges: Vec<f64>) -> Result<Self, EntropyError> {
             if edges.is_empty() {
                 return Err(EntropyError::InvalidConfig { field: "edges", reason: "must not be empty" });
             }
@@ -4865,7 +5038,8 @@ pub mod regularity {
     impl RegularityConfig {
         /// 🔁️ Validates `m >= 1` (a zero-length template is not a meaningful embedding). `r` is
         /// resolved later, once data is available, via [`resolve_tolerance`].
-        pub async fn new(m: usize, r: Tolerance) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(m: usize, r: Tolerance) -> Result<Self, EntropyError> {
             if m < 1 {
                 return Err(EntropyError::InvalidConfig { field: "m", reason: "embedding dimension must be at least 1" });
             }
@@ -4875,7 +5049,8 @@ pub mod regularity {
 
     /// 🔁️ Sample standard deviation (`n - 1` denominator). Rejects a degenerate (constant, or
     /// too-short-to-vary) series since it can never anchor a meaningful proportional tolerance.
-    async fn sample_sd(x: &[f64]) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_sd(x: &[f64]) -> Result<f64, EntropyError> {
         let n = x.len() as f64;
         if x.len() < 2 {
             return Err(EntropyError::DegenerateInput { what: "series has fewer than 2 points" });
@@ -4889,7 +5064,8 @@ pub mod regularity {
     }
 
     /// 🔁️ Resolves a [`Tolerance`] policy into a concrete positive Chebyshev radius for `x`.
-    async fn resolve_tolerance(x: &[f64], r: Tolerance) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_tolerance(x: &[f64], r: Tolerance) -> Result<f64, EntropyError> {
         match r {
             Tolerance::Absolute(v) => {
                 if !(v.is_finite() && v > 0.0) {
@@ -4901,26 +5077,29 @@ pub mod regularity {
                 if !(k.is_finite() && k > 0.0) {
                     return Err(EntropyError::InvalidConfig { field: "r", reason: "sd multiplier must be finite and positive" });
                 }
-                Ok(k * sample_sd(x).await?)
+                Ok(k * sample_sd(x)?)
             }
-            Tolerance::Auto => Ok(0.2 * sample_sd(x).await?),
+            Tolerance::Auto => Ok(0.2 * sample_sd(x)?),
         }
     }
     // #endregion 🔖️Config
 
     // #region 🔖️Distance
     /// 🔁️ Chebyshev (`L-infinity`) distance between two equal-length template vectors.
-    async fn chebyshev(a: &[f64], b: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn chebyshev(a: &[f64], b: &[f64]) -> f64 {
         a.iter().zip(b.iter()).map(|(&x, &y)| (x - y).abs()).fold(0.0_f64, f64::max)
     }
 
     /// 🔁️ Template minus its own mean (the Chen et al. fuzzy-entropy de-trending step).
-    async fn demean(t: &[f64]) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn demean(t: &[f64]) -> Vec<f64> {
         let mean = neumaier_sum(t.iter().copied()) / t.len() as f64;
         t.iter().map(|&v| v - mean).collect()
     }
 
-    async fn small_sample_warning(n: usize) -> Option<Warning> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn small_sample_warning(n: usize) -> Option<Warning> {
         (n < 100).then_some(Warning::SmallSample { n, recommended: 100 })
     }
     // #endregion 🔖️Distance
@@ -4928,7 +5107,8 @@ pub mod regularity {
     // #region 🔖️ApproximateEntropy
     /// 🔁️ `Phi(dim) = mean_i(ln(C_i))` where `C_i` counts matches INCLUDING the self-match `j == i` —
     /// the defining (if statistically awkward) ApEn convention that SampEn below deliberately drops.
-    async fn apen_phi(templates: &[Vec<f64>], r: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn apen_phi(templates: &[Vec<f64>], r: f64) -> f64 {
         let n = templates.len() as f64;
         let ln_c: Vec<f64> = templates
             .iter()
@@ -4942,20 +5122,21 @@ pub mod regularity {
 
     /// 🔁️ Approximate Entropy (Pincus 1991): `ApEn = Phi(m) - Phi(m + 1)`, in `base`. Self-matches are
     /// counted, which biases ApEn low and dependent on `m` in a way SampEn was designed to fix.
-    pub async fn approximate_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn approximate_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if x.len() < cfg.m + 2 {
             return Err(EntropyError::InsufficientData { what: "approximate_entropy", needed: cfg.m + 2, actual: x.len() });
         }
-        let r = resolve_tolerance(x, cfg.r).await?;
-        let templates_m = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m, 1).await?;
-        let templates_m1 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m + 1, 1).await?;
+        let r = resolve_tolerance(x, cfg.r)?;
+        let templates_m = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m, 1)?;
+        let templates_m1 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m + 1, 1)?;
         let apen_nats = apen_phi(&templates_m, r) - apen_phi(&templates_m1, r);
 
         let mut warnings = Vec::new();
         warnings.extend(small_sample_warning(x.len()));
 
-        Ok(Estimate { value: base.from_nats(apen_nats).await, base, method: "approximate_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
+        Ok(Estimate { value: base.from_nats(apen_nats), base, method: "approximate_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
     }
     // #endregion 🔖️ApproximateEntropy
 
@@ -4966,10 +5147,11 @@ pub mod regularity {
     /// 🔁️ Embeds at `m + 1` first to fix the valid start-index range, then embeds at `m` and
     /// truncates to that SAME range, so SampEn/FuzzyEn compare the two lengths over identical
     /// windows rather than the (larger) index range `m`-only embedding would otherwise allow.
-    async fn shared_templates(x: &[f64], m: usize) -> Result<TemplatePair, EntropyError> {
-        let templates_m1 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m + 1, 1).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn shared_templates(x: &[f64], m: usize) -> Result<TemplatePair, EntropyError> {
+        let templates_m1 = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m + 1, 1)?;
         let k = templates_m1.len();
-        let mut templates_m = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m, 1).await?;
+        let mut templates_m = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m, 1)?;
         templates_m.truncate(k);
         Ok((templates_m, templates_m1))
     }
@@ -4980,13 +5162,14 @@ pub mod regularity {
     /// length-`m` matches and `A` counts length-`(m + 1)` matches among the SAME index pairs
     /// `i < j` (self-matches structurally excluded, unlike ApEn). `B == 0` is undefined; `A == 0`
     /// is reported as `+infinity` with a diagnostic warning rather than erroring.
-    pub async fn sample_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn sample_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if x.len() < cfg.m + 2 {
             return Err(EntropyError::InsufficientData { what: "sample_entropy", needed: cfg.m + 2, actual: x.len() });
         }
-        let r = resolve_tolerance(x, cfg.r).await?;
-        let (templates_m, templates_m1) = shared_templates(x, cfg.m).await?;
+        let r = resolve_tolerance(x, cfg.r)?;
+        let (templates_m, templates_m1) = shared_templates(x, cfg.m)?;
         let k = templates_m1.len();
 
         let mut a: u64 = 0;
@@ -5015,7 +5198,7 @@ pub mod regularity {
             -((a as f64) / (b as f64)).ln()
         };
 
-        Ok(Estimate { value: base.from_nats(sampen_nats).await, base, method: "sample_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
+        Ok(Estimate { value: base.from_nats(sampen_nats), base, method: "sample_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
     }
     // #endregion 🔖️SampleEntropy
 
@@ -5023,7 +5206,8 @@ pub mod regularity {
     /// 🔁️ `Phi(dim) = (1 / (K*(K-1))) * sum_i sum_{j != i} mu(Chebyshev(T_i - mean(T_i), T_j -
     /// mean(T_j)))` with Gaussian membership `mu(d) = exp(-(d/r)^2)`, replacing SampEn/ApEn's hard
     /// `<= r` indicator with a smooth one (Chen et al. 2007).
-    async fn fuzzy_phi(templates: &[Vec<f64>], r: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fuzzy_phi(templates: &[Vec<f64>], r: f64) -> f64 {
         let k = templates.len();
         let demeaned: Vec<Vec<f64>> = templates.iter().map(|t| demean(t)).collect();
         let mut terms = Vec::with_capacity(k.saturating_mul(k.saturating_sub(1)));
@@ -5041,15 +5225,16 @@ pub mod regularity {
 
     /// 🔁️ Fuzzy Entropy: like [`sample_entropy`] but with a Gaussian-membership match indicator and
     /// per-template mean removal, `FuzzyEn = ln(Phi(m)) - ln(Phi(m + 1))`, in `base`.
-    pub async fn fuzzy_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fuzzy_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if x.len() < cfg.m + 2 {
             return Err(EntropyError::InsufficientData { what: "fuzzy_entropy", needed: cfg.m + 2, actual: x.len() });
         }
-        let r = resolve_tolerance(x, cfg.r).await?;
-        let (templates_m, templates_m1) = shared_templates(x, cfg.m).await?;
-        let phi_m = fuzzy_phi(&templates_m, r).await;
-        let phi_m1 = fuzzy_phi(&templates_m1, r).await;
+        let r = resolve_tolerance(x, cfg.r)?;
+        let (templates_m, templates_m1) = shared_templates(x, cfg.m)?;
+        let phi_m = fuzzy_phi(&templates_m, r);
+        let phi_m1 = fuzzy_phi(&templates_m1, r);
         if phi_m <= 0.0 || phi_m1 <= 0.0 {
             return Err(EntropyError::UndefinedResult { reason: "fuzzy membership sum is non-positive" });
         }
@@ -5058,7 +5243,7 @@ pub mod regularity {
         let mut warnings = Vec::new();
         warnings.extend(small_sample_warning(x.len()));
 
-        Ok(Estimate { value: base.from_nats(fuzzyen_nats).await, base, method: "fuzzy_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
+        Ok(Estimate { value: base.from_nats(fuzzyen_nats), base, method: "fuzzy_entropy", n: x.len(), n_effective: x.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("m", cfg.m as f64), ("r", r)] })
     }
     // #endregion 🔖️FuzzyEntropy
 
@@ -5068,11 +5253,13 @@ pub mod regularity {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64;
 
-        async fn sine_series(n: usize, period: f64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn sine_series(n: usize, period: f64) -> Vec<f64> {
             (0..n).map(|i| (2.0 * core::f64::consts::PI * i as f64 / period).sin()).collect()
         }
 
-        async fn white_noise_series(n: usize, seed: u64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn white_noise_series(n: usize, seed: u64) -> Vec<f64> {
             let mut rng = Xorshift64::new(seed);
             (0..n).map(|_| rng.next_gaussian()).collect()
         }
@@ -5202,8 +5389,9 @@ pub mod ordinal {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Shared
-    async fn symbol_distribution_entropy(symbols: &[u32], alphabet_size: usize, base: LogBase, method: &'static str, diagnostics: Vec<(&'static str, f64)>) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn symbol_distribution_entropy(symbols: &[u32], alphabet_size: usize, base: LogBase, method: &'static str, diagnostics: Vec<(&'static str, f64)>) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if symbols.is_empty() {
             return Err(EntropyError::EmptyInput { what: "symbols" });
         }
@@ -5223,10 +5411,11 @@ pub mod ordinal {
             warnings.push(Warning::SmallSample { n: symbols.len(), recommended: 5 * alphabet_size });
         }
 
-        Ok(Estimate { value: base.from_nats(nats).await, base, method, n: symbols.len(), n_effective: symbols.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
+        Ok(Estimate { value: base.from_nats(nats), base, method, n: symbols.len(), n_effective: symbols.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
     }
 
-    async fn sample_sd(x: &[f64]) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn sample_sd(x: &[f64]) -> f64 {
         let n = x.len() as f64;
         let mean = neumaier_sum(x.iter().copied()) / n;
         (neumaier_sum(x.iter().map(|&v| (v - mean).powi(2))) / n).sqrt()
@@ -5236,10 +5425,11 @@ pub mod ordinal {
     // #region 🔖️Permutation
     /// 🎼️ Bandt-Pompe permutation entropy: Shannon entropy of the ordinal-pattern distribution
     /// produced by [`OrdinalSymbolizer`].
-    pub async fn permutation_entropy(x: &[f64], cfg: OrdinalConfig, base: LogBase) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn permutation_entropy(x: &[f64], cfg: OrdinalConfig, base: LogBase) -> Result<Estimate, EntropyError> {
         let symbolizer = OrdinalSymbolizer::new(cfg);
         let symbols = symbolizer.symbolize(x)?;
-        symbol_distribution_entropy(&symbols, symbolizer.alphabet_size(), base, "permutation_entropy", vec![("dim", cfg.dim as f64), ("tau", cfg.tau as f64)]).await
+        symbol_distribution_entropy(&symbols, symbolizer.alphabet_size(), base, "permutation_entropy", vec![("dim", cfg.dim as f64), ("tau", cfg.tau as f64)])
     }
     // #endregion 🔖️Permutation
 
@@ -5253,7 +5443,8 @@ pub mod ordinal {
     }
 
     impl DispersionConfig {
-        pub async fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
             if classes < 2 {
                 return Err(EntropyError::InvalidConfig { field: "classes", reason: "must be at least 2" });
             }
@@ -5266,10 +5457,11 @@ pub mod ordinal {
 
     /// 🎼️ Dispersion entropy: Shannon entropy of the normal-CDF-class dispersion-pattern
     /// distribution produced by [`DispersionSymbolizer`].
-    pub async fn dispersion_entropy(x: &[f64], cfg: DispersionConfig, base: LogBase) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dispersion_entropy(x: &[f64], cfg: DispersionConfig, base: LogBase) -> Result<Estimate, EntropyError> {
         let symbolizer = DispersionSymbolizer { classes: cfg.classes, dim: cfg.dim, tau: cfg.tau };
-        let symbols = symbolizer.symbolize(x).await?;
-        symbol_distribution_entropy(&symbols, symbolizer.alphabet_size().await, base, "dispersion_entropy", vec![("classes", cfg.classes as f64), ("dim", cfg.dim as f64), ("tau", cfg.tau as f64)]).await
+        let symbols = symbolizer.symbolize(x)?;
+        symbol_distribution_entropy(&symbols, symbolizer.alphabet_size(), base, "dispersion_entropy", vec![("classes", cfg.classes as f64), ("dim", cfg.dim as f64), ("tau", cfg.tau as f64)])
     }
     // #endregion 🔖️Dispersion
 
@@ -5279,7 +5471,8 @@ pub mod ordinal {
     /// of `|increment| / sd(increments)`, symbol `levels` reserved for an exact-zero increment),
     /// `word_length` consecutive increment-symbols are packed via mixed-radix into one word, and the
     /// Shannon entropy of the resulting word distribution is reported.
-    pub async fn increment_entropy(x: &[f64], word_length: usize, levels: usize, base: LogBase) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn increment_entropy(x: &[f64], word_length: usize, levels: usize, base: LogBase) -> Result<Estimate, EntropyError> {
         if word_length == 0 {
             return Err(EntropyError::InvalidConfig { field: "word_length", reason: "must be at least 1" });
         }
@@ -5309,13 +5502,13 @@ pub mod ordinal {
             })
             .collect();
 
-        let total = checked_state_count(&vec![alphabet; word_length]).await.ok_or(EntropyError::InvalidConfig { field: "word_length", reason: "resulting alphabet overflows" })?;
+        let total = checked_state_count(&vec![alphabet; word_length]).ok_or(EntropyError::InvalidConfig { field: "word_length", reason: "resulting alphabet overflows" })?;
         if total > u32::MAX as u128 {
             return Err(EntropyError::InvalidConfig { field: "word_length", reason: "resulting alphabet exceeds u32::MAX" });
         }
         let words: Vec<u32> = symbols.windows(word_length).map(|w| w.iter().fold(0u64, |acc, &s| acc * alphabet as u64 + s as u64) as u32).collect();
 
-        symbol_distribution_entropy(&words, total as usize, base, "increment_entropy", vec![("word_length", word_length as f64), ("levels", levels as f64)]).await
+        symbol_distribution_entropy(&words, total as usize, base, "increment_entropy", vec![("word_length", word_length as f64), ("levels", levels as f64)])
     }
     // #endregion 🔖️Increment
 
@@ -5325,7 +5518,8 @@ pub mod ordinal {
     /// pi/2`: symbol `0`/`4` for a steep negative/positive slope beyond `gamma2`, `1`/`3` for a
     /// shallow negative/positive slope in `(gamma1, gamma2]`, and `2` for a near-flat slope within
     /// `gamma1`. `dim` consecutive slope-symbols are packed via mixed-radix (base 5) into one word.
-    pub async fn slope_entropy(x: &[f64], thresholds: (f64, f64), dim: usize, base: LogBase) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn slope_entropy(x: &[f64], thresholds: (f64, f64), dim: usize, base: LogBase) -> Result<Estimate, EntropyError> {
         let (gamma1, gamma2) = thresholds;
         if !(0.0 < gamma1 && gamma1 < gamma2 && gamma2 < core::f64::consts::FRAC_PI_2) {
             return Err(EntropyError::InvalidConfig { field: "thresholds", reason: "must satisfy 0 < gamma1 < gamma2 < pi/2" });
@@ -5354,13 +5548,13 @@ pub mod ordinal {
             .collect();
 
         const ALPHABET: usize = 5;
-        let total = checked_state_count(&vec![ALPHABET; dim]).await.ok_or(EntropyError::InvalidConfig { field: "dim", reason: "resulting alphabet overflows" })?;
+        let total = checked_state_count(&vec![ALPHABET; dim]).ok_or(EntropyError::InvalidConfig { field: "dim", reason: "resulting alphabet overflows" })?;
         if total > u32::MAX as u128 {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "resulting alphabet exceeds u32::MAX" });
         }
         let words: Vec<u32> = symbols.windows(dim).map(|w| w.iter().fold(0u64, |acc, &s| acc * ALPHABET as u64 + s as u64) as u32).collect();
 
-        symbol_distribution_entropy(&words, total as usize, base, "slope_entropy", vec![("dim", dim as f64), ("gamma1", gamma1), ("gamma2", gamma2)]).await
+        symbol_distribution_entropy(&words, total as usize, base, "slope_entropy", vec![("dim", dim as f64), ("gamma1", gamma1), ("gamma2", gamma2)])
     }
     // #endregion 🔖️Slope
 
@@ -5481,7 +5675,8 @@ pub mod markov {
     /// dropping it and appending a new symbol (advancing the chain by one step) is a cheap
     /// `(context % (alphabet_size^(order-1))) * alphabet_size + next` update — see
     /// [`MarkovChain::stationary`].
-    async fn pack_context(window: &[u32], alphabet_size: usize) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn pack_context(window: &[u32], alphabet_size: usize) -> usize {
         window.iter().fold(0usize, |acc, &symbol| acc * alphabet_size + symbol as usize)
     }
     // #endregion 🔖️Context
@@ -5509,7 +5704,8 @@ pub mod markov {
         /// ⛓️ Row-major `num_contexts x alphabet_size` raw transition counts (diagnostic access to
         /// the fitted state, e.g. for inspecting per-context sample sizes before trusting
         /// [`MarkovChain::entropy_rate`] on sparsely observed contexts).
-        pub async fn raw_counts(&self) -> &[f64] {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn raw_counts(&self) -> &[f64] {
             &self.counts
         }
 
@@ -5517,7 +5713,8 @@ pub mod markov {
         /// `order >= 1` and `seq.len() >= order + 1`; rejects sequences that are too short with
         /// [`EntropyError::InsufficientData`] and out-of-range symbols or an overflowing
         /// `alphabet_size^order` context space with [`EntropyError::InvalidConfig`].
-        pub async fn fit(seq: &[u32], alphabet_size: usize, order: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn fit(seq: &[u32], alphabet_size: usize, order: usize) -> Result<Self, EntropyError> {
             if order == 0 {
                 return Err(EntropyError::InvalidConfig { field: "order", reason: "must be >= 1" });
             }
@@ -5530,7 +5727,7 @@ pub mod markov {
             if seq.iter().any(|&s| s as usize >= alphabet_size) {
                 return Err(EntropyError::InvalidConfig { field: "seq", reason: "symbol index must be < alphabet_size" });
             }
-            let num_contexts = checked_state_count(&vec![alphabet_size; order]).await.and_then(|c| usize::try_from(c).ok()).ok_or(EntropyError::InvalidConfig { field: "alphabet_size/order", reason: "alphabet_size^order overflows usize" })?;
+            let num_contexts = checked_state_count(&vec![alphabet_size; order]).and_then(|c| usize::try_from(c).ok()).ok_or(EntropyError::InvalidConfig { field: "alphabet_size/order", reason: "alphabet_size^order overflows usize" })?;
 
             let mut counts = vec![0.0_f64; num_contexts * alphabet_size];
             for i in order..seq.len() {
@@ -5560,7 +5757,8 @@ pub mod markov {
         /// symbol-to-symbol transition matrix). Iterates a uniform-start distribution until the L1
         /// change drops below `1e-12` or `10_000` iterations elapse, returning
         /// [`EntropyError::NotConverged`] on the latter.
-        pub async fn stationary(&self) -> Result<Vec<f64>, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn stationary(&self) -> Result<Vec<f64>, EntropyError> {
             let k = self.num_contexts;
             let modulus = k / self.alphabet_size;
             let mut pi = vec![1.0 / k as f64; k];
@@ -5594,16 +5792,17 @@ pub mod markov {
         /// ⛓️ Entropy rate `-sum_context pi(context) * sum_next P(next|context) * ln P(next|context)`,
         /// computed in nats from [`MarkovChain::stationary`] and the fitted conditional
         /// distributions, then converted to `base`.
-        pub async fn entropy_rate(&self, base: LogBase) -> Result<Estimate, EntropyError> {
-            base.validate().await?;
-            let pi = self.stationary().await?;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn entropy_rate(&self, base: LogBase) -> Result<Estimate, EntropyError> {
+            base.validate()?;
+            let pi = self.stationary()?;
             let nats = neumaier_sum((0..self.num_contexts).map(|context| {
                 let row = &self.conditional[context * self.alphabet_size..(context + 1) * self.alphabet_size];
                 let context_entropy = -neumaier_sum(row.iter().map(|&p| x_ln_x(p)));
                 pi[context] * context_entropy
             }));
             Ok(Estimate {
-                value: base.from_nats(nats.await).await,
+                value: base.from_nats(nats),
                 base,
                 method: "markov_entropy_rate",
                 n: self.n,
@@ -5625,7 +5824,8 @@ pub mod markov {
 
         /// ⛓️ Generates a sequence from a hand-specified 2-state chain (`transition[i][j] = P(i -> j)`)
         /// starting at state 0, using a deterministic PRNG so tests are exactly reproducible.
-        async fn generate_two_state_sequence(transition: [[f64; 2]; 2], n: usize, seed: u64) -> Vec<u32> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn generate_two_state_sequence(transition: [[f64; 2]; 2], n: usize, seed: u64) -> Vec<u32> {
             let mut rng = Xorshift64::new(seed);
             let mut seq = Vec::with_capacity(n);
             let mut state = 0u32;
@@ -5637,7 +5837,8 @@ pub mod markov {
             seq
         }
 
-        async fn binary_entropy_nats(p: f64) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn binary_entropy_nats(p: f64) -> f64 {
             -(x_ln_x(p) + x_ln_x(1.0 - p))
         }
 
@@ -5744,7 +5945,8 @@ pub mod multiscale {
         StdDev,
     }
 
-    async fn coarse_grain(x: &[f64], scale: usize, grain: Grain) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn coarse_grain(x: &[f64], scale: usize, grain: Grain) -> Vec<f64> {
         if scale == 1 {
             return x.to_vec();
         }
@@ -5790,12 +5992,13 @@ pub mod multiscale {
         Dispersion(DispersionConfig),
     }
 
-    async fn run_inner(x: &[f64], inner: &MsInner, base: LogBase) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn run_inner(x: &[f64], inner: &MsInner, base: LogBase) -> Result<Estimate, EntropyError> {
         match inner {
-            MsInner::SampleEntropy(cfg) => sample_entropy(x, *cfg, base).await,
-            MsInner::FuzzyEntropy(cfg) => fuzzy_entropy(x, *cfg, base).await,
-            MsInner::Permutation(cfg) => permutation_entropy(x, *cfg, base).await,
-            MsInner::Dispersion(cfg) => dispersion_entropy(x, *cfg, base).await,
+            MsInner::SampleEntropy(cfg) => sample_entropy(x, *cfg, base),
+            MsInner::FuzzyEntropy(cfg) => fuzzy_entropy(x, *cfg, base),
+            MsInner::Permutation(cfg) => permutation_entropy(x, *cfg, base),
+            MsInner::Dispersion(cfg) => dispersion_entropy(x, *cfg, base),
         }
     }
     // #endregion 🔖️Inner
@@ -5810,7 +6013,8 @@ pub mod multiscale {
     }
 
     impl MultiscaleConfig {
-        pub async fn new(scales: usize, grain: Grain, inner: MsInner) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(scales: usize, grain: Grain, inner: MsInner) -> Result<Self, EntropyError> {
             if scales == 0 {
                 return Err(EntropyError::InvalidConfig { field: "scales", reason: "must be at least 1" });
             }
@@ -5829,18 +6033,19 @@ pub mod multiscale {
     /// 📶️ Coarse-grains `x` at scales `1..=cfg.scales` and computes `cfg.inner`'s entropy at each,
     /// stopping early (without error) once a scale's coarse-grained series becomes too short for the
     /// inner method — [`MultiscaleResult::scales`] reports exactly which scales succeeded.
-    pub async fn multiscale_entropy(x: &[f64], cfg: &MultiscaleConfig, base: LogBase) -> Result<MultiscaleResult, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn multiscale_entropy(x: &[f64], cfg: &MultiscaleConfig, base: LogBase) -> Result<MultiscaleResult, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
         let mut per_scale = Vec::new();
         let mut scales = Vec::new();
         for scale in 1..=cfg.scales {
-            let coarse = coarse_grain(x, scale, cfg.grain).await;
+            let coarse = coarse_grain(x, scale, cfg.grain);
             if coarse.len() < 4 {
                 break;
             }
-            match run_inner(&coarse, &cfg.inner, base).await {
+            match run_inner(&coarse, &cfg.inner, base) {
                 Ok(est) => {
                     per_scale.push(est);
                     scales.push(scale);
@@ -5953,7 +6158,8 @@ pub mod lz {
     /// textbook pseudocode (needed because the naive index-safety invariant does not actually hold
     /// for short inputs — confirmed by exhaustive brute-force cross-validation, see
     /// `tests::exhaustive`).
-    async fn lz76_complexity(s: &[u32]) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn lz76_complexity(s: &[u32]) -> usize {
         let n = s.len();
         if n == 0 {
             return 0;
@@ -6005,7 +6211,8 @@ pub mod lz {
     /// `base` on the returned [`Estimate`] is always [`LogBase::Nats`] as an inert placeholder — LZ
     /// complexity is a phrase count / normalized ratio, not a log-base-dependent entropy, so
     /// [`Estimate::in_base`] is meaningless here and should not be called on this result.
-    pub async fn lempel_ziv_complexity(symbols: &[u32], normalized: bool) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn lempel_ziv_complexity(symbols: &[u32], normalized: bool) -> Result<Estimate, EntropyError> {
         if symbols.is_empty() {
             return Err(EntropyError::EmptyInput { what: "symbols" });
         }
@@ -6098,7 +6305,8 @@ pub mod lz {
     /// normalized information distance in `[0, ~1]`. `compressor` decides what "compressed" means;
     /// [`Lz78Compressor`] is a reasonable zero-dependency default. Generic over the compressor (O1 —
     /// R11(a): a borrowed-reference parameter is trivially generic).
-    pub async fn ncd<C: Compressor>(x: &[u8], y: &[u8], compressor: &C) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn ncd<C: Compressor>(x: &[u8], y: &[u8], compressor: &C) -> Result<f64, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -6125,7 +6333,8 @@ pub mod lz {
     mod tests {
         use super::*;
 
-        async fn binary_string(s: &str) -> Vec<u32> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn binary_string(s: &str) -> Vec<u32> {
             s.chars().map(|c| if c == '1' { 1 } else { 0 }).collect()
         }
 
@@ -6281,7 +6490,8 @@ pub mod lz {
 
             /// 🔐️ Naive contiguous-substring test, `O(n*m)`, used only by the brute-force oracle
             /// below (never on a hot path).
-            async fn contains(haystack: &[u32], needle: &[u32]) -> bool {
+            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+            fn contains(haystack: &[u32], needle: &[u32]) -> bool {
                 if needle.is_empty() {
                     return true;
                 }
@@ -6296,7 +6506,8 @@ pub mod lz {
             /// minus its own last symbol), i.e. the shortest prefix of the remainder not found
             /// anywhere in the string up to (and including) the position just before the prefix's
             /// last symbol. Deliberately independent of [`lz76_complexity`]'s control flow.
-            async fn brute_force_lz76(s: &[u32]) -> usize {
+            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+            fn brute_force_lz76(s: &[u32]) -> usize {
                 let n = s.len();
                 if n == 0 {
                     return 0;
@@ -6374,35 +6585,43 @@ pub mod fft {
     }
 
     impl Complex {
-        pub async fn new(re: f64, im: f64) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(re: f64, im: f64) -> Self {
             Self { re, im }
         }
 
-        pub async fn zero() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn zero() -> Self {
             Self { re: 0.0, im: 0.0 }
         }
 
-        pub async fn from_polar(magnitude: f64, angle: f64) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn from_polar(magnitude: f64, angle: f64) -> Self {
             Self { re: magnitude * angle.cos(), im: magnitude * angle.sin() }
         }
 
-        pub async fn conj(self) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn conj(self) -> Self {
             Self { re: self.re, im: -self.im }
         }
 
-        pub async fn norm_sq(self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn norm_sq(self) -> f64 {
             self.re * self.re + self.im * self.im
         }
 
-        pub async fn abs(self) -> f64 {
-            self.norm_sq().await.sqrt()
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn abs(self) -> f64 {
+            self.norm_sq().sqrt()
         }
 
-        pub async fn arg(self) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn arg(self) -> f64 {
             self.im.atan2(self.re)
         }
 
-        pub async fn scale(self, s: f64) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn scale(self, s: f64) -> Self {
             Self { re: self.re * s, im: self.im * s }
         }
     }
@@ -6430,7 +6649,8 @@ pub mod fft {
     // #endregion 🔖️Complex
 
     // #region 🔖️Radix2
-    async fn bit_reverse_permute(data: &mut [Complex]) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bit_reverse_permute(data: &mut [Complex]) {
         let n = data.len();
         let mut j = 0usize;
         for i in 1..n {
@@ -6448,7 +6668,8 @@ pub mod fft {
 
     /// 🌊️ In-place iterative radix-2 Cooley-Tukey FFT. `n = data.len()` must be a power of two.
     /// `inverse = true` computes the unnormalized inverse transform (caller divides by `n`).
-    async fn fft_radix2_inplace(data: &mut [Complex], inverse: bool) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fft_radix2_inplace(data: &mut [Complex], inverse: bool) {
         let n = data.len();
         if n <= 1 {
             return;
@@ -6464,7 +6685,7 @@ pub mod fft {
                 let mut w = Complex::new(1.0, 0.0);
                 for k in 0..len / 2 {
                     let u = data[i + k];
-                    let v = data[i + k + len / 2] * w.await;
+                    let v = data[i + k + len / 2] * w;
                     data[i + k] = u + v;
                     data[i + k + len / 2] = u - v;
                     w = w * wlen;
@@ -6475,7 +6696,8 @@ pub mod fft {
         }
     }
 
-    async fn next_power_of_two(n: usize) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn next_power_of_two(n: usize) -> usize {
         n.next_power_of_two()
     }
     // #endregion 🔖️Radix2
@@ -6484,7 +6706,8 @@ pub mod fft {
     /// 🌊️ Bluestein's chirp-z transform: reduces an arbitrary-length DFT to a power-of-two
     /// convolution via the identity `n*k = (n^2 + k^2 - (n-k)^2) / 2`, so it applies exactly to any
     /// length (used whenever `n` is not already a power of two).
-    async fn fft_bluestein(data: &[Complex], inverse: bool) -> Vec<Complex> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn fft_bluestein(data: &[Complex], inverse: bool) -> Vec<Complex> {
         let n = data.len();
         if n == 0 {
             return Vec::new();
@@ -6498,11 +6721,11 @@ pub mod fft {
             .collect();
 
         let m = next_power_of_two(2 * n - 1);
-        let mut a = vec![Complex::zero(); m.await];
+        let mut a = vec![Complex::zero(); m];
         for k in 0..n {
             a[k] = data[k] * chirp[k];
         }
-        let mut b = vec![Complex::zero(); m.await];
+        let mut b = vec![Complex::zero(); m];
         b[0] = chirp[0].conj();
         for k in 1..n {
             let c = chirp[k].conj();
@@ -6535,43 +6758,48 @@ pub mod fft {
     }
 
     impl Fft {
-        pub async fn new(n: usize) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(n: usize) -> Self {
             Self { n, power_of_two: n.is_power_of_two() }
         }
 
-        pub async fn len(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn len(&self) -> usize {
             self.n
         }
 
-        pub async fn is_empty(&self) -> bool {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn is_empty(&self) -> bool {
             self.n == 0
         }
 
         /// 🌊️ Forward DFT: `X_k = sum_j x_j * exp(-2*pi*i*j*k/n)`.
-        pub async fn forward(&self, input: &[Complex]) -> Vec<Complex> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn forward(&self, input: &[Complex]) -> Vec<Complex> {
             assert_eq!(input.len(), self.n, "Fft::forward: input length must match plan length");
             if self.power_of_two {
                 let mut data = input.to_vec();
                 fft_radix2_inplace(&mut data, false);
                 data
             } else {
-                fft_bluestein(input, false).await
+                fft_bluestein(input, false)
             }
         }
 
         /// 🌊️ Inverse DFT (normalized by `1/n`): `x_j = (1/n) sum_k X_k * exp(+2*pi*i*j*k/n)`.
-        pub async fn inverse(&self, input: &[Complex]) -> Vec<Complex> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn inverse(&self, input: &[Complex]) -> Vec<Complex> {
             assert_eq!(input.len(), self.n, "Fft::inverse: input length must match plan length");
             let mut data = if self.power_of_two {
                 let mut d = input.to_vec();
                 fft_radix2_inplace(&mut d, true);
                 d
             } else {
-                fft_bluestein(input, true).await
+                fft_bluestein(input, true)
             };
             let inv_n = 1.0 / self.n as f64;
             for c in &mut data {
-                *c = c.scale(inv_n).await;
+                *c = c.scale(inv_n);
             }
             data
         }
@@ -6579,10 +6807,11 @@ pub mod fft {
 
     /// 🌊️ Real-input forward FFT, returning the one-sided spectrum (`n/2 + 1` bins, DC through
     /// Nyquist) since a real signal's full spectrum is Hermitian-symmetric.
-    pub async fn real_fft(input: &[f64]) -> Vec<Complex> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn real_fft(input: &[f64]) -> Vec<Complex> {
         let n = input.len();
         let complex: Vec<Complex> = input.iter().map(|&x| Complex::new(x, 0.0)).collect();
-        let full = Fft::new(n).await.forward(&complex);
+        let full = Fft::new(n).forward(&complex);
         full.into_iter().take(n / 2 + 1).collect()
     }
 
@@ -6627,7 +6856,8 @@ pub mod fft {
 
     /// 🌊️ Modified zeroth-order Bessel function `I0(x)`, needed by the Kaiser window, via its power
     /// series (converges rapidly for the `x` ranges Kaiser windows use).
-    async fn bessel_i0(x: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bessel_i0(x: f64) -> f64 {
         let mut term = 1.0_f64;
         let mut sum = 1.0_f64;
         let half_x_sq = (x / 2.0) * (x / 2.0);
@@ -6642,7 +6872,8 @@ pub mod fft {
     }
 
     /// 🌊️ Samples a length-`n` window of the given kind.
-    pub async fn window(kind: WindowKind, n: usize) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn window(kind: WindowKind, n: usize) -> Vec<f64> {
         if n == 0 {
             return Vec::new();
         }
@@ -6679,7 +6910,7 @@ pub mod fft {
             WindowKind::Tukey(alpha) => {
                 let alpha = alpha.clamp(0.0, 1.0);
                 if alpha <= 0.0 {
-                    return window(WindowKind::Rectangular, n).await;
+                    return window(WindowKind::Rectangular, n);
                 }
                 let taper = (alpha * nf / 2.0).floor() as usize;
                 (0..n)
@@ -6700,7 +6931,8 @@ pub mod fft {
 
     /// 🌊️ Validates that a window/segment length is nonzero, the one input check every windowed
     /// caller needs before slicing.
-    pub async fn validate_length(n: usize, what: &'static str) -> Result<(), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn validate_length(n: usize, what: &'static str) -> Result<(), EntropyError> {
         if n == 0 {
             return Err(EntropyError::EmptyInput { what });
         }
@@ -6713,7 +6945,8 @@ pub mod fft {
     mod tests {
         use super::*;
 
-        async fn approx_eq_complex(a: Complex, b: Complex, tol: f64) -> bool {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn approx_eq_complex(a: Complex, b: Complex, tol: f64) -> bool {
             (a.re - b.re).abs() < tol && (a.im - b.im).abs() < tol
         }
 
@@ -6866,13 +7099,15 @@ pub mod spectral {
 
     impl SpectralConfig {
         /// 📶️ Builds a config, validating that `overlap` is a finite fraction in `[0, 1)`.
-        pub async fn new(window: WindowKind, segment_len: usize, overlap: f64) -> Result<Self, EntropyError> {
-            validate_overlap(overlap).await?;
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(window: WindowKind, segment_len: usize, overlap: f64) -> Result<Self, EntropyError> {
+            validate_overlap(overlap)?;
             Ok(Self { window, segment_len, overlap, band: None, normalize: false })
         }
     }
 
-    async fn validate_overlap(overlap: f64) -> Result<(), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validate_overlap(overlap: f64) -> Result<(), EntropyError> {
         if !overlap.is_finite() || !(0.0..1.0).contains(&overlap) {
             return Err(EntropyError::InvalidConfig { field: "overlap", reason: "must be a finite fraction in [0, 1)" });
         }
@@ -6889,7 +7124,8 @@ pub mod spectral {
     /// When `cfg.normalize` is `true` the returned `Estimate.value` is instead the dimensionless
     /// ratio `H / ln(bins used)` in `[0, 1]` — a unitless measure of spectral flatness, not a proper
     /// entropy in any log base.
-    pub async fn spectral_entropy(x: &[f64], cfg: SpectralConfig) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn spectral_entropy(x: &[f64], cfg: SpectralConfig) -> Result<Estimate, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "spectral entropy input" });
         }
@@ -6898,7 +7134,7 @@ pub mod spectral {
                 return Err(EntropyError::NonFinite { what: "spectral entropy input", index: i });
             }
         }
-        validate_overlap(cfg.overlap).await?;
+        validate_overlap(cfg.overlap)?;
 
         let segment_len = if cfg.segment_len == 0 { x.len().min(256) } else { cfg.segment_len };
         if segment_len < 2 {
@@ -6909,8 +7145,8 @@ pub mod spectral {
         }
 
         let hop = (((segment_len as f64) * (1.0 - cfg.overlap)).round().max(1.0)) as usize;
-        let win = window(cfg.window, segment_len).await;
-        let plan = Fft::new(segment_len).await;
+        let win = window(cfg.window, segment_len);
+        let plan = Fft::new(segment_len);
         let n_bins = segment_len / 2 + 1;
 
         let mut power_sum = vec![0.0_f64; n_bins];
@@ -6918,7 +7154,7 @@ pub mod spectral {
         let mut start = 0usize;
         while start + segment_len <= x.len() {
             let segment: Vec<Complex> = x[start..start + segment_len].iter().zip(win.iter()).map(|(&xv, &wv)| Complex::new(xv * wv, 0.0)).collect();
-            let spectrum = plan.forward(&segment).await;
+            let spectrum = plan.forward(&segment);
             for k in 0..n_bins {
                 power_sum[k] += spectrum[k].norm_sq();
             }
@@ -6957,7 +7193,7 @@ pub mod spectral {
         let p: Vec<f64> = selected.iter().map(|&v| v / total_power).collect();
         let bins = p.len();
 
-        let entropy_nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats).await?;
+        let entropy_nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
         let value = if cfg.normalize {
             if bins <= 1 {
                 0.0
@@ -6992,11 +7228,13 @@ pub mod spectral {
     mod tests {
         use super::*;
 
-        async fn sine(n: usize, freq: f64, sample_rate: f64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn sine(n: usize, freq: f64, sample_rate: f64) -> Vec<f64> {
             (0..n).map(|i| (2.0 * core::f64::consts::PI * freq * i as f64 / sample_rate).sin()).collect()
         }
 
-        async fn white_noise(n: usize, seed: u64) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn white_noise(n: usize, seed: u64) -> Vec<f64> {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(seed);
             (0..n).map(|_| rng.next_f64() - 0.5).collect()
         }
@@ -7075,7 +7313,8 @@ pub mod wavelet {
     impl WaveletFamily {
         /// 🪢️ Number of taps in this family's filters; also the minimum signal length a single
         /// decomposition level can consume.
-        pub async fn filter_len(self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn filter_len(self) -> usize {
             match self {
                 Self::Haar => 2,
                 Self::Daubechies4 => 4,
@@ -7086,7 +7325,8 @@ pub mod wavelet {
 
         /// 🪢️ Orthonormal low-pass (scaling/approximation) decomposition filter coefficients, taps
         /// summing to `sqrt(2)`.
-        async fn low_pass(self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn low_pass(self) -> Vec<f64> {
             match self {
                 Self::Haar => {
                     let s = 1.0 / core::f64::consts::SQRT_2;
@@ -7105,7 +7345,8 @@ pub mod wavelet {
 
     /// 🪢️ Derives the high-pass (wavelet/detail) filter from a low-pass filter `h` via the quadrature
     /// mirror relation `g[n] = (-1)^n * h[len-1-n]`.
-    async fn high_pass(h: &[f64]) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn high_pass(h: &[f64]) -> Vec<f64> {
         let len = h.len();
         (0..len)
             .map(|n| {
@@ -7131,7 +7372,8 @@ pub mod wavelet {
 
     /// 🪢️ Resolves a possibly out-of-range tap index `idx` against a signal of length `n` under
     /// `mode`. Returns `None` only for [`BoundaryMode::Zero`] out-of-range reads (contribute nothing).
-    async fn resolve_index(idx: i64, n: usize, mode: BoundaryMode) -> Option<usize> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve_index(idx: i64, n: usize, mode: BoundaryMode) -> Option<usize> {
         let n_i = n as i64;
         if idx >= 0 && idx < n_i {
             return Some(idx as usize);
@@ -7159,14 +7401,15 @@ pub mod wavelet {
     /// 🪢️ One decomposition level: convolves `s` with `filter` and downsamples by 2, keeping output
     /// index `k` computed from input taps at `2*k + i` (boundary-resolved), `i` in `0..filter.len()`.
     /// Output length is `ceil(s.len() / 2)`.
-    async fn convolve_downsample(s: &[f64], filter: &[f64], boundary: BoundaryMode) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn convolve_downsample(s: &[f64], filter: &[f64], boundary: BoundaryMode) -> Vec<f64> {
         let n = s.len();
         let out_len = n.div_ceil(2);
         (0..out_len)
             .map(|k| {
                 neumaier_sum((0..filter.len()).filter_map(|i| {
                     let idx = 2 * k as i64 + i as i64;
-                    semio_framework_plugin::resolve_ready(resolve_index(idx, n, boundary)).map(|j| filter[i] * s[j])
+                    resolve_index(idx, n, boundary).map(|j| filter[i] * s[j])
                 }))
             })
             .collect()
@@ -7187,7 +7430,8 @@ pub mod wavelet {
 
     impl WaveletConfig {
         /// 🪢️ Builds a config, rejecting `levels == 0`.
-        pub async fn new(family: WaveletFamily, levels: usize, boundary: BoundaryMode) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(family: WaveletFamily, levels: usize, boundary: BoundaryMode) -> Result<Self, EntropyError> {
             if levels == 0 {
                 return Err(EntropyError::InvalidConfig { field: "levels", reason: "must be at least 1" });
             }
@@ -7211,10 +7455,11 @@ pub mod wavelet {
         /// subband. Stops early (without erroring) once the current approximation's length drops
         /// below the chosen family's filter length; the number of levels actually produced is
         /// reported by [`Dwt::levels_achieved`]. Rejects `x` shorter than the filter length outright.
-        pub async fn decompose(x: &[f64], cfg: WaveletConfig) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn decompose(x: &[f64], cfg: WaveletConfig) -> Result<Self, EntropyError> {
             let filter_len = cfg.family.filter_len();
-            if x.len() < filter_len.await {
-                return Err(EntropyError::InsufficientData { what: "wavelet decomposition", needed: filter_len.await, actual: x.len() });
+            if x.len() < filter_len {
+                return Err(EntropyError::InsufficientData { what: "wavelet decomposition", needed: filter_len, actual: x.len() });
             }
             let h = cfg.family.low_pass();
             let g = high_pass(&h);
@@ -7222,28 +7467,30 @@ pub mod wavelet {
             let mut details = Vec::with_capacity(cfg.levels);
             let mut levels_achieved = 0usize;
             for _ in 0..cfg.levels {
-                if approximation.len() < filter_len.await {
+                if approximation.len() < filter_len {
                     break;
                 }
                 let detail = convolve_downsample(&approximation, &g, cfg.boundary);
                 let next_approximation = convolve_downsample(&approximation, &h, cfg.boundary);
                 details.push(detail);
-                approximation = next_approximation.await;
+                approximation = next_approximation;
                 levels_achieved += 1;
             }
             Ok(Self { details, approximation, levels_achieved })
         }
 
         /// 🪢️ Number of levels actually produced (`<= cfg.levels`; see [`Dwt::decompose`]).
-        pub async fn levels_achieved(&self) -> usize {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn levels_achieved(&self) -> usize {
             self.levels_achieved
         }
 
         /// 🪢️ Energy (sum of squared coefficients) of each subband, detail levels finest-first
         /// followed by the final approximation.
-        pub async fn subband_energies(&self) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn subband_energies(&self) -> Vec<f64> {
             let mut energies: Vec<f64> = self.details.iter().map(|d| neumaier_sum(d.iter().map(|&v| v * v))).collect();
-            energies.push(neumaier_sum(self.approximation.iter().map(|&v| v * v)).await);
+            energies.push(neumaier_sum(self.approximation.iter().map(|&v| v * v)));
             energies
         }
     }
@@ -7254,15 +7501,16 @@ pub mod wavelet {
     /// (energy / total energy across all subbands), and reports the Shannon entropy (in nats) of that
     /// distribution — low when energy concentrates in a few subbands (smooth or tonal signals), high
     /// when it spreads evenly across scales (noise-like signals).
-    pub async fn wavelet_entropy(x: &[f64], cfg: WaveletConfig) -> Result<Estimate, EntropyError> {
-        let dwt = Dwt::decompose(x, cfg).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn wavelet_entropy(x: &[f64], cfg: WaveletConfig) -> Result<Estimate, EntropyError> {
+        let dwt = Dwt::decompose(x, cfg)?;
         let energies = dwt.subband_energies();
-        let total = neumaier_sum(energies.await.iter().copied());
+        let total = neumaier_sum(energies.iter().copied());
         if total <= 1e-300 {
             return Err(EntropyError::DegenerateInput { what: "wavelet subband energies sum to ~0" });
         }
-        let p: Vec<f64> = energies.await.iter().map(|&e| (e / total).max(0.0)).collect();
-        let nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats).await?;
+        let p: Vec<f64> = energies.iter().map(|&e| (e / total).max(0.0)).collect();
+        let nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
 
         let n = x.len();
         let mut warnings = Vec::new();
@@ -7414,7 +7662,8 @@ pub mod matrix {
     /// 🔢️ Cyclic Jacobi eigenvalue algorithm for a real symmetric `n x n` matrix (row-major).
     /// Returns `(eigenvalues, eigenvectors)` with eigenvalues sorted descending and `eigenvectors`
     /// row-major where column `j` is the eigenvector for `eigenvalues[j]`.
-    pub async fn jacobi_eigen_symmetric(a_in: &[f64], n: usize) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn jacobi_eigen_symmetric(a_in: &[f64], n: usize) -> Result<(Vec<f64>, Vec<f64>), EntropyError> {
         if n == 0 {
             return Err(EntropyError::EmptyInput { what: "matrix" });
         }
@@ -7528,7 +7777,8 @@ pub mod matrix {
     /// (row-major), returning the lower-triangular factor `L` (row-major, zeros above the diagonal).
     /// Falls back to progressively larger diagonal (Tikhonov) regularization if a pivot is
     /// non-positive due to floating-point noise near singularity.
-    pub async fn cholesky(a: &[f64], n: usize) -> Result<Vec<f64>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn cholesky(a: &[f64], n: usize) -> Result<Vec<f64>, EntropyError> {
         if n == 0 {
             return Err(EntropyError::EmptyInput { what: "matrix" });
         }
@@ -7566,8 +7816,9 @@ pub mod matrix {
 
     /// 🔢️ `ln|det(A)|` of a symmetric positive-definite matrix via `2 * sum(ln(L_ii))` from its
     /// Cholesky factor.
-    pub async fn log_det(a: &[f64], n: usize) -> Result<f64, EntropyError> {
-        let l = cholesky(a, n).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn log_det(a: &[f64], n: usize) -> Result<f64, EntropyError> {
+        let l = cholesky(a, n)?;
         Ok(2.0 * (0..n).map(|i| l[i * n + i].ln()).sum::<f64>())
     }
     // #endregion 🔖️Cholesky
@@ -7579,7 +7830,8 @@ pub mod matrix {
     pub type SvdResult = (Vec<f64>, Vec<f64>, Vec<f64>);
 
     /// 🔢️ One-sided Jacobi SVD of an `rows x cols` matrix (row-major) with `rows >= cols`.
-    pub async fn svd_jacobi(a: &[f64], rows: usize, cols: usize) -> Result<SvdResult, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn svd_jacobi(a: &[f64], rows: usize, cols: usize) -> Result<SvdResult, EntropyError> {
         if rows == 0 || cols == 0 {
             return Err(EntropyError::EmptyInput { what: "matrix" });
         }
@@ -7665,8 +7917,9 @@ pub mod matrix {
     // #region 🔖️Entropy
     /// 🔢️ Shannon entropy of the normalized singular-value spectrum of `data` (`rows x cols`,
     /// row-major), a measure of the matrix's effective rank / concentration of variance.
-    pub async fn svd_entropy(data: &[f64], rows: usize, cols: usize, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn svd_entropy(data: &[f64], rows: usize, cols: usize, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         let (transposed, r, c) = if rows >= cols {
             (data.to_vec(), rows, cols)
         } else {
@@ -7678,14 +7931,14 @@ pub mod matrix {
             }
             (t, cols, rows)
         };
-        let (_, singular_values, _) = svd_jacobi(&transposed, r, c).await?;
+        let (_, singular_values, _) = svd_jacobi(&transposed, r, c)?;
         let sum: f64 = singular_values.iter().sum();
         if sum <= 0.0 {
             return Err(EntropyError::DegenerateInput { what: "all singular values are zero" });
         }
         let p: Vec<f64> = singular_values.iter().map(|&s| s / sum).collect();
-        let h = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base).await?;
-        let nats = base.to_nats(h).await;
+        let h = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base)?;
+        let nats = base.to_nats(h);
         let effective_rank = nats.exp();
         let stable_rank = singular_values.iter().map(|s| s * s).sum::<f64>() / singular_values[0].max(1e-300).powi(2);
 
@@ -7705,9 +7958,10 @@ pub mod matrix {
     /// 🔢️ Von Neumann entropy `-tr(rho ln rho)` of a symmetric positive-semidefinite density matrix
     /// `rho` (row-major `n x n`, trace approximately `1`). Eigenvalues within `n * eps * max|lambda|`
     /// of zero are clipped; further-negative eigenvalues are rejected as not positive-semidefinite.
-    pub async fn von_neumann_entropy(density: &[f64], n: usize, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
-        let (eigenvalues, _) = jacobi_eigen_symmetric(density, n).await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn von_neumann_entropy(density: &[f64], n: usize, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
+        let (eigenvalues, _) = jacobi_eigen_symmetric(density, n)?;
         let max_abs = eigenvalues.iter().copied().fold(0.0_f64, |acc, v| acc.max(v.abs()));
         let tol_neg = n as f64 * f64::EPSILON * max_abs;
         let mut warnings = Vec::new();
@@ -7724,8 +7978,8 @@ pub mod matrix {
                 clipped.push(lambda);
             }
         }
-        let p = validate_probabilities(&clipped, Tolerances::default()).await?;
-        let h = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base).await?;
+        let p = validate_probabilities(&clipped, Tolerances::default())?;
+        let h = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base)?;
         let rank = p.iter().filter(|&&v| v > 1e-12).count();
 
         Ok(Estimate { value: h, base, method: "von_neumann", n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("rank", rank as f64)] })
@@ -7737,7 +7991,8 @@ pub mod matrix {
     mod tests {
         use super::*;
 
-        async fn matmul(a: &[f64], b: &[f64], m: usize, k: usize, n: usize) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn matmul(a: &[f64], b: &[f64], m: usize, k: usize, n: usize) -> Vec<f64> {
             let mut out = vec![0.0_f64; m * n];
             for i in 0..m {
                 for j in 0..n {
@@ -7751,7 +8006,8 @@ pub mod matrix {
             out
         }
 
-        async fn transpose(a: &[f64], rows: usize, cols: usize) -> Vec<f64> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn transpose(a: &[f64], rows: usize, cols: usize) -> Vec<f64> {
             let mut out = vec![0.0_f64; rows * cols];
             for i in 0..rows {
                 for j in 0..cols {
@@ -7911,7 +8167,8 @@ pub mod inference {
     // #region 🔖️ConfidenceIntervals
     /// 🧪️ Linear-interpolated percentile of an already-sorted slice (`p` in `[0, 1]`), interpolating
     /// between the two nearest order statistics when `p * (n - 1)` falls between integer indices.
-    async fn percentile(sorted: &[f64], p: f64) -> f64 {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn percentile(sorted: &[f64], p: f64) -> f64 {
         let n = sorted.len();
         if n == 1 {
             return sorted[0];
@@ -7923,7 +8180,8 @@ pub mod inference {
         sorted[lo] + (sorted[hi] - sorted[lo]) * frac
     }
 
-    async fn validate_ci_inputs(data: &[f64], level: f64, what: &'static str) -> Result<(), EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn validate_ci_inputs(data: &[f64], level: f64, what: &'static str) -> Result<(), EntropyError> {
         if data.is_empty() {
             return Err(EntropyError::EmptyInput { what });
         }
@@ -7940,32 +8198,34 @@ pub mod inference {
     /// replacement `n_bootstrap` times (via a single [`Xorshift64`] seeded from `seed`, advanced
     /// across all resamples), computes `statistic` on each resample, and returns the
     /// `(1-level)/2`/`1-(1-level)/2` percentiles of the resulting distribution as `lower`/`upper`.
-    pub async fn bootstrap_ci(data: &[f64], statistic: impl Fn(&[f64]) -> f64, n_bootstrap: usize, level: f64, seed: u64) -> Result<ConfidenceInterval, EntropyError> {
-        validate_ci_inputs(data, level, "bootstrap_ci").await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bootstrap_ci(data: &[f64], statistic: impl Fn(&[f64]) -> f64, n_bootstrap: usize, level: f64, seed: u64) -> Result<ConfidenceInterval, EntropyError> {
+        validate_ci_inputs(data, level, "bootstrap_ci")?;
         if n_bootstrap == 0 {
             return Err(EntropyError::InvalidConfig { field: "n_bootstrap", reason: "must be at least 1" });
         }
         let n = data.len();
-        let mut rng = Xorshift64::new(seed).await;
+        let mut rng = Xorshift64::new(seed);
         let mut resample = vec![0.0; n];
         let mut stats: Vec<f64> = Vec::with_capacity(n_bootstrap);
         for _ in 0..n_bootstrap {
             for slot in resample.iter_mut() {
-                *slot = data[rng.next_below(n).await];
+                *slot = data[rng.next_below(n)];
             }
             stats.push(statistic(&resample));
         }
         stats.sort_by(f64::total_cmp);
         let tail = (1.0 - level) / 2.0;
-        Ok(ConfidenceInterval { lower: percentile(&stats, tail).await, upper: percentile(&stats, 1.0 - tail).await, level })
+        Ok(ConfidenceInterval { lower: percentile(&stats, tail), upper: percentile(&stats, 1.0 - tail), level })
     }
 
     /// 🧪️ Jackknife (delete-one) confidence interval: computes `statistic` on each of the `n`
     /// leave-one-out subsets, derives the jackknife standard error
     /// `sqrt((n-1)/n * sum((theta_i - theta_bar)^2))`, and returns `theta_full +/- z * se` with
     /// `z = inverse_normal_cdf(0.5 + level/2)`.
-    pub async fn jackknife_ci(data: &[f64], statistic: impl Fn(&[f64]) -> f64, level: f64) -> Result<ConfidenceInterval, EntropyError> {
-        validate_ci_inputs(data, level, "jackknife_ci").await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn jackknife_ci(data: &[f64], statistic: impl Fn(&[f64]) -> f64, level: f64) -> Result<ConfidenceInterval, EntropyError> {
+        validate_ci_inputs(data, level, "jackknife_ci")?;
         let n = data.len();
         let theta_full = statistic(data);
         let mut leave_one_out = Vec::with_capacity(n - 1);
@@ -7991,7 +8251,8 @@ pub mod inference {
     /// advancing across permutations rather than reseeding each iteration) and recomputes the
     /// statistic. Returns the two-sided p-value
     /// `(count(|stat_perm| >= |stat_obs|) + 1) / (n_permutations + 1)`.
-    pub async fn permutation_test(x: &[f64], y: &[f64], statistic: impl Fn(&[f64], &[f64]) -> f64, n_permutations: usize, seed: u64) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn permutation_test(x: &[f64], y: &[f64], statistic: impl Fn(&[f64], &[f64]) -> f64, n_permutations: usize, seed: u64) -> Result<f64, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -8006,10 +8267,10 @@ pub mod inference {
         let mut pooled: Vec<f64> = Vec::with_capacity(nx + y.len());
         pooled.extend_from_slice(x);
         pooled.extend_from_slice(y);
-        let mut rng = Xorshift64::new(seed).await;
+        let mut rng = Xorshift64::new(seed);
         let mut count = 0usize;
         for _ in 0..n_permutations {
-            rng.shuffle(&mut pooled).await;
+            rng.shuffle(&mut pooled);
             let stat = statistic(&pooled[..nx], &pooled[nx..]).abs();
             if stat >= observed {
                 count += 1;
@@ -8049,7 +8310,8 @@ pub mod inference {
 
     impl SurrogateConfig {
         /// 🧪️ Validates `count >= 1` and, for [`SurrogateKind::BlockShuffle`], `block_size >= 1`.
-        pub async fn new(kind: SurrogateKind, count: usize, seed: u64) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(kind: SurrogateKind, count: usize, seed: u64) -> Result<Self, EntropyError> {
             if count == 0 {
                 return Err(EntropyError::InvalidConfig { field: "count", reason: "must be at least 1" });
             }
@@ -8062,13 +8324,15 @@ pub mod inference {
         }
     }
 
-    async fn circular_shift_surrogate(x: &[f64], rng: &mut Xorshift64) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn circular_shift_surrogate(x: &[f64], rng: &mut Xorshift64) -> Vec<f64> {
         let n = x.len();
         let k = 1 + rng.next_below(n - 1);
         (0..n).map(|i| x[(i + k) % n]).collect()
     }
 
-    async fn block_shuffle_surrogate(x: &[f64], block_size: usize, rng: &mut Xorshift64) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn block_shuffle_surrogate(x: &[f64], block_size: usize, rng: &mut Xorshift64) -> Vec<f64> {
         let chunks: Vec<&[f64]> = x.chunks(block_size).collect();
         let mut order: Vec<usize> = (0..chunks.len()).collect();
         rng.shuffle(&mut order);
@@ -8082,28 +8346,31 @@ pub mod inference {
     /// 🧪️ Multiplies every positive-frequency bin (excluding DC and, for even `n`, the Nyquist bin)
     /// by a random unit-magnitude phasor and mirrors the conjugate into the matching negative
     /// frequency bin so the spectrum stays Hermitian-symmetric (the inverse transform is then real).
-    async fn randomize_phases(spectrum: &mut [Complex], rng: &mut Xorshift64) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn randomize_phases(spectrum: &mut [Complex], rng: &mut Xorshift64) {
         let n = spectrum.len();
         let half = (n - 1) / 2;
         for k in 1..=half {
             let rotation = Complex::from_polar(1.0, rng.next_f64() * 2.0 * core::f64::consts::PI);
-            spectrum[k] = spectrum[k] * rotation.await;
-            spectrum[n - k] = spectrum[k].conj().await;
+            spectrum[k] = spectrum[k] * rotation;
+            spectrum[n - k] = spectrum[k].conj();
         }
     }
 
-    async fn phase_randomized_surrogate(x: &[f64], rng: &mut Xorshift64) -> Vec<f64> {
-        let fft = Fft::new(x.len()).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn phase_randomized_surrogate(x: &[f64], rng: &mut Xorshift64) -> Vec<f64> {
+        let fft = Fft::new(x.len());
         let input: Vec<Complex> = x.iter().map(|&v| Complex::new(v, 0.0)).collect();
-        let mut spectrum = fft.forward(&input).await;
+        let mut spectrum = fft.forward(&input);
         randomize_phases(&mut spectrum, rng);
-        fft.inverse(&spectrum).await.iter().map(|c| c.re).collect()
+        fft.inverse(&spectrum).iter().map(|c| c.re).collect()
     }
 
     /// 🧪️ Amplitude-adjustment step: replaces each value of `current` with the value from
     /// `sorted_original` at the same rank, so the result's exact value distribution matches the
     /// original's.
-    async fn rank_adjust(current: &[f64], sorted_original: &[f64]) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn rank_adjust(current: &[f64], sorted_original: &[f64]) -> Vec<f64> {
         let n = current.len();
         let mut order: Vec<usize> = (0..n).collect();
         order.sort_by(|&a, &b| current[a].total_cmp(&current[b]));
@@ -8114,9 +8381,10 @@ pub mod inference {
         result
     }
 
-    async fn iaaft_surrogate(x: &[f64], iterations: usize, rng: &mut Xorshift64) -> Vec<f64> {
-        let fft = Fft::new(x.len()).await;
-        let original_spectrum = fft.forward(&x.iter().map(|&v| Complex::new(v, 0.0)).collect::<Vec<_>>()).await;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn iaaft_surrogate(x: &[f64], iterations: usize, rng: &mut Xorshift64) -> Vec<f64> {
+        let fft = Fft::new(x.len());
+        let original_spectrum = fft.forward(&x.iter().map(|&v| Complex::new(v, 0.0)).collect::<Vec<_>>());
         let original_magnitude: Vec<f64> = original_spectrum.iter().map(|c| c.abs()).collect();
         let mut sorted_original = x.to_vec();
         sorted_original.sort_by(f64::total_cmp);
@@ -8125,9 +8393,9 @@ pub mod inference {
         let mut rank_adjusted = current.clone();
         for _ in 0..iterations {
             rank_adjusted = rank_adjust(&current, &sorted_original);
-            let ranked_spectrum = fft.forward(&rank_adjusted.iter().map(|&v| Complex::new(v, 0.0)).collect::<Vec<_>>()).await;
+            let ranked_spectrum = fft.forward(&rank_adjusted.iter().map(|&v| Complex::new(v, 0.0)).collect::<Vec<_>>());
             let adjusted_spectrum: Vec<Complex> = ranked_spectrum.iter().zip(original_magnitude.iter()).map(|(c, &magnitude)| Complex::from_polar(magnitude, c.arg())).collect();
-            current = fft.inverse(&adjusted_spectrum).await.iter().map(|c| c.re).collect();
+            current = fft.inverse(&adjusted_spectrum).iter().map(|c| c.re).collect();
         }
         rank_adjusted
     }
@@ -8135,7 +8403,8 @@ pub mod inference {
     /// 🧪️ Generates `cfg.count` surrogate series of the same length as `x`, per `cfg.kind`. Uses a
     /// single [`Xorshift64`] seeded from `cfg.seed` and advanced across every generated surrogate
     /// (never reseeded per-surrogate) so the whole batch is reproducible from one seed.
-    pub async fn surrogate_series(x: &[f64], cfg: &SurrogateConfig) -> Result<Vec<Vec<f64>>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn surrogate_series(x: &[f64], cfg: &SurrogateConfig) -> Result<Vec<Vec<f64>>, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -8159,7 +8428,8 @@ pub mod inference {
     /// caller's original order), whether it is rejected (declared significant) at FDR level `alpha`:
     /// sort ascending, find the largest `k` such that `p_(k) <= (k/m) * alpha`, reject all `p_(i)`
     /// for `i <= k`.
-    pub async fn fdr_bh(p_values: &[f64], alpha: f64) -> Result<Vec<bool>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn fdr_bh(p_values: &[f64], alpha: f64) -> Result<Vec<bool>, EntropyError> {
         if p_values.is_empty() {
             return Err(EntropyError::EmptyInput { what: "p_values" });
         }
@@ -8190,7 +8460,8 @@ pub mod inference {
     mod tests {
         use super::*;
 
-        async fn mean(data: &[f64]) -> f64 {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        fn mean(data: &[f64]) -> f64 {
             data.iter().sum::<f64>() / data.len() as f64
         }
 
@@ -8395,7 +8666,8 @@ pub mod transfer {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Embedding
-    async fn quantile_bin(x: &[f64], bins: usize) -> Vec<u32> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn quantile_bin(x: &[f64], bins: usize) -> Vec<u32> {
         let mut sorted = x.to_vec();
         sorted.sort_by(|a, b| a.total_cmp(b));
         let edges: Vec<f64> = (1..bins).map(|i| sorted[(sorted.len() * i / bins).min(sorted.len() - 1)]).collect();
@@ -8404,7 +8676,8 @@ pub mod transfer {
 
     /// ➡️ Delay-embedded history matrix (row-major, `n_rows x dim`) of `x[i-dim..i]` for `i` in
     /// `start..x.len()`, most-recent sample last in each row.
-    async fn history_matrix(x: &[f64], dim: usize, start: usize) -> Vec<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn history_matrix(x: &[f64], dim: usize, start: usize) -> Vec<f64> {
         let mut out = Vec::with_capacity((x.len() - start) * dim);
         for i in start..x.len() {
             for j in 0..dim {
@@ -8418,19 +8691,20 @@ pub mod transfer {
     // #region 🔖️KsgGeneralized
     /// ➡️ Generalized KSG-1 mutual information for multivariate `X` (`x_dim` columns) and `Y`
     /// (`y_dim` columns) packed as `[X | Y]` row-major joint points.
-    async fn ksg1_generalized(joint: &[f64], total_dim: usize, x_dim: usize, k: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ksg1_generalized(joint: &[f64], total_dim: usize, x_dim: usize, k: usize) -> Result<f64, EntropyError> {
         let n = joint.len() / total_dim;
         if k == 0 || k >= n {
             return Err(EntropyError::InvalidConfig { field: "k", reason: "must satisfy 0 < k < n" });
         }
-        let tree = KdTree::build(joint, total_dim).await?;
+        let tree = KdTree::build(joint, total_dim)?;
         let row = |i: usize| -> &[f64] { &joint[i * total_dim..(i + 1) * total_dim] };
         let sub_dist = |a: &[f64], b: &[f64], lo: usize, hi: usize| -> f64 { (lo..hi).map(|d| (a[d] - b[d]).abs()).fold(0.0_f64, f64::max) };
 
         let mut sum = 0.0_f64;
         for i in 0..n {
             let neighbors = tree.k_nearest(row(i), k, Metric::Chebyshev, Some(i));
-            let eps = neighbors.await.last().map_or(0.0, |&(_, d)| d);
+            let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
             let mut nx = 0usize;
             let mut ny = 0usize;
             for j in 0..n {
@@ -8451,20 +8725,21 @@ pub mod transfer {
 
     /// ➡️ Generalized Frenzel-Pompe kNN conditional mutual information `I(X;Y|Z)` for multivariate
     /// `X`/`Y`/`Z` packed as `[X | Y | Z]` row-major joint points.
-    async fn ksg_cmi_generalized(joint: &[f64], total_dim: usize, x_dim: usize, y_dim: usize, k: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn ksg_cmi_generalized(joint: &[f64], total_dim: usize, x_dim: usize, y_dim: usize, k: usize) -> Result<f64, EntropyError> {
         let n = joint.len() / total_dim;
         if k == 0 || k >= n {
             return Err(EntropyError::InvalidConfig { field: "k", reason: "must satisfy 0 < k < n" });
         }
         let z_start = x_dim + y_dim;
-        let tree = KdTree::build(joint, total_dim).await?;
+        let tree = KdTree::build(joint, total_dim)?;
         let row = |i: usize| -> &[f64] { &joint[i * total_dim..(i + 1) * total_dim] };
         let sub_dist = |a: &[f64], b: &[f64], lo: usize, hi: usize| -> f64 { (lo..hi).map(|d| (a[d] - b[d]).abs()).fold(0.0_f64, f64::max) };
 
         let mut sum = 0.0_f64;
         for i in 0..n {
             let neighbors = tree.k_nearest(row(i), k, Metric::Chebyshev, Some(i));
-            let eps = neighbors.await.last().map_or(0.0, |&(_, d)| d);
+            let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
             let mut n_xz = 0usize;
             let mut n_yz = 0usize;
             let mut n_z = 0usize;
@@ -8508,7 +8783,8 @@ pub mod transfer {
     }
 
     impl TransferConfig {
-        pub async fn new(k_history: usize, l_history: usize, backend: TeBackend) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(k_history: usize, l_history: usize, backend: TeBackend) -> Result<Self, EntropyError> {
             if k_history == 0 || l_history == 0 {
                 return Err(EntropyError::InvalidConfig { field: "history", reason: "k_history and l_history must be at least 1" });
             }
@@ -8519,7 +8795,8 @@ pub mod transfer {
 
     // #region 🔖️TransferEntropy
     /// ➡️ Transfer entropy `TE(source -> target) = I(target_future ; source_past | target_past)`.
-    pub async fn transfer_entropy(source: &[f64], target: &[f64], cfg: TransferConfig) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn transfer_entropy(source: &[f64], target: &[f64], cfg: TransferConfig) -> Result<Estimate, EntropyError> {
         if source.len() != target.len() {
             return Err(EntropyError::LengthMismatch { expected: source.len(), actual: target.len() });
         }
@@ -8553,7 +8830,7 @@ pub mod transfer {
                     c.push(target_symbols[i]);
                 }
                 let _ = (a_size, b_size);
-                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::mutual::conditional_mutual_information(&a, &c, &b, LogBase::Nats).await?.value
+                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::mutual::conditional_mutual_information(&a, &c, &b, LogBase::Nats)?.value
             }
             TeBackend::Knn { k } => {
                 let a = history_matrix(source, cfg.l_history, start);
@@ -8566,7 +8843,7 @@ pub mod transfer {
                     joint.extend_from_slice(&b[i * cfg.k_history..(i + 1) * cfg.k_history]);
                     joint.push(c[i]);
                 }
-                ksg_cmi_generalized(&joint, total_dim, cfg.l_history, 1, k).await?
+                ksg_cmi_generalized(&joint, total_dim, cfg.l_history, 1, k)?
             }
         };
         let nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
@@ -8577,7 +8854,7 @@ pub mod transfer {
         }
 
         Ok(Estimate {
-            value: nats.await,
+            value: nats,
             base: LogBase::Nats,
             method: "transfer_entropy",
             n: n_samples,
@@ -8593,8 +8870,9 @@ pub mod transfer {
     // #region 🔖️ActiveInformationStorage
     /// ➡️ Active information storage `AIS(Y) = I(Y_future ; Y_past)`, how predictable a series is
     /// from its own `k_history`-length past.
-    pub async fn active_information_storage(x: &[f64], k_history: usize, backend: TeBackend, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn active_information_storage(x: &[f64], k_history: usize, backend: TeBackend, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if k_history == 0 {
             return Err(EntropyError::InvalidConfig { field: "k_history", reason: "must be at least 1" });
         }
@@ -8625,7 +8903,7 @@ pub mod transfer {
                     &future,
                     crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::estimators::DiscreteMethod::Plugin,
                     LogBase::Nats,
-                ).await?
+                )?
                 .value
             }
             TeBackend::Knn { k } => {
@@ -8637,13 +8915,13 @@ pub mod transfer {
                     joint.extend_from_slice(&past[i * k_history..(i + 1) * k_history]);
                     joint.push(future[i]);
                 }
-                ksg1_generalized(&joint, total_dim, k_history, k).await?
+                ksg1_generalized(&joint, total_dim, k_history, k)?
             }
         };
         let clamped = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
 
         Ok(Estimate {
-            value: base.from_nats(clamped.await).await,
+            value: base.from_nats(clamped),
             base,
             method: "active_information_storage",
             n: n_samples,
@@ -8772,7 +9050,8 @@ pub mod spatial {
     }
 
     impl SpatialConfig {
-        pub async fn new(method: SpatialMethod, bins: usize) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(method: SpatialMethod, bins: usize) -> Result<Self, EntropyError> {
             if bins < 2 {
                 return Err(EntropyError::InvalidConfig { field: "bins", reason: "must be at least 2" });
             }
@@ -8782,7 +9061,8 @@ pub mod spatial {
     // #endregion 🔖️Config
 
     // #region 🔖️Binning
-    async fn bin_pixels(pixels: &[f64], bins: usize) -> Result<Vec<usize>, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bin_pixels(pixels: &[f64], bins: usize) -> Result<Vec<usize>, EntropyError> {
         let (min, max) = pixels.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)));
         if max <= min {
             return Err(EntropyError::DegenerateInput { what: "constant image has zero dynamic range" });
@@ -8793,7 +9073,8 @@ pub mod spatial {
 
     // #region 🔖️Dispatch
     /// 🖼️ Computes a spatial entropy measure over a row-major `width x height` pixel grid.
-    pub async fn entropy_2d(pixels: &[f64], width: usize, height: usize, cfg: SpatialConfig) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn entropy_2d(pixels: &[f64], width: usize, height: usize, cfg: SpatialConfig) -> Result<Estimate, EntropyError> {
         if pixels.is_empty() {
             return Err(EntropyError::EmptyInput { what: "pixels" });
         }
@@ -8805,7 +9086,7 @@ pub mod spatial {
                 return Err(EntropyError::NonFinite { what: "pixels", index: i });
             }
         }
-        let levels = bin_pixels(pixels, cfg.bins).await?;
+        let levels = bin_pixels(pixels, cfg.bins)?;
 
         let (nats, method, diagnostics) = match cfg.method {
             SpatialMethod::Global => {
@@ -8846,7 +9127,7 @@ pub mod spatial {
             warnings.push(Warning::SmallSample { n: pixels.len(), recommended: 10 * cfg.bins });
         }
 
-        Ok(Estimate { value: LogBase::Nats.from_nats(nats).await, base: LogBase::Nats, method, n: pixels.len(), n_effective: pixels.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
+        Ok(Estimate { value: LogBase::Nats.from_nats(nats), base: LogBase::Nats, method, n: pixels.len(), n_effective: pixels.len() as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics })
     }
     // #endregion 🔖️Dispatch
 
@@ -8917,8 +9198,9 @@ pub mod graph {
     // #region 🔖️Degree
     /// 🕸️ Shannon entropy of the (out-)degree distribution of a graph given as an edge list.
     /// `directed` selects out-degree counting; undirected counts each edge toward both endpoints.
-    pub async fn degree_distribution_entropy(edges: &[(u32, u32)], n_nodes: usize, directed: bool, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn degree_distribution_entropy(edges: &[(u32, u32)], n_nodes: usize, directed: bool, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if n_nodes == 0 {
             return Err(EntropyError::EmptyInput { what: "n_nodes" });
         }
@@ -8947,7 +9229,7 @@ pub mod graph {
         }
 
         Ok(Estimate {
-            value: base.from_nats(nats).await,
+            value: base.from_nats(nats),
             base,
             method: "degree_distribution_entropy",
             n: n_nodes,
@@ -8964,8 +9246,9 @@ pub mod graph {
     /// 🕸️ Random-walk entropy rate `sum_i pi_i * H(row_i)`: the average per-step uncertainty of a
     /// simple (optionally weighted) random walk on the graph, weighted by the walk's stationary node
     /// distribution (via power iteration).
-    pub async fn random_walk_entropy_rate(edges: &[(u32, u32)], n_nodes: usize, weights: Option<&[f64]>, base: LogBase) -> Result<Estimate, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn random_walk_entropy_rate(edges: &[(u32, u32)], n_nodes: usize, weights: Option<&[f64]>, base: LogBase) -> Result<Estimate, EntropyError> {
+        base.validate()?;
         if n_nodes == 0 {
             return Err(EntropyError::EmptyInput { what: "n_nodes" });
         }
@@ -9028,7 +9311,7 @@ pub mod graph {
         let nats = pi.iter().zip(row_entropy_nats.iter()).map(|(&p, &h)| p * h).sum::<f64>();
 
         Ok(Estimate {
-            value: base.from_nats(nats).await,
+            value: base.from_nats(nats),
             base,
             method: "random_walk_entropy_rate",
             n: n_nodes,
@@ -9105,8 +9388,9 @@ pub mod ml {
 
     // #region 🔖️Predictive
     /// 🤖️ Shannon entropy of each row of a row-major `[n_samples x n_classes]` probability batch.
-    pub async fn predictive_entropy(probs: &[f64], n_classes: usize, base: LogBase) -> Result<Vec<Estimate>, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn predictive_entropy(probs: &[f64], n_classes: usize, base: LogBase) -> Result<Vec<Estimate>, EntropyError> {
+        base.validate()?;
         if n_classes == 0 {
             return Err(EntropyError::InvalidConfig { field: "n_classes", reason: "must be at least 1" });
         }
@@ -9117,9 +9401,9 @@ pub mod ml {
         let mut out = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let row = &probs[i * n_classes..(i + 1) * n_classes];
-            let p = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(row, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default()).await?;
+            let p = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(row, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
             let nats = -p.iter().map(|&v| x_ln_x(v)).sum::<f64>();
-            out.push(Estimate { value: base.from_nats(nats).await, base, method: "predictive_entropy", n: n_classes, n_effective: n_classes as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: Vec::new() });
+            out.push(Estimate { value: base.from_nats(nats), base, method: "predictive_entropy", n: n_classes, n_effective: n_classes as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: Vec::new() });
         }
         Ok(out)
     }
@@ -9130,8 +9414,9 @@ pub mod ml {
     /// splitting total predictive uncertainty into epistemic (this value) and aleatoric (the
     /// subtracted mean-member-entropy term) components. `ensemble_probs` is row-major
     /// `[n_samples][n_members][n_classes]` flattened.
-    pub async fn bald_mutual_information(ensemble_probs: &[f64], n_members: usize, n_classes: usize, base: LogBase) -> Result<Vec<Estimate>, EntropyError> {
-        base.validate().await?;
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn bald_mutual_information(ensemble_probs: &[f64], n_members: usize, n_classes: usize, base: LogBase) -> Result<Vec<Estimate>, EntropyError> {
+        base.validate()?;
         if n_members == 0 || n_classes == 0 {
             return Err(EntropyError::InvalidConfig { field: "n_members/n_classes", reason: "must be at least 1" });
         }
@@ -9148,19 +9433,19 @@ pub mod ml {
             for m in 0..n_members {
                 let member = &sample[m * n_classes..(m + 1) * n_classes];
                 let p =
-                    crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(member, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default()).await?;
+                    crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(member, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
                 for c in 0..n_classes {
                     mean_probs[c] += p[c] / n_members as f64;
                 }
                 mean_member_entropy_nats += -p.iter().map(|&v| x_ln_x(v)).sum::<f64>() / n_members as f64;
             }
             let mean_probs =
-                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default()).await?;
+                crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
             let predictive_nats = -mean_probs.iter().map(|&v| x_ln_x(v)).sum::<f64>();
             let bald_nats = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(predictive_nats - mean_member_entropy_nats, 1e-9);
 
             out.push(Estimate {
-                value: base.from_nats(bald_nats.await).await,
+                value: base.from_nats(bald_nats),
                 base,
                 method: "bald_mutual_information",
                 n: n_members,
@@ -9168,7 +9453,7 @@ pub mod ml {
                 std_error: None,
                 ci: None::<ConfidenceInterval>,
                 warnings: Vec::new(),
-                diagnostics: vec![("predictive_entropy", base.from_nats(predictive_nats).await), ("mean_member_entropy", base.from_nats(mean_member_entropy_nats).await)],
+                diagnostics: vec![("predictive_entropy", base.from_nats(predictive_nats)), ("mean_member_entropy", base.from_nats(mean_member_entropy_nats))],
             });
         }
         Ok(out)
@@ -9178,7 +9463,8 @@ pub mod ml {
     // #region 🔖️Calibration
     /// 🤖️ Expected calibration error: bins predictions by confidence into `n_bins` equal-width bins
     /// in `[0,1]`, and reports the confidence-weighted average `|accuracy - confidence|` per bin.
-    pub async fn expected_calibration_error(confidences: &[f64], correct: &[bool], n_bins: usize) -> Result<f64, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn expected_calibration_error(confidences: &[f64], correct: &[bool], n_bins: usize) -> Result<f64, EntropyError> {
         if confidences.len() != correct.len() {
             return Err(EntropyError::LengthMismatch { expected: confidences.len(), actual: correct.len() });
         }
@@ -9330,7 +9616,8 @@ pub mod streaming {
     // #endregion 🔖️Trait
 
     // #region 🔖️Shared
-    async fn plugin_entropy_from_counts(counts: &[f64], base: LogBase, method: &'static str, n_raw: usize) -> Estimate {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn plugin_entropy_from_counts(counts: &[f64], base: LogBase, method: &'static str, n_raw: usize) -> Estimate {
         let total: f64 = counts.iter().sum();
         let nats = if total > 0.0 { -counts.iter().map(|&c| x_ln_x(c / total)).sum::<f64>() } else { 0.0 };
         let mut warnings = Vec::new();
@@ -9338,7 +9625,7 @@ pub mod streaming {
         if occupied * 2 < counts.len() {
             warnings.push(Warning::Undersampled { occupied_bins: occupied, total_bins: counts.len() });
         }
-        Estimate { value: base.from_nats(nats).await, base, method, n: n_raw, n_effective: total, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("alphabet_size", counts.len() as f64), ("total_weight", total)] }
+        Estimate { value: base.from_nats(nats), base, method, n: n_raw, n_effective: total, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("alphabet_size", counts.len() as f64), ("total_weight", total)] }
     }
     // #endregion 🔖️Shared
 
@@ -9351,7 +9638,8 @@ pub mod streaming {
     }
 
     impl StreamingCounts {
-        pub async fn new(alphabet_size: usize, base: LogBase) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(alphabet_size: usize, base: LogBase) -> Self {
             Self { counts: vec![0.0; alphabet_size], base, n_raw: 0 }
         }
     }
@@ -9391,7 +9679,7 @@ pub mod streaming {
             if self.n_raw == 0 {
                 return Err(EntropyError::EmptyInput { what: "streaming counts" });
             }
-            Ok(plugin_entropy_from_counts(&self.counts, self.base, "streaming_counts", self.n_raw).await)
+            Ok(plugin_entropy_from_counts(&self.counts, self.base, "streaming_counts", self.n_raw))
         }
 
         async fn reset(&mut self) {
@@ -9419,11 +9707,12 @@ pub mod streaming {
     }
 
     impl SlidingWindowEntropy {
-        pub async fn new(alphabet_size: usize, capacity: usize, base: LogBase) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(alphabet_size: usize, capacity: usize, base: LogBase) -> Result<Self, EntropyError> {
             if capacity == 0 {
                 return Err(EntropyError::InvalidConfig { field: "capacity", reason: "must be at least 1" });
             }
-            Ok(Self { window: VecDeque::with_capacity(capacity), capacity, counts: StreamingCounts::new(alphabet_size, base).await })
+            Ok(Self { window: VecDeque::with_capacity(capacity), capacity, counts: StreamingCounts::new(alphabet_size, base) })
         }
     }
 
@@ -9491,7 +9780,8 @@ pub mod streaming {
     }
 
     impl DecayedEntropy {
-        pub async fn new(alphabet_size: usize, decay: f64, base: LogBase) -> Result<Self, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(alphabet_size: usize, decay: f64, base: LogBase) -> Result<Self, EntropyError> {
             if !(0.0 < decay && decay <= 1.0) {
                 return Err(EntropyError::InvalidConfig { field: "decay", reason: "must be in (0, 1]" });
             }
@@ -9530,7 +9820,7 @@ pub mod streaming {
             if total <= 0.0 {
                 return Err(EntropyError::EmptyInput { what: "decayed counts" });
             }
-            Ok(plugin_entropy_from_counts(&self.counts, self.base, "decayed_entropy", self.counts.len()).await)
+            Ok(plugin_entropy_from_counts(&self.counts, self.base, "decayed_entropy", self.counts.len()))
         }
 
         async fn reset(&mut self) {
@@ -9701,29 +9991,34 @@ pub mod features {
     // #endregion 🔖️Feature
 
     // #region 🔖️StandardFeatures
-    async fn feature_histogram_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn feature_histogram_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
         crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::entropy_continuous(
             x,
             &crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges),
             LogBase::Nats,
-        ).await
+        )
     }
 
-    async fn feature_sample_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        let cfg = RegularityConfig::new(2, Tolerance::Auto).await?;
-        sample_entropy(x, cfg, LogBase::Nats).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn feature_sample_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
+        let cfg = RegularityConfig::new(2, Tolerance::Auto)?;
+        sample_entropy(x, cfg, LogBase::Nats)
     }
 
-    async fn feature_permutation_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        let cfg = OrdinalConfig::new(3, 1).await?;
-        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::ordinal::permutation_entropy(x, cfg, LogBase::Nats).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn feature_permutation_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
+        let cfg = OrdinalConfig::new(3, 1)?;
+        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::ordinal::permutation_entropy(x, cfg, LogBase::Nats)
     }
 
-    async fn feature_spectral_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::spectral::spectral_entropy(x, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::spectral::SpectralConfig::default()).await
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn feature_spectral_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
+        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::spectral::spectral_entropy(x, crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::spectral::SpectralConfig::default())
     }
 
-    async fn feature_lempel_ziv(x: &[f64]) -> Result<Estimate, EntropyError> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn feature_lempel_ziv(x: &[f64]) -> Result<Estimate, EntropyError> {
         let (_, sd) = {
             let n = x.len() as f64;
             let mean = x.iter().sum::<f64>() / n;
@@ -9736,7 +10031,7 @@ pub mod features {
         } else {
             vec![0; x.len()]
         };
-        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::lz::lempel_ziv_complexity(&symbols, true).await
+        crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::lz::lempel_ziv_complexity(&symbols, true)
     }
     // #endregion 🔖️StandardFeatures
 
@@ -9753,7 +10048,8 @@ pub mod features {
         /// 📋️ The built-in standard feature set: histogram entropy, sample entropy, permutation
         /// entropy, spectral entropy, and normalized Lempel-Ziv complexity (over a median-split
         /// binary encoding).
-        pub async fn standard() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn standard() -> Self {
             Self {
                 entries: vec![
                     ("histogram_entropy", feature_histogram_entropy as FeatureFn),
@@ -9767,7 +10063,8 @@ pub mod features {
 
         /// 📋️ Registers an additional named feature function, appended after the existing entries
         /// (preserving deterministic ordering).
-        pub async fn with_feature(mut self, name: &'static str, f: FeatureFn) -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_feature(mut self, name: &'static str, f: FeatureFn) -> Self {
             self.entries.push((name, f));
             self
         }
@@ -9775,7 +10072,8 @@ pub mod features {
         /// 📋️ Computes every registered feature over `x`, in registration order. The first feature
         /// that errors short-circuits the whole batch (no partial/best-effort results) — callers
         /// that want per-feature failure isolation should call individual feature functions directly.
-        pub async fn compute(&self, x: &[f64]) -> Result<Vec<Feature>, EntropyError> {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn compute(&self, x: &[f64]) -> Result<Vec<Feature>, EntropyError> {
             self.entries.iter().map(|&(name, f)| Ok(Feature { name, estimate: f(x)? })).collect()
         }
     }
@@ -9785,7 +10083,8 @@ pub mod features {
     /// 📋️ Suggests a histogram binning rule for `x`: Freedman-Diaconis when the interquartile range
     /// is positive (robust to outliers), falling back to Sturges' rule otherwise (e.g. heavily
     /// discrete/degenerate data where IQR collapses to zero).
-    pub async fn suggest_bins(x: &[f64]) -> BinsSpec {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn suggest_bins(x: &[f64]) -> BinsSpec {
         if x.len() < 2 {
             return BinsSpec::Fixed(1);
         }
@@ -9803,7 +10102,8 @@ pub mod features {
     /// 📋️ Suggests a kNN neighbor count `k` for continuous estimators (Kozachenko-Leonenko/KSG):
     /// `round(sqrt(n) / 2)`, clamped to `[3, 20]` and to at most `n / 4` for small samples (the
     /// standard practical bias/variance compromise for these estimators).
-    pub async fn suggest_knn_k(n: usize) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn suggest_knn_k(n: usize) -> usize {
         if n == 0 {
             return 3;
         }

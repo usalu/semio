@@ -402,6 +402,22 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+s must be programmed interactive from bottom up.
+Everything must run on worker threads (1 to max number of cores).
+The ui thread must be separate.
+Every single interactive tool in apps must be non-blocking and take at most 8ms to complete.
+Every complex simulation (such as energy simulation, wave function collapse, fem, fill tool of puzzle, etc) must preview results in realtime and be split into composable multiple small parts.
+
+e.g. the fill tool in puzzle should preview the tested results in realtime (show colliding objects while testing, instead of waiting for it to be complete.)
+e.g. fem should show propagation of forces and displacements in realtime.
+e.g. wave function collapse should show the tested slots in realtime.
+
+The goal is not maximum performance of commands but maximum interactivity.‚
+
+Take all the fundamental decisions and refactor everything no matter the effort.
+
+---
+
 `<name>.<serialization-artifact>...<kind>.<subset>.<standard>.<artifact>(.<seralization-subset>.<serialization-standard>)?`
 
 

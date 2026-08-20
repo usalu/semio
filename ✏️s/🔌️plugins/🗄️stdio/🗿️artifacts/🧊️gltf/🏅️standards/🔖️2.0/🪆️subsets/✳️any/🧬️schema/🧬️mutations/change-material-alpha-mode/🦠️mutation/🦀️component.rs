@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 pub const ID: &str = "s.stdio.gltf.mutation.change-material-alpha-mode.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/alphaMode"];
-pub async fn touched_paths(payload: &GltfChangeMaterialAlphaModePayload) -> Vec<String> {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn touched_paths(payload: &GltfChangeMaterialAlphaModePayload) -> Vec<String> {
     vec![format!("document/materials/{}/alphaMode", payload.material)]
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -16,7 +17,8 @@ pub struct GltfChangeMaterialAlphaModeRejection {
     pub path: String,
     pub detail: String,
 }
-async fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialAlphaModeRejection {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialAlphaModeRejection {
     GltfChangeMaterialAlphaModeRejection { code: value.code.into(), path: value.path, detail: value.detail.into() }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -25,16 +27,18 @@ pub struct GltfChangeMaterialAlphaModePayload {
     pub material: usize,
     pub alpha_mode: GltfAlphaMode,
 }
-pub async fn validate(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
-    index(&base.document.materials, payload.material, "document/materials").await.map_err(failure)?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn validate(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
+    index(&base.document.materials, payload.material, "document/materials").map_err(failure)?;
     (base.document.materials[payload.material].alpha_mode != payload.alpha_mode).then_some(()).ok_or_else(|| GltfChangeMaterialAlphaModeRejection {
         code: "gltf.mutation.no-observable-change".into(),
         path: format!("document/materials/{}/alphaMode", payload.material),
         detail: "alphaMode already has that value".into(),
     })
 }
-pub async fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialAlphaModePayload) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
-    validate(payload, snapshot).await?;
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialAlphaModePayload) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
+    validate(payload, snapshot)?;
     snapshot.document.materials[payload.material].alpha_mode = payload.alpha_mode;
     Ok(())
 }

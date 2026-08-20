@@ -26,20 +26,24 @@ impl Default for SemioGraphArtifact {
 }
 
 impl SemioGraphArtifact {
-    pub async fn to_snapshot(&self) -> SemioGraphSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> SemioGraphSnapshot {
         SemioGraphSnapshot { schema: self.schema.clone(), nodes: self.nodes.clone(), edges: self.edges.clone() }
     }
-    pub async fn from_snapshot(snapshot: SemioGraphSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: SemioGraphSnapshot) -> Self {
         Self { schema: snapshot.schema, nodes: snapshot.nodes, edges: snapshot.edges }
     }
-    pub async fn set_snapshot(&mut self, snapshot: SemioGraphSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: SemioGraphSnapshot) {
         self.schema = snapshot.schema;
         self.nodes = snapshot.nodes;
         self.edges = snapshot.edges;
     }
 }
 
-pub async fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_graph_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.graph",
         artifact: schema::FacetLeaves {
@@ -89,18 +93,21 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioGraphBuilderConstruction {
         /// 🏗️ Starts a fresh, empty graph document.
-        pub async fn new() -> Self {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
             Self { snapshot: SemioGraphSnapshot::default() }
         }
         /// 🏗️ Appends one node, in insertion order (id-keyed set — order carries no display
         /// meaning, but insertion order is preserved for determinism).
-        pub async fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
-            self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id).await, kind: kind.into(), label: label.into(), position, ports, properties });
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
+            self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id), kind: kind.into(), label: label.into(), position, ports, properties });
             self
         }
         /// 🏗️ Appends one edge, in insertion order.
-        pub async fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
-            self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id).await, source: GraphNodeId::new(source).await, target: GraphNodeId::new(target).await, kind: kind.into(), label: label.into() });
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
+            self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: kind.into(), label: label.into() });
             self
         }
     }

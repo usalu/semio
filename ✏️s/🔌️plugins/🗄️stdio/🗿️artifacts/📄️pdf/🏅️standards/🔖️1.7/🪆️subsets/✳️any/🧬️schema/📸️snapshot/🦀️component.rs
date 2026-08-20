@@ -67,7 +67,8 @@ pub struct PdfDecimal {
 }
 
 impl PdfDecimal {
-    pub async fn parse(text: &str) -> Result<Self, String> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
             Some(b'+') => (false, &text[1..]),
@@ -81,14 +82,15 @@ impl PdfDecimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32 })
     }
 
-    pub async fn from_f64(value: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let (mantissa, exponent) = match text.find(['e', 'E']) {
             Some(index) => (&text[..index], text[index + 1..].parse::<i32>().expect("finite f64 exponent")),
             None => (text.as_str(), 0),
         };
         let normalized = if mantissa.contains('.') { mantissa.to_string() } else { format!("{mantissa}.") };
-        let mut decimal = Self::parse(&normalized).await.expect("finite f64 has valid decimal mantissa");
+        let mut decimal = Self::parse(&normalized).expect("finite f64 has valid decimal mantissa");
         let scale = decimal.scale as i64 - exponent as i64;
         if scale < 0 {
             decimal.coefficient.extend(std::iter::repeat_n('0', -scale as usize));
@@ -99,7 +101,8 @@ impl PdfDecimal {
         decimal
     }
 
-    pub async fn to_f64(&self) -> Option<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
 }
@@ -154,45 +157,52 @@ impl Default for PdfObject {
 }
 
 impl PdfObject {
-    pub async fn as_dict(&self) -> Option<&[PdfDictEntry]> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_dict(&self) -> Option<&[PdfDictEntry]> {
         match self {
             PdfObject::Dict(d) => Some(d),
             PdfObject::Stream { dict, .. } => Some(dict),
             _ => None,
         }
     }
-    pub async fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
-        self.as_dict().await?.iter().find(|e| e.key == key).map(|e| &e.value)
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
+        self.as_dict()?.iter().find(|e| e.key == key).map(|e| &e.value)
     }
-    pub async fn as_name(&self) -> Option<&str> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_name(&self) -> Option<&str> {
         match self {
             PdfObject::Name(n) => Some(n.as_str()),
             _ => None,
         }
     }
-    pub async fn as_ref(&self) -> Option<ObjRef> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_ref(&self) -> Option<ObjRef> {
         match self {
             PdfObject::Ref(r) => Some(*r),
             _ => None,
         }
     }
-    pub async fn as_array(&self) -> Option<&[PdfObject]> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_array(&self) -> Option<&[PdfObject]> {
         match self {
             PdfObject::Array(a) => Some(a),
             _ => None,
         }
     }
-    pub async fn as_f64(&self) -> Option<f64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_f64(&self) -> Option<f64> {
         match self {
             PdfObject::Int(i) => Some(*i as f64),
-            PdfObject::Real(r) => r.to_f64().await,
+            PdfObject::Real(r) => r.to_f64(),
             _ => None,
         }
     }
-    pub async fn as_i64(&self) -> Option<i64> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_i64(&self) -> Option<i64> {
         match self {
             PdfObject::Int(i) => Some(*i),
-            PdfObject::Real(r) => r.to_f64().await.map(|value| value as i64),
+            PdfObject::Real(r) => r.to_f64().map(|value| value as i64),
             _ => None,
         }
     }
@@ -231,7 +241,8 @@ impl Default for PdfPage {
 }
 
 impl PdfPage {
-    pub async fn new(width: f64, height: f64) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(width: f64, height: f64) -> Self {
         Self { media_box: [0.0, 0.0, width, height], crop_box: None, rotate: 0, text: String::new() }
     }
 }
@@ -339,7 +350,8 @@ impl store::ArtifactPack for PdfSnapshot {
 //#region 🔖️SnapshotFixtures
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructors, no codec/IO concern.
-pub async fn empty_pdf_snapshot() -> PdfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn empty_pdf_snapshot() -> PdfSnapshot {
     PdfSnapshot::default()
 }
 
@@ -359,7 +371,8 @@ pub async fn empty_pdf_snapshot() -> PdfSnapshot {
 /// hardcoded `width`/`height`. `pages`/`info` DO survive this round trip losslessly (the
 /// bachelor-thesis example's own `decode_encode_decode_is_structurally_equal_at_page_level` test
 /// already proves this at scale) -- only `objects`/`trailer` need the fixed-point construction.
-pub async fn demo_pdf17_snapshot() -> PdfSnapshot {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_pdf17_snapshot() -> PdfSnapshot {
     let seed = PdfSnapshot {
         schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
         declared_version: "1.7".into(),
@@ -368,7 +381,7 @@ pub async fn demo_pdf17_snapshot() -> PdfSnapshot {
         objects: Vec::new(),
         trailer: Vec::new(),
     };
-    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).await.expect("encode_pdf(seed) must succeed");
-    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).await.expect("decode_pdf(encode_pdf(seed)) must succeed")
+    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️SnapshotFixtures

@@ -386,8 +386,13 @@ impl WheelCore {
     /// ⏲️ Arms a timer for `plugin`/`actor` firing at `at_ms`, optionally repeating every
     /// `repeat_ms`. The per-plugin quota is checked BEFORE any insertion, so a rejected call leaves
     /// the wheel completely untouched.
+    // 🚫️async: E1-adjacent — identical reasoning to `pop_expired`/`next_expiry_ms` below (R9): pure,
+    // in-memory only, with no suspension point of its own, and reached through a
+    // `std::sync::Mutex<WheelCore>` guard held by an async caller. `async` here forced that
+    // `MutexGuard` (not `Send`) to live across the caller's await point, making
+    // `TimerWheel::arm`'s future non-`Send` and breaking the `HostFuture<()>: Send` bound R3 requires.
     #[allow(clippy::too_many_arguments)]
-    pub async fn arm(&mut self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
+    pub fn arm(&mut self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
         let count = self.per_plugin_counts.get(&plugin).copied().unwrap_or(0);
         if count >= self.quota_per_plugin {
             return Err(TimerError::QuotaExceeded { plugin, limit: self.quota_per_plugin });
@@ -405,7 +410,8 @@ impl WheelCore {
     /// 🔕️ Disarms `id`, returning whether it was actually armed. Lazy: the heap entry is left in
     /// place and skipped when eventually popped by [`WheelCore::pop_expired`], since a `BinaryHeap`
     /// cannot remove an arbitrary interior element faster than O(n).
-    pub async fn disarm(&mut self, id: TimerId) -> bool {
+    // 🚫️async: E1-adjacent — same reasoning as `arm` above (R9).
+    pub fn disarm(&mut self, id: TimerId) -> bool {
         match self.entries.get_mut(&id) {
             Some(entry) if !entry.cancelled => {
                 entry.cancelled = true;
@@ -472,7 +478,8 @@ impl WheelCore {
         self.order.iter().filter(|Reverse((_, _, id))| self.entries.get(id).is_some_and(|entry| !entry.cancelled)).map(|Reverse((expiry, _, _))| *expiry).min()
     }
 
-    pub async fn armed_count(&self, plugin: &PackageId) -> u32 {
+    // 🚫️async: E1-adjacent — same reasoning as `arm` above (R9).
+    pub fn armed_count(&self, plugin: &PackageId) -> u32 {
         self.per_plugin_counts.get(plugin).copied().unwrap_or(0)
     }
 }
@@ -498,17 +505,17 @@ impl TimerWheel {
 
     #[allow(clippy::too_many_arguments)]
     pub async fn arm(&self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
-        let id = self.core.lock().expect("TimerWheel core mutex poisoned").arm(plugin, actor, generation, lane, at_ms, repeat_ms).await?;
+        let id = self.core.lock().expect("TimerWheel core mutex poisoned").arm(plugin, actor, generation, lane, at_ms, repeat_ms)?;
         self.wake.notify_one();
         Ok(id)
     }
 
     pub async fn disarm(&self, id: TimerId) -> bool {
-        self.core.lock().expect("TimerWheel core mutex poisoned").disarm(id).await
+        self.core.lock().expect("TimerWheel core mutex poisoned").disarm(id)
     }
 
     pub async fn armed_count(&self, plugin: &PackageId) -> u32 {
-        self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin).await
+        self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin)
     }
 
     /// ▶️ Spawns the driver loop into `scope` on `runtime`: sleeps until the wheel's next expiry (or
@@ -1728,8 +1735,8 @@ mod tests {
     async fn wheel_core_pop_expired_fires_in_expiry_order_not_arm_order() {
         let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.unwrap();
-        let early = wheel.arm(plugin, 2, 0, 0, 100, None).await.unwrap();
+        let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+        let early = wheel.arm(plugin, 2, 0, 0, 100, None).unwrap();
         let fired: Vec<TimerId> = wheel.pop_expired(1_000).into_iter().map(|f| f.id).collect();
         assert_eq!(fired, vec![early, late], "expiry order must win over arm order");
     }
@@ -1738,7 +1745,7 @@ mod tests {
     async fn wheel_core_pop_expired_respects_now_ms_boundary() {
         let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        wheel.arm(plugin, 1, 0, 0, 500, None).await.unwrap();
+        wheel.arm(plugin, 1, 0, 0, 500, None).unwrap();
         assert!(wheel.pop_expired(400).is_empty(), "must not fire before its expiry");
         assert_eq!(wheel.pop_expired(500).len(), 1, "must fire once now_ms reaches the expiry");
     }
@@ -1750,7 +1757,7 @@ mod tests {
     async fn wheel_core_repeat_rearms_and_catches_up_without_drift_accumulation() {
         let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).await.unwrap();
+        let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).unwrap();
         let first = wheel.pop_expired(100);
         assert_eq!(first.len(), 1);
         assert_eq!(first[0].id, id);
@@ -1763,31 +1770,31 @@ mod tests {
     async fn wheel_core_disarm_prevents_a_future_fire() {
         let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin, 1, 0, 0, 100, None).await.unwrap();
-        assert!(wheel.disarm(id).await);
+        let id = wheel.arm(plugin, 1, 0, 0, 100, None).unwrap();
+        assert!(wheel.disarm(id));
         assert!(wheel.pop_expired(1_000).is_empty());
-        assert!(!wheel.disarm(id).await, "disarming twice must report false the second time");
+        assert!(!wheel.disarm(id), "disarming twice must report false the second time");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wheel_core_rejects_arm_past_the_per_plugin_quota_with_a_typed_error() {
         let mut wheel = WheelCore::new(2).await;
         let plugin = PackageId("p".to_string());
-        wheel.arm(plugin.clone(), 1, 0, 0, 100, None).await.unwrap();
-        wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.unwrap();
-        let result = wheel.arm(plugin.clone(), 1, 0, 0, 300, None).await;
+        wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+        wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+        let result = wheel.arm(plugin.clone(), 1, 0, 0, 300, None);
         assert_eq!(result, Err(TimerError::QuotaExceeded { plugin: plugin.clone(), limit: 2 }));
-        assert_eq!(wheel.armed_count(&plugin).await, 2, "a rejected arm must leave the wheel untouched");
+        assert_eq!(wheel.armed_count(&plugin), 2, "a rejected arm must leave the wheel untouched");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wheel_core_disarm_frees_quota_for_a_new_arm() {
         let mut wheel = WheelCore::new(1).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).await.unwrap();
-        assert!(wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.is_err());
-        wheel.disarm(id).await;
-        assert!(wheel.arm(plugin, 1, 0, 0, 200, None).await.is_ok());
+        let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+        assert!(wheel.arm(plugin.clone(), 1, 0, 0, 200, None).is_err());
+        wheel.disarm(id);
+        assert!(wheel.arm(plugin, 1, 0, 0, 200, None).is_ok());
     }
     //#endregion ⏲️WheelCoreTests
 

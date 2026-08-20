@@ -28,7 +28,9 @@ pub struct ImperativeExtensionContributes {
 }
 
 /// 📦️ Builds manifest JSON from a module registry and catalogue fragment.
-pub async fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> String {
+// 🚫️async: E1 pure — serde_json::to_string only, zero suspension points; every caller across the 5
+// imperative-* extensions consumes this synchronously — see R9.
+pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> String {
     let manifest = ImperativeExtensionManifest {
         schema: "imperative.extension".into(),
         id: id.into(),
@@ -45,7 +47,8 @@ pub async fn build_manifest_json(id: &str, name: &str, version: &str, registry: 
 
 // #region 🔖️Evaluate
 /// 🧮️ Evaluates an operator and returns JSON dictionary or `{ "error": ... }`.
-pub async fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
+// 🚫️async: E1 pure — in-memory registry dispatch only, zero suspension points — see R9.
+pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
     let input: Dictionary = match serde_json::from_str(input_json) {
         Ok(d) => d,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
@@ -61,17 +64,19 @@ pub async fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str)
 }
 
 /// 🔀️ WIT `extension::invoke` payload for `imperative.module/evaluate`.
-pub async fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
+// 🚫️async: E1 pure — serde_json only, zero suspension points — see R9.
+pub fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
     let input: serde_json::Value = serde_json::from_str(input_json).unwrap_or(serde_json::json!({}));
     serde_json::json!({ "kindId": kind_id, "input": input }).to_string()
 }
 
 /// 🔀️ Parses an evaluate invoke request and runs it against `registry`.
-pub async fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
+// 🚫️async: E1 pure — delegates to `evaluate_json` (sync), zero suspension points — see R9.
+pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
     let body: serde_json::Value = serde_json::from_slice(request).map_err(|err| err.to_string())?;
     let kind_id = body.get("kindId").and_then(|v| v.as_str()).ok_or_else(|| "missing kindId".to_string())?;
     let input_json = body.get("input").map(|v| v.to_string()).unwrap_or_else(|| "{}".to_string());
-    Ok(evaluate_json(registry, kind_id, &input_json).await.into_bytes())
+    Ok(evaluate_json(registry, kind_id, &input_json).into_bytes())
 }
 // #endregion 🔖️Evaluate
 
@@ -83,7 +88,9 @@ pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
 pub const IMPERATIVE_MODULE_EVALUATE_CAPABILITY: &str = "imperative.module/evaluate";
 
 /// 🧩️ Builds one `ProgramContributionEntry` carrying the `"imperative.module"` topic contribution.
-pub async fn imperative_module_contribution(
+// 🚫️async: E1 pure — struct literal over `imperative_module_topic_contribution` (sync); every one of
+// the 5 imperative-* extensions' own wrapper fns consumes this synchronously (unawaited) — see R9.
+pub fn imperative_module_contribution(
     extension_id: &str,
     module_id: &str,
     label: &str,
@@ -96,7 +103,7 @@ pub async fn imperative_module_contribution(
 ) -> ProgramContributionEntry {
     ProgramContributionEntry {
         plugin_id: extension_id.into(),
-        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json).await),
+        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)),
     }
 }
 // #endregion 🔖️Constants
@@ -105,7 +112,17 @@ pub async fn imperative_module_contribution(
 /// 🗺️ Builds the `"imperative.module"` `TopicContribution` payload consumed by
 /// [`imperative_module_contribution`] — see
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
-pub async fn imperative_module_topic_contribution(
+// 🚫️async: E1 pure — serde_json manifest assembly, zero suspension points; every one of the 5
+// imperative-* extensions' `bundle()`/`extension_exports!` call sites needs this synchronously
+// (the macro invokes `bundle` outside an async context) — see R9. `TopicContribution::new` itself is
+// still `async fn` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this
+// packet's path_scope — SDK owner's file); bridged here via the framework's own established
+// sync-from-async idiom (`semio_framework::io::resolve_ready`, already used by
+// `ExtensionBundle::depends_on` in that same file for the identical purpose) rather than waiting on a
+// cross-packet lease. See `📓️terra-fleet-extensions-report.md` for the matching lease-request asking
+// the SDK owner to revert `TopicContribution::new` (and `ExtensionBundle::mode`/`.contributes_topic`)
+// to sync directly, which would let this bridge be removed.
+pub fn imperative_module_topic_contribution(
     module_id: &str,
     label: &str,
     icon_id: &str,
@@ -115,8 +132,8 @@ pub async fn imperative_module_topic_contribution(
     registry: &Registry,
     catalogue_json: Option<&str>,
 ) -> TopicContribution {
-    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json).await;
-    TopicContribution::new(
+    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
+    semio_framework::io::resolve_ready(TopicContribution::new(
         "imperative.module",
         serde_json::json!({
             "appId": IMPERATIVE_PLAY_APP_ID,
@@ -125,6 +142,6 @@ pub async fn imperative_module_topic_contribution(
             "iconId": icon_id,
             "manifestJson": manifest_json,
         }),
-    )
+    ))
 }
 // #endregion 🔖️TopicContribution

@@ -24,19 +24,23 @@ impl Default for PdfArtifact {
 }
 
 impl PdfArtifact {
-    pub async fn to_snapshot(&self) -> PdfSnapshot {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn to_snapshot(&self) -> PdfSnapshot {
         PdfSnapshot { schema: self.schema.clone(), page: self.page.clone() }
     }
-    pub async fn from_snapshot(snapshot: PdfSnapshot) -> Self {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
         Self { schema: snapshot.schema, page: snapshot.page }
     }
-    pub async fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
         self.page = snapshot.page;
     }
 }
 
-pub async fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pdf",
         artifact: schema::FacetLeaves {
@@ -100,7 +104,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;
