@@ -17,11 +17,29 @@
     },
     "build-forschungsbericht": {
       "executor": "nx:run-commands",
+      "dependsOn": ["akteursnetz-validate"],
       "inputs": ["production", "^production", "print"],
       "outputs": ["{projectRoot}/forschungsbericht/dist"],
       "options": {
         "cwd": "mit-bestand/bericht",
         "command": "bun ./script.ts build forschungsbericht"
+      }
+    },
+    "akteursnetz-validate": {
+      "executor": "nx:run-commands",
+      "inputs": ["production", "^production", "print"],
+      "options": {
+        "cwd": "mit-bestand/bericht",
+        "command": "bun ./script.ts akteursnetz validate"
+      }
+    },
+    "akteursnetz-render": {
+      "executor": "nx:run-commands",
+      "inputs": ["production", "^production", "print"],
+      "outputs": ["{projectRoot}/forschungsbericht/anhang/akteursnetz.tex", "{projectRoot}/forschungsbericht/anhang/akteursnetz-figuren.tex", "{projectRoot}/forschungsbericht/anhang/akteursnetz-tabellen.tex", "{projectRoot}/forschungsbericht/anhang/akteursnetz-programme.tex"],
+      "options": {
+        "cwd": "mit-bestand/bericht",
+        "command": "bun ./script.ts akteursnetz render"
       }
     },
     "build-kompaktbericht": {

@@ -1,0 +1,10 @@
+{
+  "title": "Projektkatalog auf 127 Karten mit bereinigter Git-Taxonomie finalisieren",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Den freigegebenen 127-Projekt-Korpus mit 426 Ereignissen auf den achtwertigen Projektkopf und die achtspaltige Bauteiltabelle normalisieren. Drei getrennte Kohorten P01-P67, P68-P109 und P110-P127 auditieren und im Ring-Review prüfen; nur der Lead integriert kanonische LaTeX- und Bibliografiedateien. Zwischenbericht, Neo4j, Akteursnetz und bestehende Bildassets bleiben unverändert. Abschließend Zitations-, Struktur-, Build- und visuelle PDF-Prüfung für helle und dunkle Fassung durchführen.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪caeccacd47004643a0b747675e7f52a5"
+  ]
+}

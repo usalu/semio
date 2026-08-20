@@ -3268,6 +3268,28 @@
       }
     },
     {
+      "name": "📦validate🏚️mitbestand📕forschungsbericht🕸️akteursnetz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:akteursnetz-validate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132.1
+      }
+    },
+    {
+      "name": "📦render🏚️mitbestand📕forschungsbericht🕸️akteursnetz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:akteursnetz-render",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132.2
+      }
+    },
+    {
       "name": "📦build🏚️mitbestand📗kompaktbericht",
       "type": "node-terminal",
       "request": "launch",
